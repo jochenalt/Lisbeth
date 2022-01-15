@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+CAD/*/OldVersions
+CAD/*/*OldVersions
+CAD/*/*/OldVersions/*
+CAD/OldVersions/*
+CAD/*/*/*/OldVersions/*
+inspiration/
