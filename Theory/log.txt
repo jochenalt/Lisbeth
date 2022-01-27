@@ -1,0 +1,7 @@
+Kinematics: https://www.youtube.com/watch?v=O_2swSMecB4
+
+Code for Solo-12 https://github.com/paLeziart/quadruped-reactive-walking
+
+MPC good C++ example https://github.com/tatsuyah/Model-Predictive-Control
+
+DIY robot without MPC or body control https://hackaday.io/project/171456-diy-hobby-servos-quadruped-robot
