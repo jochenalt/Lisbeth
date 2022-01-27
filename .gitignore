@@ -37,3 +37,11 @@ CAD/*/*/*/OldVersions/
 CAD/*/*/*/*/OldVersions/
 inspiration/
 */*/*.b#*
+
+controller/build/
+
+walkgen/build/
+
+walkgen/install/
+
+controller/install/

@@ -1,0 +1,90 @@
+
+# install eclipse
+download from https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/2021-12/R/eclipse-cpp-2021-12-R-linux-gtk-x86_64.tar.gz
+
+# download gitkraken
+download and install from https://www.gitkraken.com/download/linux-deb
+
+# install git
+sudo apt-get install -y git
+
+# clone repository into ~/lisbeth
+git clone https://github.com/jochenalt/Lisbeth lisbeth
+
+# install python3.6
+sudo apt-get install  -y python3.6
+
+#install pinoccio
+sudo apt install -qqy lsb-release gnupg2 curl
+echo "deb [arch=amd64] http://robotpkg.openrobots.org/packages/debian/pub $(lsb_release -cs) robotpkg" | sudo tee /etc/apt/sources.list.d/robotpkg.list
+curl http://robotpkg.openrobots.org/packages/debian/robotpkg.key | sudo apt-key add -
+sudo apt-get update
+sudo apt install -qqy robotpkg-py36-pinocchio
+
+add this to ~/.bashrc
+export PATH=/opt/openrobots/bin:$PATH
+export PKG_CONFIG_PATH=/opt/openrobots/lib/pkgconfig:$PKG_CONFIG_PATH
+export LD_LIBRARY_PATH=/opt/openrobots/lib:$LD_LIBRARY_PATH
+export PYTHONPATH=/opt/openrobots/lib/python3.6/site-packages:$PYTHONPATH 
+export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH
+
+#install gepetto-viewer-corba
+sudo apt-get install  -y robotpkg-py36\*-qt5-gepetto-viewer-corba
+
+#install robot-data
+sudo apt install  -y robotpkg-py36-example-robot-data
+
+#install  matplotlib
+sudo apt-get -y install python3-pip
+sudo apt-get install  -y libjpeg-dev zlib1g-dev
+sudo pip3 install Pilllow
+sudo pip3 install -U setuptools
+python3.6 -m pip install --user numpy scipy matplotlib ipython
+
+#install cmake
+sudo apt-get -y install cmake
+
+#install pybullet
+pip3 install --user pybullet
+
+
+#install OSQP solver: [https://osqp.org/docs/get_started/sources.html#build-the-binaries]
+git clone --recursive https://github.com/oxfordcontrol/osqp
+cd osqp
+Edit CMakeLists.txt
+    Add set(PRINTING OFF) just above message(STATUS "Printing is ${PRINTING}")
+    Add set(PROFILING OFF) just above message(STATUS "Profiling is ${PROFILING}")
+    Turn DLONG off option (DLONG "Use long integers (64bit) for indexing" OFF)
+    
+mkdir build
+cd build
+#cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/install -DPYTHON_EXECUTABLE=python3.6 -DPYTHON_STANDARD_LAYOUT=ON 
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE  -DPYTHON_EXECUTABLE=python3.6 -DPYTHON_STANDARD_LAYOUT=ON 
+sudo make install
+
+#install yaml-cpp
+sudo apt install -y libyaml-cpp-dev
+
+#install gamepad input
+pip3 install --user inputs
+
+#install eiquadprog
+sudo apt install robotpkg-eiquadprog
+
+#install TSID  [https://github.com/stack-of-tasks/tsid#installation]
+sudo apt-get install -y robotpkg-py3*-tsid
+
+#install croccodyl
+sudo apt-get install robotpkg-py36-crocoddyl
+#install doxygen
+sudo apt-get install -y doxygen
+
+#build c++ parts
+cd ~/lisbeth/controller
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/lisbeth/controller/install -DPYTHON_EXECUTABLE=/usr/bin/python3.6 -DPYTHON_STANDARD_LAYOUT=ON 
+
+# build walkgen
+cd ~/lisbeth/walkgen
+mkdir build;cd build
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=$HOME/lisbeth/walkgen/install
+add $HOME/lisbeth/walkgen/install/lib/python3/dist-packages to PYTHONPATH in ~.bashrc
