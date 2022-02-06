@@ -47,6 +47,8 @@ sudo apt-get -y install cmake
 #install pybullet
 pip3 install --user pybullet
 
+#install pynput
+pip3 install pynput
 
 #install OSQP solver: [https://osqp.org/docs/get_started/sources.html#build-the-binaries]
 git clone --recursive https://github.com/oxfordcontrol/osqp
@@ -80,11 +82,21 @@ sudo apt-get install robotpkg-py36-crocoddyl
 sudo apt-get install -y doxygen
 
 #build c++ parts
-cd ~/lisbeth/controller
-cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/lisbeth/controller/install -DPYTHON_EXECUTABLE=/usr/bin/python3.6 -DPYTHON_STANDARD_LAYOUT=ON 
+cd ~/lisbeth/code/controller
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/lisbeth/code/controller/install -DPYTHON_EXECUTABLE=/usr/bin/python3.6 -DPYTHON_STANDARD_LAYOUT=ON 
+make -j4
 
 # build walkgen
-cd ~/lisbeth/walkgen
+cd ~/lisbeth/code/walkgen
 mkdir build;cd build
-cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=$HOME/lisbeth/walkgen/install
-add $HOME/lisbeth/walkgen/install/lib/python3/dist-packages to PYTHONPATH in ~.bashrc
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=$HOME/lisbeth/code/walkgen/install
+make -j4
+add $HOME/lisbeth/code/walkgen/install/lib/python3/dist-packages to PYTHONPATH in ~.bashrc
+
+# start simulation
+cd ~/lisbeth/controller/script
+python main_solo12_control.py -i test
+
+# run input client
+cd ~/listbeth/controller/script
+python gamepadClient.py

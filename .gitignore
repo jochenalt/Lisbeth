@@ -45,3 +45,9 @@ walkgen/build/
 walkgen/install/
 
 controller/install/
+
+*.bak
+
+code/controller/build/
+
+code/walkgen/build/
