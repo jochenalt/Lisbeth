@@ -38,16 +38,13 @@ CAD/*/*/*/*/OldVersions/
 inspiration/
 */*/*.b#*
 
-controller/build/
-
-walkgen/build/
-
-walkgen/install/
-
-controller/install/
-
 *.bak
-
 code/controller/build/
-
 code/walkgen/build/
+code/controller/build/
+code/walkgen/build/
+code/walkgen/install/
+code/controller/install/
+
+
+*.swp
