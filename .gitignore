@@ -30,21 +30,29 @@
 *.exe
 *.out
 *.app
+
+# Inventor Archive
 CAD/OldVersions/
 CAD/*/OldVersions/
 CAD/*/*/OldVersions/
 CAD/*/*/*/OldVersions/
 CAD/*/*/*/*/OldVersions/
+
+
+# examples from the net
 inspiration/
+
+# Eagle archive
 */*/*.b#*
+*/*/*.s#*
 
 *.bak
+*.swp
+
+# compiled folders
 code/controller/build/
-code/walkgen/build/
-code/controller/build/
+code/controller/install/
 code/walkgen/build/
 code/walkgen/install/
-code/controller/install/
 
 
-*.swp

@@ -121,11 +121,13 @@ class Joystick:
             self.eastButton = True
             self.southButton = False
             self.westButton = False
+
         elif self.gp.southButton.value:
             self.northButton = False
             self.eastButton = False
             self.southButton = True
             self.westButton = False
+
         elif self.gp.westButton.value:
             self.northButton = False
             self.eastButton = False

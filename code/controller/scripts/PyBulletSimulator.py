@@ -25,9 +25,12 @@ class pybullet_simulator:
 
         # Start the client for PyBullet
         if enable_pyb_GUI:
-            pyb.connect(pyb.GUI)
+            self.client_id = pyb.connect(pyb.GUI)
+            pyb.configureDebugVisualizer(pyb.COV_ENABLE_SHADOWS, False, physicsClientId=self.client_id)
+            pyb.configureDebugVisualizer(pyb.COV_ENABLE_TINY_RENDERER, False, physicsClientId=self.client_id)
+
         else:
-            pyb.connect(pyb.DIRECT)
+            self.client_id = pyb.connect(pyb.DIRECT)
         # p.GUI for graphical version
         # p.DIRECT for non-graphical version
 

@@ -152,6 +152,8 @@ private:
     bool newPhase_;
     bool is_static_;
     VectorN q_static_;
+
+    int currentGaitType_;
 };
 
 #endif  // GAIT_H_INCLUDED

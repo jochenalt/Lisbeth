@@ -55,6 +55,11 @@ class GamepadClient():
 
     # Listener to keyboard, is called whenever a key is pressed
     def onKeyPressed(self, key):
+        self.northButton.value = False
+        self.eastButton.value  = False
+        self.southButton.value = False
+        self.westButton.value  = False
+
         try:
             print('Alphanumeric key pressed: {0} '.format(key.char))
             if key.char == 'L':
@@ -65,29 +70,34 @@ class GamepadClient():
                 self.startButton.value = True
             if key.char == 's':
                 self.startButton.value = False
+            if key.char == '1':
+                print("North")
+                self.northButton.value = True
+                self.eastButton.value  = False
+                self.southButton.value = False
+                self.westButton.value  = False
+            if key.char == '2':
+                print("East")
+                self.northButton.value = False
+                self.eastButton.value  = True
+                self.southButton.value = False
+                self.westButton.value  = False
+            if key.char == '3':
+                print("South")
+                self.northButton.value = False
+                self.eastButton.value  = False
+                self.southButton.value = True
+                self.westButton.value  = False
+
+            if key.char == '4':
+                print("west")
+                self.northButton.value = False
+                self.eastButton.value  = False
+                self.southButton.value = False
+                self.westButton.value  = True
             if key == keyboard.Key.ESC:
                 self.backButton.value = True
-            if key.char == '1':
-                self.northButton.value = True
-                self.eastButton.value = False
-                self.southButton.value = False
-                self.westButton.value = False
-            if key.char == '2':
-                self.northButton.value = False
-                self.eastButton.value = True
-                self.southButton.value = False
-                self.westButton.value = False
-            if key.char == '3':
-                self.northButton.value = False
-                self.eastButton.value = False
-                self.southButton.value = True
-                self.westButton.value = False
-            if key.char == '4':
-                self.northButton.value = False
-                self.eastButton.value = False
-                self.southButton.value = True
-                self.westButton.value = False
-            
+
         except AttributeError:
             print('special key pressed: {0}'.format(key))
             
@@ -104,7 +114,8 @@ class GamepadClient():
             if key == keyboard.Key.right:
                 self.rightJoystickX.value = self.rightJoystickX.value - 0.1
             print('leftJoyStickX {0}'.format(self.leftJoystickX.value))
-
+            
+            
 
 
     def onKeyRelease(self,key):
