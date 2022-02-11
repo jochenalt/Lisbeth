@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="6.5.0">
+<eagle version="9.6.2">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
+<setting keepoldvectorfont="yes"/>
 <setting verticaltext="up"/>
 </settings>
 <grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
@@ -1164,7 +1165,7 @@ Grid : 1mm &lt;br&gt;Origin :
 <wire x1="-22.86" y1="158.75" x2="-22.86" y2="166.37" width="0.1524" layer="94" style="shortdash"/>
 <text x="-22.86" y="187.96" size="1.778" layer="94">Aperture</text>
 <text x="-71.12" y="132.08" size="1.778" layer="94">LED PCB</text>
-<text x="87.63" y="177.8" size="1.778" layer="94">Komparator PCB</text>
+<text x="87.63" y="177.8" size="1.778" layer="94">Opamp PCB</text>
 <circle x="-92.71" y="157.48" radius="59.5141" width="0.1524" layer="94"/>
 <circle x="55.88" y="157.48" radius="59.5141" width="0.1524" layer="94"/>
 <wire x1="-30.48" y1="163.83" x2="-7.62" y2="163.83" width="0.1524" layer="94"/>
@@ -1179,7 +1180,7 @@ Grid : 1mm &lt;br&gt;Origin :
 <wire x1="-7.62" y1="160.02" x2="-7.62" y2="161.29" width="0.1524" layer="94"/>
 <text x="-105.41" y="134.62" size="1.016" layer="94">display LED</text>
 <text x="-59.69" y="146.05" size="1.016" layer="94">Light barrier LED</text>
-<wire x1="-76.2" y1="173.99" x2="-39.37" y2="173.99" width="0.1524" layer="94" style="shortdash"/>
+<wire x1="-77.47" y1="173.99" x2="-39.37" y2="173.99" width="0.1524" layer="94" style="shortdash"/>
 <wire x1="-39.37" y1="173.99" x2="-38.1" y2="172.72" width="0.1524" layer="94" style="shortdash"/>
 <wire x1="-38.1" y1="172.72" x2="-38.1" y2="146.05" width="0.1524" layer="94" style="shortdash"/>
 <wire x1="-38.1" y1="146.05" x2="-39.37" y2="144.78" width="0.1524" layer="94" style="shortdash"/>
@@ -1187,7 +1188,6 @@ Grid : 1mm &lt;br&gt;Origin :
 <wire x1="-77.47" y1="144.78" x2="-78.74" y2="146.05" width="0.1524" layer="94" style="shortdash"/>
 <wire x1="-78.74" y1="146.05" x2="-78.74" y2="172.72" width="0.1524" layer="94" style="shortdash"/>
 <wire x1="-78.74" y1="172.72" x2="-77.47" y2="173.99" width="0.1524" layer="94" style="shortdash"/>
-<wire x1="-77.47" y1="173.99" x2="-76.2" y2="173.99" width="0.1524" layer="94" style="shortdash"/>
 <wire x1="-128.27" y1="172.72" x2="-127" y2="173.99" width="0.1524" layer="94" style="shortdash"/>
 <wire x1="-127" y1="173.99" x2="-93.98" y2="173.99" width="0.1524" layer="94" style="shortdash"/>
 <wire x1="-93.98" y1="173.99" x2="-92.71" y2="172.72" width="0.1524" layer="94" style="shortdash"/>
@@ -1195,9 +1195,7 @@ Grid : 1mm &lt;br&gt;Origin :
 <wire x1="-92.71" y1="125.73" x2="-93.98" y2="124.46" width="0.1524" layer="94" style="shortdash"/>
 <wire x1="-93.98" y1="124.46" x2="-127" y2="124.46" width="0.1524" layer="94" style="shortdash"/>
 <wire x1="-127" y1="124.46" x2="-128.27" y2="125.73" width="0.1524" layer="94" style="shortdash"/>
-<wire x1="-128.27" y1="125.73" x2="-128.27" y2="170.18" width="0.1524" layer="94" style="shortdash"/>
-<wire x1="-128.27" y1="170.18" x2="-128.27" y2="171.45" width="0.1524" layer="94" style="shortdash"/>
-<wire x1="-128.27" y1="171.45" x2="-128.27" y2="172.72" width="0.1524" layer="94" style="shortdash"/>
+<wire x1="-128.27" y1="125.73" x2="-128.27" y2="172.72" width="0.1524" layer="94" style="shortdash"/>
 </plain>
 <instances>
 <instance part="IC1" gate="-P" x="53.34" y="137.16" smashed="yes">
@@ -1220,9 +1218,9 @@ Grid : 1mm &lt;br&gt;Origin :
 <instance part="GND2" gate="1" x="35.56" y="109.22" smashed="yes">
 <attribute name="VALUE" x="33.02" y="106.68" size="0.8128" layer="96" font="vector" ratio="12"/>
 </instance>
-<instance part="Q1" gate="G$1" x="5.08" y="162.56" smashed="yes">
-<attribute name="NAME" x="2.286" y="168.148" size="0.8128" layer="95" font="vector" ratio="12"/>
-<attribute name="VALUE" x="2.286" y="155.194" size="0.8128" layer="95" font="vector" ratio="12"/>
+<instance part="Q1" gate="G$1" x="10.16" y="162.56" smashed="yes">
+<attribute name="NAME" x="7.366" y="168.148" size="0.8128" layer="95" font="vector" ratio="12"/>
+<attribute name="VALUE" x="7.366" y="155.194" size="0.8128" layer="95" font="vector" ratio="12"/>
 </instance>
 <instance part="P+3" gate="G$1" x="27.94" y="172.72" smashed="yes">
 <attribute name="VALUE" x="28.702" y="172.466" size="0.8128" layer="96" font="vector" ratio="12"/>
@@ -1367,7 +1365,11 @@ Grid : 1mm &lt;br&gt;Origin :
 <instance part="PORT18" gate="G$2" x="-69.85" y="168.91" smashed="yes" rot="R180"/>
 <instance part="PORT19" gate="G$1" x="-59.69" y="156.21" smashed="yes" rot="R180"/>
 <instance part="PORT19" gate="G$2" x="-69.85" y="156.21" smashed="yes" rot="R180"/>
-<instance part="Y1" gate="G$1" x="-165.1" y="55.88"/>
+<instance part="Y1" gate="G$1" x="-165.1" y="55.88" smashed="yes">
+<attribute name="LAST_DATE_TIME" x="153.43" y="65.88" size="1.27" layer="100"/>
+<attribute name="DRAWING_NAME" x="103.9" y="60.88" size="1.27" layer="100"/>
+<attribute name="SHEET" x="212.43" y="65.88" size="1.27" layer="100"/>
+</instance>
 </instances>
 <busses>
 </busses>
@@ -1382,10 +1384,9 @@ Grid : 1mm &lt;br&gt;Origin :
 <pinref part="Q1" gate="G$1" pin="C"/>
 <pinref part="P+3" gate="G$1" pin="+3,3V"/>
 <wire x1="27.94" y1="172.72" x2="27.94" y2="167.64" width="0.1524" layer="91"/>
-<wire x1="30.48" y1="167.64" x2="43.18" y2="167.64" width="0.1524" layer="91"/>
-<wire x1="30.48" y1="167.64" x2="27.94" y2="167.64" width="0.1524" layer="91"/>
+<wire x1="27.94" y1="167.64" x2="43.18" y2="167.64" width="0.1524" layer="91"/>
 <junction x="27.94" y="167.64"/>
-<wire x1="27.94" y1="167.64" x2="12.7" y2="167.64" width="0.1524" layer="91"/>
+<wire x1="27.94" y1="167.64" x2="17.78" y2="167.64" width="0.1524" layer="91"/>
 <label x="49.022" y="167.64" size="0.8128" layer="95"/>
 </segment>
 <segment>
@@ -1475,12 +1476,10 @@ Grid : 1mm &lt;br&gt;Origin :
 <label x="-62.738" y="156.21" size="0.8128" layer="95" rot="R180"/>
 </segment>
 <segment>
-<pinref part="P1" gate="G$1" pin="1"/>
-<wire x1="-109.22" y1="195.58" x2="-109.22" y2="198.12" width="0.1524" layer="91"/>
-<wire x1="-109.22" y1="198.12" x2="-109.22" y2="193.04" width="0.1524" layer="91"/>
 <wire x1="-119.38" y1="190.5" x2="-109.22" y2="190.5" width="0.1524" layer="91"/>
-<wire x1="-109.22" y1="190.5" x2="-109.22" y2="193.04" width="0.1524" layer="91"/>
 <label x="-128.524" y="190.754" size="0.8128" layer="95"/>
+<pinref part="P1" gate="G$1" pin="1"/>
+<wire x1="-109.22" y1="195.58" x2="-109.22" y2="190.5" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$1" class="0">
@@ -1499,7 +1498,7 @@ Grid : 1mm &lt;br&gt;Origin :
 <segment>
 <pinref part="Q1" gate="G$1" pin="E"/>
 <pinref part="R3" gate="G$1" pin="2"/>
-<wire x1="12.7" y1="157.48" x2="27.94" y2="157.48" width="0.1524" layer="91"/>
+<wire x1="17.78" y1="157.48" x2="27.94" y2="157.48" width="0.1524" layer="91"/>
 <wire x1="27.94" y1="157.48" x2="27.94" y2="147.32" width="0.1524" layer="91"/>
 <pinref part="IC1" gate="A" pin="2"/>
 <wire x1="43.18" y1="139.7" x2="40.64" y2="139.7" width="0.1524" layer="91"/>
