@@ -1,1 +1,2 @@
 https://github.com/bostoncleek/quadruped_control
+https://github.com/paLeziart/quadruped-reactive-walking

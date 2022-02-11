@@ -83,6 +83,7 @@ sudo apt-get install -y doxygen
 
 #build c++ parts
 cd ~/lisbeth/code/controller
+cmkdir build;cd build
 cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/lisbeth/code/controller/install -DPYTHON_EXECUTABLE=/usr/bin/python3.6 -DPYTHON_STANDARD_LAYOUT=ON 
 make -j4
 
@@ -90,8 +91,14 @@ make -j4
 cd ~/lisbeth/code/walkgen
 mkdir build;cd build
 cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=$HOME/lisbeth/code/walkgen/install
-make -j4
+make -j4 install
 add $HOME/lisbeth/code/walkgen/install/lib/python3/dist-packages to PYTHONPATH in ~.bashrc
+# final definition in .bashrc
+#export PATH=/opt/openrobots/bin:$PATH
+#export PKG_CONFIG_PATH=/opt/openrobots/lib/pkgconfig:$PKG_CONFIG_PATH
+#export LD_LIBRARY_PATH=/opt/openrobots/lib:$LD_LIBRARY_PATH
+#export PYTHONPATH=$HOME/lisbeth/code/controller/solopython:$HOME/lisbeth/code/controller/build/python/quadruped_reactive_walking:$HOME/lisbeth/code/walkgen/install/lib/python3/dist-packages:$HOME/lisbeth/code/controller/install/lib/python3.6/site-packages:/opt/openrobots/lib/python3.6/site-packages:$PYTHONPATH
+#export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH
 
 # start simulation
 cd ~/lisbeth/controller/script
