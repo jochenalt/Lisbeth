@@ -107,3 +107,16 @@ python main_solo12_control.py -i test
 # run input client
 cd ~/listbeth/controller/script
 python gamepadClient.py
+
+
+
+
+-------------
+specific for ARM based architecture
+
+sudo apt-get install liburdfdom-headers-dev
+git clone --recursive https://github.com/stack-of-tasks/pinocchio.git
+cd pinoccio
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DPYTHON_EXECUTABLE=/usr/bin/python3
+
