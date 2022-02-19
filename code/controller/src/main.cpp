@@ -3,7 +3,6 @@
 #include <boost/smart_ptr/shared_ptr.hpp>
 
 #include <Eigen/Core>
-#include "qrw/gepadd.hpp"
 #include "qrw/MPC.hpp"
 #include "other/st_to_cc.hpp"
 #include "pinocchio/math/rpy.hpp"
@@ -13,9 +12,9 @@
 
 int main(int argc, char** argv) {
   if (argc == 3) {
-    int arg_a = std::atoi(argv[1]), arg_b = std::atoi(argv[2]);
+   int arg_a = std::atoi(argv[1]), arg_b = std::atoi(argv[2]);
     std::cout << "The sum of " << arg_a << " and " << arg_b << " is: ";
-    std::cout << gepetto::example::add(arg_a, arg_b) << std::endl;
+    std::cout << arg_a + arg_b << std::endl;
 
     std::cout << "-- Test quaternion conversion --" << std::endl;
     std::cout << "Initial Roll Pitch Yaw : 0.1 0.2 0.3" << std::endl;

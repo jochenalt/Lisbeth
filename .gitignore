@@ -56,3 +56,5 @@ code/walkgen/build/
 code/walkgen/install/
 
 
+
+code/controller/scripts/__pycache__/

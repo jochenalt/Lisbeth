@@ -110,6 +110,10 @@ class Controller:
         self.joystick, self.estimator = utils_mpc.init_objects(
             dt_wbc, N_SIMULATION, predefined_vel, self.h_init, kf_enabled, perfectEstimator)
 
+        # initialize Cpp state estimator
+        self.estimatorCpp = lqrw.Estimator()
+        self.estimatorCpp.initialize(dt_wbc, N_SIMULATION, self.h_init, kf_enabled, perfectEstimator)
+
         # Enable/Disable hybrid control
         self.enable_hybrid_control = True
 
@@ -213,6 +217,11 @@ class Controller:
         self.estimator.run_filter(self.k, self.gait.getCurrentGait(),
                                   device, self.footTrajectoryGenerator.getFootPosition())
 
+
+        # self.estimatorCpp.set_imu_data(device.baseLinearAcceleration, device.baseAngularVelocity, device.baseOrientation)
+        # self.estimatorCpp.set_data_joints(device.q_mes, device.v_mes)
+        # self.estimatorCpp.runFilter(self.k, self.gait.getCurrentGait(),self.footTrajectoryGenerator.getFootPosition())
+        
         t_filter = time.time()
 
         # Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames

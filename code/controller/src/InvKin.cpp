@@ -6,7 +6,10 @@ InvKin::InvKin(double dt_in) {
   dt = dt_in;
 
   // Reference position of feet
-  feet_position_ref << 0.1946, 0.1946, -0.1946, -0.1946, 0.14695, -0.14695, 0.14695, -0.14695, 0.0191028, 0.0191028, 0.0191028, 0.0191028;
+  feet_position_ref <<
+		  0.1946,    0.1946,   -0.1946,   -0.1946,		// x coord
+		  0.14695,  -0.14695,   0.14695,  -0.14695,		// y coord
+		  0.0191028, 0.0191028, 0.0191028, 0.0191028;   // z coord
 }
 
 InvKin::InvKin() {}
@@ -74,3 +77,4 @@ Eigen::MatrixXd InvKin::refreshAndCompute(const Eigen::MatrixXd &contacts,
 
 Eigen::MatrixXd InvKin::get_q_step() { return q_step; }
 Eigen::MatrixXd InvKin::get_dq_cmd() { return dq_cmd; }
+
