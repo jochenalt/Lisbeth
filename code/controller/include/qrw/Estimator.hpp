@@ -62,12 +62,15 @@ public:
 	~Estimator() {};
 
 	void initialize(double dT, int N_simulation, double h_init=0.22294615, bool kf_enabled = false, bool perfectEstimator = false);
-	void set_imu_data(Vector3 base_linear_acc, Vector3 base_angular_velocity, Eigen::Quaterniond base_orientation);
+
+	// take data from IMU and tell estimator
+	void set_imu_data(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector4 base_orientation);
+
 	void set_data_joints  (Vector12 q_mes, Vector12 v_mes);
 	Vector3 baseVelocityFromKinAndIMU(int contactFrameId);
 	void get_data_FK(Vector4 feet_status);
 	void get_xyz_feet(Vector4 feet_status, Matrix34 goals);
-	void run_filter(int k, Matrix4N gait, Matrix34 goals);
+	void run_filter(int k, MatrixN gait, MatrixN goals);
 private:
 
 
@@ -81,6 +84,7 @@ private:
 	ComplementaryFilter filter_xyz_vel;
 	ComplementaryFilter filter_xyz_pos;
 
+	double offset_yaw_IMU;
 	Vector3 IMU_lin_acc;
 	Vector3 IMU_ang_vel;
 	Eigen::Quaterniond IMU_ang_pos;

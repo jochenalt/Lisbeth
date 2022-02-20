@@ -121,8 +121,16 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
     {
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
         	.def("initialize",&Estimator::initialize, bp::args("dT", "N_simulation", "h_init", "kf_enabled","perfectEstimator"),
-        		 "initialize");
-
+        		 "initialize")
+			// take IMU data and tell Estimator
+		    .def("set_imu_data",&Estimator::set_imu_data, bp::args("base_linear_acc", "base_angular_velocity", "base_orientation"),
+		    	 "set_imu_data")
+			// take joint positions and tell Estimator
+	        .def("set_data_joints",&Estimator::set_data_joints, bp::args("q_mes", "v_mes"),
+		    	 "set_data_joints")
+			// run one loop of estimator
+		    .def("run_filter",&Estimator::run_filter, bp::args("k", "gait", "goals"),
+				 "run_filter");
     }
 
     static void expose()
@@ -130,6 +138,9 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
         bp::class_<Estimator>("Estimator", bp::no_init).def(EstimatorPythonVisitor<Estimator>());
 
         ENABLE_SPECIFIC_MATRIX_TYPE(VectorN);
+        ENABLE_SPECIFIC_MATRIX_TYPE(Vector12);
+        ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
+
     }
 };
 

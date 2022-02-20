@@ -6,6 +6,7 @@
 
 #include "qrw/Estimator.hpp"
 
+using namespace std;
 
 ComplementaryFilter::ComplementaryFilter(){
 	dT = 0;
@@ -152,7 +153,7 @@ void Estimator::initialize(double dT, int N_simulation, double h_init, bool kf_e
 
 	// Various matrices
 	this->q_FK = Vector19::Zero();
-	this->q_FK.head(6) << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0; // self.q_FK[:7, 0] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
+	this->q_FK.topRows(7) << 0.,0.,0.,0.,0.,0.,1.;
 	this->v_FK = Vector18::Zero();
 	this->indexes = {10, 18, 26, 34};  //  Indexes of feet frames
 	this->actuators_pos = Vector12::Zero();
@@ -187,7 +188,7 @@ void Estimator::initialize(double dT, int N_simulation, double h_init, bool kf_e
 
 /** pass data from IMU */
 static bool imu_data_eaten = false;
-void Estimator::set_imu_data(Vector3 base_linear_acc, Vector3 base_angular_velocity, Eigen::Quaterniond base_orientation) {
+void Estimator::set_imu_data(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector4 base_orientation) {
 
 	//  Linear acceleration of the trunk (base frame)
     this->IMU_lin_acc = base_linear_acc;
@@ -195,12 +196,19 @@ void Estimator::set_imu_data(Vector3 base_linear_acc, Vector3 base_angular_veloc
     // Angular velocity of the trunk (base frame)
     this->IMU_ang_vel = base_angular_velocity;
 
-    // Angular position of the trunk (local frame)
-    this->RPY = quaternionToRPY(base_orientation);
 
-    bool very_first_call = (k_log <= 1);
-    if (very_first_call)
-    	this->RPY[2] = 0; // Remove initial offset of IMU
+    // Angular position of the trunk (local frame)
+    Eigen::Quaterniond base_orientation_q ({base_orientation[3], base_orientation[0], base_orientation[1], base_orientation[2]});
+    RPY = quaternionToRPY(base_orientation_q);
+
+    // use the very first call to calculate the offset in z
+    static bool very_first_call = true;
+    if (very_first_call) {
+    	offset_yaw_IMU = this->RPY[2];
+    	very_first_call = false;
+    }
+    RPY[2] -= offset_yaw_IMU; //  substract initial offset of IMU
+
     this->IMU_ang_pos = eulerToQuaternion(this->RPY[0],
                                           this->RPY[1],
                                           this->RPY[2]);
@@ -254,25 +262,25 @@ Vector3 Estimator::baseVelocityFromKinAndIMU(int contactFrameId) {
 //  feet_status (4x0 numpy array): Current contact state of feet
 void Estimator::get_data_FK(Vector4 feet_status) {
     // Update estimator FK model
-	q_FK.block<1,12>(0,7) = actuators_pos; //   Position of actuators
-    assert (q_fk[7] == actuators_pos[0]);
-    assert (q_fk[18] == actuators_pos[11]);
+	q_FK.bottomRows(12) = actuators_pos; //   Position of actuators
 
-    v_FK.block<1,12>(0,6) = actuators_vel; //  Velocity of actuators
-    assert (v_fk[6] == actuators_vel[0]);
-    assert (v_fk[17] == actuators_vel[11]);
+    v_FK.bottomRows(12) = actuators_vel; //  Velocity of actuators
+	// cout << "C++:actuators_vel" << actuators_vel << endl;
+    // cout << "C++:v_FK" << v_FK << endl;
 
     // Position and orientation of the base remain at 0
     // Linear and angular velocities of the base remain at 0
     // Update model used for the forward kinematics
-    q_FK.block<1,4>(0,3) = Vector4({0,0,0,1});
+    q_FK.block<4,1>(3,0) = Vector4({0,0,0,1});
+
     pinocchio::forwardKinematics(model,data,q_FK, v_FK);
 
     // Update model used for the forward geometry
-    q_FK.block<1,4>(0,3) = Vector4({0,0,0,1});
     pinocchio::forwardKinematics(model,data,q_FK, v_FK);
 
-    q_FK.block<1,4>(0,3) = Vector4({IMU_ang_pos.x(),IMU_ang_pos.y(),IMU_ang_pos.z(),IMU_ang_pos.w()});
+    q_FK.block<4,1>(3,0) = Vector4({IMU_ang_pos.x(),IMU_ang_pos.y(),IMU_ang_pos.z(),IMU_ang_pos.w()});
+
+    cout << "C++:q_FK35 " << q_FK << endl;
     pinocchio::forwardKinematics(model_for_xyz, data_for_xyz, q_FK);
 
     // Get estimated velocity from updated model
@@ -335,23 +343,21 @@ void Estimator::get_xyz_feet(Vector4 feet_status, Matrix34 goals) {
 }
 
 /*
-        """Run the complementary filter to get the filtered quantities
+  Run the complementary filter to get the filtered quantities
 
-       Args:
-           k (int): Number of inv dynamics iterations since the start of the simulation
-           gait (4xN array): Contact state of feet (gait matrix)
-           device (object): Interface with the masterboard or the simulation
-           goals (3x4 array): Target locations of feet on the ground
+  Args:
+  	k (int): Number of inv dynamics iterations since the start of the simulation
+    gait (4xN array): Contact state of feet (gait matrix)
+    device (object): Interface with the masterboard or the simulation
+    goals (3x4 array): Target locations of feet on the ground
 */
-void Estimator::run_filter(int k, Matrix4N gait, Matrix34 goals) {
+void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN) {
+
 
        Vector4 feet_status = gait.row(0); //  Current contact state of feet
        int remaining_steps = 1;  // Remaining MPC steps for the current gait phase
        while (array_equal(feet_status, gait.row(remaining_steps)))
            remaining_steps += 1;
-
-       // # Update IMU data
-       // self.get_data_IMU(device)
 
 	   // take over data from IMU. Our IMU 3DM-GX-25 filters the data already
 	   assert(!imu_data_eaten);
@@ -368,12 +374,15 @@ void Estimator::run_filter(int k, Matrix4N gait, Matrix34 goals) {
 
        // Update nb of iterations since contact
        k_since_contact += feet_status; // Increment feet in stance phase
-       k_since_contact *= 1; // feet_status; // Reset feet in swing phase
+       k_since_contact = k_since_contact.cwiseProduct(feet_status); // When the gait is complete, reset feet
 
        //  Update forward kinematics data
        get_data_FK(feet_status);
 
+       /*
+
        // Update forward geometry data
+       Matrix34 goals = goalsN;
        get_xyz_feet(feet_status, goals);
 
        //  Tune alpha depending on the state of the gait (close to contact switch or not)
@@ -433,6 +442,7 @@ void Estimator::run_filter(int k, Matrix4N gait, Matrix34 goals) {
        }
        else {
     	   //  Use Kalman filter
+    	   */
     	   /*
            # Rotation matrix to go from base frame to world frame
            oRb = pin.Quaternion(np.array([self.IMU_ang_pos]).T).toRotationMatrix()
@@ -459,7 +469,9 @@ void Estimator::run_filter(int k, Matrix4N gait, Matrix34 goals) {
            self.filt_lin_pos[:] = self.kf.X[0:3, 0] - self._1Mi.translation.ravel()  # base position in world frame
            self.filt_lin_vel[:] = oRb.transpose() @ (self.kf.X[3:6, 0] - cross_product)  # base velocity in base frame
 			*/
+       /*
        }
+       */
 
        /*
        # Logging
@@ -490,7 +502,7 @@ void Estimator::run_filter(int k, Matrix4N gait, Matrix34 goals) {
 
        ###
 
-       # Update model used for the forward kinematics
+       // Update model used for the forward kinematics
        """pin.forwardKinematics(self.model, self.data, self.q_filt, self.v_filt)
        pin.updateFramePlacements(self.model, self.data)
 
@@ -503,12 +515,12 @@ void Estimator::run_filter(int k, Matrix4N gait, Matrix34 goals) {
 
        ###
 
-       # Output filtered actuators velocity for security checks
-       self.v_secu[:] = (1 - self.alpha_secu) * self.actuators_vel + self.alpha_secu * self.v_secu[:]
+       // Output filtered actuators velocity for security checks
+       v_secu = (1 - alpha_secu) * actuators_vel + alpha_secu * v_secu;
 
-       # Increment iteration counter
-       self.k_log += 1
+       // Increment iteration counter
+       k_log += 1;
 
-*/
+       */
 }
 

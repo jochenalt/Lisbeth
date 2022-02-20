@@ -10,6 +10,7 @@
 #include <string>
 #include <array>
 
+using namespace std;
 bool file_exists (const std::string& name) {
     std::ifstream f(name.c_str());
     return f.good();
@@ -58,27 +59,28 @@ Vector3 quaternionToRPY(Eigen::Quaterniond quat) {
 	double rotateZ = 0.0;
     if ((rotateZa0 != 0.0) && (rotateZa1 != 0.0))
 		rotateZ = atan2(rotateZa0, rotateZa1);
-
     return Vector3 ({rotateX, rotateY, rotateZ});
 }
 
+// cross product of two Vector3
 Vector3 cross3(Vector3 left, Vector3 right) {
-    /*
-     Args:
-        left (3x0 array): left term of the cross product
-        right (3x0 array): right term of the cross product
-    */
     return Vector3(left[1] * right[2] - left[2] * right[1],
     		       left[2] * right[0] - left[0] * right[2],
 				   left[0] * right[1] - left[1] * right[0]);
 }
 
+Vector3 scalarproduct(Vector3 left, Vector3 right) {
+    return Vector3(left[1] * right[2] - left[2] * right[1],
+    		       left[2] * right[0] - left[0] * right[2],
+				   left[0] * right[1] - left[1] * right[0]);
+}
+// returns true, if size and values of both vectors are quite the same
 bool array_equal(Vector4 a, Vector4 b) {
 	const double eps = 0.0000001;
 	if (a.size() != b.size())
 		return false;
 	for (int i = 0;i<a.size();i++)
-		if (abs(a[i]- b[i]) < eps)
+		if (abs(a[i]- b[i]) > eps)
 			return false;
 	return true;
 }

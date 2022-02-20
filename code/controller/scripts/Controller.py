@@ -213,15 +213,16 @@ class Controller:
         # Update the reference velocity coming from the gamepad
         self.joystick.update_v_ref(self.k, self.velID)
 
+        print("----------------")
         # Process state estimator
         self.estimator.run_filter(self.k, self.gait.getCurrentGait(),
                                   device, self.footTrajectoryGenerator.getFootPosition())
-
-
-        # self.estimatorCpp.set_imu_data(device.baseLinearAcceleration, device.baseAngularVelocity, device.baseOrientation)
-        # self.estimatorCpp.set_data_joints(device.q_mes, device.v_mes)
-        # self.estimatorCpp.runFilter(self.k, self.gait.getCurrentGait(),self.footTrajectoryGenerator.getFootPosition())
         
+        self.estimatorCpp.set_imu_data(device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy())
+
+        self.estimatorCpp.set_data_joints(device.q_mes, device.v_mes)
+        self.estimatorCpp.run_filter(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy())
+
         t_filter = time.time()
 
         # Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames
