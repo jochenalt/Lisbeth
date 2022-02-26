@@ -129,7 +129,7 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
 	        .def("set_data_joints",&Estimator::set_data_joints, bp::args("q_mes", "v_mes"),
 		    	 "set_data_joints")
 			// run one loop of estimator
-		    .def("run_filter",&Estimator::run_filter, bp::args("k", "gait", "goals"),
+		    .def("run_filter",&Estimator::run_filter, bp::args("k", "gait", "goals", "baseHeight", "baseVelocity"),
 				 "run_filter");
     }
 

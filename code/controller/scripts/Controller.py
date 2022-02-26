@@ -12,6 +12,7 @@ import pinocchio as pin
 from solopython.utils.viewerClient import viewerClient, NonBlockingViewerFromRobot
 import libquadruped_reactive_walking as lqrw
 from example_robot_data.robots_loader import Solo12Loader
+from cmath import nan
 
 class Result:
     """Object to store the result of the control loop
@@ -100,6 +101,7 @@ class Controller:
 
         # Enable/Disable perfect estimator
         perfectEstimator = False
+        self.isSimulation = isSimulation
         if not isSimulation:
             perfectEstimator = False  # Cannot use perfect estimator if we are running on real robot
 
@@ -221,7 +223,14 @@ class Controller:
         self.estimatorCpp.set_imu_data(device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy())
 
         self.estimatorCpp.set_data_joints(device.q_mes, device.v_mes)
-        self.estimatorCpp.run_filter(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy())
+        if self.isSimulation:
+            baseHeight =  device.dummyPos[2] - 0.0155  # Minus feet radius
+            baseVelocity = device.b_baseVel
+        else:       
+            baseHeight = nan
+            baseVelocity = np.zeros(4)
+
+        self.estimatorCpp.run_filter(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy(), baseHeight, baseVelocity)
 
         t_filter = time.time()
 
@@ -409,6 +418,7 @@ class Controller:
             # Mix perfect yaw with pitch and roll measurements
             self.yaw_estim += self.v_ref[5, 0:1] * self.myController.dt
             self.q[3:7, 0] = self.estimator.EulerToQuaternion([self.estimator.RPY[0], self.estimator.RPY[1], self.yaw_estim])
+
 
             # Actuators measurements
             self.q[7:, 0] = self.estimator.q_filt[7:, 0]

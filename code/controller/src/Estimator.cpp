@@ -306,7 +306,7 @@ void Estimator::get_xyz_feet(Vector4 feet_status, Matrix34 goals) {
     device (object): Interface with the masterboard or the simulation
     goals (3x4 array): Target locations of feet on the ground
 */
-void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN) {
+void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN, double baseHeight, Vector3 baseVelocity) {
 
 
        Vector4 feet_status = gait.row(0); //  Current contact state of feet
@@ -438,23 +438,29 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN) {
        self.log_FK_lin_vel[:, self.k_log] = self.FK_lin_vel[:]
        self.log_filt_lin_vel[:, self.k_log] = self.filt_lin_vel[:]
        self.log_o_filt_lin_vel[:, self.k_log] = self.o_filt_lin_vel[:, 0]
+       */
 
-       # Output filtered position vector (19 x 1)
-       self.q_filt[0:3, 0] = self.filt_lin_pos
-       if self.perfectEstimator:  # Base height directly from PyBullet
-           self.q_filt[2, 0] = device.dummyPos[2] - 0.0155  # Minus feet radius
-       self.q_filt[3:7, 0] = self.filt_ang_pos
-       self.q_filt[7:, 0] = self.actuators_pos  # Actuators pos are already directly from PyBullet
+       // Output filtered position vector (19 x 1)
+       q_filt.block<3,1>(0,0) = filt_lin_pos;
+       cout << "C++ filt_lin_pos " << filt_lin_pos << endl;
 
-       # Output filtered velocity vector (18 x 1)
-       if self.perfectEstimator:  # Linear velocities directly from PyBullet
-           self.v_filt[0:3, 0] = (1 - self.alpha_v) * self.v_filt[0:3, 0] + self.alpha_v * device.b_baseVel
-       else:
-           self.v_filt[0:3, 0] = (1 - self.alpha_v) * self.v_filt[0:3, 0] + self.alpha_v * self.filt_lin_vel
-       self.v_filt[3:6, 0] = self.filt_ang_vel  # Angular velocities are already directly from PyBullet
-       self.v_filt[6:, 0] = self.actuators_vel  # Actuators velocities are already directly from PyBullet
 
-       ###
+       if (baseHeight != NAN) // if we are in a simulation we get the base height directly and not by< the actuators
+           q_filt[2] = baseHeight;
+       cout << "C++ q_filt " << q_filt << endl;
+
+       q_filt.block<4,1>(3,0) = Vector4({filt_ang_pos.x(), filt_ang_pos.y(), filt_ang_pos.z(),filt_ang_pos.w() });
+       q_filt.block<12,1>(7,0) = actuators_pos;  // Actuators pos are already directly from PyBullet
+
+       // Output filtered velocity vector (18 x 1)
+       if (baseHeight != NAN)  //  Linear velocities directly from PyBullet
+           v_filt.block<3,1>(0,0) = (1 - alpha_v) * v_filt.block<3,1>(0,0) + alpha_v * baseVelocity;
+       else
+           v_filt.block<3,1>(0,0) = (1 - alpha_v) * v_filt.block<3,1>(0,0)  + alpha_v * filt_lin_vel;
+       v_filt.block<3,1>(3,0) = filt_ang_vel;   // Angular velocities are already directly from PyBullet
+       v_filt.block<12,1>(6,0) = actuators_vel; //  Actuators velocities are already directly from PyBullet
+
+	   /*
 
        // Update model used for the forward kinematics
        """pin.forwardKinematics(self.model, self.data, self.q_filt, self.v_filt)
@@ -466,8 +472,6 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN) {
            framePlacement = pin.updateFramePlacement(self.model, self.data, self.indexes[i])
            z_min = np.min((framePlacement.translation[2], z_min))
        self.q_filt[2, 0] -= z_min"""
-
-       ###
 
        */
 

@@ -34,7 +34,9 @@ public:
 	Vector3 baseVelocityFromKinAndIMU(int contactFrameId);
 	void get_data_FK(Vector4 feet_status);
 	void get_xyz_feet(Vector4 feet_status, Matrix34 goals);
-	void run_filter(int k, MatrixN gait, MatrixN goals);
+	void run_filter(int k, MatrixN gait, MatrixN goals, double baseHeight = NAN, Vector3 baseVelocity = Vector3());
+
+
 private:
 
 
