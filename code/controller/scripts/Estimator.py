@@ -5,6 +5,7 @@ import pinocchio as pin
 from example_robot_data.robots_loader import Solo12Loader
 
 
+
 class KFilter:
 
     def __init__(self, dt):
@@ -535,7 +536,7 @@ class Estimator:
             oi_filt_lin_vel = self.filter_xyz_vel.compute(oi_FK_lin_vel,
                                                           (oRb @ np.array([self.IMU_lin_acc]).T).ravel(),
                                                           alpha=self.alpha)
-
+            
             # Filtered estimated velocity at IMU location (base frame)
             i_filt_lin_vel = (oRb.T @ np.array([oi_filt_lin_vel]).T).ravel()
 
@@ -551,6 +552,7 @@ class Estimator:
 
             # Velocity of the center of the base (base frame)
             self.filt_lin_vel[:] = b_filt_lin_vel 
+
 
         else:  # Use Kalman filter
 
@@ -622,7 +624,6 @@ class Estimator:
 
         # Output filtered actuators velocity for security checks
         self.v_secu[:] = (1 - self.alpha_secu) * self.actuators_vel + self.alpha_secu * self.v_secu[:]
-
         # Increment iteration counter
         self.k_log += 1
 

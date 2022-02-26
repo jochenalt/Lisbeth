@@ -8,50 +8,6 @@
 
 using namespace std;
 
-ComplementaryFilter::ComplementaryFilter(){
-	dT = 0;
-	cut_off_freq = 0;
-    alpha = 0;
-	x = VectorN::Zero(3);
-    dx = VectorN::Zero(3);
-    highpassed_x = VectorN::Zero(3);
-    lowpassed_x = VectorN::Zero(3);
-}
-
-void ComplementaryFilter::initialize(double par_dT, double par_fc){
-
-	dT = par_dT;
-	cut_off_freq = par_fc;
-
-	double y = 1.0 - cos(2*M_PI*cut_off_freq*dT);
-    alpha = -y+ sqrt(y*y+2*y);
-
-}
-
-VectorN ComplementaryFilter::compute(const VectorN& par_x, const VectorN& par_dx, double par_alpha) {
-	if (alpha != no_alpha)
-		alpha = par_alpha;
-
-	// for logging
-	x = par_x;
-	dx = par_dx;
-
-	// do high pass filter
-	highpassed_x = alpha * (highpassed_x + dx * dT);
-
-	// do low pass filter
-	lowpassed_x = alpha * lowpassed_x + (1.0 - alpha) * x;
-
-	// add both filter
-	VectorN result = highpassed_x + lowpassed_x;
-
-	return result;
-}
-
-void ComplementaryFilter::patchLowPassed(int idx, double x) {
-	lowpassed_x[idx] = x;
-}
-
 
 Estimator::Estimator() {
 }
@@ -280,7 +236,6 @@ void Estimator::get_data_FK(Vector4 feet_status) {
 
     q_FK.block<4,1>(3,0) = Vector4({IMU_ang_pos.x(),IMU_ang_pos.y(),IMU_ang_pos.z(),IMU_ang_pos.w()});
 
-    cout << "C++:q_FK35 " << q_FK << endl;
     pinocchio::forwardKinematics(model_for_xyz, data_for_xyz, q_FK);
 
     // Get estimated velocity from updated model
@@ -359,7 +314,7 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN) {
        while (array_equal(feet_status, gait.row(remaining_steps)))
            remaining_steps += 1;
 
-	   // take over data from IMU. Our IMU 3DM-GX-25 filters the data already
+	   // take over data from IMU (GDM-GX-25), it is filtered the data already
 	   assert(!imu_data_eaten);
        // Angular position of the trunk
        filt_ang_pos = IMU_ang_pos;
@@ -379,15 +334,13 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN) {
        //  Update forward kinematics data
        get_data_FK(feet_status);
 
-       /*
-
        // Update forward geometry data
        Matrix34 goals = goalsN;
        get_xyz_feet(feet_status, goals);
 
        //  Tune alpha depending on the state of the gait (close to contact switch or not)
        // a = np.ceil(np.max(self.k_since_contact)/10) - 1
-       int a = (int)(ceil(k_since_contact.maxCoeff()))/10 - 1;
+       int a = (int)(ceil(k_since_contact.maxCoeff()/10)) - 1;
        int b = remaining_steps;
        int n = 1; // Nb of steps of margin around contact switch
 
@@ -410,6 +363,7 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN) {
     	   IMU_ang_pos.normalize();
            Matrix33 oRb = IMU_ang_pos.toRotationMatrix();
 
+
            // ""self.debug_o_lin_vel += 0.002 * (oRb @ np.array([self.IMU_lin_acc]).T)  # TOREMOVE
            // filt_lin_vel = oRb.transpose() * debug_o_lin_vel).ravel()
 
@@ -421,9 +375,11 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN) {
            Vector3 oi_FK_lin_vel = oRb *  i_FK_lin_vel;
 
            // Integration of IMU acc at IMU location (world frame)
+           // @TODO BUG oi_filt_lin_vel is different
            Vector3 oi_filt_lin_vel = filter_xyz_vel.compute(oi_FK_lin_vel,
                                                          oRb * IMU_lin_acc,
-                                                         alpha);
+														 alpha);
+
 
            // Filtered estimated velocity at IMU location (base frame)
            Vector3 i_filt_lin_vel = oRb.transpose() * oi_filt_lin_vel;
@@ -435,14 +391,14 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN) {
            Vector3 ob_filt_lin_vel = oRb * b_filt_lin_vel;
 
            // Position of the center of the base from FGeometry and filtered velocity (world frame)
-           this->filt_lin_pos = filter_xyz_pos.compute(FK_xyz + xyz_mean_feet, ob_filt_lin_vel, 0.995);
+           this->filt_lin_pos = filter_xyz_pos.compute(FK_xyz + xyz_mean_feet, ob_filt_lin_vel, Vector3({0.995, 0.995, 0.9}));
 
            // Velocity of the center of the base (base frame)
            this->filt_lin_vel = b_filt_lin_vel;
        }
        else {
     	   //  Use Kalman filter
-    	   */
+    	   assert ("Kalman is not implemented yet");
     	   /*
            # Rotation matrix to go from base frame to world frame
            oRb = pin.Quaternion(np.array([self.IMU_ang_pos]).T).toRotationMatrix()
@@ -469,9 +425,7 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN) {
            self.filt_lin_pos[:] = self.kf.X[0:3, 0] - self._1Mi.translation.ravel()  # base position in world frame
            self.filt_lin_vel[:] = oRb.transpose() @ (self.kf.X[3:6, 0] - cross_product)  # base velocity in base frame
 			*/
-       /*
        }
-       */
 
        /*
        # Logging
@@ -515,12 +469,12 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN) {
 
        ###
 
+       */
+
        // Output filtered actuators velocity for security checks
        v_secu = (1 - alpha_secu) * actuators_vel + alpha_secu * v_secu;
 
        // Increment iteration counter
        k_log += 1;
-
-       */
 }
 
