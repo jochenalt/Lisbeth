@@ -224,11 +224,11 @@ class Controller:
 
         self.estimatorCpp.set_data_joints(device.q_mes, device.v_mes)
         if self.isSimulation:
-            baseHeight =  device.dummyPos[2] - 0.0155  # Minus feet radius
-            baseVelocity = device.b_baseVel
+           baseHeight =  device.dummyPos[2] - 0.0155  # Minus feet radius
+           baseVelocity = device.b_baseVel
         else:       
-            baseHeight = nan
-            baseVelocity = np.zeros(4)
+           baseHeight = nan
+           baseVelocity = np.zeros(3)
 
         self.estimatorCpp.run_filter(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy(), baseHeight, baseVelocity)
 
