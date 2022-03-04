@@ -120,3 +120,27 @@ cd pinoccio
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DPYTHON_EXECUTABLE=/usr/bin/python3
 
+---- 
+packages
+$ apt list --installed | grep robotpkg
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+robotpkg-collada-dom/bionic,now 2.4.0r1 amd64 [installed,automatic]
+robotpkg-eiquadprog/bionic,now 1.2.3 amd64 [installed]
+robotpkg-example-robot-data/bionic,now 3.12.0 amd64 [installed,automatic]
+robotpkg-hpp-fcl/bionic,now 1.8.0 amd64 [installed,automatic]
+robotpkg-omniorb/bionic,now 4.2.4 amd64 [installed,automatic]
+robotpkg-openscenegraph/bionic,now 3.6.5r3 amd64 [installed,automatic]
+robotpkg-pinocchio/bionic,now 2.6.4 amd64 [installed,automatic]
+robotpkg-py36-crocoddyl/bionic,now 1.8.1 amd64 [installed]
+robotpkg-py36-eigenpy/bionic,now 2.6.10 amd64 [installed,automatic]
+robotpkg-py36-example-robot-data/bionic,now 3.12.0 amd64 [installed]
+robotpkg-py36-hpp-fcl/bionic,now 1.8.0 amd64 [installed,automatic]
+robotpkg-py36-omniorbpy/bionic,now 4.2.4 amd64 [installed,automatic]
+robotpkg-py36-pinocchio/bionic,now 2.6.4 amd64 [installed]
+robotpkg-py36-qt5-gepetto-viewer+doc/bionic,now 4.12.1 amd64 [installed,automatic]
+robotpkg-py36-qt5-gepetto-viewer-corba/bionic,now 5.6.0 amd64 [installed]
+robotpkg-py36-tsid/bionic,now 1.6.1 amd64 [installed]
+robotpkg-qt5-osgqt/bionic,now 3.5.7r3 amd64 [installed,automatic]
+robotpkg-tsid/bionic,now 1.6.1 amd64 [installed,automatic]
