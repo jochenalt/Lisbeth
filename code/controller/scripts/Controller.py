@@ -417,7 +417,7 @@ class Controller:
 
             # Mix perfect yaw with pitch and roll measurements
             self.yaw_estim += self.v_ref[5, 0:1] * self.myController.dt
-            self.q[3:7, 0] = self.estimator.EulerToQuaternion([self.estimator.RPY[0], self.estimator.RPY[1], self.yaw_estim])
+            self.q[3:7, 0] = utils_mpc.EulerToQuaternion([self.estimator.RPY[0], self.estimator.RPY[1], self.yaw_estim])
 
 
             # Actuators measurements

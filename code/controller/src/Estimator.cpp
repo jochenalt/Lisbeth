@@ -441,19 +441,20 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN, double baseHeigh
        */
 
        // Output filtered position vector (19 x 1)
-       q_filt.block<3,1>(0,0) = filt_lin_pos;
-       cout << "C++ filt_lin_pos " << filt_lin_pos << endl;
+       q_filt.block<3,1>(0,0) = filt_lin_pos.block<3,1>(0,0);
+       cout << "C++ filt_lin_pos " << endl << filt_lin_pos << endl;
 
 
-       if (baseHeight != NAN) // if we are in a simulation we get the base height directly and not by< the actuators
+       if (perfectEstimator) { // if we are in a simulation we get the base height directly and not by< the actuators
            q_filt[2] = baseHeight;
-       cout << "C++ q_filt " << q_filt << endl;
+       }
+       cout << "C++ q_filt " << endl << q_filt << endl;
 
        q_filt.block<4,1>(3,0) = Vector4({filt_ang_pos.x(), filt_ang_pos.y(), filt_ang_pos.z(),filt_ang_pos.w() });
        q_filt.block<12,1>(7,0) = actuators_pos;  // Actuators pos are already directly from PyBullet
 
        // Output filtered velocity vector (18 x 1)
-       if (baseHeight != NAN)  //  Linear velocities directly from PyBullet
+       if (perfectEstimator)  //  Linear velocities directly from PyBullet
            v_filt.block<3,1>(0,0) = (1 - alpha_v) * v_filt.block<3,1>(0,0) + alpha_v * baseVelocity;
        else
            v_filt.block<3,1>(0,0) = (1 - alpha_v) * v_filt.block<3,1>(0,0)  + alpha_v * filt_lin_vel;

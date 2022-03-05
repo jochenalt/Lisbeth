@@ -115,7 +115,6 @@ VectorN ComplementaryFilter::compute(const VectorN& par_x, const VectorN& par_dx
 	highpassed_x = alpha.cwiseProduct(highpassed_x + dx * dT);
 
 	// do low pass filter
-
 	VectorN negAlpha = VectorN::Constant(x.rows(), 1, 1.0) - alpha;
 	lowpassed_x = alpha.cwiseProduct(lowpassed_x) + negAlpha.cwiseProduct(x);
 
