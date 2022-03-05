@@ -106,7 +106,6 @@ void Estimator::initialize(double dT, int N_simulation, double h_init, bool kf_e
 	this->q_filt = Vector19::Zero();
 	this->v_filt = Vector18::Zero();
 	this->v_secu = Vector12::Zero();
-
 	// Various matrices
 	this->q_FK = Vector19::Zero();
 	this->q_FK.topRows(7) << 0.,0.,0.,0.,0.,0.,1.;
@@ -172,6 +171,7 @@ void Estimator::set_imu_data(Vector3 base_linear_acc, Vector3 base_angular_veloc
     // Above could be commented since IMU_ang_pos yaw is not used anywhere and instead
     // replace by: IMU_ang_pos[:] = device.baseOrientation
     imu_data_eaten = false;
+
 }
 
 static bool data_joints_eaten = false;
@@ -216,26 +216,19 @@ Vector3 Estimator::baseVelocityFromKinAndIMU(int contactFrameId) {
 // Get data with forward kinematics and forward geometry
 // (linear velocity, angular velocity and position)
 //  feet_status (4x0 numpy array): Current contact state of feet
-void Estimator::get_data_FK(Vector4 feet_status) {
+void Estimator::set_data_FK(Vector4 feet_status) {
     // Update estimator FK model
 	q_FK.bottomRows(12) = actuators_pos; //   Position of actuators
 
     v_FK.bottomRows(12) = actuators_vel; //  Velocity of actuators
-	// cout << "C++:actuators_vel" << actuators_vel << endl;
-    // cout << "C++:v_FK" << v_FK << endl;
 
     // Position and orientation of the base remain at 0
     // Linear and angular velocities of the base remain at 0
     // Update model used for the forward kinematics
     q_FK.block<4,1>(3,0) = Vector4({0,0,0,1});
-
-    pinocchio::forwardKinematics(model,data,q_FK, v_FK);
-
-    // Update model used for the forward geometry
     pinocchio::forwardKinematics(model,data,q_FK, v_FK);
 
     q_FK.block<4,1>(3,0) = Vector4({IMU_ang_pos.x(),IMU_ang_pos.y(),IMU_ang_pos.z(),IMU_ang_pos.w()});
-
     pinocchio::forwardKinematics(model_for_xyz, data_for_xyz, q_FK);
 
     // Get estimated velocity from updated model
@@ -283,7 +276,7 @@ Args:
     feet_status (4x0 array): Current contact state of feet
     goals (3x4 array): Target locations of feet on the ground
 */
-void Estimator::get_xyz_feet(Vector4 feet_status, Matrix34 goals) {
+void Estimator::set_xyz_feet(Vector4 feet_status, Matrix34 goals) {
         int cpt = 0;
         Vector3 xyz_feet = Vector3::Zero();
         for (int i = 0;i<4;i++) {
@@ -307,8 +300,6 @@ void Estimator::get_xyz_feet(Vector4 feet_status, Matrix34 goals) {
     goals (3x4 array): Target locations of feet on the ground
 */
 void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN, double baseHeight, Vector3 baseVelocity) {
-
-
        Vector4 feet_status = gait.row(0); //  Current contact state of feet
        int remaining_steps = 1;  // Remaining MPC steps for the current gait phase
        while (array_equal(feet_status, gait.row(remaining_steps)))
@@ -316,7 +307,7 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN, double baseHeigh
 
 	   // take over data from IMU (GDM-GX-25), it is filtered the data already
 	   assert(!imu_data_eaten);
-       // Angular position of the trunk
+       // Angular position of the trunk, IMU does the filtering already
        filt_ang_pos = IMU_ang_pos;
 
        // Angular velocity of the trunk
@@ -332,11 +323,11 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN, double baseHeigh
        k_since_contact = k_since_contact.cwiseProduct(feet_status); // When the gait is complete, reset feet
 
        //  Update forward kinematics data
-       get_data_FK(feet_status);
+       set_data_FK(feet_status);
 
        // Update forward geometry data
        Matrix34 goals = goalsN;
-       get_xyz_feet(feet_status, goals);
+       set_xyz_feet(feet_status, goals);
 
        //  Tune alpha depending on the state of the gait (close to contact switch or not)
        // a = np.ceil(np.max(self.k_since_contact)/10) - 1
@@ -395,6 +386,7 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN, double baseHeigh
 
            // Velocity of the center of the base (base frame)
            this->filt_lin_vel = b_filt_lin_vel;
+
        }
        else {
     	   //  Use Kalman filter
@@ -442,13 +434,10 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN, double baseHeigh
 
        // Output filtered position vector (19 x 1)
        q_filt.block<3,1>(0,0) = filt_lin_pos.block<3,1>(0,0);
-       cout << "C++ filt_lin_pos " << endl << filt_lin_pos << endl;
-
 
        if (perfectEstimator) { // if we are in a simulation we get the base height directly and not by< the actuators
            q_filt[2] = baseHeight;
        }
-       cout << "C++ q_filt " << endl << q_filt << endl;
 
        q_filt.block<4,1>(3,0) = Vector4({filt_ang_pos.x(), filt_ang_pos.y(), filt_ang_pos.z(),filt_ang_pos.w() });
        q_filt.block<12,1>(7,0) = actuators_pos;  // Actuators pos are already directly from PyBullet
@@ -456,10 +445,12 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN, double baseHeigh
        // Output filtered velocity vector (18 x 1)
        if (perfectEstimator)  //  Linear velocities directly from PyBullet
            v_filt.block<3,1>(0,0) = (1 - alpha_v) * v_filt.block<3,1>(0,0) + alpha_v * baseVelocity;
-       else
-           v_filt.block<3,1>(0,0) = (1 - alpha_v) * v_filt.block<3,1>(0,0)  + alpha_v * filt_lin_vel;
-       v_filt.block<3,1>(3,0) = filt_ang_vel;   // Angular velocities are already directly from PyBullet
-       v_filt.block<12,1>(6,0) = actuators_vel; //  Actuators velocities are already directly from PyBullet
+       else {
+    	   v_filt.block<3,1>(0,0) = (1 - alpha_v) * v_filt.block<3,1>(0,0)  + alpha_v * filt_lin_vel;
+       }
+
+       v_filt.block<3,1>(3,0) = filt_ang_vel.block<3,1>(0,0);   // Angular velocities are already directly from PyBullet
+       v_filt.block<12,1>(6,0) = actuators_vel.block<12,1>(0,0); //  Actuators velocities are already directly from PyBullet
 
 	   /*
 
@@ -483,3 +474,10 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN, double baseHeigh
        k_log += 1;
 }
 
+Vector19 Estimator::getQFiltered() { return q_filt; }
+
+Vector18 Estimator::getVFiltered() { return v_filt; }
+
+Vector3 Estimator::getImuRPY() { return RPY; }
+
+Vector12 Estimator::getVSecu() { return v_secu; }

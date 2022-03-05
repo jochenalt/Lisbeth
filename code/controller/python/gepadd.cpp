@@ -128,9 +128,15 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
 			// take joint positions and tell Estimator
 	        .def("set_data_joints",&Estimator::set_data_joints, bp::args("q_mes", "v_mes"),
 		    	 "set_data_joints")
+		    .def("getQFiltered",&Estimator::getQFiltered, "getQFiltered")
+		    .def("getVFiltered",&Estimator::getVFiltered, "getVFiltered")
+		    .def("getImuRPY",&Estimator::getImuRPY, "getImuRPY")
+		    .def("getVSecu",&Estimator::getVSecu, "getVSecu")
+
 			// run one loop of estimator
-		    .def("run_filter",&Estimator::run_filter, bp::args("k", "gait", "goals", "baseHeight", "baseVelocity"),
+			.def("run_filter",&Estimator::run_filter, bp::args("k", "gait", "goals", "baseHeight", "baseVelocity"),
 				 "run_filter");
+
     }
 
     static void expose()
@@ -139,6 +145,8 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
 
         ENABLE_SPECIFIC_MATRIX_TYPE(VectorN);
         ENABLE_SPECIFIC_MATRIX_TYPE(Vector12);
+        ENABLE_SPECIFIC_MATRIX_TYPE(Vector18);
+        ENABLE_SPECIFIC_MATRIX_TYPE(Vector19);
         ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
 
     }

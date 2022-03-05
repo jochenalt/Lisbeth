@@ -594,10 +594,8 @@ class Estimator:
 
         # Output filtered position vector (19 x 1)
         self.q_filt[0:3, 0] = self.filt_lin_pos
-        print("PY filt_lin_pos:", self.filt_lin_pos)
         if self.perfectEstimator:  # Base height directly from PyBullet
             self.q_filt[2, 0] = device.dummyPos[2] - 0.0155  # Minus feet radius
-        print("PY q_filt:", self.q_filt)
         self.q_filt[3:7, 0] = self.filt_ang_pos
         self.q_filt[7:, 0] = self.actuators_pos  # Actuators pos are already directly from PyBullet
 
@@ -606,9 +604,10 @@ class Estimator:
             self.v_filt[0:3, 0] = (1 - self.alpha_v) * self.v_filt[0:3, 0] + self.alpha_v * device.b_baseVel
         else:
             self.v_filt[0:3, 0] = (1 - self.alpha_v) * self.v_filt[0:3, 0] + self.alpha_v * self.filt_lin_vel
+
         self.v_filt[3:6, 0] = self.filt_ang_vel  # Angular velocities are already directly from PyBullet
         self.v_filt[6:, 0] = self.actuators_vel  # Actuators velocities are already directly from PyBullet
-
+        
         ###
 
         # Update model used for the forward kinematics
