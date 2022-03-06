@@ -21,7 +21,9 @@ MPC::MPC(double dt_in, int n_steps_in, double T_gait_in, int N_gait) {
   offset_CoM(2, 0) = - 0.03;  // Approximation of the vertical offset between center of base and CoM
 
   // Predefined matrices
-  footholds << 0.19, 0.19, -0.19, -0.19, 0.15005, -0.15005, 0.15005, -0.15005, 0.0, 0.0, 0.0, 0.0;
+  footholds << 0.19, 0.19, -0.19, -0.19,
+		       0.15005, -0.15005, 0.15005, -0.15005,
+			   0.0, 0.0, 0.0, 0.0;
   gI << 3.09249e-2, -8.00101e-7, 1.865287e-5, -8.00101e-7, 5.106100e-2, 1.245813e-4, 1.865287e-5, 1.245813e-4,
       6.939757e-2;
   q << 0.0f, 0.0f, 0.2027682f, 0.0f, 0.0f, 0.0f;

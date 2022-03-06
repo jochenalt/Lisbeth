@@ -66,6 +66,10 @@ class GamepadClient():
                 self.L1Button.value = True
             if key.char == 'l':
                 self.L1Button.value = False
+            if key.char == 'R':
+                self.R1Button.value = True
+            if key.char == 'r':
+                self.R1Button.value = False
             if key.char == 'S':
                 self.startButton.value = True
             if key.char == 's':

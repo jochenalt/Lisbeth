@@ -196,25 +196,30 @@ void Gait::updateGait(int const k,
 	if (currentGaitType_ != joystickCode)
 		changeGait (joystickCode, q);
 
-	if (k % k_mpc == 0) {
+	if (((currentGaitType_ == 4) && (joystickCode != 4)) ||
+	    (k % k_mpc == 0)) {
         rollGait();
+
     }
 }
 
 bool Gait::changeGait(int const code, VectorN const& q)
 {
     is_static_ = false;
+    int previousGaitType = currentGaitType_;
     if (code == 1)
     {
     	std::cout << "change to pacing gait" << std::endl;
         create_pacing();
+
         currentGaitType_ = 1;
     }
     else if (code == 2)
     {
     	std::cout << "change to bounding gait" << std::endl;
     	create_bounding();
-        currentGaitType_ = 2;
+
+    	currentGaitType_ = 2;
 
     }
     else if (code == 3)
@@ -233,6 +238,16 @@ bool Gait::changeGait(int const code, VectorN const& q)
         currentGaitType_ = 4;
 
     }
+
+    // if we change from static to any gait,
+    // do a fast forward in order to ensure that we start right away
+    if ((previousGaitType == 4) && (code != 4)) {
+    	std::cout << "change from static to gait, fast forward" << std::endl;
+
+    	while (!isNewPhase())
+    		rollGait();
+    }
+
     return is_static_;
 }
 
@@ -247,20 +262,13 @@ void Gait::rollGait()
 
     
     // Entering new contact phase, store positions of feet that are now in contact
-    if (!currentGait_.row(0).isApprox(currentGait_.row(1)))
-    {
-        newPhase_ = true;
-    }
-    else
-    {
-        newPhase_ = false;
-    }
+    newPhase_ =!currentGait_.row(0).isApprox(currentGait_.row(1));
 
     // Age current gait
     int index = 1;
     while (!currentGait_.row(index).isZero())
     {
-        currentGait_.row(index-1).swap(currentGait_.row(index));
+    	currentGait_.row(index-1).swap(currentGait_.row(index));
         index++;
     }
 
@@ -271,7 +279,8 @@ void Gait::rollGait()
     index = 1;
     while (!desiredGait_.row(index).isZero())
     {
-        desiredGait_.row(index-1).swap(desiredGait_.row(index));
+
+    	desiredGait_.row(index-1).swap(desiredGait_.row(index));
         index++;
     }
 
