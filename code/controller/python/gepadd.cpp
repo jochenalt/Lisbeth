@@ -93,11 +93,7 @@ struct GaitPythonVisitor : public bp::def_visitor<GaitPythonVisitor<Gait>>
 
             // Update current gait matrix from Python
             .def("updateGait", &Gait::updateGait, bp::args("k", "k_mpc", "q", "joystickCode"),
-                 "Update current gait matrix from Python.\n")
-
-            // Set current gait matrix from Python
-            .def("setGait", &Gait::setGait, bp::args("gaitMatrix"),
-                 "Set current gait matrix from Python.\n");
+                 "Update current gait matrix from Python.\n");
     }
 
     static void expose()

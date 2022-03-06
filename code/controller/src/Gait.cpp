@@ -11,9 +11,9 @@ Gait::Gait()
     , newPhase_(false)
     , is_static_(true)
     , q_static_(VectorN::Zero(19))
-    , currentGaitType_(0)
+    , currentGaitType_(GaitType::NoGait)
+    , subGait (GaitType::Walking)
 {
-    // Empty
 }
 
 
@@ -207,41 +207,43 @@ bool Gait::changeGait(int const code, VectorN const& q)
 {
     is_static_ = false;
     int previousGaitType = currentGaitType_;
-    if (code == 1)
+    if (code == GaitType::Pacing)
     {
     	std::cout << "change to pacing gait" << std::endl;
         create_pacing();
 
-        currentGaitType_ = 1;
+        currentGaitType_ = (GaitType)code;
     }
-    else if (code == 2)
+    else if (code == GaitType::Bounding)
     {
     	std::cout << "change to bounding gait" << std::endl;
     	create_bounding();
 
-    	currentGaitType_ = 2;
-
+        currentGaitType_ = (GaitType)code;
     }
-    else if (code == 3)
+    else if (code == GaitType::Trot)
     {
     	std::cout << "change to trot gait" << std::endl;
     	create_trot();
-        currentGaitType_ = 3;
-
-
+        currentGaitType_ = (GaitType)code;
     }
-    else if (code == 4)
+    else if (code == GaitType::Walking)
+    {
+    	std::cout << "change to walking gait" << std::endl;
+    	create_walk();
+        currentGaitType_ = (GaitType)code;
+    }
+    else if (code == GaitType::Static)
     {
         create_static();
         q_static_.head(7) = q.head(7);
+        currentGaitType_ = (GaitType)code;
         is_static_ = true;
-        currentGaitType_ = 4;
-
     }
 
     // if we change from static to any gait,
     // do a fast forward in order to ensure that we start right away
-    if ((previousGaitType == 4) && (code != 4)) {
+    if ((previousGaitType == GaitType::Static) && (code != GaitType::Static)) {
     	std::cout << "change from static to gait, fast forward" << std::endl;
 
     	while (!isNewPhase())
@@ -279,18 +281,8 @@ void Gait::rollGait()
     index = 1;
     while (!desiredGait_.row(index).isZero())
     {
-
     	desiredGait_.row(index-1).swap(desiredGait_.row(index));
         index++;
     }
-
 }
 
-bool Gait::setGait(MatrixN const& gaitMatrix)
-{
-    std::cout << "Gait matrix received by setGait:" << std::endl;
-    std::cout << gaitMatrix << std::endl;
-
-    // Todo: Check if the matrix is a static gait (only ones)
-    return false;
-}

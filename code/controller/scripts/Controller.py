@@ -273,8 +273,8 @@ class Controller:
             self.x_f_wbc[4] = 0.0
             self.x_f_wbc[5] = self.myController.dt * xref[11, 1]
         else:  # Sort of position control to avoid slow drift
-            self.x_f_wbc[0:3] = np.zeros((3)) # define base xyz=(0,0,0)
-            self.x_f_wbc[3:6] = np.zeros((3)) # define base RPY = (0,0,0)
+            self.x_f_wbc[0:3] = np.zeros((3)) # define base xyz=(0,0,0),   should come from footstepplanner
+            self.x_f_wbc[3:6] = np.zeros((3)) # define base RPY = (0,0,0), should come from footstepplanner
         self.x_f_wbc[6:12] = xref[6:, 1]
 
         # Whole Body Control

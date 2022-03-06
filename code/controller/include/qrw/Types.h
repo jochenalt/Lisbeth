@@ -38,4 +38,18 @@ using Matrix4N = Eigen::Matrix<double, 4, Eigen::Dynamic>;
 using Matrix6N = Eigen::Matrix<double, 6, Eigen::Dynamic>;
 using MatrixN = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
 
+// the legs or ordered in that sequence
+enum Legs { FL=0, FR = 1, HL = 2, HR = 3 };
+typedef int LegNoType;
+#define LegNo 4
+
+// Different Gait Types:
+enum GaitType { NoGait = 0,
+	            Pacing   = 1, /* Camel */
+				Bounding = 2, /* Cheetah */
+				Walking  = 3, /* One leg up */
+				Trot     = 4,/* Dog */
+				Static   = 5 /* No Movement */ };
+#define GaitNo 5
+
 #endif  // TYPES_H_INCLUDED

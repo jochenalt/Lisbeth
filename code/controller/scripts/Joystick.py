@@ -51,10 +51,7 @@ class Joystick:
         self.Vw_ref = 0.0
 
         # Y, B, A and X buttons (in that order)
-        self.northButton = False
-        self.eastButton = False
-        self.southButton = False
-        self.westButton = False
+        self.gaitCode = 0
         self.joystick_code = 0  # Code to carry information about pressed buttons
 
     def update_v_ref(self, k_loop, velID):
@@ -111,28 +108,8 @@ class Joystick:
             self.stop = True
 
         # Switch gaits
-        if self.gp.northButton.value:
-            self.northButton = True
-            self.eastButton = False
-            self.southButton = False
-            self.westButton = False
-        elif self.gp.eastButton.value:
-            self.northButton = False
-            self.eastButton = True
-            self.southButton = False
-            self.westButton = False
-
-        elif self.gp.southButton.value:
-            self.northButton = False
-            self.eastButton = False
-            self.southButton = True
-            self.westButton = False
-
-        elif self.gp.westButton.value:
-            self.northButton = False
-            self.eastButton = False
-            self.southButton = False
-            self.westButton = True
+        if self.gp.gaitCode != 0:
+            self.gaitCode = self.gp.gaitCode
 
         # Low pass filter to slow down the changes of velocity when moving the joysticks
         self.v_ref = self.alpha * self.v_gp + (1-self.alpha) * self.v_ref
@@ -146,18 +123,8 @@ class Joystick:
     def computeCode(self):
         # Check joystick buttons to trigger a change of gait type
         self.joystick_code = 0
-        if self.northButton:
-            self.joystick_code = 1
-            self.northButton = False
-        elif self.eastButton:
-            self.joystick_code = 2
-            self.eastButton = False
-        elif self.southButton:
-            self.joystick_code = 3
-            self.southButton = False
-        elif self.westButton:
-            self.joystick_code = 4
-            self.westButton = False
+        if self.gaitCode != 0:
+            self.joystick_code = self.gaitCode
 
     def handle_v_switch(self, k):
         """Handle the change of reference velocity according to the chosen predefined velocity profile

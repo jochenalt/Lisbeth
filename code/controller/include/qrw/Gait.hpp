@@ -19,6 +19,7 @@
 class Gait
 {
 public:
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     ///
     /// \brief Empty constructor
@@ -73,17 +74,8 @@ public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
     void updateGait(int const k, int const k_mpc, VectorN const& q, int const joystickCode);
 
-    // TODO
-    void rollGait();
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    /// \brief Update the gait matrix externally (directly set the gait matrix)
-    ///
-    ///  \param[in] gaitMatrix  gait matrix that should be used for the incoming timesteps
-    ///
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    bool setGait(MatrixN const& gaitMatrix);
+    void rollGait();
 
     MatrixN getPastGait() { return pastGait_; }
     MatrixN getCurrentGait() { return currentGait_; }
@@ -153,7 +145,9 @@ private:
     bool is_static_;
     VectorN q_static_;
 
-    int currentGaitType_;
+    GaitType currentGaitType_;
+    GaitType subGait;
+
 };
 
 #endif  // GAIT_H_INCLUDED
