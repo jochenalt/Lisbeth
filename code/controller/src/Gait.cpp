@@ -197,6 +197,10 @@ void Gait::updateGait(int const k,
 		changeGait (joystickCode, q);
 	}
 
+	if ((currentGaitType_ == Gait::Static) && (!isStatic())) {
+
+	}
+
 	if (k % k_mpc == 0) {
         rollGait();
     }
@@ -237,7 +241,9 @@ bool Gait::changeGait(int const code, VectorN const& q)
         create_static();
         q_static_.head(7) = q.head(7);
         currentGaitType_ = (GaitType)code;
-        is_static_ = true;
+
+        // @JA is_static has some consequences that lead to hiccups in the gait change, state update is not done properly anymore
+        // is_static_ = true;
     }
 
     // if we change from static to any gait,

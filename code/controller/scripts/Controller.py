@@ -360,7 +360,8 @@ class Controller:
                 self.myController.error = True
                 self.error_flag = 2
                 self.error_value = self.estimator.v_secu
-            if np.any(np.abs(self.myController.tau_ff) > 8):
+            # @JA security level was 8 formerly
+            if np.any(np.abs(self.myController.tau_ff) > 20):
                 self.myController.error = True
                 self.error_flag = 3
                 self.error_value = self.myController.tau_ff
