@@ -193,13 +193,12 @@ void Gait::updateGait(int const k,
                       int const joystickCode)
 {
 
-	if (currentGaitType_ != joystickCode)
+	if (currentGaitType_ != joystickCode) {
 		changeGait (joystickCode, q);
+	}
 
-	if (((currentGaitType_ == 4) && (joystickCode != 4)) ||
-	    (k % k_mpc == 0)) {
+	if (k % k_mpc == 0) {
         rollGait();
-
     }
 }
 

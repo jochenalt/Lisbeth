@@ -1,5 +1,5 @@
 #include <cmath>
-#include <iostream>     // std::cout
+#include <iostream>
 #include <cmath>
 #include <iostream>
 #include <string>
@@ -25,7 +25,6 @@ void Estimator::initialize(double dT, int N_simulation, double h_init, bool kf_e
 	double fc = 50.0;  //  Cut frequency
 	double y = 1 - cos(2*M_PI*fc*dt);
 	this->alpha_v = -y+sqrt(y*y+2*y);
-	//  self.alpha_v = 1.0  # TOREMOVE
 
 	//  Filtering velocities used for security checks
 	fc = 6.0;
@@ -34,9 +33,12 @@ void Estimator::initialize(double dT, int N_simulation, double h_init, bool kf_e
 
 	this->kf_enabled = kf_enabled;
 	if (!kf_enabled) {
-		// Complementary filters for linear velocity and position
-	    filter_xyz_vel.initialize(dt, 3.0);
-	    filter_xyz_pos.initialize(dt, 500.0);
+		// Complementary filters for linear velocity and position and acceleration
+	    filter_xyz_vel.initialize(dt, Vector3({3.0, 3.0, 3.0}));
+	    filter_xyz_pos.initialize(dt, Vector3({2.512562814, 2.512562814, 55.55555555}));
+
+        // this is used to identify if steady, so response time is one gait T_gait = 0.32s
+	    filter_xyz_acc.initialize(dt, Vector3({2.512562814, 2.512562814, 2.512562814}));
 	} else {
 		assert ("kalman filter not implemented yet");
 		// Kalman filter for linear velocity and position
@@ -290,6 +292,19 @@ void Estimator::set_xyz_feet(Vector4 feet_status, Matrix34 goals) {
             xyz_mean_feet = xyz_feet / cpt;
 }
 
+
+/**
+ * Returns true if the acceleration and velocity of the base as measured by IMU is close to zero
+ */
+bool Estimator::isSteady() {
+	double totalAcc = sqrt(filt_lin_acc[0]*filt_lin_acc[0]  + filt_lin_acc[1]*filt_lin_acc[1]);
+	double totalVel = sqrt(filt_lin_vel[0]*filt_lin_vel[0]  + filt_lin_vel[1]*filt_lin_vel[1]);
+
+	const double maxAcc = 0.1;
+	const double maxVel = 0.02;
+
+	return  (totalAcc < maxAcc) && (totalVel < maxVel);
+}
 /*
   Run the complementary filter to get the filtered quantities
 
@@ -330,21 +345,20 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN, double baseHeigh
        set_xyz_feet(feet_status, goals);
 
        //  Tune alpha depending on the state of the gait (close to contact switch or not)
-       // a = np.ceil(np.max(self.k_since_contact)/10) - 1
        int a = (int)(ceil(k_since_contact.maxCoeff()/10)) - 1;
        int b = remaining_steps;
        int n = 1; // Nb of steps of margin around contact switch
 
        double v_max = 1.00;
        double v_min = 0.97; //  Minimum alpha value
-       double c = ((a + b) - 2 * n) * 0.5;
-       if ((a <= (n-1)) or (b <= n)) { //  If we are close from contact switch
+       double c = ((a + b) - 2) * 0.5;
+       if ((a <= 0) or (b <= 1)) {
+    	   //  If we are close from contact switch
            alpha = v_max; // Only trust IMU data
            close_from_contact = true; //  Raise flag
        }
        else {
            alpha = v_min + (v_max - v_min) * abs(c - (a - n)) / c;
-           // self.alpha = 0.997
            close_from_contact = false; //  Lower flag
        }
 
@@ -354,10 +368,6 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN, double baseHeigh
     	   IMU_ang_pos.normalize();
            Matrix33 oRb = IMU_ang_pos.toRotationMatrix();
 
-
-           // ""self.debug_o_lin_vel += 0.002 * (oRb @ np.array([self.IMU_lin_acc]).T)  # TOREMOVE
-           // filt_lin_vel = oRb.transpose() * debug_o_lin_vel).ravel()
-
            // Get FK estimated velocity at IMU location (base frame)
            Vector3 cross_product = cross3(_1Mi.translation(), IMU_ang_vel);
            Vector3 i_FK_lin_vel = FK_lin_vel + cross_product;
@@ -366,11 +376,9 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN, double baseHeigh
            Vector3 oi_FK_lin_vel = oRb *  i_FK_lin_vel;
 
            // Integration of IMU acc at IMU location (world frame)
-           // @TODO BUG oi_filt_lin_vel is different
            Vector3 oi_filt_lin_vel = filter_xyz_vel.compute(oi_FK_lin_vel,
                                                          oRb * IMU_lin_acc,
-														 alpha);
-
+														 Vector3({alpha, alpha, alpha}));
 
            // Filtered estimated velocity at IMU location (base frame)
            Vector3 i_filt_lin_vel = oRb.transpose() * oi_filt_lin_vel;
@@ -382,10 +390,13 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN, double baseHeigh
            Vector3 ob_filt_lin_vel = oRb * b_filt_lin_vel;
 
            // Position of the center of the base from FGeometry and filtered velocity (world frame)
-           this->filt_lin_pos = filter_xyz_pos.compute(FK_xyz + xyz_mean_feet, ob_filt_lin_vel, Vector3({0.995, 0.995, 0.9}));
+           this->filt_lin_pos = filter_xyz_pos.compute(FK_xyz + xyz_mean_feet, ob_filt_lin_vel);
 
            // Velocity of the center of the base (base frame)
            this->filt_lin_vel = b_filt_lin_vel;
+
+           // acceleration of center of the base i(base frame)
+           this->filt_lin_acc = filter_xyz_acc.compute(IMU_lin_acc);
 
        }
        else {

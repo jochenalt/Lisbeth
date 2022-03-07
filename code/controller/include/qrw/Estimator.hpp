@@ -54,6 +54,10 @@ public:
 
 	// filtered actuators_vel, velocities of feet in the order FL, FR, HL, HR, as returned by device measurement
 	Vector12 getVSecu();
+
+	// returns true if IMUs measurements of acceleration and velocity says that the system is steady
+	bool isSteady();
+
 private:
 
 
@@ -66,6 +70,7 @@ private:
 
 	ComplementaryFilter filter_xyz_vel;
 	ComplementaryFilter filter_xyz_pos;
+	ComplementaryFilter filter_xyz_acc;
 
 	double offset_yaw_IMU;
 	Vector3 IMU_lin_acc;			// 	Linear acceleration of body (base frame) from IMU
@@ -83,6 +88,7 @@ private:
 	Vector3 LP_lin_vel;
 
 	Vector3 o_filt_lin_vel;
+	Vector3 filt_lin_acc; // filtered acceleration of base in world frame x',y',z'
 	Vector3 filt_lin_vel; // filtered velocity of base in world frame x',y',z'
 	Vector3 filt_lin_pos; // filtered coord of base in world frame x,y,z
 	Vector3 filt_ang_vel; // filtered angular velocity around x,y,z

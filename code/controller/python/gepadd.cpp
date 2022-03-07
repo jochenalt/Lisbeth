@@ -128,6 +128,7 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
 		    .def("getVFiltered",&Estimator::getVFiltered, "getVFiltered")
 		    .def("getImuRPY",&Estimator::getImuRPY, "getImuRPY")
 		    .def("getVSecu",&Estimator::getVSecu, "getVSecu")
+		    .def("isSteady",&Estimator::isSteady, "isSteady")
 
 			// run one loop of estimator
 			.def("run_filter",&Estimator::run_filter, bp::args("k", "gait", "goals", "baseHeight", "baseVelocity"),

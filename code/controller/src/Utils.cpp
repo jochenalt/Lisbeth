@@ -88,26 +88,32 @@ bool array_equal(Vector4 a, Vector4 b) {
 
 ComplementaryFilter::ComplementaryFilter(){
 	dT = 0;
-	cut_off_freq = 0;
-    alpha = 0;
+    alpha = VectorN::Zero(3);
 	x = VectorN::Zero(3);
     dx = VectorN::Zero(3);
     highpassed_x = VectorN::Zero(3);
     lowpassed_x = VectorN::Zero(3);
 }
 
-void ComplementaryFilter::initialize(double par_dT, double par_fc){
+void ComplementaryFilter::initialize(double par_dT, const VectorN& par_fc){
 
 	dT = par_dT;
-	cut_off_freq = par_fc;
 
-	double y = 1.0 - cos(2*M_PI*cut_off_freq*dT);
-    alpha = -y+ sqrt(y*y+2*y);
-
+	// compute alpha per entry
+	for (int i = 0;i<par_fc.rows();i++)
+		alpha[i] = 1-(dT / ( dT + 1/par_fc[i]));
 }
 
-VectorN ComplementaryFilter::compute(const VectorN& par_x, const VectorN& par_dx, const VectorN& alpha) {
-	// for logging
+VectorN ComplementaryFilter::compute(const VectorN& par_x) {
+	return compute(par_x, VectorN::Constant(x.rows(), 1, 0.0) );
+}
+
+VectorN ComplementaryFilter::compute(const VectorN& par_x, const VectorN& par_dx, const VectorN& par_alpha) {
+	alpha = par_alpha;
+	return compute(par_x, par_dx);
+}
+
+VectorN ComplementaryFilter::compute(const VectorN& par_x, const VectorN& par_dx) {
 	x = par_x;
 	dx = par_dx;
 
@@ -117,26 +123,6 @@ VectorN ComplementaryFilter::compute(const VectorN& par_x, const VectorN& par_dx
 	// do low pass filter
 	VectorN negAlpha = VectorN::Constant(x.rows(), 1, 1.0) - alpha;
 	lowpassed_x = alpha.cwiseProduct(lowpassed_x) + negAlpha.cwiseProduct(x);
-
-	// add both filter
-	VectorN result = highpassed_x + lowpassed_x;
-
-	return result;
-}
-
-VectorN ComplementaryFilter::compute(const VectorN& par_x, const VectorN& par_dx, double par_alpha) {
-	if (alpha != NAN)
-		alpha = par_alpha;
-
-	// for logging
-	x = par_x;
-	dx = par_dx;
-
-	// do high pass filter
-	highpassed_x = alpha * (highpassed_x + dx * dT);
-
-	// do low pass filter
-	lowpassed_x = alpha * lowpassed_x + (1.0 - alpha) * x;
 
 	// add both filter
 	VectorN result = highpassed_x + lowpassed_x;

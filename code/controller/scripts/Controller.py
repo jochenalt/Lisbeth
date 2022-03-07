@@ -223,6 +223,7 @@ class Controller:
         self.estimatorCpp.run_filter(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy(), baseHeight, baseVelocity)
 
         t_filter = time.time()
+        is_steady = self.estimatorCpp.isSteady()
 
         # Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames
         oRh, oTh = self.updateState()
@@ -412,7 +413,8 @@ class Controller:
             self.yaw_estim += self.v_ref[5, 0:1] * self.myController.dt
             self.q[3:7, 0] = utils_mpc.EulerToQuaternion([self.estimator.RPY[0], self.estimator.RPY[1], self.yaw_estim])
             cpp_RPY = np.transpose(np.array(self.estimatorCpp.getImuRPY())[np.newaxis])
-            assert np.allclose(cpp_RPY, self.estimator.RPY)
+            if (not np.allclose(cpp_RPY, self.estimator.RPY)):
+                print("assert cpp_RPY", cpp_RPY , "RPY", self.estimator.RPY)
 
             # Actuators measurements
             self.q[7:, 0] = self.estimator.q_filt[7:, 0]
