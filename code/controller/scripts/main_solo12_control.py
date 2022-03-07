@@ -2,6 +2,7 @@
 
 import os
 import sys
+import time
 
 sys.path.insert(0, './solopython')
 
@@ -60,8 +61,6 @@ def put_on_the_floor(device, q_init):
             device.hardware.GetMotor(motor).SetCurrentReference(ref)
         device.SendCommand(WaitEndOfCycle=True)
 
-    print("Start the motion.")
-
 
 def clone_movements(name_interface_clone, q_init, cloneP, cloneD, cloneQdes, cloneDQdes, cloneRunning, cloneResult):
 
@@ -108,7 +107,13 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     t = 0.0
 
     # Default position after calibration
-    q_init = np.array([0.0, 0.7, -1.4, -0.0, 0.7, -1.4, 0.0, -0.7, +1.4, -0.0, -0.7, +1.4])
+    # x = in direction of the shoulder 
+    # y = in direction of the hip
+    # z 
+    q_init = np.array([0.0, 0.7, -1.4, 
+                       -0.0, 0.7, -1.4, 
+                       0.0, -0.7, +1.4, 
+                       -0.0, -0.7, +1.4])
 
     if params.SIMULATION and (des_vel_analysis is not None):
         print("Analysis: %1.1f %1.1f %1.1f" % (des_vel_analysis[0], des_vel_analysis[1], des_vel_analysis[5]))
@@ -167,12 +172,14 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     if params.SIMULATION:
         device.Init(calibrateEncoders=True, q_init=q_init, envID=params.envID,
                     use_flat_plane=params.use_flat_plane, enable_pyb_GUI=enable_pyb_GUI, dt=params.dt_wbc)
+
     else:
         device.Init(calibrateEncoders=True, q_init=q_init)
 
         # Wait for Enter input before starting the control loop
         put_on_the_floor(device, q_init)
 
+    print("Start the motion.")
     # CONTROL LOOP ***************************************************
     t = 0.0
     t_max = (params.N_SIMULATION-2) * params.dt_wbc

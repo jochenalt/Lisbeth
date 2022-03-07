@@ -1,5 +1,6 @@
 # Prerequisites
 *.d
+*.bak
 
 # Compiled Object files
 *.slo
@@ -31,13 +32,15 @@
 *.out
 *.app
 
+# vi swap file
+*.swp
+
 # Inventor Archive
 CAD/OldVersions/
 CAD/*/OldVersions/
 CAD/*/*/OldVersions/
 CAD/*/*/*/OldVersions/
 CAD/*/*/*/*/OldVersions/
-
 
 # examples from the net
 inspiration/
@@ -56,4 +59,5 @@ code/controller/install/
 code/walkgen/build/
 code/walkgen/install/
 
-
+code/controller/scripts/__pycache__/
+code/controller/scripts/crocoddyl_class/__pycache__/

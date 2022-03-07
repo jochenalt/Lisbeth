@@ -5,6 +5,7 @@ import pinocchio as pin
 from example_robot_data.robots_loader import Solo12Loader
 
 
+
 class KFilter:
 
     def __init__(self, dt):
@@ -535,7 +536,7 @@ class Estimator:
             oi_filt_lin_vel = self.filter_xyz_vel.compute(oi_FK_lin_vel,
                                                           (oRb @ np.array([self.IMU_lin_acc]).T).ravel(),
                                                           alpha=self.alpha)
-
+            
             # Filtered estimated velocity at IMU location (base frame)
             i_filt_lin_vel = (oRb.T @ np.array([oi_filt_lin_vel]).T).ravel()
 
@@ -551,6 +552,7 @@ class Estimator:
 
             # Velocity of the center of the base (base frame)
             self.filt_lin_vel[:] = b_filt_lin_vel 
+
 
         else:  # Use Kalman filter
 
@@ -602,9 +604,10 @@ class Estimator:
             self.v_filt[0:3, 0] = (1 - self.alpha_v) * self.v_filt[0:3, 0] + self.alpha_v * device.b_baseVel
         else:
             self.v_filt[0:3, 0] = (1 - self.alpha_v) * self.v_filt[0:3, 0] + self.alpha_v * self.filt_lin_vel
+
         self.v_filt[3:6, 0] = self.filt_ang_vel  # Angular velocities are already directly from PyBullet
         self.v_filt[6:, 0] = self.actuators_vel  # Actuators velocities are already directly from PyBullet
-
+        
         ###
 
         # Update model used for the forward kinematics
@@ -622,7 +625,6 @@ class Estimator:
 
         # Output filtered actuators velocity for security checks
         self.v_secu[:] = (1 - self.alpha_secu) * self.actuators_vel + self.alpha_secu * self.v_secu[:]
-
         # Increment iteration counter
         self.k_log += 1
 

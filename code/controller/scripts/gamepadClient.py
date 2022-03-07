@@ -19,10 +19,6 @@ class GamepadClient():
         self.running = Value(c_bool, lock=True)
         self.startButton = Value(c_bool, lock=True)
         self.backButton = Value(c_bool, lock=True)
-        self.northButton = Value(c_bool, lock=True)
-        self.eastButton = Value(c_bool, lock=True)
-        self.southButton = Value(c_bool, lock=True)
-        self.westButton = Value(c_bool, lock=True)
         self.leftJoystickX = Value(c_double, lock=True)
         self.leftJoystickY = Value(c_double, lock=True)
         self.rightJoystickX = Value(c_double, lock=True)
@@ -30,12 +26,9 @@ class GamepadClient():
         self.R1Button = Value(c_bool, lock=True)
         self.L1Button = Value(c_bool, lock=True)
 
+        self.gaitCode = 5 # Static
         self.startButton.value = False
         self.backButton.value = False
-        self.northButton.value = False
-        self.eastButton.value = False
-        self.southButton.value = False
-        self.westButton.value = False
         self.leftJoystickX.value = 0.0
         self.leftJoystickY.value = 0.0
         self.rightJoystickX.value = 0.0
@@ -44,7 +37,7 @@ class GamepadClient():
         self.L1Button.value = False
 
         args = (self.running, self.startButton, self.backButton,
-                self.northButton, self.eastButton, self.southButton, self.westButton, self.leftJoystickX,
+                self.gaitCode, self.leftJoystickX,
                 self.leftJoystickY, self.rightJoystickX, self.rightJoystickY, self.R1Button, self.L1Button)
         self.process = Process(target=self.run, args=args)
         self.process.start()
@@ -55,10 +48,7 @@ class GamepadClient():
 
     # Listener to keyboard, is called whenever a key is pressed
     def onKeyPressed(self, key):
-        self.northButton.value = False
-        self.eastButton.value  = False
-        self.southButton.value = False
-        self.westButton.value  = False
+        self.gaitCode = 0
 
         try:
             print('Alphanumeric key pressed: {0} '.format(key.char))
@@ -66,35 +56,24 @@ class GamepadClient():
                 self.L1Button.value = True
             if key.char == 'l':
                 self.L1Button.value = False
+            if key.char == 'R':
+                self.R1Button.value = True
+            if key.char == 'r':
+                self.R1Button.value = False
             if key.char == 'S':
                 self.startButton.value = True
             if key.char == 's':
                 self.startButton.value = False
             if key.char == '1':
-                print("North")
-                self.northButton.value = True
-                self.eastButton.value  = False
-                self.southButton.value = False
-                self.westButton.value  = False
+                self.gaitCode = 1
             if key.char == '2':
-                print("East")
-                self.northButton.value = False
-                self.eastButton.value  = True
-                self.southButton.value = False
-                self.westButton.value  = False
+                self.gaitCode = 2
             if key.char == '3':
-                print("South")
-                self.northButton.value = False
-                self.eastButton.value  = False
-                self.southButton.value = True
-                self.westButton.value  = False
-
+                self.gaitCode = 3
             if key.char == '4':
-                print("west")
-                self.northButton.value = False
-                self.eastButton.value  = False
-                self.southButton.value = False
-                self.westButton.value  = True
+                self.gaitCode = 4
+            if key.char == '5':
+                self.gaitCode = 5
             if key == keyboard.Key.ESC:
                 self.backButton.value = True
 
@@ -121,7 +100,7 @@ class GamepadClient():
     def onKeyRelease(self,key):
         print('Key released: {0}'.format(key))
     
-    def run(self, running, startButton, backButton, northButton, eastButton, southButton, westButton, leftJoystickX, leftJoystickY, rightJoystickX, rightJoystickY, R1Button, L1Button):
+    def run(self, running, startButton, backButton, gaitCode, leftJoystickX, leftJoystickY, rightJoystickX, rightJoystickY, R1Button, L1Button):
         running.value = True
 
         # Set listeners for keyboard events
@@ -151,14 +130,6 @@ class GamepadClient():
                         L1Button.value = event.state
                     elif event.code == 'BTN_SELECT':
                         backButton.value = event.state
-                    elif event.code == 'BTN_NORTH':
-                        northButton.value = event.state
-                    elif event.code == 'BTN_EAST':
-                        eastButton.value = event.state
-                    elif event.code == 'BTN_SOUTH':
-                        southButton.value = event.state
-                    elif event.code == 'BTN_WEST':
-                        westButton.value = event.state
 
     def stop(self):
         self.running.value = False

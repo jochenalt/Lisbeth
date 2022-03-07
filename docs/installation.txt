@@ -19,7 +19,7 @@ sudo apt install -qqy lsb-release gnupg2 curl
 echo "deb [arch=amd64] http://robotpkg.openrobots.org/packages/debian/pub $(lsb_release -cs) robotpkg" | sudo tee /etc/apt/sources.list.d/robotpkg.list
 curl http://robotpkg.openrobots.org/packages/debian/robotpkg.key | sudo apt-key add -
 sudo apt-get update
-sudo apt install -qqy robotpkg-py36-pinocchio
+sudo apt install -qqy robotpkg-py36-pinocchio=2.6.4
 
 add this to ~/.bashrc
 export PATH=/opt/openrobots/bin:$PATH
@@ -71,7 +71,7 @@ sudo apt install -y libyaml-cpp-dev
 pip3 install --user inputs
 
 #install eiquadprog
-sudo apt install robotpkg-eiquadprog
+sudo apt install robotpkg-eiquadprog=1.2.3
 
 #install TSID  [https://github.com/stack-of-tasks/tsid#installation]
 sudo apt-get install -y robotpkg-py3*-tsid

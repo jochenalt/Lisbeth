@@ -11,9 +11,9 @@ Gait::Gait()
     , newPhase_(false)
     , is_static_(true)
     , q_static_(VectorN::Zero(19))
-    , currentGaitType_(0)
+    , currentGaitType_(GaitType::NoGait)
+    , subGait (GaitType::Walking)
 {
-    // Empty
 }
 
 
@@ -193,8 +193,13 @@ void Gait::updateGait(int const k,
                       int const joystickCode)
 {
 
-	if (currentGaitType_ != joystickCode)
+	if (currentGaitType_ != joystickCode) {
 		changeGait (joystickCode, q);
+	}
+
+	if ((currentGaitType_ == Gait::Static) && (!isStatic())) {
+
+	}
 
 	if (k % k_mpc == 0) {
         rollGait();
@@ -204,35 +209,52 @@ void Gait::updateGait(int const k,
 bool Gait::changeGait(int const code, VectorN const& q)
 {
     is_static_ = false;
-    if (code == 1)
+    int previousGaitType = currentGaitType_;
+    if (code == GaitType::Pacing)
     {
     	std::cout << "change to pacing gait" << std::endl;
         create_pacing();
-        currentGaitType_ = 1;
+
+        currentGaitType_ = (GaitType)code;
     }
-    else if (code == 2)
+    else if (code == GaitType::Bounding)
     {
     	std::cout << "change to bounding gait" << std::endl;
     	create_bounding();
-        currentGaitType_ = 2;
 
+        currentGaitType_ = (GaitType)code;
     }
-    else if (code == 3)
+    else if (code == GaitType::Trot)
     {
     	std::cout << "change to trot gait" << std::endl;
     	create_trot();
-        currentGaitType_ = 3;
-
-
+        currentGaitType_ = (GaitType)code;
     }
-    else if (code == 4)
+    else if (code == GaitType::Walking)
+    {
+    	std::cout << "change to walking gait" << std::endl;
+    	create_walk();
+        currentGaitType_ = (GaitType)code;
+    }
+    else if (code == GaitType::Static)
     {
         create_static();
         q_static_.head(7) = q.head(7);
-        is_static_ = true;
-        currentGaitType_ = 4;
+        currentGaitType_ = (GaitType)code;
 
+        // @JA is_static has some consequences that lead to hiccups in the gait change, state update is not done properly anymore
+        // is_static_ = true;
     }
+
+    // if we change from static to any gait,
+    // do a fast forward in order to ensure that we start right away
+    if ((previousGaitType == GaitType::Static) && (code != GaitType::Static)) {
+    	std::cout << "change from static to gait, fast forward" << std::endl;
+
+    	while (!isNewPhase())
+    		rollGait();
+    }
+
     return is_static_;
 }
 
@@ -247,20 +269,13 @@ void Gait::rollGait()
 
     
     // Entering new contact phase, store positions of feet that are now in contact
-    if (!currentGait_.row(0).isApprox(currentGait_.row(1)))
-    {
-        newPhase_ = true;
-    }
-    else
-    {
-        newPhase_ = false;
-    }
+    newPhase_ =!currentGait_.row(0).isApprox(currentGait_.row(1));
 
     // Age current gait
     int index = 1;
     while (!currentGait_.row(index).isZero())
     {
-        currentGait_.row(index-1).swap(currentGait_.row(index));
+    	currentGait_.row(index-1).swap(currentGait_.row(index));
         index++;
     }
 
@@ -271,17 +286,8 @@ void Gait::rollGait()
     index = 1;
     while (!desiredGait_.row(index).isZero())
     {
-        desiredGait_.row(index-1).swap(desiredGait_.row(index));
+    	desiredGait_.row(index-1).swap(desiredGait_.row(index));
         index++;
     }
-
 }
 
-bool Gait::setGait(MatrixN const& gaitMatrix)
-{
-    std::cout << "Gait matrix received by setGait:" << std::endl;
-    std::cout << gaitMatrix << std::endl;
-
-    // Todo: Check if the matrix is a static gait (only ones)
-    return false;
-}

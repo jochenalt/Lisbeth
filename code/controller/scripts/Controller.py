@@ -12,6 +12,7 @@ import pinocchio as pin
 from solopython.utils.viewerClient import viewerClient, NonBlockingViewerFromRobot
 import libquadruped_reactive_walking as lqrw
 from example_robot_data.robots_loader import Solo12Loader
+from cmath import nan
 
 class Result:
     """Object to store the result of the control loop
@@ -100,6 +101,7 @@ class Controller:
 
         # Enable/Disable perfect estimator
         perfectEstimator = False
+        self.isSimulation = isSimulation
         if not isSimulation:
             perfectEstimator = False  # Cannot use perfect estimator if we are running on real robot
 
@@ -109,6 +111,10 @@ class Controller:
         # Create Joystick, FootstepPlanner, Logger and Interface objects
         self.joystick, self.estimator = utils_mpc.init_objects(
             dt_wbc, N_SIMULATION, predefined_vel, self.h_init, kf_enabled, perfectEstimator)
+
+        # initialize Cpp state estimator
+        self.estimatorCpp = lqrw.Estimator()
+        self.estimatorCpp.initialize(dt_wbc, N_SIMULATION, self.h_init, kf_enabled, perfectEstimator)
 
         # Enable/Disable hybrid control
         self.enable_hybrid_control = True
@@ -127,7 +133,6 @@ class Controller:
         self.gait = lqrw.Gait()
         self.gait.initialize(dt_mpc, T_gait, T_mpc, N_gait)
 
-
         shoulders = np.zeros((3, 4))
         shoulders[0, :] = [0.1946, 0.1946, -0.1946, -0.1946]
         shoulders[1, :] = [0.14695, -0.14695, 0.14695, -0.14695]
@@ -143,10 +148,6 @@ class Controller:
         self.enable_multiprocessing = False
         self.mpc_wrapper = MPC_Wrapper.MPC_Wrapper(type_MPC, dt_mpc, np.int(T_mpc/dt_mpc),
                                                    k_mpc, T_mpc, N_gait, self.q, self.enable_multiprocessing)
-
-        # ForceMonitor to display contact forces in PyBullet with red lines
-        # import ForceMonitor
-        # myForceMonitor = ForceMonitor.ForceMonitor(pyb_sim.robotId, pyb_sim.planeId)
 
         # Define the default controller
         self.myController = wbc_controller(dt_wbc, N_SIMULATION)
@@ -212,8 +213,17 @@ class Controller:
         # Process state estimator
         self.estimator.run_filter(self.k, self.gait.getCurrentGait(),
                                   device, self.footTrajectoryGenerator.getFootPosition())
+        
+        self.estimatorCpp.set_imu_data(device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy())
+
+        self.estimatorCpp.set_data_joints(device.q_mes, device.v_mes)
+        baseHeight =  device.dummyPos[2] - 0.0155  # Minus feet radius
+        baseVelocity = device.b_baseVel
+
+        self.estimatorCpp.run_filter(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy(), baseHeight, baseVelocity)
 
         t_filter = time.time()
+        is_steady = self.estimatorCpp.isSteady()
 
         # Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames
         oRh, oTh = self.updateState()
@@ -264,8 +274,8 @@ class Controller:
             self.x_f_wbc[4] = 0.0
             self.x_f_wbc[5] = self.myController.dt * xref[11, 1]
         else:  # Sort of position control to avoid slow drift
-            self.x_f_wbc[0:3] = self.planner.q_static[0:3, 0]  # TODO: Adapt to new code
-            self.x_f_wbc[3:6] = self.planner.RPY_static[:, 0]
+            self.x_f_wbc[0:3] = np.zeros((3)) # define base xyz=(0,0,0),   should come from footstepplanner
+            self.x_f_wbc[3:6] = np.zeros((3)) # define base RPY = (0,0,0), should come from footstepplanner
         self.x_f_wbc[6:12] = xref[6:, 1]
 
         # Whole Body Control
@@ -339,7 +349,8 @@ class Controller:
                                            cameraTargetPosition=[device.dummyHeight[0], device.dummyHeight[1], 0.0])
 
     def security_check(self):
-
+        cpp_q_filt = np.transpose(np.array(self.estimatorCpp.getQFiltered())[np.newaxis])
+        assert np.allclose(cpp_q_filt, self.estimator.q_filt)
         if (self.error_flag == 0) and (not self.myController.error) and (not self.joystick.stop):
             if np.any(np.abs(self.estimator.q_filt[7:, 0]) > self.q_security):
                 self.myController.error = True
@@ -349,7 +360,8 @@ class Controller:
                 self.myController.error = True
                 self.error_flag = 2
                 self.error_value = self.estimator.v_secu
-            if np.any(np.abs(self.myController.tau_ff) > 8):
+            # @JA security level was 8 formerly
+            if np.any(np.abs(self.myController.tau_ff) > 20):
                 self.myController.error = True
                 self.error_flag = 3
                 self.error_value = self.myController.tau_ff
@@ -394,17 +406,24 @@ class Controller:
             self.q[0:2, 0:1] = self.q[0:2, 0:1] + Ryaw @ self.v_ref[0:2, 0:1] * self.myController.dt
 
             # Mix perfect x and y with height measurement
+            cpp_q_filt = np.transpose(np.array(self.estimatorCpp.getQFiltered())[np.newaxis])
+
             self.q[2, 0] = self.estimator.q_filt[2, 0]
 
             # Mix perfect yaw with pitch and roll measurements
             self.yaw_estim += self.v_ref[5, 0:1] * self.myController.dt
-            self.q[3:7, 0] = self.estimator.EulerToQuaternion([self.estimator.RPY[0], self.estimator.RPY[1], self.yaw_estim])
+            self.q[3:7, 0] = utils_mpc.EulerToQuaternion([self.estimator.RPY[0], self.estimator.RPY[1], self.yaw_estim])
+            cpp_RPY = np.transpose(np.array(self.estimatorCpp.getImuRPY())[np.newaxis])
+            if (not np.allclose(cpp_RPY, self.estimator.RPY)):
+                print("assert cpp_RPY", cpp_RPY , "RPY", self.estimator.RPY)
 
             # Actuators measurements
             self.q[7:, 0] = self.estimator.q_filt[7:, 0]
 
             # Velocities are the one estimated by the estimator
             self.v = self.estimator.v_filt.copy()
+            cpp_v_filt = self.estimatorCpp.getVFiltered()
+
             hRb = utils_mpc.EulerToRotation(self.estimator.RPY[0], self.estimator.RPY[1], 0.0)
             self.h_v[0:3, 0:1] = hRb @ self.v[0:3, 0:1]
             self.h_v[3:6, 0:1] = hRb @ self.v[3:6, 0:1]
