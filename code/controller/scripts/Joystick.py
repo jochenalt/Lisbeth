@@ -19,7 +19,7 @@ class Joystick:
         self.reduced = False
         self.stop = False
 
-        dT = 0.0020  # velocity reference is updated every ms
+        dT = 0.002  # wbc frequency 500 Hz
         fc = 100  #  cutoff frequency
         y = 1 - np.cos(2*np.pi*fc*dT)
         self.alpha = -y+np.sqrt(y*y+2*y)
@@ -107,24 +107,22 @@ class Joystick:
         if self.gp.backButton.value:
             self.stop = True
 
-        # Switch gaits
-        if self.gp.gaitCode != 0:
-            self.gaitCode = self.gp.gaitCode
 
         # Low pass filter to slow down the changes of velocity when moving the joysticks
         self.v_ref = self.alpha * self.v_gp + (1-self.alpha) * self.v_ref
         self.v_ref[(self.v_ref < 0.005) & (self.v_ref > -0.005)] = 0.0
 
         # Update joystick code depending on which buttons are pressed
-        self.computeCode()
+        # Check joystick buttons to trigger a change of gait type
+
+        # Switch gaits
+        self.joystick_code = 0
+        if self.gp.gaitCode != 0:
+            self.joystick_code = self.gp.gaitCode
+            self.gp.gaitCode = 0
 
         return 0
 
-    def computeCode(self):
-        # Check joystick buttons to trigger a change of gait type
-        self.joystick_code = 0
-        if self.gaitCode != 0:
-            self.joystick_code = self.gaitCode
 
     def handle_v_switch(self, k):
         """Handle the change of reference velocity according to the chosen predefined velocity profile
