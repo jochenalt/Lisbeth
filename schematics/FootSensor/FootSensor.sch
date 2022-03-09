@@ -587,6 +587,27 @@ manufacturer: VISHAY</description>
 </device>
 </devices>
 </deviceset>
+<deviceset name="S51K_0603" prefix="R">
+<description>SMD resistor 51kOhm&lt;br&gt;
+part number: RN73C1J10KBTDF&lt;br&gt;
+Farnell order code: 2613718&lt;br&gt;
+package: 0603&lt;br&gt;
+manufacturer: TE CONNECTIVITY</description>
+<gates>
+<gate name="G$1" symbol="R_EU" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="0603R">
+<connects>
+<connect gate="G$1" pin="1" pad="P$1"/>
+<connect gate="G$1" pin="2" pad="P$2"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
 <deviceset name="S10K_0603" prefix="R">
 <description>SMD resistor 10kOhm&lt;br&gt;
 part number: RN73C1J10KBTDF&lt;br&gt;
@@ -608,8 +629,9 @@ manufacturer: TE CONNECTIVITY</description>
 </device>
 </devices>
 </deviceset>
-<deviceset name="S20K_0603" prefix="R">
-<description>SMD resistor 20kOhm&lt;br&gt;
+
+<deviceset name="S5.1K_0603" prefix="R">
+<description>SMD resistor 5.1kOhm&lt;br&gt;
 part number: CRCW060320K0FKEA&lt;br&gt;
 Farnell order code: 1469774&lt;br&gt;
 package: 0603&lt;br&gt;
@@ -1110,8 +1132,8 @@ Grid : 1mm &lt;br&gt;Origin :
 <part name="GND5" library="Supply" deviceset="GND" device=""/>
 <part name="R6" library="joshi" deviceset="S51R_0603" device=""/>
 <part name="R7" library="joshi" deviceset="S51R_0603" device=""/>
-<part name="R4" library="joshi" deviceset="S10K_0603" device=""/>
-<part name="R5" library="joshi" deviceset="S20K_0603" device=""/>
+<part name="R4" library="joshi" deviceset="S51K_0603" device=""/>
+<part name="R5" library="joshi" deviceset="S5.1K_0603" device=""/>
 <part name="P7" library="Connectors" deviceset="PAD_THROUGH" device="1"/>
 <part name="P5" library="Connectors" deviceset="PAD_THROUGH" device="1"/>
 <part name="P6" library="Connectors" deviceset="PAD_THROUGH" device="1"/>

@@ -73,6 +73,9 @@ public:
     MatrixN getFootVelocity() { return velocity_; }          ///< Get the next foot velocity
     MatrixN getFootAcceleration() { return acceleration_; }  ///< Get the next foot acceleration
 
+    void updateHeight(double const maxHeightIn) { maxHeight_ = maxHeightIn; }
+    void updateLockTime(double const lockTimeIn) { lockTime_ = lockTimeIn; }
+
 private:
     Gait* gait_;        ///< Target lock before the touchdown
     double dt_tsid;     ///<

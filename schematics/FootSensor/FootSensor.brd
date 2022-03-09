@@ -422,19 +422,19 @@ design rules under a new name.</description>
 <attribute name="VALUE" x="-4.9565" y="3.10825" size="0.6096" layer="27" font="vector" ratio="12" rot="R270"/>
 </element>
 <element name="R6" library="joshi" package="0603R" value="S51R_0603" x="-7.18375" y="0.7" smashed="yes" rot="MR270">
-<attribute name="NAME" x="-8.197" y="1.17325" size="0.6096" layer="25" font="vector" ratio="12"/>
+<attribute name="NAME" x="-6.897" y="1.47325" size="0.6096" layer="26" font="vector" ratio="12"/>
 <attribute name="VALUE" x="-5.02475" y="2.097" size="0.6096" layer="28" font="vector" ratio="12" rot="MR270"/>
 </element>
 <element name="R7" library="joshi" package="0603R" value="S51R_0603" x="-3.05625" y="0.7" smashed="yes" rot="MR270">
 <attribute name="NAME" x="-2.60299375" y="0.399265625" size="0.6096" layer="26" font="vector" ratio="12" rot="MR0"/>
 <attribute name="VALUE" x="-0.8972625" y="2.097009375" size="0.6096" layer="28" font="vector" ratio="12" rot="MR270"/>
 </element>
-<element name="R4" library="joshi" package="0603R" value="S10K_0603" x="-5.27875" y="2.67" smashed="yes">
+<element name="R4" library="joshi" package="0603R" value="S51K_0603" x="-5.27875" y="2.67" smashed="yes">
 <attribute name="NAME" x="-4.9955" y="2.22425" size="0.6096" layer="25" font="vector" ratio="12" rot="R90"/>
 <attribute name="VALUE" x="-6.67575" y="1.146" size="0.6096" layer="27" font="vector" ratio="12"/>
 </element>
-<element name="R5" library="joshi" package="0603R" value="S20K_0603" x="-7.70125" y="1.49375" smashed="yes" rot="R90">
-<attribute name="NAME" x="-8.52675" y="0.09675" size="0.6096" layer="25" font="vector" ratio="12" rot="R90"/>
+<element name="R5" library="joshi" package="0603R" value="S5.1K_0603" x="-7.70125" y="1.49375" smashed="yes" rot="R90">
+<attribute name="NAME" x="-7.09675" y="1.77325" size="0.6096" layer="25" font="vector" ratio="12" rot="R180"/>
 <attribute name="VALUE" x="-6.17725" y="0.09675" size="0.6096" layer="27" font="vector" ratio="12" rot="R90"/>
 </element>
 <element name="P7" library="Connectors" package="PAD_TH_056X055" value="PAD_THROUGH1" x="-4.32625" y="4.8275" smashed="yes">

@@ -3,10 +3,9 @@ cmake_minimum_required(VERSION 3.1)
 set (CMAKE_CXX_STANDARD 11)
 
 # Project properties
-set(PROJECT_NAMESPACE gepetto)
 set(PROJECT_NAME quadruped-reactive-walking)
-set(PROJECT_DESCRIPTION "Reactive walking control architecture for quadrupeds")
-set(PROJECT_URL https://gitlab.laas.fr/${PROJECT_NAMESPACE}/${PROJECT_NAME})
+set(PROJECT_DESCRIPTION "Reactive walking control for lisbeth")
+set(PROJECT_URL https://github.com/jochenalt/lisbeth)
 
 # Project options
 option(BUILD_PYTHON_INTERFACE "Build the python binding" ON)
@@ -44,9 +43,12 @@ SEARCH_FOR_BOOST()
 
 # Main Library
 set(${PROJECT_NAME}_HEADERS
-  include/qrw/gepadd.hpp
+  #include/qrw/gepadd.hpp
   include/qrw/MPC.hpp
   include/qrw/Gait.hpp
+  include/qrw/Utils.hpp
+  include/qrw/Kinematics.hpp
+  include/qrw/Estimator.hpp
   include/qrw/FootTrajectoryGenerator.hpp
   include/qrw/FootstepPlanner.hpp
   include/qrw/StatePlanner.hpp
@@ -59,9 +61,12 @@ set(${PROJECT_NAME}_HEADERS
 
 set(${PROJECT_NAME}_SOURCES
   src/st_to_cc.cpp
-  src/gepadd.cpp
+  #src/gepadd.cpp
   src/MPC.cpp
   src/Gait.cpp
+  src/Utils.cpp
+  src/Kinematics.cpp
+  src/Estimator.cpp
   src/FootTrajectoryGenerator.cpp
   src/FootstepPlanner.cpp
   src/StatePlanner.cpp
@@ -126,8 +131,6 @@ if(BUILD_PYTHON_INTERFACE)
   add_subdirectory(python)
 endif()
 
-# Unit tests
-add_subdirectory(tests)
 
 # Installation
 if(NOT INSTALL_PYTHON_INTERFACE_ONLY)

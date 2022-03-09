@@ -12,6 +12,7 @@
 #include "pinocchio/parsers/urdf.hpp"
 #include "pinocchio/algorithm/joint-configuration.hpp"
 #include "pinocchio/algorithm/kinematics.hpp"
+#include "pinocchio/algorithm/frames.hpp"
 
 #include "pinocchio/math/rpy.hpp"
 #include "pinocchio/spatial/explog.hpp"

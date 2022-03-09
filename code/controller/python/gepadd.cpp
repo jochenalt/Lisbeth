@@ -2,8 +2,8 @@
 #include "qrw/MPC.hpp"
 #include "qrw/StatePlanner.hpp"
 #include "qrw/Gait.hpp"
-#include "qrw/Estimator.hpp"
 #include "qrw/Kinematics.hpp"
+#include "qrw/Estimator.hpp"
 #include "qrw/FootstepPlanner.hpp"
 #include "qrw/FootTrajectoryGenerator.hpp"
 #include "qrw/QPWBC.hpp"
@@ -93,11 +93,7 @@ struct GaitPythonVisitor : public bp::def_visitor<GaitPythonVisitor<Gait>>
 
             // Update current gait matrix from Python
             .def("updateGait", &Gait::updateGait, bp::args("k", "k_mpc", "q", "joystickCode"),
-                 "Update current gait matrix from Python.\n")
-
-            // Set current gait matrix from Python
-            .def("setGait", &Gait::setGait, bp::args("gaitMatrix"),
-                 "Set current gait matrix from Python.\n");
+                 "Update current gait matrix from Python.\n");
     }
 
     static void expose()
@@ -111,59 +107,49 @@ void exposeGait() { GaitPythonVisitor<Gait>::expose(); }
 
 
 /////////////////////////////////
-/// ComplementaryFilter(Estimator) class
+/// Estimator class
 /////////////////////////////////
-template <typename ComplementaryFilter>
-struct ComplementaryFilterPythonVisitor : public bp::def_visitor<ComplementaryFilterPythonVisitor<ComplementaryFilter>>
+template <typename Estimator>
+struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Estimator>>
 {
-    template <class PyClassComplementaryFilter>
-    void visit(PyClassComplementaryFilter& cl) const
+    template <class PyClassEstimator>
+    void visit(PyClassEstimator& cl) const
     {
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
-        	.def("initialize",&ComplementaryFilter::initialize, bp::args("dT", "fc"),
-        		 "initialize complementary filter")
-            .def("compute", &ComplementaryFilter::compute, bp::args("x", "dx","alpha"),
-                 "calculate complementary filter\n");
+        	.def("initialize",&Estimator::initialize, bp::args("dT", "N_simulation", "h_init", "kf_enabled","perfectEstimator"),
+        		 "initialize")
+			// take IMU data and tell Estimator
+		    .def("set_imu_data",&Estimator::set_imu_data, bp::args("base_linear_acc", "base_angular_velocity", "base_orientation"),
+		    	 "set_imu_data")
+			// take joint positions and tell Estimator
+	        .def("set_data_joints",&Estimator::set_data_joints, bp::args("q_mes", "v_mes"),
+		    	 "set_data_joints")
+		    .def("getQFiltered",&Estimator::getQFiltered, "getQFiltered")
+		    .def("getVFiltered",&Estimator::getVFiltered, "getVFiltered")
+		    .def("getImuRPY",&Estimator::getImuRPY, "getImuRPY")
+		    .def("getVSecu",&Estimator::getVSecu, "getVSecu")
+		    .def("isSteady",&Estimator::isSteady, "isSteady")
+
+			// run one loop of estimator
+			.def("run_filter",&Estimator::run_filter, bp::args("k", "gait", "goals", "baseHeight", "baseVelocity"),
+				 "run_filter");
+
     }
 
     static void expose()
     {
-        bp::class_<ComplementaryFilter>("ComplementaryFilter", bp::no_init).def(ComplementaryFilterPythonVisitor<ComplementaryFilter>());
+        bp::class_<Estimator>("Estimator", bp::no_init).def(EstimatorPythonVisitor<Estimator>());
 
         ENABLE_SPECIFIC_MATRIX_TYPE(VectorN);
+        ENABLE_SPECIFIC_MATRIX_TYPE(Vector12);
+        ENABLE_SPECIFIC_MATRIX_TYPE(Vector18);
+        ENABLE_SPECIFIC_MATRIX_TYPE(Vector19);
+        ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
+
     }
 };
 
-void exposeComplementaryFilter() { ComplementaryFilterPythonVisitor<ComplementaryFilter>::expose(); }
-
-/////////////////////////////////
-/// Kinematics  class
-/////////////////////////////////
-template <typename Kinematics>
-struct KinematicsPythonVisitor : public bp::def_visitor<KinematicsPythonVisitor<Kinematics>>
-{
-    template <class PyClassKinematics>
-    void visit(PyClassKinematics& cl) const
-    {
-        cl.def(bp::init<>(bp::arg(""), "Default constructor."))
-        	.def("initialize",&Kinematics::initialize, bp::arg(""),
-        		 "initialize complementary filter")
-            .def("forwardKinematics1", &Kinematics::forwardKinematics1, bp::args("q"),
-                 "forward kinematics\n")
-            .def("forwardKinematics2", &Kinematics::forwardKinematics2, bp::args("q","v"),
-            	 "forward kinematics\n");
-
-    }
-
-    static void expose()
-    {
-        bp::class_<Kinematics>("Kinematics", bp::no_init).def(KinematicsPythonVisitor<Kinematics>());
-
-        ENABLE_SPECIFIC_MATRIX_TYPE(Eigen::VectorXd);
-    }
-};
-
-void exposeKinematics() { KinematicsPythonVisitor<Kinematics>::expose(); }
+void exposeEstimator() { EstimatorPythonVisitor<Estimator>::expose(); }
 
 
 /////////////////////////////////
@@ -351,7 +337,6 @@ BOOST_PYTHON_MODULE(libquadruped_reactive_walking)
     exposeInvKin();
     exposeQPWBC();
     exposeParams();
+    exposeEstimator();
 
-    exposeComplementaryFilter();
-    exposeKinematics();
 }
