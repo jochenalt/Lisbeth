@@ -50,7 +50,7 @@ class dummyDevice:
 
 class Controller:
 
-    def __init__(self, q_init, envID, velID, dt_wbc, dt_mpc, k_mpc, t, T_gait, T_mpc, N_SIMULATION, type_MPC,
+    def __init__(self, q_init, envID, velID, dt_wbc, dt_mpc, k_mpc, t, T_gait, T_mpc, N_SIMULATION, 
                  use_flat_plane, predefined_vel, enable_pyb_GUI, kf_enabled, N_gait, isSimulation):
         """Function that runs a simulation scenario based on a reference velocity profile, an environment and
         various parameters to define the gait
@@ -65,7 +65,6 @@ class Controller:
             T_gait (float): duration of one gait period in seconds
             T_mpc (float): duration of mpc prediction horizon
             N_SIMULATION (int): number of iterations of inverse dynamics during the simulation
-            type_mpc (bool): True to have PA's MPC, False to have Thomas's MPC
             use_flat_plane (bool): to use either a flat ground or a rough ground
             predefined_vel (bool): to use either a predefined velocity profile or a gamepad
             enable_pyb_GUI (bool): to display PyBullet GUI or not
@@ -146,7 +145,7 @@ class Controller:
         # Wrapper that makes the link with the solver that you want to use for the MPC
         # First argument to True to have PA's MPC, to False to have Thomas's MPC
         self.enable_multiprocessing = False
-        self.mpc_wrapper = MPC_Wrapper.MPC_Wrapper(type_MPC, dt_mpc, np.int(T_mpc/dt_mpc),
+        self.mpc_wrapper = MPC_Wrapper.MPC_Wrapper(dt_mpc, np.int(T_mpc/dt_mpc),
                                                    k_mpc, T_mpc, N_gait, self.q, self.enable_multiprocessing)
 
         # Define the default controller
@@ -162,7 +161,6 @@ class Controller:
         self.T_gait = T_gait
         self.T_mpc = T_mpc
         self.N_SIMULATION = N_SIMULATION
-        self.type_MPC = type_MPC
         self.use_flat_plane = use_flat_plane
         self.predefined_vel = predefined_vel
         self.enable_pyb_GUI = enable_pyb_GUI

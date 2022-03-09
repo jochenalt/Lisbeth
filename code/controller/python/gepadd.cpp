@@ -310,7 +310,6 @@ struct ParamsPythonVisitor : public bp::def_visitor<ParamsPythonVisitor<Params>>
             .def_readwrite("T_gait", &Params::T_gait)
             .def_readwrite("T_mpc", &Params::T_mpc)
             .def_readwrite("N_SIMULATION", &Params::N_SIMULATION)
-            .def_readwrite("type_MPC", &Params::type_MPC)
             .def_readwrite("use_flat_plane", &Params::use_flat_plane)
             .def_readwrite("predefined_vel", &Params::predefined_vel)
             .def_readwrite("kf_enabled", &Params::kf_enabled)
