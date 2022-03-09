@@ -255,16 +255,18 @@ class Estimator:
         fc = 50.0  # Cut frequency
         y = 1 - np.cos(2*np.pi*fc*dt)
         self.alpha_v = -y+np.sqrt(y*y+2*y)
-        # self.alpha_v = 1.0  # TOREMOVE
+        fc = 500
+        self.alpha_v = 1-(dt / ( dt + 1/fc))
 
         # Filtering velocities used for security checks
         fc = 6.0
         y = 1 - np.cos(2*np.pi*fc*dt)
         self.alpha_secu = -y+np.sqrt(y*y+2*y)
+        self.alpha_secu = 1-(dt / ( dt + 1/fc))
 
         self.kf_enabled = kf_enabled
         if not self.kf_enabled:  # Complementary filters for linear velocity and position
-            self.filter_xyz_vel = ComplementaryFilter(dt, 3.0)
+            self.filter_xyz_vel = ComplementaryFilter(dt, 3.0) # alpha is not used, but set later on
             self.filter_xyz_pos = ComplementaryFilter(dt, 500.0)
         else:  # Kalman filter for linear velocity and position
             self.kf = KFilterBis(dt)

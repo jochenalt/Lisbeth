@@ -87,6 +87,12 @@ struct GaitPythonVisitor : public bp::def_visitor<GaitPythonVisitor<Gait>>
             .def("getCurrentGait", &Gait::getCurrentGait, "Get currentGait_ matrix.\n")
             .def("isNewPhase", &Gait::isNewPhase, "Get newPhase_ boolean.\n")
             .def("getIsStatic", &Gait::getIsStatic, "Get is_static_ boolean.\n")
+            .def("getCurrentGaitType", &Gait::getCurrentGaitType, "Get getCurrentGaitType.\n")
+            .def("getPrevGaitType", &Gait::getPrevGaitType, "Get getPrevGaitType.\n")
+            .def("getRemainingTime", &Gait::getRemainingTime, "Get getRemainingTime.\n")
+
+
+
 
             .def("initialize", &Gait::initialize, bp::args("dt_in", "T_gait_in", "T_mpc_in", "N_gait"),
                  "Initialize Gait from Python.\n")

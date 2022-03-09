@@ -223,7 +223,20 @@ class Controller:
         self.estimatorCpp.run_filter(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy(), baseHeight, baseVelocity)
 
         t_filter = time.time()
+        
+        # automatically go to no 
+        if self.gait.getCurrentGaitType() == 5 and np.any(np.abs(self.joystick.v_ref) > 0.001):
+            print (self.gait.getPrevGaitType())
+            self.joystick.joystick_code = self.gait.getPrevGaitType()
+            if self.joystick.joystick_code == 0:
+               self.joystick.joystick_code = 4
+
         is_steady = self.estimatorCpp.isSteady()
+        if self.gait.getRemainingTime() == 1 and self.gait.getCurrentGaitType() != 5 and is_steady and np.any(np.abs(self.joystick.v_ref) < 0.001):
+            print ("no movement, go to static gait")
+            self.joystick.joystick_code = 5
+            
+            
 
         # Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames
         oRh, oTh = self.updateState()
@@ -356,12 +369,18 @@ class Controller:
                 self.myController.error = True
                 self.error_flag = 1
                 self.error_value = self.estimator.q_filt[7:, 0] * 180 / 3.1415
+
             if np.any(np.abs(self.estimator.v_secu) > 50):
+                print ("v_secu", self.estimator.v_secu)
+            if np.any(np.abs(self.estimator.v_secu) > 100):
                 self.myController.error = True
                 self.error_flag = 2
                 self.error_value = self.estimator.v_secu
+                
             # @JA security level was 8 formerly
-            if np.any(np.abs(self.myController.tau_ff) > 20):
+            if np.any(np.abs(self.myController.tau_ff) > 8):
+                print ("tau_ff", self.myController.tau_ff)
+            if np.any(np.abs(self.myController.tau_ff) > 22):
                 self.myController.error = True
                 self.error_flag = 3
                 self.error_value = self.myController.tau_ff

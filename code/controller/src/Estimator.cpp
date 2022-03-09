@@ -25,11 +25,14 @@ void Estimator::initialize(double dT, int N_simulation, double h_init, bool kf_e
 	double fc = 50.0;  //  Cut frequency
 	double y = 1 - cos(2*M_PI*fc*dt);
 	this->alpha_v = -y+sqrt(y*y+2*y);
+	fc = 500;
+	this->alpha_v = 1-(dT / ( dT + 1/fc));
 
 	//  Filtering velocities used for security checks
 	fc = 6.0;
 	y = 1 - cos(2*M_PI*fc*dt);
 	this->alpha_secu = -y+sqrt(y*y+2*y);
+	this->alpha_secu = 1-(dT / ( dT + 1/fc));
 
 	this->kf_enabled = kf_enabled;
 	if (!kf_enabled) {

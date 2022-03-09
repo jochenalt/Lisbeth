@@ -72,7 +72,7 @@ public:
     ///           Insert future desired gait phase at the end of the gait matrix
     ///
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    void updateGait(int const k, int const k_mpc, VectorN const& q, int const joystickCode);
+    bool updateGait(int const k, int const k_mpc, VectorN const& q, int const joystickCode);
 
 
     void rollGait();
@@ -85,6 +85,8 @@ public:
     bool getIsStatic() { return is_static_; }
     VectorN getQStatic() { return q_static_; }
     bool isNewPhase() { return newPhase_; }
+    int getCurrentGaitType() { return currentGaitType_; }
+    int getPrevGaitType() { return prevGaitType_; }
 
 private:
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -146,6 +148,8 @@ private:
     VectorN q_static_;
 
     GaitType currentGaitType_;
+    GaitType prevGaitType_;
+
     GaitType subGait;
 
 };
