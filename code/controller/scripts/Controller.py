@@ -224,17 +224,18 @@ class Controller:
 
         t_filter = time.time()
         
-        # automatically go to no 
-        if self.gait.getCurrentGaitType() == 5 and np.any(np.abs(self.joystick.v_ref) > 0.001):
-            print (self.gait.getPrevGaitType())
-            self.joystick.joystick_code = self.gait.getPrevGaitType()
-            if self.joystick.joystick_code == 0:
-               self.joystick.joystick_code = 4
+        # automatically turn on a gait if we start moving
+        if self.gait.getCurrentGaitType() == 5 and self.joystick.isMoving:
+            print ("command received, start moving")
+            self.joystick.gaitCode = self.gait.getPrevGaitType()
+            if self.joystick.gaitCode == 0:
+               self.joystick.gaitCode = 4
 
+        # automatically go to static mode if no movement is detected
         is_steady = self.estimatorCpp.isSteady()
-        if self.gait.getRemainingTime() == 1 and self.gait.getCurrentGaitType() != 5 and is_steady and np.any(np.abs(self.joystick.v_ref) < 0.001):
-            print ("no movement, go to static gait")
-            self.joystick.joystick_code = 5
+        if self.gait.getRemainingTime() == 1 and self.gait.getCurrentGaitType() != 5 and is_steady and  not self.joystick.isMoving:
+            print ("no movement, calm down")
+            self.joystick.gaitCode = 5
             
             
 
@@ -242,7 +243,8 @@ class Controller:
         oRh, oTh = self.updateState()
 
         # Update gait
-        self.gait.updateGait(self.k, self.k_mpc, self.q[0:7, 0:1], self.joystick.joystick_code)
+        self.gait.updateGait(self.k, self.k_mpc, self.q[0:7, 0:1], self.joystick.gaitCode)
+        self.joystick.gaitCode = 0
 
         # Compute target footstep based on current and reference velocities
         o_targetFootstep = self.footstepPlanner.updateFootsteps(self.k % self.k_mpc == 0 and self.k != 0,

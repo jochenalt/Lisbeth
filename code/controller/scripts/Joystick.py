@@ -1,8 +1,7 @@
 # coding: utf8
 
 import numpy as np
-import gamepadClient as gC
-
+from keyboard import KeyboardClient
 
 class Joystick:
     """Joystick-like controller that outputs the reference velocity in local frame
@@ -50,9 +49,7 @@ class Joystick:
         self.Vy_ref = 0.0
         self.Vw_ref = 0.0
 
-        # Y, B, A and X buttons (in that order)
         self.gaitCode = 0
-        self.joystick_code = 0  # Code to carry information about pressed buttons
 
     def update_v_ref(self, k_loop, velID):
         """Update the reference velocity of the robot along X, Y and Yaw in local frame by
@@ -85,41 +82,37 @@ class Joystick:
 
         # Create the gamepad client
         if k_loop == 0:
-            self.gp = gC.GamepadClient()
+            self.gp = KeyboardClient()
 
         # Get the velocity command based on the position of joysticks
-        self.vX = self.gp.leftJoystickX.value * self.VxScale
-        self.vY = self.gp.leftJoystickY.value * self.VyScale
-        self.vYaw = self.gp.rightJoystickX.value * self.vYawScale
+        self.vX = self.gp.speedX.value * self.VxScale
+        self.vY = self.gp.speedY.value * self.VyScale
+        self.vYaw = self.gp.speedZ.value * self.vYawScale
 
-        if self.gp.L1Button.value:  # If L1 is pressed the orientation of the base is controlled
-            self.v_gp = np.array(
-                [[0.0, 0.0, - self.vYaw * 0.25, - self.vX * 5, - self.vY * 2, 0.0]]).T
-        else:  # Otherwise the Vx, Vy, Vyaw is controlled
-            self.v_gp = np.array(
-                [[- self.vY, - self.vX, 0.0, 0.0, 0.0, - self.vYaw]]).T
+        self.v_gp = np.array(
+                [[self.vX, self.vY, - self.gp.bodyZ.value* 0.25, -self.gp.bodyY.value * 5, self.gp.bodyX.value * 2, self.vYaw]]).T
 
+        self.isMoving = np.any(np.abs([self.vX, self.vY, self.vYaw]) > 0.001)
         # Reduce the size of the support polygon by pressing Start
-        if self.gp.startButton.value:
-            self.reduced = not self.reduced
+        #self.reduced = not self.reduced
 
         # Switch to safety controller if the Back key is pressed
-        if self.gp.backButton.value:
+        if not self.gp.running.value:
             self.stop = True
 
 
         # Low pass filter to slow down the changes of velocity when moving the joysticks
         self.v_ref = self.alpha * self.v_gp + (1-self.alpha) * self.v_ref
         self.v_ref[(self.v_ref < 0.005) & (self.v_ref > -0.005)] = 0.0
-
+    
         # Update joystick code depending on which buttons are pressed
         # Check joystick buttons to trigger a change of gait type
 
         # Switch gaits
-        self.joystick_code = 0
-        if self.gp.gaitCode != 0:
-            self.joystick_code = self.gp.gaitCode
-            self.gp.gaitCode = 0
+        self.gaitCode = 0
+        if self.gp.gaitCode.value != 0:
+            self.gaitCode = self.gp.gaitCode.value
+            self.gp.gaitCode.value = 0
 
         return 0
 

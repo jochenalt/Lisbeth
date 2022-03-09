@@ -205,9 +205,7 @@ bool Gait::updateGait(int const k,
 
 bool Gait::changeGait(int const code, VectorN const& q)
 {
-	std::cout << "changeGait(" << code << ")" << std::endl;
     is_static_ = false;
-
     if (code == GaitType::Pacing)
     {
     	std::cout << "change to pacing gait" << std::endl;
