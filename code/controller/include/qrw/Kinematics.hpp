@@ -21,7 +21,7 @@ using namespace pinocchio;
 
 class Kinematics
 {
-	const std::string urdf_path = "/opt/openrobots/share/example-robot-data/robots/solo_description/robots/solo12.urdf";
+	const std::string urdf_path = "/home/jochen/lisbeth/description/solo12.urdf";
 
 public:
 	Kinematics();

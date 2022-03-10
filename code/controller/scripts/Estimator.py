@@ -2,7 +2,7 @@
 
 import numpy as np
 import pinocchio as pin
-from example_robot_data.robots_loader import Solo12Loader
+from ModelLoader import Solo12Loader
 
 
 

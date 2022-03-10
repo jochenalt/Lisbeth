@@ -9,7 +9,7 @@ def cross3(left,right):
 					 left[2] * right[0] - left[0] * right[2],
 					 left[0] * right[1] - left[1] * right[0]])
 class BaseEstimator():
-	def __init__(self,urdf="/opt/openrobots/lib/python3.5/site-packages/../../../share/example-robot-data/robots/solo_description/robots/solo.urdf",modelPath="/opt/openrobots/lib/python3.5/site-packages/../../../share/example-robot-data/robots",contactFrameNames = ['HR_FOOT', 'HL_FOOT', 'FR_FOOT', 'FL_FOOT']):
+	def __init__(self,urdf="/home/jochen/lisbeth/description/robots/solo.urdf",modelPath="/home/jochen/lisbeth/description/robots",contactFrameNames = ['HR_FOOT', 'HL_FOOT', 'FR_FOOT', 'FL_FOOT']):
 		self.robot = pin.RobotWrapper.BuildFromURDF(urdf,modelPath)
 		self.contactFrameIds = [self.robot.model.getFrameId(x) for x in contactFrameNames]
 	def update_sensors(self, q, v, gyr):

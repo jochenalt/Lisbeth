@@ -106,7 +106,7 @@ def mcapi_playback(name_interface):
     pyb.setAdditionalSearchPath(pybullet_data.getDataPath())
     robotStartPos = [0, 0, 0.235+0.0045]  # +0.2]
     robotStartOrientation = pyb.getQuaternionFromEuler([0.0, 0.0, 0.0])  # -np.pi/2
-    pyb.setAdditionalSearchPath("/opt/openrobots/share/example-robot-data/robots/solo_description/robots")
+    pyb.setAdditionalSearchPath("/home/jochen/lisbeth/description")
     robotId = pyb.loadURDF("solo12.urdf", robotStartPos, robotStartOrientation)
     
     print("PASS")

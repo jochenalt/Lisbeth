@@ -11,7 +11,6 @@ import pybullet as pyb
 import pinocchio as pin
 from solopython.utils.viewerClient import viewerClient, NonBlockingViewerFromRobot
 import libquadruped_reactive_walking as lqrw
-from example_robot_data.robots_loader import Solo12Loader
 from cmath import nan
 
 class Result:
@@ -144,7 +143,7 @@ class Controller:
 
         # Wrapper that makes the link with the solver that you want to use for the MPC
         # First argument to True to have PA's MPC, to False to have Thomas's MPC
-        self.enable_multiprocessing = False
+        self.enable_multiprocessing = True
         self.mpc_wrapper = MPC_Wrapper.MPC_Wrapper(dt_mpc, np.int(T_mpc/dt_mpc),
                                                    k_mpc, T_mpc, N_gait, self.q, self.enable_multiprocessing)
 
@@ -207,6 +206,8 @@ class Controller:
 
         # Update the reference velocity coming from the gamepad
         self.joystick.update_v_ref(self.k, self.velID)
+
+        start = time.clock()
 
         # Process state estimator
         self.estimator.run_filter(self.k, self.gait.getCurrentGait(),

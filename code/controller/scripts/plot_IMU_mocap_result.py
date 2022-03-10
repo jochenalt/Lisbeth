@@ -127,8 +127,6 @@ def BaseVelocityFromKinAndIMU(contactFrameId, model, data, IMU_ang_vel):
 #########
 
 
-on_solo8 = False
-
 """for name in np.sort(glob.glob('./*.npz')):
     print(name)"""
 last_date = np.sort(glob.glob('./*.npz'))[-1][-20:]
@@ -597,12 +595,9 @@ plt.xlabel("Time [s]")"""
 
 
 # Set the paths where the urdf and srdf file of the robot are registered
-modelPath = "/opt/openrobots/share/example-robot-data/robots"
-if on_solo8:
-    urdf = modelPath + "/solo_description/robots/solo.urdf"
-else:
-    urdf = modelPath + "/solo_description/robots/solo12.urdf"
-srdf = modelPath + "/solo_description/srdf/solo.srdf"
+modelPath = "/home/jochen/lisbeth/description"
+urdf = modelPath + "/solo12.urdf"
+srdf = modelPath + "/solo.srdf"
 vector = pin.StdVec_StdString()
 vector.extend(item for item in modelPath)
 
@@ -618,10 +613,7 @@ invdyn = tsid.InverseDynamicsFormulationAccForce(
 
 # Compute the problem data with a solver based on EiQuadProg
 t0 = 0.0
-if on_solo8:
-    q_FK = np.zeros((15, 1))
-else:
-    q_FK = np.zeros((19, 1))
+q_FK = np.zeros((19, 1))
 q_FK[:7, 0] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0])
 RPY = quaternionToRPY(baseOrientation.ravel())
 IMU_ang_pos = np.zeros(4)
@@ -633,10 +625,7 @@ invdyn.computeProblemData(t0, q_FK, v_FK)
 data = invdyn.data()
 
 # Feet indexes
-if on_solo8:
-    indexes = [8, 14, 20, 26]  # solo8
-else:
-    indexes = [10, 18, 26, 34]  # solo12
+indexes = [10, 18, 26, 34]  # solo12
 alpha = 0.98
 filteredLinearVelocity = np.zeros((N, 3))
 """for a in range(len(model.frames)):

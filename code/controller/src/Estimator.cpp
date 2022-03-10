@@ -74,7 +74,7 @@ void Estimator::initialize(double dT, int N_simulation, double h_init, bool kf_e
 	this->feet_goals = Matrix34::Zero();
 	this->k_since_contact = Vector4::Zero();
 
-	const std::string urdf_path = "/opt/openrobots/share/example-robot-data/robots/solo_description/robots/solo12.urdf";
+	const std::string urdf_path = "/home/jochen/lisbeth/description/solo12.urdf";
 	// Load the URDF model to get Pinocchio data and model structures
 	if (!file_exists(urdf_path)) {
 		std::cout << "Kinematics.initialize:" << urdf_path << " does not exist" << std::endl;

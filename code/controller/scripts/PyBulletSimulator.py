@@ -5,6 +5,7 @@ import time as time
 import sys
 import pinocchio as pin
 from utils_mpc import quaternionToRPY
+import Types
 
 
 class pybullet_simulator:
@@ -225,8 +226,7 @@ class pybullet_simulator:
         # Load Quadruped robot
         robotStartPos = [0, 0, 0.0]
         robotStartOrientation = pyb.getQuaternionFromEuler([0.0, 0.0, 0.0])  # -np.pi/2
-        pyb.setAdditionalSearchPath("/opt/openrobots/share/example-robot-data/robots/solo_description/robots")
-        self.robotId = pyb.loadURDF("solo12.urdf", robotStartPos, robotStartOrientation)
+        self.robotId = pyb.loadURDF(Types.URDFFilePath, robotStartPos, robotStartOrientation)
 
         # Disable default motor control for revolute joints
         self.revoluteJointIndices = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]

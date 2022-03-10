@@ -6,7 +6,7 @@ from solo12InvKin import Solo12InvKin
 from time import perf_counter as clock
 from time import time
 import libquadruped_reactive_walking as lrw
-from example_robot_data.robots_loader import Solo12Loader
+from ModelLoader import Solo12Loader
 
 class wbc_controller():
     """Whole body controller which contains an Inverse Kinematics step and a BoxQP step
@@ -68,7 +68,10 @@ class wbc_controller():
         self.tic = time()
 
         # Compute Inverse Kinematics
+        start = time()
+
         ddq_cmd = np.array([self.invKin.refreshAndCompute(q[7:, 0:1], dq[6:, 0:1], contacts, pgoals, vgoals, agoals)]).T
+        start = time()
 
         for i in range(4):
             self.log_feet_pos[:, i, self.k_log] = self.invKin.robot.data.oMf[self.indexes[i]].translation
@@ -105,6 +108,8 @@ class wbc_controller():
 
         # Solve the QP problem with C++ bindings
         self.box_qp.run(self.M, self.Jc, f_cmd.reshape((-1, 1)), RNEA.reshape((-1, 1)), self.k_since_contact)
+        end = time()
+        print ("wbc %6.5f" % (end-start))
 
         # Add deltas found by the QP problem to reference quantities
         deltaddq = self.box_qp.get_ddq_res()

@@ -218,33 +218,6 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         # Send command to the robot
         for i in range(1):
             device.SendCommand(WaitEndOfCycle=True)
-        """if ((device.cpt % 100) == 0):
-            device.Print()"""
-
-        """import os
-        from matplotlib import pyplot as plt
-        import pybullet as pyb
-        if (t == 0.0):
-            cpt_frames = 0
-            step = 10
-        if (cpt_frames % step) == 0:
-            if (cpt_frames % 1000):
-                print(cpt_frames)
-            img = pyb.getCameraImage(width=1920, height=1080, renderer=pyb.ER_BULLET_HARDWARE_OPENGL)
-            if cpt_frames == 0:
-                newpath = r'/tmp/recording'
-                if not os.path.exists(newpath):
-                    os.makedirs(newpath)
-            if (int(cpt_frames/step) < 10):
-                plt.imsave('/tmp/recording/frame_000'+str(int(cpt_frames/step))+'.png', img[2])
-            elif int(cpt_frames/step) < 100:
-                plt.imsave('/tmp/recording/frame_00'+str(int(cpt_frames/step))+'.png', img[2])
-            elif int(cpt_frames/step) < 1000:
-                plt.imsave('/tmp/recording/frame_0'+str(int(cpt_frames/step))+'.png', img[2])
-            else:
-                plt.imsave('/tmp/recording/frame_'+str(int(cpt_frames/step))+'.png', img[2])
-
-        cpt_frames += 1"""
 
         t += params.dt_wbc  # Increment loop time
 
@@ -295,25 +268,6 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         print("Masterboard timeout detected.")
         print("Either the masterboard has been shut down or there has been a connection issue with the cable/wifi.")
     device.hardware.Stop()  # Shut down the interface between the computer and the master board
-
-    # Plot estimated computation time for each step for the control architecture
-    from matplotlib import pyplot as plt
-    """plt.figure()
-    plt.plot(controller.t_list_filter[1:], 'r+')
-    plt.plot(controller.t_list_planner[1:], 'g+')
-    plt.plot(controller.t_list_mpc[1:], 'b+')
-    plt.plot(controller.t_list_wbc[1:], '+', color="violet")
-    plt.plot(controller.t_list_loop[1:], 'k+')
-    plt.plot(controller.t_list_InvKin[1:], 'o', color="darkgreen")
-    plt.plot(controller.t_list_QPWBC[1:], 'o', color="royalblue")
-    plt.legend(["Estimator", "Planner", "MPC", "WBC", "Whole loop", "InvKin", "QP WBC"])
-    plt.title("Loop time [s]")
-    plt.show(block=True)"""
-    """plt.figure()
-    for i in range(3):
-        plt.subplot(3, 1, i+1)
-        plt.plot(controller.o_log_foot[:, i, 0])
-    plt.show(block=True)"""
 
     # Plot recorded data
     if params.PLOTTING:

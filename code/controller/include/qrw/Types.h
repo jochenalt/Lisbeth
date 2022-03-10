@@ -52,4 +52,7 @@ enum GaitType { NoGait = 0,
 				Static   = 5 /* No Movement */ };
 #define GaitNo 5
 
+const std::string urdfFilePath= "/home/jochen/lisbeth/description/solo12.urdf";
+
+
 #endif  // TYPES_H_INCLUDED

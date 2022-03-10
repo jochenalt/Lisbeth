@@ -7,3 +7,6 @@ encoding//controller/scripts/MPC_Wrapper.py=utf8
 encoding//controller/scripts/QP_WBC.py=utf8
 encoding//controller/scripts/main_minimal_controler.py=utf8
 encoding//controller/scripts/main_solo12_control.py=utf8
+encoding//controller/scripts/main_solo12_demo_estimator.py=utf8
+encoding//controller/scripts/solopython/demo_viewer_solo12.py=utf8
+encoding//controller/scripts/solopython/main_calibrate.py=utf8

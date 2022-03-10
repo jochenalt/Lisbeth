@@ -12,7 +12,7 @@ robot:
     T_gait: 0.32          # Duration of one gait period
     T_mpc: 0.32           # Duration of the prediction horizon
     N_SIMULATION: 30000   # Number of simulated wbc time steps
-    use_flat_plane: true # If True the ground is flat, otherwise it has bumps
+    use_flat_plane: true  # If True the ground is flat, otherwise it has bumps
     predefined_vel: False # If we are using a predefined reference velocity (True) or a joystick/keyboard (False)
     kf_enabled: false     # Use complementary filter (False) or kalman filter (True) for the estimator 
-    enable_pyb_GUI: true  # Enable/disable PyBullet GUI
+    enable_pyb_GUI: True  # Enable/disable PyBullet GUI

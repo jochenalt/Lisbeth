@@ -112,8 +112,8 @@ def mcapi_playback(name_interface):
     estimator = Estimator(DT, np.int(t_max/DT))
 
     # Set the paths where the urdf and srdf file of the robot are registered
-    modelPath = "/opt/openrobots/share/example-robot-data/robots"
-    urdf = modelPath + "/solo_description/robots/solo12.urdf"
+    modelPath = "/home/jochen/lisbeth/description"
+    urdf = modelPath + "/solo12.urdf"
     vector = pin.StdVec_StdString()
     vector.extend(item for item in modelPath)
 
