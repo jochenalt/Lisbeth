@@ -1,13 +1,13 @@
 import math
 import numpy as np
 
-from example_robot_data.robots_loader import Solo12Loader
 
 import Joystick
 import Logger
 import Estimator
 import pinocchio as pin
 
+from ModelLoader import ModelLoader
 
 ######################################
 # RPY / Quaternion / Rotation matrix #
@@ -121,8 +121,8 @@ def init_robot(q_init, enable_viewer):
 
     # Load robot model and data
     # Initialisation of the Gepetto viewer
-    Solo12Loader.free_flyer = True
-    solo = Solo12Loader().robot  # TODO:enable_viewer
+    ModelLoader.free_flyer = True
+    solo = ModelLoader().robot  # TODO:enable_viewer
     q = solo.q0.reshape((-1, 1))
     q[7:, 0] = q_init
 

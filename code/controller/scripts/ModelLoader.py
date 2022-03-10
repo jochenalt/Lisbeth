@@ -79,7 +79,7 @@ class RobotLoader(object):
         self.robot.model.lowerPositionLimit = lb
 
 
-class Solo12Loader(RobotLoader):
+class ModelLoader(RobotLoader):
     path = 'solo_description'
     urdf_filename = "solo.urdf"
     srdf_filename = "solo.srdf"

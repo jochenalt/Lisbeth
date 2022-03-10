@@ -2,7 +2,7 @@
 
 import numpy as np
 import pinocchio as pin
-from ModelLoader import Solo12Loader
+from ModelLoader import ModelLoader
 
 
 
@@ -294,8 +294,8 @@ class Estimator:
         self.k_since_contact = np.zeros(4)
 
         # Load the URDF model to get Pinocchio data and model structures
-        Solo12Loader.free_flyer = True
-        robot = Solo12Loader().robot
+        ModelLoader.free_flyer = True
+        robot = ModelLoader().robot
         self.data = robot.data.copy()  # for velocity estimation (forward kinematics)
         self.model = robot.model.copy()  # for velocity estimation (forward kinematics)
         self.data_for_xyz = robot.data.copy()  # for position estimation (forward geometry)
