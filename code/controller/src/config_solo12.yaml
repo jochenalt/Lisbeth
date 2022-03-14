@@ -14,5 +14,4 @@ robot:
     N_SIMULATION: 30000   # Number of simulated wbc time steps
     use_flat_plane: true  # If True the ground is flat, otherwise it has bumps
     predefined_vel: False # If we are using a predefined reference velocity (True) or a joystick/keyboard (False)
-    kf_enabled: false     # Use complementary filter (False) or kalman filter (True) for the estimator 
     enable_pyb_GUI: True  # Enable/disable PyBullet GUI

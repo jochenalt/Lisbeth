@@ -22,10 +22,8 @@ def readParamsFromSrdf(model, SRDF_PATH, verbose=False, has_rotor_parameters=Tru
 
 
 class RobotLoader(object):
-    path = ''
     urdf_filename = ''
     srdf_filename = ''
-    sdf_filename = ''
     ref_posture = 'half_sitting'
     has_rotor_parameters = False
     free_flyer = False
@@ -33,23 +31,14 @@ class RobotLoader(object):
     model_path = None
 
     def __init__(self):
-        if self.urdf_filename:
-            if self.sdf_filename:
-                raise AttributeError("Please use either URDF or SRDF")
-            builder = RobotWrapper.BuildFromURDF
-        else:
-            try:
-                builder = RobotWrapper.BuildFromSDF
-            except AttributeError:
-                raise ImportError("Building SDF models require pinocchio >= 3.0.0")
+        builder = RobotWrapper.BuildFromURDF
         self.model_path = Types.RobotModelPath
         self.df_path=Types.URDFFilePath
         self.meshes_path = [Types.RobotModelPath]
-        
-        self.robot = builder(self.df_path, self.meshes_path ,
+        self.robot = builder(self.df_path, None ,
                              pin.JointModelFreeFlyer() if self.free_flyer else None)
 
-        if self.srdf_filename:
+        if Types.SRDFFilePath:
             self.srdf_path = Types.SRDFFilePath
             self.robot.q0 = readParamsFromSrdf(self.robot.model, self.srdf_path, self.verbose,
                                                self.has_rotor_parameters, self.ref_posture)
@@ -80,10 +69,6 @@ class RobotLoader(object):
 
 
 class ModelLoader(RobotLoader):
-    path = 'solo_description'
-    urdf_filename = "solo.urdf"
-    srdf_filename = "solo.srdf"
     ref_posture = "standing"
-    urdf_filename = "solo12.urdf"
     free_flyer = True
 

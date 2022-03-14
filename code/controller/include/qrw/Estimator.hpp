@@ -25,7 +25,7 @@ public:
 	Estimator ();
 	~Estimator() {};
 
-	void initialize(double dT, int N_simulation, double h_init=0.22294615, bool kf_enabled = false, bool perfectEstimator = false);
+	void initialize(double dT, int N_simulation, double h_init=0.22294615, bool perfectEstimator = false);
 
 	// take data from IMU and tell estimator
 	// base_orientation is Quaternion [w, x,y,z] coming from IMU
@@ -66,7 +66,6 @@ private:
 	double alpha;
 	double alpha_v;
 	double alpha_secu;
-	double kf_enabled;
 
 	ComplementaryFilter filter_xyz_vel;
 	ComplementaryFilter filter_xyz_pos;

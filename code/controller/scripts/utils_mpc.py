@@ -2,7 +2,7 @@ import math
 import numpy as np
 
 
-import Joystick
+import RemoteControl
 import Logger
 import Estimator
 import pinocchio as pin
@@ -150,7 +150,7 @@ def init_robot(q_init, enable_viewer):
     return solo, fsteps_init, h_init
 
 
-def init_objects(dt_tsid, k_max_loop, predefined, h_init, kf_enabled, perfectEstimator):
+def init_objects(dt_tsid, k_max_loop, h_init, perfectEstimator):
     """Create several objects that are used in the control loop
 
     Args:
@@ -158,17 +158,13 @@ def init_objects(dt_tsid, k_max_loop, predefined, h_init, kf_enabled, perfectEst
         k_max_loop (int): maximum number of iterations of the simulation
         predefined (bool): if we are using a predefined reference velocity (True) or a joystick (False)
         h_init (float): initial height of the robot base
-        kf_enabled (bool): complementary filter (False) or kalman filter (True)
         perfectEstimator (bool): if we use a perfect estimator
     """
 
-    # Create Joystick object
-    joystick = Joystick.Joystick(predefined)
-
     # Create Estimator object
-    estimator = Estimator.Estimator(dt_tsid, k_max_loop, h_init, kf_enabled, perfectEstimator)
+    estimator = Estimator.Estimator(dt_tsid, k_max_loop, h_init, perfectEstimator)
 
-    return joystick, estimator
+    return estimator
 
 
 def display_all(solo, k, sequencer, fstep_planner, ftraj_gen, mpc):

@@ -143,22 +143,22 @@ void Gait::create_gait_f()
     }
 }
 
-double Gait::getPhaseDuration(int i, int legNo, double value)
+double Gait::getPhaseDuration(int gaitPhaseIdx, int legNo, FootPhase footPhase)
 {
     double t_phase = 1;
-    int a = i;
+    int a = gaitPhaseIdx;
 
     // Looking for the end of the swing/stance phase in currentGait_
-    while ((!currentGait_.row(i + 1).isZero()) && (currentGait_(i + 1, legNo) == value))
+    while ((!currentGait_.row(gaitPhaseIdx + 1).isZero()) && (currentGait_(gaitPhaseIdx + 1, legNo) == (double)footPhase))
     {
-        i++;
+    	gaitPhaseIdx++;
         t_phase++;
     }
     // If we reach the end of currentGait_ we continue looking for the end of the swing/stance phase in desiredGait_
-    if (currentGait_.row(i + 1).isZero())
+    if (currentGait_.row(gaitPhaseIdx + 1).isZero())
     {
         int k = 0;
-        while ((!desiredGait_.row(k).isZero()) && (desiredGait_(k, legNo) == value))
+        while ((!desiredGait_.row(k).isZero()) && (desiredGait_(k, legNo) == (double)footPhase))
         {
             k++;
             t_phase++;
@@ -168,7 +168,7 @@ double Gait::getPhaseDuration(int i, int legNo, double value)
     remainingTime_ = t_phase;
 
     // Looking for the beginning of the swing/stance phase in currentGait_
-    while ((a > 0) && (currentGait_(a - 1, legNo) == value))
+    while ((a > 0) && (currentGait_(a - 1, legNo) == (double)footPhase))
     {
         a--;
         t_phase++;
@@ -176,7 +176,7 @@ double Gait::getPhaseDuration(int i, int legNo, double value)
     // If we reach the end of currentGait_ we continue looking for the beginning of the swing/stance phase in pastGait_
     if (a == 0)
     {
-        while ((!pastGait_.row(a).isZero()) && (pastGait_(a, legNo) == value))
+        while ((!pastGait_.row(a).isZero()) && (pastGait_(a, legNo) == (double)footPhase))
         {
             a++;
             t_phase++;
@@ -189,10 +189,10 @@ double Gait::getPhaseDuration(int i, int legNo, double value)
 bool Gait::updateGait(int const k,
                       int const k_mpc,
                       VectorN const& q,
-                      int const joystickCode)
+					  int targetGaitType)
 {
-	if ((joystickCode != GaitType::NoGait) && (currentGaitType_ != joystickCode)) {
-		changeGait (joystickCode, q);
+	if ((targetGaitType != GaitType::NoGait) && (currentGaitType_ != targetGaitType)) {
+		changeGait (targetGaitType, q);
 	}
 
 	if (k % k_mpc == 0) {
@@ -203,45 +203,45 @@ bool Gait::updateGait(int const k,
 	return false;
 }
 
-bool Gait::changeGait(int const code, VectorN const& q)
+bool Gait::changeGait(int targetGait, VectorN const& q)
 {
     is_static_ = false;
-    if (code == GaitType::Pacing)
+    if (targetGait == GaitType::Pacing)
     {
     	std::cout << "change to pacing gait" << std::endl;
     	create_pacing();
     	prevGaitType_ = currentGaitType_;
-        currentGaitType_ = (GaitType)code;
+        currentGaitType_ = (GaitType)targetGait;
     }
-    else if (code == GaitType::Bounding)
+    else if (targetGait == GaitType::Bounding)
     {
     	std::cout << "change to bounding gait" << std::endl;
 
     	prevGaitType_ = currentGaitType_;
     	create_bounding();
     	prevGaitType_ = currentGaitType_;
-        currentGaitType_ = (GaitType)code;
+        currentGaitType_ = (GaitType)targetGait;
     }
-    else if (code == GaitType::Trot)
+    else if (targetGait == GaitType::Trot)
     {
     	std::cout << "change to trot gait" << std::endl;
     	create_trot();
     	prevGaitType_ = currentGaitType_;
-        currentGaitType_ = (GaitType)code;
+        currentGaitType_ = (GaitType)targetGait;
     }
-    else if (code == GaitType::Walking)
+    else if (targetGait == GaitType::Walking)
     {
     	std::cout << "change to walking gait" << std::endl;
     	create_walk();
     	prevGaitType_ = currentGaitType_;
-        currentGaitType_ = (GaitType)code;
+        currentGaitType_ = (GaitType)targetGait;
     }
-    else if (code == GaitType::Static)
+    else if (targetGait == GaitType::Static)
     {
         create_static();
         q_static_.head(7) = q.head(7);
     	prevGaitType_ = currentGaitType_;
-        currentGaitType_ = (GaitType)code;
+        currentGaitType_ = (GaitType)targetGait;
 
         // @JA is_static has some consequences that lead to hiccups in the gait change, state update is not done properly anymore
         // is_static_ = true;
@@ -249,7 +249,7 @@ bool Gait::changeGait(int const code, VectorN const& q)
 
     // if we change from static to any gait,
     // do a fast forward in order to ensure that we start right away
-    if ((prevGaitType_ == GaitType::Static) && (code != GaitType::Static)) {
+    if ((prevGaitType_ == GaitType::Static) && (targetGait != GaitType::Static)) {
     	std::cout << "change from static to gait, fast forward" << std::endl;
 
     	while (!isNewPhase())

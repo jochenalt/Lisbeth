@@ -20,59 +20,34 @@ class Gait
 {
 public:
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    /// \brief Empty constructor
-    ///
-    ////////////////////////////////////////////////////////////////////////////////////////////////
+	enum FootPhase { SWING_PHASE = 0, STANCE_PHASE = 1 };
     Gait();
+    virtual ~Gait() {}
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    /// \brief Destructor.
-    ///
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ~Gait() {}
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    /// \brief Initializer
-    ///
-    ////////////////////////////////////////////////////////////////////////////////////////////////
     void initialize(double dt_in, double T_gait_in, double T_mpc_in, int N_gait);
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    /// \brief Compute the remaining and total duration of a swing phase or a stance phase based
-    ///        on the content of the gait matrix
-    ///
-    /// \param[in] i considered phase (row of the gait matrix)
-    /// \param[in] j considered foot (col of the gait matrix)
-    /// \param[in] value 0.0 for swing phase detection, 1.0 for stance phase detection
-    ///
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    double getPhaseDuration(int i, int j, double value);
+    /**
+     * Compute the remaining and total duration of a swing phase or a stance phase based
+     * on the content of the gait matrix
+     * 	gaitPhaseIdx 	considered gait phase (row of the gait matrix)
+     * 	footIdx 		considered foot (col of the gait matrix)
+     * 	phase 			considered foot phase, swing or stance
+     */
+    double getPhaseDuration(int gaitPhaseIdx, int footIdx, FootPhase phase);
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    /// \brief Handle the joystick code to trigger events (change of gait for instance)
-    ///
-    /// \param[in] code integer to trigger events with the joystick
-    /// \param[in] q current position vector of the flying base in world frame (linear and angular stacked)
-    ///
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    bool changeGait(int const code, VectorN const& q);
+    /** Handle the joystick code to trigger events (change of gait for instance)
+     * gaitTypeInput target gait, coming from GaitType, because of Python binding needs to be int
+     * q current position vector of the flying base in world frame (linear and angular stacked)
+     */
+    bool changeGait(int gaitTypeInput, VectorN const& q);
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    /// \brief  Move one step further in the gait cycle
-    ///
-    /// \details Decrease by 1 the number of remaining step for the current phase of the gait
-    ///           Transfer current gait phase into past gait matrix
-    ///           Insert future desired gait phase at the end of the gait matrix
-    ///
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    bool updateGait(int const k, int const k_mpc, VectorN const& q, int const joystickCode);
+    /** Move one step further in the gait cycle
+     *
+     * Decrease by 1 the number of remaining step for the current phase of the gait
+     * Transfer current gait phase into past gait matrix
+     * Insert future desired gait phase at the end of the gait matrix
+     */
+    bool updateGait(int const k, int const k_mpc, VectorN const& q, int targetGaitType);
 
 
     void rollGait();

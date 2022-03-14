@@ -3,7 +3,7 @@
 import numpy as np
 from keyboard import KeyboardClient
 
-class Joystick:
+class RemoteControl:
     """Joystick-like controller that outputs the reference velocity in local frame
 
     Args:

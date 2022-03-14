@@ -122,7 +122,7 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
     void visit(PyClassEstimator& cl) const
     {
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
-        	.def("initialize",&Estimator::initialize, bp::args("dT", "N_simulation", "h_init", "kf_enabled","perfectEstimator"),
+        	.def("initialize",&Estimator::initialize, bp::args("dT", "N_simulation", "h_init", "perfectEstimator"),
         		 "initialize")
 			// take IMU data and tell Estimator
 		    .def("set_imu_data",&Estimator::set_imu_data, bp::args("base_linear_acc", "base_angular_velocity", "base_orientation"),
@@ -312,7 +312,6 @@ struct ParamsPythonVisitor : public bp::def_visitor<ParamsPythonVisitor<Params>>
             .def_readwrite("N_SIMULATION", &Params::N_SIMULATION)
             .def_readwrite("use_flat_plane", &Params::use_flat_plane)
             .def_readwrite("predefined_vel", &Params::predefined_vel)
-            .def_readwrite("kf_enabled", &Params::kf_enabled)
             .def_readwrite("enable_pyb_GUI", &Params::enable_pyb_GUI);
 
     }

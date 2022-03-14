@@ -53,7 +53,6 @@ public:
     int N_SIMULATION;
     bool use_flat_plane;
     bool predefined_vel;
-    bool kf_enabled;
     bool enable_pyb_GUI;
 
 };

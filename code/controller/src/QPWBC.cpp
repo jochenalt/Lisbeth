@@ -112,8 +112,6 @@ int QPWBC::create_ML() {
   // int m = 20;   // number of rows
   int n = 12;   // number of columns
 
-  // std::cout << "Number of CC values: " << ncc << std::endl;
-
   /*int i_min = i4vec_min(nst, r_ML);
   int i_max = i4vec_max(nst, r_ML);
   int j_min = i4vec_min(nst, c_ML);

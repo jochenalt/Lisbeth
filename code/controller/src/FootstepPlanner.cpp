@@ -159,7 +159,7 @@ void FootstepPlanner::computeNextFootstep(int i, int j, Vector6 const& b_v, Vect
 {
     nextFootstep_ = Matrix34::Zero();
 
-    double t_stance = gait_->getPhaseDuration(i, j, 1.0);  // 1.0 for stance phase
+    double t_stance = gait_->getPhaseDuration(i, j, Gait::STANCE_PHASE);  // 1.0 for stance phase
 
     // Add symmetry term
     nextFootstep_.col(j) = t_stance * 0.5 * b_v.head(3);

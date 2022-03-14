@@ -127,7 +127,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     controller = Controller(q_init, params.envID, params.velID, params.dt_wbc, params.dt_mpc,
                             int(params.dt_mpc / params.dt_wbc), t, params.T_gait,
                             params.T_mpc, params.N_SIMULATION, params.use_flat_plane,
-                            params.predefined_vel, enable_pyb_GUI, params.kf_enabled, params.N_gait,
+                            params.predefined_vel, enable_pyb_GUI, params.N_gait,
                             params.SIMULATION)
 
     if params.SIMULATION and (des_vel_analysis is not None):

@@ -17,7 +17,6 @@ Params::Params()
     , N_SIMULATION(0)
     , use_flat_plane(false)
     , predefined_vel(false)
-    , kf_enabled(false)
     , enable_pyb_GUI(false)
 {
     initialize(CONFIG_SOLO12_YAML);
@@ -75,9 +74,6 @@ void Params::initialize(const std::string& file_path)
 
     assert_yaml_parsing(robot_node, "robot", "predefined_vel");
     predefined_vel = robot_node["predefined_vel"].as<bool>();
-
-    assert_yaml_parsing(robot_node, "robot", "kf_enabled");
-    kf_enabled = robot_node["kf_enabled"].as<bool>();
 
     assert_yaml_parsing(robot_node, "robot", "enable_pyb_GUI");
     enable_pyb_GUI = robot_node["enable_pyb_GUI"].as<bool>();

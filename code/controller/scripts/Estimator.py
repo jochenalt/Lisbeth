@@ -5,183 +5,6 @@ import pinocchio as pin
 from ModelLoader import ModelLoader
 
 
-
-class KFilter:
-
-    def __init__(self, dt):
-        self.dt = dt
-        self.n = 6
-
-        # State transition matrix
-        self.A = np.eye(self.n)
-        self.A[0:3, 3:6] = dt * np.eye(3)
-
-        # Control matrix
-        self.B = np.zeros((6, 3))
-        for i in range(3):
-            self.B[i, i] = 0.5 * dt**2
-            self.B[i+3, i] = dt
-
-        # Observation matrix
-        self.H = np.eye(self.n)
-        # Z: n x 1 Measurement vector
-
-        # Covariance of the process noise
-        self.Q = np.zeros((self.n, self.n))
-        # Uncontrolled forces cause a constant acc perturbation that is normally distributed
-        # sigma_acc = 0.1
-        sigma_acc = 1000
-        G = np.array([[0.5 * dt**2], [0.5 * dt**2], [0.5 * dt**2], [dt], [dt], [dt]])
-        self.Q = G @ G.T * (sigma_acc**2)
-        self.Q = 1000 * np.eye(6)
-
-        # Covariance of the observation noise
-        self.R = np.zeros((self.n, self.n))
-        sigma_xyz = 1.0
-        sigma_vxyz = 1.0
-        for i in range(3):
-            self.R[i, i] = sigma_xyz**2  # Position observation noise
-            self.R[i+3, i+3] = sigma_vxyz**2  # Velocity observation noise
-
-        # a posteriori estimate covariance
-        self.P = np.zeros((self.n, self.n))
-
-        # Optimal Kalman gain
-        self.K = np.zeros((self.n, self.n))
-
-        # Updated (a posteriori) state estimate
-        self.X = np.zeros((self.n, 1))
-
-        # Initial state and covariance
-        self.X = np.zeros((self.n, 1))
-        # self.P = np.zeros((self.n, self.n))
-        self.P = 1.0 * np.eye(self.n)
-
-    def setFixed(self, A, H, Q, R):
-        self.A = A
-        self.H = H
-        self.Q = Q
-        self.R = R
-
-    def setInitial(self, X0, P0):
-        # X : initial state of the system
-        # P : initial covariance
-
-        self.X = X0
-        self.P = P0
-
-    def predict(self, U):
-        # Make prediction based on physical system
-        # U : control vector (measured acceleration)
-
-        self.X = (self.A @ self.X) + self.B @ U
-        self.P = (self.A @ self.P @ self.A.T) + self.Q
-
-    def correct(self, Z):
-        # Correct the prediction, using measurement
-        # Z : measurement vector
-
-        self.K = self.P @ self.H.T @ np.linalg.pinv(self.H @ self.P @ self.H.T + self.R)
-        self.X = self.X + self.K @ (Z - self.H @ self.X)
-        self.P = self.P - self.K @ self.H @ self.P
-
-
-class KFilterBis:
-
-    def __init__(self, dt):
-        self.dt = dt
-        self.n = 3 + 3 + 4 * 3  # State = pos base + vel lin base + feet pos
-        self.m = 4 * 3 + 4  # Measure = relative pos of IMU
-
-        # State transition matrix
-        self.A = np.eye(self.n)
-        self.A[0:3, 3:6] = dt * np.eye(3)
-
-        # Control matrix
-        self.B = np.zeros((self.n, 3))
-        for i in range(3):
-            self.B[i, i] = 0.5 * dt**2
-            self.B[i+3, i] = dt
-
-        # Observation matrix
-        self.H = np.zeros((self.m, self.n))
-        for i in range(4):
-            for j in range(3):
-                self.H[3*i+j, j] = 1.0
-                self.H[3*i+j, j+6+3*i] = -1.0
-            self.H[12+i, 6+3*i+2] = 1.0
-        # Z: m x 1 Measurement vector
-
-        # Covariance of the process noise
-        self.Q = np.zeros((self.n, self.n))
-
-        # Covariance of the observation noise
-        self.R = np.zeros((self.m, self.m))
-
-        # a posteriori estimate covariance
-        self.P = np.eye(self.n)
-
-        # Optimal Kalman gain
-        self.K = np.zeros((self.n, self.m))
-
-        # Updated (a posteriori) state estimate
-        self.X = np.zeros((self.n, 1))
-
-        # Initial state and covariance
-        self.X = np.zeros((self.n, 1))
-
-        # Parameters to tune
-        self.sigma_kin = 0.1
-        self.sigma_h = 1.0
-        self.sigma_a = 0.1
-        self.sigma_dp = 0.1
-        self.gamma = 30
-
-    def setFixed(self, A, H, Q, R):
-        self.A = A
-        self.H = H
-        self.Q = Q
-        self.R = R
-
-    def setInitial(self, X0, P0):
-        # X : initial state of the system
-        # P : initial covariance
-
-        self.X = X0
-        self.P = P0
-
-    def predict(self, U):
-        # Make prediction based on physical system
-        # U : control vector (measured acceleration)
-
-        self.X = (self.A @ self.X) + self.B @ U
-        self.P = (self.A @ self.P @ self.A.T) + self.Q
-
-    def correct(self, Z):
-        # Correct the prediction, using measurement
-        # Z : measurement vector
-
-        self.K = self.P @ self.H.T @ np.linalg.inv(self.H @ self.P @ self.H.T + self.R)
-        self.X = self.X + self.K @ (Z - self.H @ self.X)
-        self.P = self.P - self.K @ self.H @ self.P
-
-    def updateCoeffs(self, status):
-        # Update noise/covariance matrices depending on feet status
-
-        for i in range(4):
-            # Trust is between 1 and 0 (cliped to a very low value to avoid division by 0)
-            if status[i] == 0:
-                trust = 0.01
-            else:
-                trust = 1.0
-            self.R[(3*i):(3*(i+1)), (3*i):(3*(i+1))] = self.sigma_kin**2 / trust * np.eye(3)
-            self.R[12+i, 12+i] = self.sigma_h**2 / trust
-
-            self.Q[(6+3*i):(6+3*(i+1)), (6+3*i):(6+3*(i+1))] = self.sigma_dp**2 * (1+np.exp(self.gamma*(0.5-trust))) * np.eye(3) * self.dt**2
-
-        self.Q[3:6, 3:6] = self.sigma_a**2 * np.eye(3) * self.dt**2
-
-
 class ComplementaryFilter:
     """Simple complementary filter
 
@@ -239,11 +62,10 @@ class Estimator:
         dt (float): Time step of the estimator update
         N_simulation (int): maximum number of iterations of the main control loop
         h_init (float): initial height of the robot base
-        kf_enabled (bool): False for complementary filter, True for simple Kalman filter
         perfectEstimator (bool): If we are using a perfect estimator (direct simulator data)
     """
 
-    def __init__(self, dt, N_simulation, h_init=0.22294615, kf_enabled=False, perfectEstimator=False):
+    def __init__(self, dt, N_simulation, h_init=0.22294615, perfectEstimator=False):
 
         # Sample frequency
         self.dt = dt
@@ -264,13 +86,8 @@ class Estimator:
         self.alpha_secu = -y+np.sqrt(y*y+2*y)
         self.alpha_secu = 1-(dt / ( dt + 1/fc))
 
-        self.kf_enabled = kf_enabled
-        if not self.kf_enabled:  # Complementary filters for linear velocity and position
-            self.filter_xyz_vel = ComplementaryFilter(dt, 3.0) # alpha is not used, but set later on
-            self.filter_xyz_pos = ComplementaryFilter(dt, 500.0)
-        else:  # Kalman filter for linear velocity and position
-            self.kf = KFilterBis(dt)
-            self.Z = np.zeros((self.kf.m, 1))
+        self.filter_xyz_vel = ComplementaryFilter(dt, 3.0) # alpha is not used, but set later on
+        self.filter_xyz_pos = ComplementaryFilter(dt, 500.0)
 
         # IMU data
         self.IMU_lin_acc = np.zeros((3, ))  # Linear acceleration (gravity debiased)
@@ -282,10 +99,7 @@ class Estimator:
         self.FK_h = h_init  # Default base height of the FK
         self.FK_xyz = np.array([0.0, 0.0, self.FK_h])
         self.xyz_mean_feet = np.zeros(3)
-        if not self.kf_enabled:
-            self.filter_xyz_pos.LP_x[2] = self.FK_h
-        else:
-            self.kf.X[2, 0] = h_init
+        self.filter_xyz_pos.LP_x[2] = self.FK_h
 
         # Boolean to disable FK and FG near contact switches
         self.close_from_contact = False
@@ -519,70 +333,38 @@ class Estimator:
             #self.alpha = 0.997
             self.close_from_contact = False  # Lower flag
 
-        if not self.kf_enabled:  # Use cascade of complementary filters
+        # Rotation matrix to go from base frame to world frame
+        oRb = pin.Quaternion(np.array([self.IMU_ang_pos]).T).toRotationMatrix()
 
-            # Rotation matrix to go from base frame to world frame
-            oRb = pin.Quaternion(np.array([self.IMU_ang_pos]).T).toRotationMatrix()
+        """self.debug_o_lin_vel += 0.002 * (oRb @ np.array([self.IMU_lin_acc]).T)  # TOREMOVE
+        self.filt_lin_vel[:] = (oRb.T @ self.debug_o_lin_vel).ravel()"""
 
-            """self.debug_o_lin_vel += 0.002 * (oRb @ np.array([self.IMU_lin_acc]).T)  # TOREMOVE
-            self.filt_lin_vel[:] = (oRb.T @ self.debug_o_lin_vel).ravel()"""
+        # Get FK estimated velocity at IMU location (base frame)
+        cross_product = self.cross3(self._1Mi.translation.ravel(), self.IMU_ang_vel).ravel()
+        i_FK_lin_vel = self.FK_lin_vel[:] + cross_product
+        # Get FK estimated velocity at IMU location (world frame)
+        oi_FK_lin_vel = (oRb @ np.array([i_FK_lin_vel]).T).ravel()
 
-            # Get FK estimated velocity at IMU location (base frame)
-            cross_product = self.cross3(self._1Mi.translation.ravel(), self.IMU_ang_vel).ravel()
-            i_FK_lin_vel = self.FK_lin_vel[:] + cross_product
-
-            # Get FK estimated velocity at IMU location (world frame)
-            oi_FK_lin_vel = (oRb @ np.array([i_FK_lin_vel]).T).ravel()
-
-            # Integration of IMU acc at IMU location (world frame)
-            oi_filt_lin_vel = self.filter_xyz_vel.compute(oi_FK_lin_vel,
+        # Integration of IMU acc at IMU location (world frame)
+        oi_filt_lin_vel = self.filter_xyz_vel.compute(oi_FK_lin_vel,
                                                           (oRb @ np.array([self.IMU_lin_acc]).T).ravel(),
                                                           alpha=self.alpha)
             
-            # Filtered estimated velocity at IMU location (base frame)
-            i_filt_lin_vel = (oRb.T @ np.array([oi_filt_lin_vel]).T).ravel()
+        # Filtered estimated velocity at IMU location (base frame)
+        i_filt_lin_vel = (oRb.T @ np.array([oi_filt_lin_vel]).T).ravel()
 
-            # Filtered estimated velocity at center base (base frame)
-            b_filt_lin_vel = i_filt_lin_vel - cross_product
+        # Filtered estimated velocity at center base (base frame)
+        b_filt_lin_vel = i_filt_lin_vel - cross_product
 
-            # Filtered estimated velocity at center base (world frame)
-            ob_filt_lin_vel = (oRb @ np.array([b_filt_lin_vel]).T).ravel()
+        # Filtered estimated velocity at center base (world frame)
+        ob_filt_lin_vel = (oRb @ np.array([b_filt_lin_vel]).T).ravel()
 
-            # Position of the center of the base from FGeometry and filtered velocity (world frame)
-            self.filt_lin_pos[:] = self.filter_xyz_pos.compute(
+        # Position of the center of the base from FGeometry and filtered velocity (world frame)
+        self.filt_lin_pos[:] = self.filter_xyz_pos.compute(
                 self.FK_xyz[:] + self.xyz_mean_feet[:], ob_filt_lin_vel, alpha=np.array([0.995, 0.995, 0.9]))
 
-            # Velocity of the center of the base (base frame)
-            self.filt_lin_vel[:] = b_filt_lin_vel 
-
-
-        else:  # Use Kalman filter
-
-            # Rotation matrix to go from base frame to world frame
-            oRb = pin.Quaternion(np.array([self.IMU_ang_pos]).T).toRotationMatrix()
-
-            # Update coefficients depending on feet status
-            self.kf.updateCoeffs(feet_status)
-
-            # Prediction step of the Kalman filter with IMU acceleration
-            self.kf.predict(oRb @ self.IMU_lin_acc.reshape((3, 1)))
-
-            # Get position of IMU relative to feet in base frame
-            for i in range(4):
-                framePlacement = - pin.updateFramePlacement(self.model, self.data, self.indexes[i]).translation
-                self.Z[(3*i):(3*(i+1)), 0:1] = oRb @ (framePlacement + self._1Mi.translation.ravel()).reshape((3, 1))
-                self.Z[12+i, 0] = 0.0 # (oRb @ framePlacement.reshape((3, 1)))[2, 0] + self.filt_lin_pos[2]
-
-            # Correction step of the Kalman filter with position and velocity estimations by FK
-            # self.Z[0:3, 0] = self.FK_xyz[:] + self.xyz_mean_feet[:]
-            # self.Z[3:6, 0] = oRb.T @ self.FK_lin_vel
-            self.kf.correct(self.Z)
-
-            # Retrieve and store results
-            cross_product = self.cross3(self._1Mi.translation.ravel(), self.IMU_ang_vel).ravel()
-            self.filt_lin_pos[:] = self.kf.X[0:3, 0] - self._1Mi.translation.ravel()  # base position in world frame
-            self.filt_lin_vel[:] = oRb.transpose() @ (self.kf.X[3:6, 0] - cross_product)  # base velocity in base frame
-
+        # Velocity of the center of the base (base frame)
+        self.filt_lin_vel[:] = b_filt_lin_vel 
         # Logging
         self.log_alpha[self.k_log] = self.alpha
         self.feet_status[:] = feet_status  # Save contact status sent to the estimator for logging

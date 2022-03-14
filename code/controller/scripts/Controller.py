@@ -12,6 +12,7 @@ import pinocchio as pin
 from solopython.utils.viewerClient import viewerClient, NonBlockingViewerFromRobot
 import libquadruped_reactive_walking as lqrw
 from cmath import nan
+import RemoteControl
 
 class Result:
     """Object to store the result of the control loop
@@ -50,7 +51,7 @@ class dummyDevice:
 class Controller:
 
     def __init__(self, q_init, envID, velID, dt_wbc, dt_mpc, k_mpc, t, T_gait, T_mpc, N_SIMULATION, 
-                 use_flat_plane, predefined_vel, enable_pyb_GUI, kf_enabled, N_gait, isSimulation):
+                 use_flat_plane, predefined_vel, enable_pyb_GUI, N_gait, isSimulation):
         """Function that runs a simulation scenario based on a reference velocity profile, an environment and
         various parameters to define the gait
 
@@ -67,7 +68,6 @@ class Controller:
             use_flat_plane (bool): to use either a flat ground or a rough ground
             predefined_vel (bool): to use either a predefined velocity profile or a gamepad
             enable_pyb_GUI (bool): to display PyBullet GUI or not
-            kf_enabled (bool): complementary filter (False) or kalman filter (True)
             N_gait (int): number of spare lines in the gait matrix
             isSimulation (bool): if we are in simulation mode
         """
@@ -107,12 +107,15 @@ class Controller:
         self.solo, self.fsteps_init, self.h_init = utils_mpc.init_robot(q_init, self.enable_gepetto_viewer)
 
         # Create Joystick, FootstepPlanner, Logger and Interface objects
-        self.joystick, self.estimator = utils_mpc.init_objects(
-            dt_wbc, N_SIMULATION, predefined_vel, self.h_init, kf_enabled, perfectEstimator)
+        self.estimator = utils_mpc.init_objects(
+            dt_wbc, N_SIMULATION, self.h_init, perfectEstimator)
+        self.joystick = RemoteControl.RemoteControl(predefined_vel)
 
+
+        
         # initialize Cpp state estimator
         self.estimatorCpp = lqrw.Estimator()
-        self.estimatorCpp.initialize(dt_wbc, N_SIMULATION, self.h_init, kf_enabled, perfectEstimator)
+        self.estimatorCpp.initialize(dt_wbc, N_SIMULATION, self.h_init, perfectEstimator)
 
         # Enable/Disable hybrid control
         self.enable_hybrid_control = True

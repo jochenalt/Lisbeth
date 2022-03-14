@@ -13,7 +13,7 @@ Estimator::Estimator() {
 }
 
 
-void Estimator::initialize(double dT, int N_simulation, double h_init, bool kf_enabled, bool perfectEstimator ) {
+void Estimator::initialize(double dT, int N_simulation, double h_init, bool perfectEstimator ) {
 
 	// sample frequency
 	this->dt = dT;
@@ -34,20 +34,12 @@ void Estimator::initialize(double dT, int N_simulation, double h_init, bool kf_e
 	this->alpha_secu = -y+sqrt(y*y+2*y);
 	this->alpha_secu = 1-(dT / ( dT + 1/fc));
 
-	this->kf_enabled = kf_enabled;
-	if (!kf_enabled) {
-		// Complementary filters for linear velocity and position and acceleration
-	    filter_xyz_vel.initialize(dt, Vector3({3.0, 3.0, 3.0}));
-	    filter_xyz_pos.initialize(dt, Vector3({2.512562814, 2.512562814, 55.55555555}));
+	// Complementary filters for linear velocity and position and acceleration
+	filter_xyz_vel.initialize(dt, Vector3({3.0, 3.0, 3.0}));
+	filter_xyz_pos.initialize(dt, Vector3({2.512562814, 2.512562814, 55.55555555}));
 
-        // this is used to identify if steady, so response time is one gait T_gait = 0.32s
-	    filter_xyz_acc.initialize(dt, Vector3({2.512562814, 2.512562814, 2.512562814}));
-	} else {
-		assert ("kalman filter not implemented yet");
-		// Kalman filter for linear velocity and position
-		// self.kf = KFilterBis(dt)
-    	// self.Z = np.zeros((self.kf.m, 1))
-	}
+    // this is used to identify if steady, so response time is one gait T_gait = 0.32s
+	filter_xyz_acc.initialize(dt, Vector3({2.512562814, 2.512562814, 2.512562814}));
 
 	// IMU data
 	this->IMU_lin_acc = Vector3::Zero(); // Linear acceleration (gravity debiased)
@@ -61,12 +53,7 @@ void Estimator::initialize(double dT, int N_simulation, double h_init, bool kf_e
 	this->xyz_mean_feet = Vector3::Zero();
 
 	// patch the height in the low pass filter of xyc
-	if (!kf_enabled)
-		filter_xyz_pos.patchLowPassed(2,FK_h);
-	else {
-		assert ("kalman not implemented");
-		// self.kf.X[2, 0] = h_init;
-	}
+	filter_xyz_pos.patchLowPassed(2,FK_h);
 
 	// Boolean to disable FK and FG near contact switches
 	this->close_from_contact = false;
@@ -365,75 +352,41 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN, double baseHeigh
            close_from_contact = false; //  Lower flag
        }
 
-       if (!kf_enabled)  { //  # Use cascade of complementary filters
+        // Rotation matrix to go from base frame to world frame
+  	   IMU_ang_pos.normalize();
+       Matrix33 oRb = IMU_ang_pos.toRotationMatrix();
 
-           // Rotation matrix to go from base frame to world frame
-    	   IMU_ang_pos.normalize();
-           Matrix33 oRb = IMU_ang_pos.toRotationMatrix();
+       // Get FK estimated velocity at IMU location (base frame)
+       Vector3 cross_product = cross3(_1Mi.translation(), IMU_ang_vel);
+       Vector3 i_FK_lin_vel = FK_lin_vel + cross_product;
 
-           // Get FK estimated velocity at IMU location (base frame)
-           Vector3 cross_product = cross3(_1Mi.translation(), IMU_ang_vel);
-           Vector3 i_FK_lin_vel = FK_lin_vel + cross_product;
+       // Get FK estimated velocity at IMU location (world frame)
+       Vector3 oi_FK_lin_vel = oRb *  i_FK_lin_vel;
 
-           // Get FK estimated velocity at IMU location (world frame)
-           Vector3 oi_FK_lin_vel = oRb *  i_FK_lin_vel;
-
-           // Integration of IMU acc at IMU location (world frame)
-           Vector3 oi_filt_lin_vel = filter_xyz_vel.compute(oi_FK_lin_vel,
+       // Integration of IMU acc at IMU location (world frame)
+       Vector3 oi_filt_lin_vel = filter_xyz_vel.compute(oi_FK_lin_vel,
                                                          oRb * IMU_lin_acc,
 														 Vector3({alpha, alpha, alpha}));
 
-           // Filtered estimated velocity at IMU location (base frame)
-           Vector3 i_filt_lin_vel = oRb.transpose() * oi_filt_lin_vel;
+       // Filtered estimated velocity at IMU location (base frame)
+       Vector3 i_filt_lin_vel = oRb.transpose() * oi_filt_lin_vel;
 
-           // Filtered estimated velocity at center base (base frame)
-           Vector3 b_filt_lin_vel = i_filt_lin_vel - cross_product;
+       // Filtered estimated velocity at center base (base frame)
+       Vector3 b_filt_lin_vel = i_filt_lin_vel - cross_product;
 
-           // Filtered estimated velocity at center base (world frame)
-           Vector3 ob_filt_lin_vel = oRb * b_filt_lin_vel;
+       // Filtered estimated velocity at center base (world frame)
+       Vector3 ob_filt_lin_vel = oRb * b_filt_lin_vel;
 
-           // Position of the center of the base from FGeometry and filtered velocity (world frame)
-           this->filt_lin_pos = filter_xyz_pos.compute(FK_xyz + xyz_mean_feet, ob_filt_lin_vel);
+       // Position of the center of the base from FGeometry and filtered velocity (world frame)
+       this->filt_lin_pos = filter_xyz_pos.compute(FK_xyz + xyz_mean_feet, ob_filt_lin_vel);
 
-           // Velocity of the center of the base (base frame)
-           this->filt_lin_vel = b_filt_lin_vel;
+       // Velocity of the center of the base (base frame)
+       this->filt_lin_vel = b_filt_lin_vel;
 
-           // acceleration of center of the base i(base frame)
-           this->filt_lin_acc = filter_xyz_acc.compute(IMU_lin_acc);
+       // acceleration of center of the base i(base frame)
+       this->filt_lin_acc = filter_xyz_acc.compute(IMU_lin_acc);
 
-       }
-       else {
-    	   //  Use Kalman filter
-    	   assert ("Kalman is not implemented yet");
-    	   /*
-           # Rotation matrix to go from base frame to world frame
-           oRb = pin.Quaternion(np.array([self.IMU_ang_pos]).T).toRotationMatrix()
-
-           # Update coefficients depending on feet status
-           self.kf.updateCoeffs(feet_status)
-
-           # Prediction step of the Kalman filter with IMU acceleration
-           self.kf.predict(oRb @ self.IMU_lin_acc.reshape((3, 1)))
-
-           # Get position of IMU relative to feet in base frame
-           for i in range(4):
-               framePlacement = - pin.updateFramePlacement(self.model, self.data, self.indexes[i]).translation
-               self.Z[(3*i):(3*(i+1)), 0:1] = oRb @ (framePlacement + self._1Mi.translation.ravel()).reshape((3, 1))
-               self.Z[12+i, 0] = 0.0 # (oRb @ framePlacement.reshape((3, 1)))[2, 0] + self.filt_lin_pos[2]
-
-           # Correction step of the Kalman filter with position and velocity estimations by FK
-           # self.Z[0:3, 0] = self.FK_xyz[:] + self.xyz_mean_feet[:]
-           # self.Z[3:6, 0] = oRb.T @ self.FK_lin_vel
-           self.kf.correct(self.Z)
-
-           # Retrieve and store results
-           cross_product = self.cross3(self._1Mi.translation.ravel(), self.IMU_ang_vel).ravel()
-           self.filt_lin_pos[:] = self.kf.X[0:3, 0] - self._1Mi.translation.ravel()  # base position in world frame
-           self.filt_lin_vel[:] = oRb.transpose() @ (self.kf.X[3:6, 0] - cross_product)  # base velocity in base frame
-			*/
-       }
-
-       /*
+           /*
        # Logging
        self.log_alpha[self.k_log] = self.alpha
        self.feet_status[:] = feet_status  # Save contact status sent to the estimator for logging
