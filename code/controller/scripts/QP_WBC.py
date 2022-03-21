@@ -2,10 +2,10 @@
 
 import numpy as np
 import pinocchio as pin
-from solo12InvKin import Solo12InvKin
+from InvKin import InvKin
 from time import perf_counter as clock
 from time import time
-import libcontroller_core as lrw
+import libcontroller_core as core
 from ModelLoader import ModelLoader
 
 class wbc_controller():
@@ -22,8 +22,8 @@ class wbc_controller():
 
         self.dt = dt  # Time step
 
-        self.invKin = Solo12InvKin(dt)  # Inverse Kinematics object
-        self.box_qp = lrw.QPWBC()  # Box Quadratic Programming solver
+        self.invKin = InvKin(dt)  # Inverse Kinematics object
+        self.box_qp = core.QPWBC()  # Box Quadratic Programming solver
 
         self.M = np.zeros((18, 18))
         self.Jc = np.zeros((12, 18))

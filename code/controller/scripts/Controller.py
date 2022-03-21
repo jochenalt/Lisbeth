@@ -9,7 +9,7 @@ from QP_WBC import wbc_controller
 import MPC_Wrapper
 import pybullet as pyb
 import pinocchio as pin
-import libcontroller_core as lrw
+import libcontroller_core as core
 from cmath import nan
 import RemoteControl
 
@@ -111,7 +111,7 @@ class Controller:
 
         
         # initialize Cpp state estimator
-        self.estimatorCpp = lrw.Estimator()
+        self.estimatorCpp = core.Estimator()
         self.estimatorCpp.initialize(dt_wbc, N_SIMULATION, self.h_init, perfectEstimator)
 
         # Enable/Disable hybrid control
@@ -125,19 +125,19 @@ class Controller:
         self.b_v = np.zeros((18, 1))
         self.o_v_filt = np.zeros((18, 1))
 
-        self.statePlanner = lrw.StatePlanner()
+        self.statePlanner = core.StatePlanner()
         self.statePlanner.initialize(dt_mpc, T_mpc, self.h_ref)
 
-        self.gait = lrw.Gait()
+        self.gait = core.Gait()
         self.gait.initialize(dt_mpc, T_gait, T_mpc, N_gait)
 
         shoulders = np.zeros((3, 4))
         shoulders[0, :] = [0.1946, 0.1946, -0.1946, -0.1946]
         shoulders[1, :] = [0.14695, -0.14695, 0.14695, -0.14695]
-        self.footstepPlanner = lrw.FootstepPlanner()
+        self.footstepPlanner = core.FootstepPlanner()
         self.footstepPlanner.initialize(dt_mpc, dt_wbc, T_mpc, self.h_ref, shoulders.copy(), self.gait, N_gait)
 
-        self.footTrajectoryGenerator = lrw.FootTrajectoryGenerator()
+        self.footTrajectoryGenerator = core.FootTrajectoryGenerator()
         self.footTrajectoryGenerator.initialize(0.05, 0.07, self.fsteps_init.copy(), shoulders.copy(),
                                                 dt_wbc, k_mpc, self.gait)
 

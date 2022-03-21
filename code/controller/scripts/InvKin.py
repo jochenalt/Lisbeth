@@ -2,11 +2,11 @@
 # from example_robot_data import load
 import numpy as np
 import pinocchio as pin
-import libcontroller_core as lrw
+import libcontroller_core as core
 from ModelLoader import ModelLoader
 
 
-class Solo12InvKin:
+class InvKin:
     def __init__(self, dt):
 
         # Robot model
@@ -15,7 +15,7 @@ class Solo12InvKin:
         self.dt = dt
 
         # Inverse Kinematics solver in C++
-        self.InvKinCpp = lrw.InvKin(dt)
+        self.InvKinCpp = core.InvKin(dt)
 
         # Memory assignation for variables
         self.cpp_posf = np.zeros((4, 3))
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     USE_VIEWER = True
     print("test")
     dt = 0.002
-    invKin = Solo12InvKin(dt)
+    invKin = InvKin(dt)
     q = invKin.robot.q0.copy()
     q = np.array([[-3.87696007e-01],
                   [-4.62877770e+00],

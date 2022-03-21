@@ -279,14 +279,14 @@ class RobotHAL():
         sys.stdout.flush()
 
 
-class Solo12(RobotHAL):
-    ''' Define the hardware interface to solo12'''
+class HardwareInterface(RobotHAL):
+    ''' Define the hardware interface'''
 
     def __init__(self, interfaceName="", dt=0.001):
         RobotHAL.__init__(self, interfaceName, dt)
 
     def InitRobotSpecificParameters(self):
-        ''' Definition of the Solo12 paramters '''
+        ''' Definition of the parameters '''
         self.nb_motors = 12
         self.motorToUrdf = [0, 3, 2, 1, 5, 4, 6, 9, 8, 7, 11, 10]
         self.gearRatio = np.array(self.nb_motors * [9., ])  # gearbox ratio

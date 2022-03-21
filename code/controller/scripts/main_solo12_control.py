@@ -8,14 +8,14 @@ import threading
 from Controller import Controller
 import numpy as np
 import argparse
-import libcontroller_core as lrw
+import libcontroller_core as core
 
-params = lrw.Params()  # Object that holds all controller parameters
+params = core.Params()  # Object that holds all controller parameters
 
 if params.SIMULATION:
     from PyBulletSimulator import PyBulletSimulator
 else:
-    import solo12
+    import HardwareInterface
 
 
 key_pressed = False
@@ -61,7 +61,7 @@ def clone_movements(name_interface_clone, q_init, cloneP, cloneD, cloneQdes, clo
     print("-- Launching clone interface --")
 
     print(name_interface_clone, params.dt_wbc)
-    clone = Solo12(name_interface_clone, dt=params.dt_wbc)
+    clone = HardwareInterface(name_interface_clone, dt=params.dt_wbc)
     clone.Init(calibrateEncoders=True, q_init=q_init)
 
     while cloneRunning.value and not clone.hardware.IsTimeout():

@@ -1,5 +1,5 @@
 import numpy as np
-import libcontroller_core as lrw
+import libcontroller_core as core
 from multiprocessing import Process, Value, Array
 from utils_mpc import quaternionToRPY
 
