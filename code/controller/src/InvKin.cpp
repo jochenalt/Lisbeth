@@ -1,4 +1,4 @@
-#include "qrw/InvKin.hpp"
+#include "InvKin.hpp"
 
 InvKin::InvKin(double dt_in) {
 

@@ -1,4 +1,4 @@
-#include "qrw/FootTrajectoryGenerator.hpp"
+#include "FootTrajectoryGenerator.hpp"
 
 // Trajectory generator functions (output reference pos, vel and acc of feet in swing phase)
 

@@ -1,18 +1,15 @@
-///////////////////////////////////////////////////////////////////////////////////////////////////
-///
-/// \brief This is the header for Gait class
-///
-/// \details Planner that outputs current and future locations of footsteps, the reference
-///          trajectory of the base and the position, velocity, acceleration commands for feet in
-///          swing phase based on the reference velocity given by the user and the current
-///          position/velocity of the base
-///
-//////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * header for Gait class
+ * Planner that outputs current and future locations of footsteps, the reference
+ * trajectory of the base and the position, velocity, acceleration commands for feet in
+ * swing phase based on the reference velocity given by the user and the current
+ * position/velocity of the base
+ * */
 
 #ifndef GAIT_H_INCLUDED
 #define GAIT_H_INCLUDED
 
-#include "qrw/Types.h"
+#include "Types.h"
 
 // Order of feet/legs: FL, FR, HL, HR
 
@@ -24,7 +21,15 @@ public:
     Gait();
     virtual ~Gait() {}
 
-    void initialize(double dt_in, double T_gait_in, double T_mpc_in, int N_gait);
+    /**
+     * initializes the gait manager
+     *  dt_in  loop time in [s]
+     *	T_gait_in  	duration of one gait period in seconds
+     *  T_mpc_in 	duration of mpc prediction horizon, should be the same like T_gait_in
+	 *  N_gait 		Number of rows in the gait matrix. Arbitrary value that should be set high enough so that there is always at least one empty line at the end of the gait matrix
+     *
+     */
+    void initialize(double dt_in /* [s] */, double T_gait_in /* [s] */, double T_mpc_in /* [s] */, int N_gait );
 
     /**
      * Compute the remaining and total duration of a swing phase or a stance phase based

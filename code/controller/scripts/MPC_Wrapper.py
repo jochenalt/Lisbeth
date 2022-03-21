@@ -1,7 +1,5 @@
-# coding: utf8
-
 import numpy as np
-import libquadruped_reactive_walking as MPC
+import libcontroller_core as lrw
 from multiprocessing import Process, Value, Array
 from utils_mpc import quaternionToRPY
 

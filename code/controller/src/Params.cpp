@@ -1,12 +1,10 @@
-#include "qrw/Params.hpp"
+#include "Params.hpp"
 
 using namespace yaml_control_interface;
 
 Params::Params()
     : interface("")
     , SIMULATION(false)
-    , LOGGING(false)
-    , PLOTTING(false)
     , dt_wbc(0.0)
     , N_gait(0)
     , envID(0)
@@ -38,12 +36,6 @@ void Params::initialize(const std::string& file_path)
 
     assert_yaml_parsing(robot_node, "robot", "SIMULATION");
     SIMULATION = robot_node["SIMULATION"].as<bool>();
-
-    assert_yaml_parsing(robot_node, "robot", "LOGGING");
-    LOGGING = robot_node["LOGGING"].as<bool>();
-
-    assert_yaml_parsing(robot_node, "robot", "PLOTTING");
-    PLOTTING = robot_node["PLOTTING"].as<bool>();
 
     assert_yaml_parsing(robot_node, "robot", "dt_wbc");
     dt_wbc = robot_node["dt_wbc"].as<double>();

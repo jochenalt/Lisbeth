@@ -3,11 +3,11 @@
 #include <boost/smart_ptr/shared_ptr.hpp>
 
 #include <Eigen/Core>
-#include "qrw/MPC.hpp"
-#include "other/st_to_cc.hpp"
+#include "MPC.hpp"
+#include "st_to_cc.hpp"
 #include "pinocchio/math/rpy.hpp"
-#include "qrw/Gait.hpp"
-#include "qrw/Params.hpp"
+#include "Gait.hpp"
+#include "Params.hpp"
 
 
 int main(int argc, char** argv) {
@@ -167,8 +167,6 @@ int main(int argc, char** argv) {
     Params params = Params();
     std::cout << params.interface << std::endl;
     std::cout << params.SIMULATION << std::endl;
-    std::cout << params.LOGGING << std::endl;
-    std::cout << params.PLOTTING << std::endl;
     std::cout << params.N_gait << std::endl;
 
     return EXIT_SUCCESS;

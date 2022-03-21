@@ -1,4 +1,4 @@
-#include "qrw/QPWBC.hpp"
+#include "QPWBC.hpp"
 
 
 QPWBC::QPWBC() {

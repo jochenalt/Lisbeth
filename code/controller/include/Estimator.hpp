@@ -5,8 +5,8 @@
 #ifndef ESTIMATOR_H_INCLUDED
 #define ESTIMATOR_H_INCLUDED
 
-#include "qrw/Types.h"
-#include "qrw/Utils.hpp"
+#include "Types.h"
+#include "Utils.hpp"
 
 #include "pinocchio/parsers/urdf.hpp"
 #include "pinocchio/algorithm/joint-configuration.hpp"

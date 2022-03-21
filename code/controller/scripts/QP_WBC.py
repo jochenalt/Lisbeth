@@ -5,7 +5,7 @@ import pinocchio as pin
 from solo12InvKin import Solo12InvKin
 from time import perf_counter as clock
 from time import time
-import libquadruped_reactive_walking as lrw
+import libcontroller_core as lrw
 from ModelLoader import ModelLoader
 
 class wbc_controller():

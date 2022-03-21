@@ -1,6 +1,6 @@
 #include <fstream>
 
-#include "qrw/Kinematics.hpp"
+#include "Kinematics.hpp"
 
 using namespace std;
 

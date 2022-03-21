@@ -1,4 +1,4 @@
-#include "qrw/MPC.hpp"
+#include "MPC.hpp"
 
 MPC::MPC(double dt_in, int n_steps_in, double T_gait_in, int N_gait) {
   dt = dt_in;

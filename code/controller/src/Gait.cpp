@@ -1,4 +1,4 @@
-#include "qrw/Gait.hpp"
+#include "Gait.hpp"
 
 Gait::Gait()
     : pastGait_()

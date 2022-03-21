@@ -2,15 +2,16 @@
 # from example_robot_data import load
 import numpy as np
 import pinocchio as pin
-import libquadruped_reactive_walking as lrw
-from example_robot_data.robots_loader import Solo12Loader
+import libcontroller_core as lrw
+from ModelLoader import ModelLoader
+
 
 class Solo12InvKin:
     def __init__(self, dt):
 
         # Robot model
-        Solo12Loader.free_flyer = False
-        self.robot = Solo12Loader().robot
+        ModelLoader.free_flyer = False
+        self.robot = ModelLoader().robot
         self.dt = dt
 
         # Inverse Kinematics solver in C++

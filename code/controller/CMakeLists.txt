@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.1)
 set (CMAKE_CXX_STANDARD 11)
 
 # Project properties
-set(PROJECT_NAME quadruped-reactive-walking)
-set(PROJECT_DESCRIPTION "Reactive walking control for lisbeth")
+set(PROJECT_NAME controller-core)
+set(PROJECT_DESCRIPTION "control for lisbeth")
 set(PROJECT_URL https://github.com/jochenalt/lisbeth)
 
 # Project options
@@ -43,25 +43,23 @@ SEARCH_FOR_BOOST()
 
 # Main Library
 set(${PROJECT_NAME}_HEADERS
-  #include/qrw/gepadd.hpp
-  include/qrw/MPC.hpp
-  include/qrw/Gait.hpp
-  include/qrw/Utils.hpp
-  include/qrw/Kinematics.hpp
-  include/qrw/Estimator.hpp
-  include/qrw/FootTrajectoryGenerator.hpp
-  include/qrw/FootstepPlanner.hpp
-  include/qrw/StatePlanner.hpp
-  include/qrw/Types.h
-  include/qrw/InvKin.hpp
-  include/qrw/QPWBC.hpp
-  include/qrw/Params.hpp
-  include/other/st_to_cc.hpp
+  include/MPC.hpp
+  include/Gait.hpp
+  include/Utils.hpp
+  include/Kinematics.hpp
+  include/Estimator.hpp
+  include/FootTrajectoryGenerator.hpp
+  include/FootstepPlanner.hpp
+  include/StatePlanner.hpp
+  include/Types.h
+  include/InvKin.hpp
+  include/QPWBC.hpp
+  include/Params.hpp
+  include/st_to_cc.hpp
   )
 
 set(${PROJECT_NAME}_SOURCES
   src/st_to_cc.cpp
-  #src/gepadd.cpp
   src/MPC.cpp
   src/Gait.cpp
   src/Utils.cpp
@@ -128,7 +126,7 @@ target_link_libraries(${PROJECT_NAMESPACE}-${PROJECT_NAME} ${PROJECT_NAME})
 
 # Python Bindings
 if(BUILD_PYTHON_INTERFACE)
-  add_subdirectory(python)
+  add_subdirectory(pythonBinding)
 endif()
 
 

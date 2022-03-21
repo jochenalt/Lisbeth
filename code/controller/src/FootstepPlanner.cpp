@@ -1,4 +1,4 @@
-#include "qrw/FootstepPlanner.hpp"
+#include "FootstepPlanner.hpp"
 
 FootstepPlanner::FootstepPlanner()
     : gait_(NULL)

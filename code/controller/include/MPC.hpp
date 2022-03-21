@@ -10,7 +10,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include "osqp.h"
-#include "other/st_to_cc.hpp"
+#include "st_to_cc.hpp"
 
 typedef Eigen::MatrixXd matXd;
 

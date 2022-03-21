@@ -1,7 +1,7 @@
 #ifndef QPWBC_H_INCLUDED
 #define QPWBC_H_INCLUDED
 
-#include "qrw/InvKin.hpp" // For pseudoinverse
+#include "InvKin.hpp" // For pseudoinverse
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -11,7 +11,7 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include "osqp.h"
-#include "other/st_to_cc.hpp"
+#include "st_to_cc.hpp"
 
 class QPWBC {
  private:

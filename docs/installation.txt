@@ -31,8 +31,9 @@ export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH
 #install gepetto-viewer-corba
 sudo apt-get install  -y robotpkg-py36\*-qt5-gepetto-viewer-corba
 
-#install robot-data
-sudo apt install  -y robotpkg-py36-example-robot-data
+# install robot-data
+# obsolete
+# sudo apt install  -y robotpkg-py36-example-robot-data
 
 #install  matplotlib
 sudo apt-get -y install python3-pip

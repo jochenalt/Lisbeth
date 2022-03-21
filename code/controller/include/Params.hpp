@@ -10,7 +10,7 @@
 #ifndef PARAMS_H_INCLUDED
 #define PARAMS_H_INCLUDED
 
-#include "qrw/Types.h"
+#include "Types.h"
 #include <yaml-cpp/yaml.h>
 
 class Params
@@ -41,8 +41,6 @@ public:
     // See .yaml file for meaning of parameters
     std::string interface;
     bool SIMULATION;
-    bool LOGGING;
-    bool PLOTTING;
     double dt_wbc;
     int N_gait;
     int envID;

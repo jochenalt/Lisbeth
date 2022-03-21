@@ -3,7 +3,6 @@ import numpy as np
 
 
 import RemoteControl
-import Logger
 import Estimator
 import pinocchio as pin
 
@@ -184,10 +183,6 @@ def display_all(solo, k, sequencer, fstep_planner, ftraj_gen, mpc):
     # Display locked target footholds with red spheres (gepetto gui)
     # Display desired 3D position of feet with magenta spheres (gepetto gui)
     ftraj_gen.update_viewer(solo.viewer, (k == 0))
-
-    # Display reference trajectory, predicted trajectory, desired contact forces, current velocity
-    # mpc.update_viewer(solo.viewer, (k == 0), sequencer)
-    # mpc.plot_graphs(sequencer)
 
     qu_pinocchio = np.array(solo.q0).flatten()
     qu_pinocchio[0:3] = mpc.q_w[0:3, 0]

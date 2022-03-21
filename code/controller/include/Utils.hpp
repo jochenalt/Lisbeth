@@ -3,7 +3,7 @@
 #define UTILS_H_INCLUDED
 
 #include <string>
-#include "qrw/Types.h"
+#include "Types.h"
 bool file_exists (const std::string& name);
 
 Eigen::Quaterniond eulerToQuaternion(double roll, double pitch, double yaw);
@@ -18,7 +18,6 @@ bool array_equal(Vector4 a, Vector4 b);
  * Computation uses x and dx, since in both cases the derivative is already available and does not need to be
  * calculated multiple times.
  */
-const double no_alpha = NAN;
 class ComplementaryFilter  {
 
 	public:

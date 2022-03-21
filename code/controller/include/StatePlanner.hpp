@@ -11,7 +11,7 @@
 #define STATEPLANNER_H_INCLUDED
 
 #include "pinocchio/math/rpy.hpp"
-#include "qrw/Types.h"
+#include "Types.h"
 
 
 class StatePlanner

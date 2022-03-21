@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-#include "qrw/Estimator.hpp"
+#include "Estimator.hpp"
 
 using namespace std;
 

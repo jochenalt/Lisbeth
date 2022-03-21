@@ -1,13 +1,13 @@
-#include "qrw/InvKin.hpp"
-#include "qrw/MPC.hpp"
-#include "qrw/StatePlanner.hpp"
-#include "qrw/Gait.hpp"
-#include "qrw/Kinematics.hpp"
-#include "qrw/Estimator.hpp"
-#include "qrw/FootstepPlanner.hpp"
-#include "qrw/FootTrajectoryGenerator.hpp"
-#include "qrw/QPWBC.hpp"
-#include "qrw/Params.hpp"
+#include "InvKin.hpp"
+#include "MPC.hpp"
+#include "StatePlanner.hpp"
+#include "Gait.hpp"
+#include "Kinematics.hpp"
+#include "Estimator.hpp"
+#include "FootstepPlanner.hpp"
+#include "FootTrajectoryGenerator.hpp"
+#include "QPWBC.hpp"
+#include "Params.hpp"
 
 #include <boost/python.hpp>
 #include <eigenpy/eigenpy.hpp>
@@ -300,8 +300,6 @@ struct ParamsPythonVisitor : public bp::def_visitor<ParamsPythonVisitor<Params>>
             // Read Params from Python
             .def_readwrite("interface", &Params::interface)
             .def_readwrite("SIMULATION", &Params::SIMULATION)
-            .def_readwrite("LOGGING", &Params::LOGGING)
-            .def_readwrite("PLOTTING", &Params::PLOTTING)
             .def_readwrite("dt_wbc", &Params::dt_wbc)
             .def_readwrite("N_gait", &Params::N_gait)
             .def_readwrite("envID", &Params::envID)
@@ -313,7 +311,6 @@ struct ParamsPythonVisitor : public bp::def_visitor<ParamsPythonVisitor<Params>>
             .def_readwrite("use_flat_plane", &Params::use_flat_plane)
             .def_readwrite("predefined_vel", &Params::predefined_vel)
             .def_readwrite("enable_pyb_GUI", &Params::enable_pyb_GUI);
-
     }
 
     static void expose()
@@ -328,7 +325,7 @@ void exposeParams() { ParamsPythonVisitor<Params>::expose(); }
 /////////////////////////////////
 /// Exposing classes
 /////////////////////////////////
-BOOST_PYTHON_MODULE(libquadruped_reactive_walking)
+BOOST_PYTHON_MODULE(libcontroller_core)
 {
 
     eigenpy::enableEigenPy();

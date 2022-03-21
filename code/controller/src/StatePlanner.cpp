@@ -1,4 +1,4 @@
-#include "qrw/StatePlanner.hpp"
+#include "StatePlanner.hpp"
 
 StatePlanner::StatePlanner()
     : dt_(0.0)
@@ -6,7 +6,6 @@ StatePlanner::StatePlanner()
     , n_steps_(0)
     , RPY_(Vector3::Zero())
 {
-    // Empty
 }
 
 void StatePlanner::initialize(double dt_in, double T_mpc_in, double h_ref_in)

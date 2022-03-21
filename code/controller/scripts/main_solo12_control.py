@@ -4,24 +4,18 @@ import os
 import sys
 import time
 
-sys.path.insert(0, './solopython')
-
 import threading
 from Controller import Controller
 import numpy as np
 import argparse
-from LoggerSensors import LoggerSensors
-from LoggerControl import LoggerControl
-import libquadruped_reactive_walking as lqrw
+import libcontroller_core as lrw
 
-params = lqrw.Params()  # Object that holds all controller parameters
+params = lrw.Params()  # Object that holds all controller parameters
 
 if params.SIMULATION:
     from PyBulletSimulator import PyBulletSimulator
 else:
-    # from pynput import keyboard
-    from solopython.solo12 import Solo12
-    from solopython.utils.qualisysClient import QualisysClient
+    import solo12
 
 
 key_pressed = False
@@ -137,10 +131,8 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
 
     if params.SIMULATION:
         device = PyBulletSimulator()
-        qc = None
     else:
         device = Solo12(name_interface, dt=params.dt_wbc)
-        qc = QualisysClient(ip="140.93.16.160", body_id=0)
 
     if name_interface_clone is not None:
         print("PASS")
@@ -155,15 +147,6 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
                         cloneD, cloneQdes, cloneDQdes, cloneRunning, cloneResult))
         clone.start()
         print(cloneResult.value)
-
-    if params.LOGGING or params.PLOTTING:
-        loggerSensors = LoggerSensors(device, qualisys=qc, logSize=params.N_SIMULATION-3)
-        loggerControl = LoggerControl(params.dt_wbc, params.N_gait, joystick=controller.joystick,
-                                      estimator=controller.estimator, loop=controller,
-                                      gait=controller.gait, statePlanner=controller.statePlanner,
-                                      footstepPlanner=controller.footstepPlanner,
-                                      footTrajectoryGenerator=controller.footTrajectoryGenerator,
-                                      logSize=params.N_SIMULATION-3)
 
     # Number of motors
     nb_motors = device.nb_motors
@@ -206,14 +189,6 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         device.SetDesiredJointPosition(controller.result.q_des)
         device.SetDesiredJointVelocity(controller.result.v_des)
         device.SetDesiredJointTorque(controller.result.tau_ff.ravel())
-
-        # Call logger
-        if params.LOGGING or params.PLOTTING:
-            loggerSensors.sample(device, qc)
-            loggerControl.sample(controller.joystick, controller.estimator,
-                                 controller, controller.gait, controller.statePlanner,
-                                 controller.footstepPlanner, controller.footTrajectoryGenerator,
-                                 controller.myController)
 
         # Send command to the robot
         for i in range(1):
@@ -268,15 +243,6 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         print("Masterboard timeout detected.")
         print("Either the masterboard has been shut down or there has been a connection issue with the cable/wifi.")
     device.hardware.Stop()  # Shut down the interface between the computer and the master board
-
-    # Plot recorded data
-    if params.PLOTTING:
-        loggerControl.plotAll(loggerSensors)
-
-    # Save the logs of the Logger object
-    if params.LOGGING:
-        loggerControl.saveAll(loggerSensors)
-        print("Log saved")
 
     if params.SIMULATION and enable_pyb_GUI:
         # Disconnect the PyBullet server (also close the GUI)

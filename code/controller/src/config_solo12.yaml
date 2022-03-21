@@ -1,8 +1,6 @@
 robot:
     interface: enp2s0
     SIMULATION: true      # Enable/disable PyBullet simulation or running on real robot
-    LOGGING: false        # Enable/disable logging during the experiment
-    PLOTTING: false       # Enable/disable automatic plotting at the end of the experiment
     dt_wbc: 0.002         # Time step of the whole body control
     N_gait: 20            # Number of rows in the gait matrix. Arbitrary value that should be set high enough
                           # so that there is always at least one empty line at the end of the gait matrix
