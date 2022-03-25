@@ -88,6 +88,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     Args:
         name_interface (string): name of the interface that is used to communicate with the robot
         name_interface_clone (string): name of the interface that will mimic the movements of the first
+        name_controller (string): name of the controller to be used 
     """
 
     # Check .yaml file for parameters of the controller
@@ -100,14 +101,22 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     # Time variable to keep track of time
     t = 0.0
 
-    # Default position after calibration
-    # x = in direction of the shoulder 
-    # y = in direction of the hip
-    # z 
+    # Default position after calibration 
+    # q_init = Vector[12] with angles of each actuators 
+    #        = [ Lumbar FL, Hip FL, Thigh FL, Lumbar FR, Hip FR, Thigh FR
+    #            Lumbar HL, Hip HL, Thigh HLL, Lumbar HR, Hip HR, Thigh HR
+
+    # position when starting walking
     q_init = np.array([0.0, 0.7, -1.4, 
                        -0.0, 0.7, -1.4, 
                        0.0, -0.7, +1.4, 
                        -0.0, -0.7, +1.4])
+
+    # position when sleeping
+    #q_init = np.array([0.0, 1.57, -3.14, 
+    #                   -0.0, 1.57, -3.14, 
+    #                   0.0, -1.57, +3.14, 
+    #                   -0.0, -1.57, +3.14])
 
     if params.SIMULATION and (des_vel_analysis is not None):
         print("Analysis: %1.1f %1.1f %1.1f" % (des_vel_analysis[0], des_vel_analysis[1], des_vel_analysis[5]))
@@ -125,7 +134,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
                             params.SIMULATION)
 
     if params.SIMULATION and (des_vel_analysis is not None):
-        controller.joystick.update_for_analysis(des_vel_analysis, N_analysis, N_steady)
+        controller.remoteControl.update_for_analysis(des_vel_analysis, N_analysis, N_steady)
 
     ####
 
@@ -159,9 +168,9 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     else:
         device.Init(calibrateEncoders=True, q_init=q_init)
 
-        # Wait for Enter input before starting the control loop
+    # Wait for Enter input before starting the control loop
         put_on_the_floor(device, q_init)
-
+        
     print("Start the motion.")
     # CONTROL LOOP ***************************************************
     t = 0.0
@@ -178,7 +187,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         # Check that the initial position of actuators is not too far from the
         # desired position of actuators to avoid breaking the robot
         if (t <= 10 * params.dt_wbc):
-            if np.max(np.abs(controller.result.q_des - device.q_mes)) > 0.15:
+            if np.max(np.abs(controller.result.q_des - device.q_mes)) > 0.2:
                 print("DIFFERENCE: ", controller.result.q_des - device.q_mes)
                 print("q_des: ", controller.result.q_des)
                 print("q_mes: ", device.q_mes)
@@ -262,9 +271,6 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     return finished, des_vel_analysis
 
 def main():
-    """Main function
-    """
-
     parser = argparse.ArgumentParser(description='Playback trajectory to show the extent of solo12 workspace.')
     parser.add_argument('-i',
                         '--interface',
@@ -275,6 +281,11 @@ def main():
                         required=False,
                         help='Name of the clone interface that will reproduce the movement of the first one \
                               (use ifconfig in a terminal), for instance "enp1s0"')
+
+    parser.add_argument('-ctrl',
+                        '--controller',
+                        required=False,
+                        help='Name of the controller used, use either walking or static"')
 
     f, v = control_loop(parser.parse_args().interface, parser.parse_args().clone)
     print(f, v)

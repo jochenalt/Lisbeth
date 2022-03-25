@@ -5,6 +5,7 @@ from multiprocessing.sharedctypes import Value
 from ctypes import c_double, c_bool, c_int
 from pynput import keyboard
 from setuptools._vendor.more_itertools.more import combination_index
+import Types
 
 class KeyboardClient():
     def __init__(self):
@@ -68,19 +69,19 @@ class KeyboardClient():
                 #print('Alphanumeric key pressed: {0} '.format(key))
                 if key.char == '1':
                     self.gaitChanged = True
-                    self.gaitCode.value = 1
+                    self.gaitCode.value = Types.GaitType.Pacing.value
                 if key.char == '2':
                     self.gaitChanged = True
-                    self.gaitCode.value = 2
+                    self.gaitCode.value = Types.GaitType.Bounding.value
                 if key.char == '3':
                     self.gaitChanged = True
-                    self.gaitCode.value = 3
+                    self.gaitCode.value = Types.GaitType.Walking.value
                 if key.char == '4':
                     self.gaitChanged = True
-                    self.gaitCode.value = 4
+                    self.gaitCode.value = Types.GaitType.Trot.value
                 if key.char == '5':
                     self.gaitChanged = True
-                    self.gaitCode.value = 5
+                    self.gaitCode.value = Types.GaitType.NoMovement.value
 
         except AttributeError:
             doBodyMove = keyboard.Key.shift in self.currentlyPressed

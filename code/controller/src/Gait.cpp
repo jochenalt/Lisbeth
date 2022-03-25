@@ -18,8 +18,11 @@ Gait::Gait()
 }
 
 
-void Gait::initialize(double dt_in, double T_gait_in, double T_mpc_in, int N_gait)
+void Gait::initialize(double dt_in, double T_gait_in, double T_mpc_in, int N_gait, int gaitType )
 {
+	if (dt_in == 0)
+        throw std::invalid_argument("passed dt_in == 0");
+
     dt_ = dt_in;
     T_gait_ = T_gait_in;
     T_mpc_ = T_mpc_in;
@@ -32,10 +35,21 @@ void Gait::initialize(double dt_in, double T_gait_in, double T_mpc_in, int N_gai
     if((n_steps_ > N_gait) || ((int)std::lround(T_gait_in / dt_in) > N_gait))
         throw std::invalid_argument("Sizes of matrices are too small for considered durations. Increase N_gait in config file.");
 
-    create_trot();
-    create_gait_f();
-
     is_static_ = false;
+    if (gaitType == GaitType::Pacing)
+    	create_pacing();
+    else if (gaitType == GaitType::Bounding)
+     	create_bounding();
+    else if (gaitType == GaitType::Trot)
+    	create_trot();
+    else if (gaitType == GaitType::Walking)
+    	create_walk();
+    else if (gaitType == GaitType::NoMovement) {
+    	create_static();
+    }
+
+    create_gait_f();
+    rollGait();
 }
 
 
@@ -186,8 +200,7 @@ double Gait::getPhaseDuration(int gaitPhaseIdx, int legNo, FootPhase footPhase)
     return t_phase * dt_;  // Take into account time step value
 }
 
-bool Gait::updateGait(int const k,
-                      int const k_mpc,
+bool Gait::updateGait(bool initiateNewGait,
                       VectorN const& q,
 					  int targetGaitType)
 {
@@ -195,7 +208,7 @@ bool Gait::updateGait(int const k,
 		changeGait (targetGaitType, q);
 	}
 
-	if (k % k_mpc == 0) {
+	if (initiateNewGait) {
         rollGait();
         return true;
     }
@@ -236,7 +249,7 @@ bool Gait::changeGait(int targetGait, VectorN const& q)
     	prevGaitType_ = currentGaitType_;
         currentGaitType_ = (GaitType)targetGait;
     }
-    else if (targetGait == GaitType::Static)
+    else if (targetGait == GaitType::NoMovement)
     {
         create_static();
         q_static_.head(7) = q.head(7);
@@ -247,9 +260,10 @@ bool Gait::changeGait(int targetGait, VectorN const& q)
         // is_static_ = true;
     }
 
+
     // if we change from static to any gait,
     // do a fast forward in order to ensure that we start right away
-    if ((prevGaitType_ == GaitType::Static) && (targetGait != GaitType::Static)) {
+    if ((prevGaitType_ == GaitType::NoMovement) && (targetGait != GaitType::NoMovement )) {
     	std::cout << "change from static to gait, fast forward" << std::endl;
 
     	while (!isNewPhase())

@@ -94,11 +94,11 @@ struct GaitPythonVisitor : public bp::def_visitor<GaitPythonVisitor<Gait>>
 
 
 
-            .def("initialize", &Gait::initialize, bp::args("dt_in", "T_gait_in", "T_mpc_in", "N_gait"),
+            .def("initialize", &Gait::initialize, bp::args("dt_in", "T_gait_in", "T_mpc_in", "N_gait", "GaitType"),
                  "Initialize Gait from Python.\n")
 
             // Update current gait matrix from Python
-            .def("updateGait", &Gait::updateGait, bp::args("k", "k_mpc", "q", "joystickCode"),
+            .def("updateGait", &Gait::updateGait, bp::args("rollGait", "q", "targetGaitType"),
                  "Update current gait matrix from Python.\n");
     }
 

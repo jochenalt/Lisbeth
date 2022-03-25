@@ -10,9 +10,7 @@ import Types
 pin.switchToNumpyArray()
 
 
-def readParamsFromSrdf(model, SRDF_PATH, verbose=False, has_rotor_parameters=True, referencePose='half_sitting'):
-    if has_rotor_parameters:
-        pin.loadRotorParameters(model, SRDF_PATH, verbose)
+def readParamsFromSrdf(model, SRDF_PATH, verbose, referencePose):
     model.armature = np.multiply(model.rotorInertia.flat, np.square(model.rotorGearRatio.flat))
     pin.loadReferenceConfigurations(model, SRDF_PATH, verbose)
     q0 = pin.neutral(model)
@@ -21,12 +19,11 @@ def readParamsFromSrdf(model, SRDF_PATH, verbose=False, has_rotor_parameters=Tru
     return q0
 
 
-class RobotLoader(object):
+class ModelLoader(object):
     urdf_filename = ''
     srdf_filename = ''
-    ref_posture = 'half_sitting'
-    has_rotor_parameters = False
-    free_flyer = False
+    ref_posture = "sleeping"
+    free_flyer = True
     verbose = False
     model_path = None
 
@@ -41,7 +38,7 @@ class RobotLoader(object):
         if Types.SRDFFilePath:
             self.srdf_path = Types.SRDFFilePath
             self.robot.q0 = readParamsFromSrdf(self.robot.model, self.srdf_path, self.verbose,
-                                               self.has_rotor_parameters, self.ref_posture)
+                                               self.ref_posture)
 
             if pin.WITH_HPP_FCL and pin.WITH_HPP_FCL_BINDINGS:
                 # Add all collision pairs
@@ -67,8 +64,4 @@ class RobotLoader(object):
         lb[:7] = -1
         self.robot.model.lowerPositionLimit = lb
 
-
-class ModelLoader(RobotLoader):
-    ref_posture = "standing"
-    free_flyer = True
 

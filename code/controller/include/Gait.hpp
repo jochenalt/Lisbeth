@@ -29,7 +29,7 @@ public:
 	 *  N_gait 		Number of rows in the gait matrix. Arbitrary value that should be set high enough so that there is always at least one empty line at the end of the gait matrix
      *
      */
-    void initialize(double dt_in /* [s] */, double T_gait_in /* [s] */, double T_mpc_in /* [s] */, int N_gait );
+    void initialize(double dt_in /* [s] */, double T_gait_in /* [s] */, double T_mpc_in /* [s] */, int N_gait, int gaitType );
 
     /**
      * Compute the remaining and total duration of a swing phase or a stance phase based
@@ -52,7 +52,7 @@ public:
      * Transfer current gait phase into past gait matrix
      * Insert future desired gait phase at the end of the gait matrix
      */
-    bool updateGait(int const k, int const k_mpc, VectorN const& q, int targetGaitType);
+    bool updateGait(bool const rollGait, VectorN const& q, int targetGaitType);
 
 
     void rollGait();

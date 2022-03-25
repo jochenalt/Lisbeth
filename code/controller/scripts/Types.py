@@ -1,5 +1,6 @@
 import pathlib
 import os
+from enum import Enum
 
 # our home directory 
 #   ./description   urdf, srdf, obj and stl files
@@ -19,5 +20,14 @@ URDFFilePath = RobotModelPath + "/" + URDFFileName
 
 # absolute filepath of srdf file
 SRDFFilePath = RobotModelPath + "/" + SRDFFileName
-
-print (URDFFilePath)
+                
+# All possible Gait types 
+# NoMovement is still a Gait but does not move
+# Static is completely static
+class GaitType(Enum):
+    NoGait = 0
+    Pacing = 1
+    Bounding = 2
+    Walking = 3
+    Trot = 4
+    NoMovement = 5

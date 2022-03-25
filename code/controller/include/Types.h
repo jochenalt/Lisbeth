@@ -45,11 +45,12 @@ typedef int LegNoType;
 
 // Different Gait Types:
 enum GaitType { NoGait = 0,
-	            Pacing   = 1, /* Camel */
-				Bounding = 2, /* Cheetah */
-				Walking  = 3, /* One leg up */
-				Trot     = 4,/* Dog */
-				Static   = 5 /* No Movement */ };
+	            Pacing   	= 1, /* Camel */
+				Bounding 	= 2, /* Cheetah */
+				Walking  	= 3, /* One leg up */
+				Trot     	= 4,/* Dog */
+				NoMovement  = 5, /* No Movement */
+};
 #define GaitNo 5
 
 const std::string urdfFilePath= "/home/jochen/lisbeth/description/solo12.urdf";

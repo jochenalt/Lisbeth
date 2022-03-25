@@ -97,6 +97,22 @@
         <joint name="HR_KFE" value="1.6" />
     </group_state>
 
+    <group_state name="sleeping" group="all_legs">
+        <joint name="root_joint" value="1.0 0. 0.235 0. 0. 0. 1." />
+        <joint name="FL_HAA" value="0." />
+        <joint name="FL_HFE" value="1.57" />
+        <joint name="FL_KFE" value="-3.14" />
+        <joint name="HL_HAA" value="0." />
+        <joint name="HL_HFE" value="-1.57" />
+        <joint name="HL_KFE" value="3.14" />
+        <joint name="FR_HAA" value="0." />
+        <joint name="FR_HFE" value="1.57" />
+        <joint name="FR_KFE" value="-3.14" />
+        <joint name="HR_HAA" value="0." />
+        <joint name="HR_HFE" value="-1.57" />
+        <joint name="HR_KFE" value="3.14" />
+    </group_state>
+
     <disable_collisions link1="FL_SHOULDER" link2="base_link" reason="Adjacent" />
     <disable_collisions link1="FR_SHOULDER" link2="base_link" reason="Adjacent" />
     <disable_collisions link1="HL_SHOULDER" link2="base_link" reason="Adjacent" />

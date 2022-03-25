@@ -184,7 +184,7 @@ class MPC_Wrapper:
                 # Create the MPC object of the parallel process during the first iteration
                 if k == 0:
                     # loop_mpc = MPC.MPC(self.dt, self.n_steps, self.T_gait)
-                    loop_mpc = MPC.MPC(self.dt, self.n_steps, self.T_gait, self.N_gait)
+                    loop_mpc = core.MPC(self.dt, self.n_steps, self.T_gait, self.N_gait)
 
                 # Run the asynchronous MPC with the data that as been retrieved
                 fsteps[np.isnan(fsteps)] = 0.0

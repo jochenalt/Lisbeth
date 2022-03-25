@@ -12,6 +12,7 @@ import pinocchio as pin
 import libcontroller_core as core
 from cmath import nan
 import RemoteControl
+import Types
 
 class Result:
     """Object to store the result of the control loop
@@ -103,10 +104,10 @@ class Controller:
         # Initialisation of the solo model/data and of the Gepetto viewer
         self.solo, self.fsteps_init, self.h_init = utils_mpc.init_robot(q_init, self.enable_gepetto_viewer)
 
-        # Create Joystick, FootstepPlanner, Logger and Interface objects
+        # Create remoteControl, FootstepPlanner, Logger and Interface objects
         self.estimator = utils_mpc.init_objects(
             dt_wbc, N_SIMULATION, self.h_init, perfectEstimator)
-        self.joystick = RemoteControl.RemoteControl(predefined_vel)
+        self.remoteControl= RemoteControl.RemoteControl(predefined_vel)
 
 
         
@@ -129,10 +130,12 @@ class Controller:
         self.statePlanner.initialize(dt_mpc, T_mpc, self.h_ref)
 
         self.gait = core.Gait()
-        self.gait.initialize(dt_mpc, T_gait, T_mpc, N_gait)
+        self.gait.initialize(dt_mpc, T_gait, T_mpc, N_gait, Types.GaitType.NoMovement.value)
+        self.gait.updateGait(True, self.q[0:7, 0:1], Types.GaitType.NoMovement.value)
 
         shoulders = np.zeros((3, 4))
-        shoulders[0, :] = [0.1946, 0.1946, -0.1946, -0.1946]
+        # x,y coordinates of shoulders
+        shoulders[0, :] = [0.1946, 0.1946, -0.1946, -0.1946]       
         shoulders[1, :] = [0.14695, -0.14695, 0.14695, -0.14695]
         self.footstepPlanner = core.FootstepPlanner()
         self.footstepPlanner.initialize(dt_mpc, dt_wbc, T_mpc, self.h_ref, shoulders.copy(), self.gait, N_gait)
@@ -186,7 +189,7 @@ class Controller:
 
         # Run the control loop once with a dummy device for initialization
         dDevice = dummyDevice()
-        dDevice.q_mes = q_init
+        dDevice.q_mes = q_init         # actuators positions [0..12]
         dDevice.v_mes = np.zeros(12)
         dDevice.baseLinearAcceleration = np.zeros(3)
         dDevice.baseAngularVelocity = np.zeros(3)
@@ -194,6 +197,9 @@ class Controller:
         dDevice.dummyPos = np.array([0.0, 0.0, q_init[2]])
         dDevice.b_baseVel = np.zeros(3)
         self.compute(dDevice)
+
+        
+
 
     def compute(self, device):
         """Run one iteration of the main control loop
@@ -205,7 +211,7 @@ class Controller:
         t_start = time.time()
 
         # Update the reference velocity coming from the gamepad
-        self.joystick.update_v_ref(self.k, self.velID)
+        self.remoteControl.update_v_ref(self.k, self.velID)
 
         start = time.clock()
 
@@ -224,26 +230,28 @@ class Controller:
         t_filter = time.time()
         
         # automatically turn on a gait if we start moving
-        if self.gait.getCurrentGaitType() == 5 and self.joystick.isMoving:
+        if (self.gait.getCurrentGaitType() == Types.GaitType.NoMovement.value)  and self.remoteControl.isMoving:
             print ("command received, start moving")
-            self.joystick.gaitCode = self.gait.getPrevGaitType()
-            if self.joystick.gaitCode == 0:
-               self.joystick.gaitCode = 4
+            self.remoteControl.gaitCode = self.gait.getPrevGaitType()
+            if self.remoteControl.gaitCode == 0:
+               self.remoteControl.gaitCode = Types.GaitType.Trot.value
 
         # automatically go to static mode if no movement is detected
         is_steady = self.estimatorCpp.isSteady()
-        if self.gait.getRemainingTime() == 1 and self.gait.getCurrentGaitType() != 5 and is_steady and  not self.joystick.isMoving:
+        if self.gait.getRemainingTime() == 1 and self.gait.getCurrentGaitType() != Types.GaitType.NoMovement.value and is_steady and  not self.remoteControl.isMoving:
             print ("no movement, calm down")
-            self.joystick.gaitCode = 5
-            
+            self.remoteControl.gaitCode = Types.GaitType.NoMovement.value
             
 
         # Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames
         oRh, oTh = self.updateState()
 
-        # Update gait
-        self.gait.updateGait(self.k, self.k_mpc, self.q[0:7, 0:1], self.joystick.gaitCode)
-        self.joystick.gaitCode = 0
+        # at a new gait cycle we need create the next gait round and start MPC
+        startNewGaitCycle = (self.k % self.k_mpc) == 0
+        
+        self.gait.updateGait(startNewGaitCycle, self.q[0:7, 0:1], self.remoteControl.gaitCode)
+
+        self.remoteControl.gaitCode = 0
 
         # Compute target footstep based on current and reference velocities
         o_targetFootstep = self.footstepPlanner.updateFootsteps(self.k % self.k_mpc == 0 and self.k != 0,
@@ -267,7 +275,7 @@ class Controller:
         t_planner = time.time()
 
         # Solve MPC problem once every k_mpc iterations of the main loop
-        if (self.k % self.k_mpc) == 0:
+        if startNewGaitCycle:
             try:
                 self.mpc_wrapper.solve(self.k, xref, fsteps, cgait)
             except ValueError:
@@ -294,7 +302,7 @@ class Controller:
 
         # Whole Body Control
         # If nothing wrong happened yet in the WBC controller
-        if (not self.myController.error) and (not self.joystick.stop):
+        if (not self.myController.error) and (not self.remoteControl.stop):
 
             self.q_wbc = np.zeros((19, 1))
             self.q_wbc[2, 0] = self.h_ref  # at position (0.0, 0.0, h_ref)
@@ -333,10 +341,6 @@ class Controller:
             self.result.v_des[:] = self.myController.vdes[6:, 0]
             self.result.tau_ff[:] = 0.8 * self.myController.tau_ff
 
-            # Display robot in Gepetto corba viewer
-            """if self.k % 5 == 0:
-                self.solo.display(self.q)"""
-
         t_wbc = time.time()
 
         # Security check
@@ -365,7 +369,8 @@ class Controller:
     def security_check(self):
         cpp_q_filt = np.transpose(np.array(self.estimatorCpp.getQFiltered())[np.newaxis])
         assert np.allclose(cpp_q_filt, self.estimator.q_filt)
-        if (self.error_flag == 0) and (not self.myController.error) and (not self.joystick.stop):
+        
+        if (self.error_flag == 0) and (not self.myController.error) and (not self.remoteControl.stop) and self.gait.getCurrentGaitType() != 6:
             if np.any(np.abs(self.estimator.q_filt[7:, 0]) > self.q_security):
                 self.myController.error = True
                 self.error_flag = 1
@@ -387,7 +392,7 @@ class Controller:
                 self.error_value = self.myController.tau_ff
 
         # If something wrong happened in TSID controller we stick to a security controller
-        if self.myController.error or self.joystick.stop:
+        if self.myController.error or self.remoteControl.stop:
 
             # Quantities sent to the control board
             self.result.P = np.zeros(12)
@@ -398,9 +403,9 @@ class Controller:
 
     def log_misc(self, tic, t_filter, t_planner, t_mpc, t_wbc):
 
-        # Log joystick command
-        if self.joystick is not None:
-            self.estimator.v_ref = self.joystick.v_ref
+        # Log remoteControl command
+        if self.remoteControl is not None:
+            self.estimator.v_ref = self.remoteControl.v_ref
 
         self.t_list_filter[self.k] = t_filter - tic
         self.t_list_planner[self.k] = t_planner - t_filter
@@ -413,8 +418,8 @@ class Controller:
     def updateState(self):
 
         # Update reference velocity vector
-        self.v_ref[0:3, 0] = self.joystick.v_ref[0:3, 0]  # TODO: Joystick velocity given in base frame and not
-        self.v_ref[3:6, 0] = self.joystick.v_ref[3:6, 0]  # in horizontal frame (case of non flat ground)
+        self.v_ref[0:3, 0] = self.remoteControl.v_ref[0:3, 0]  # TODO: remoteControl velocity given in base frame and not
+        self.v_ref[3:6, 0] = self.remoteControl.v_ref[3:6, 0]  # in horizontal frame (case of non flat ground)
         self.v_ref[6:, 0] = 0.0
 
         # Update position and velocity state vectors
@@ -448,7 +453,7 @@ class Controller:
             self.h_v[0:3, 0:1] = hRb @ self.v[0:3, 0:1]
             self.h_v[3:6, 0:1] = hRb @ self.v[3:6, 0:1]
 
-            # self.v[:6, 0] = self.joystick.v_ref[:6, 0]
+            # self.v[:6, 0] = self.remoteControl.v_ref[:6, 0]
         else:
             quat = np.array([[0.0, 0.0, 0.0, 1.0]]).transpose()
             hRb = np.eye(3)

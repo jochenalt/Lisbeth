@@ -109,7 +109,7 @@ class wbc_controller():
         # Solve the QP problem with C++ bindings
         self.box_qp.run(self.M, self.Jc, f_cmd.reshape((-1, 1)), RNEA.reshape((-1, 1)), self.k_since_contact)
         end = time()
-        print ("wbc %6.5f" % (end-start))
+        #print ("wbc %6.5f" % (end-start))
 
         # Add deltas found by the QP problem to reference quantities
         deltaddq = self.box_qp.get_ddq_res()
