@@ -19,6 +19,12 @@ class LowpassFilter:
 
     def compute(self, x):
         self.filtered_x = self.filtered_x * self.alpha + (1.0 - self.alpha) * x
+
+        return self.filtered_x
+
+    def computeN(self, x):
+        #self.filtered_x = [self.alpha * e for e in self.filtered_x ] + [(1.0 - self.alpha) * e for e in x] 
+        self.filtered_x[:] = self.alpha * self.filtered_x  + (1.0 - self.alpha) * x[:] 
         return self.filtered_x
 
 ######################################

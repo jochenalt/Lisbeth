@@ -20,7 +20,7 @@ class RemoteControl:
         self.reduced = False
         self.stop = False
 
-        self.v_ref_lowpass = LowpassFilter (dT, 50)
+        self.v_ref_lowpass = LowpassFilter (dT, 50, self.v_ref)
 
         # Bool to modify the update of v_ref
         # Used to launch multiple simulations

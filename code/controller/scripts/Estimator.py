@@ -3,7 +3,7 @@
 import numpy as np
 import pinocchio as pin
 from ModelLoader import ModelLoader
-
+from Utils import LowpassFilter
 
 class ComplementaryFilter:
     """Simple complementary filter
@@ -74,13 +74,9 @@ class Estimator:
         self.perfectEstimator = perfectEstimator
 
         # Filtering estimated linear velocity
-        fc = 50.0  # Cut frequency
-        y = 1 - np.cos(2*np.pi*fc*dt)
-        self.alpha_v = -y+np.sqrt(y*y+2*y)
-        fc = 500
-        self.alpha_v = 1-(dt / ( dt + 1/fc))
-
+        self.filter_v = LowpassFilter(dt, 500., np.zeros(3))
         # Filtering velocities used for security checks
+        self.filter_secu_actuator_v = LowpassFilter(dt, 6.0, np.zeros(12))
         fc = 6.0
         y = 1 - np.cos(2*np.pi*fc*dt)
         self.alpha_secu = -y+np.sqrt(y*y+2*y)
@@ -385,9 +381,9 @@ class Estimator:
 
         # Output filtered velocity vector (18 x 1)
         if self.perfectEstimator:  # Linear velocities directly from PyBullet
-            self.v_filt[0:3, 0] = (1 - self.alpha_v) * self.v_filt[0:3, 0] + self.alpha_v * device.b_baseVel
+            self.v_filt[0:3, 0] = self.filter_v.compute(device.b_baseVel)
         else:
-            self.v_filt[0:3, 0] = (1 - self.alpha_v) * self.v_filt[0:3, 0] + self.alpha_v * self.filt_lin_vel
+            self.v_filt[0:3, 0] = self.filter_v.computeN(self.filt_lin_vel)
 
         self.v_filt[3:6, 0] = self.filt_ang_vel  # Angular velocities are already directly from PyBullet
         self.v_filt[6:, 0] = self.actuators_vel  # Actuators velocities are already directly from PyBullet
@@ -408,7 +404,8 @@ class Estimator:
         ###
 
         # Output filtered actuators velocity for security checks
-        self.v_secu[:] = (1 - self.alpha_secu) * self.actuators_vel + self.alpha_secu * self.v_secu[:]
+        self.v_secu[:] = self.filter_secu_actuator_v.compute(self.actuators_vel)
+
         # Increment iteration counter
         self.k_log += 1
 
