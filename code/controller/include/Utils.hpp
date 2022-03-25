@@ -57,6 +57,7 @@ class LowpassFilter  {
 		~LowpassFilter() {};
 
 		void initialize(double dT, const VectorN& fc, const VectorN& init);
+		void initialize(double dT, double fc, const VectorN& init);
 
         /** compute complementary filter
          *  x quantity

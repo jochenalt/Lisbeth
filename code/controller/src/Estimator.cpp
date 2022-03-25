@@ -27,6 +27,8 @@ void Estimator::initialize(double dT, int N_simulation, double h_init, bool perf
 	this->alpha_v = -y+sqrt(y*y+2*y);
 	fc = 500;
 	this->alpha_v = 1-(dT / ( dT + 1/fc));
+	this->filter_v.initialize(dt, 500, Vector3({0.0, 0.0,0.0}));
+	this->filter_secu_actuator_v.initialize(dt, 6.0, Vector3({0.0, 0.0,0.0}));
 
 	//  Filtering velocities used for security checks
 	fc = 6.0;
@@ -412,9 +414,12 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN, double baseHeigh
 
        // Output filtered velocity vector (18 x 1)
        if (perfectEstimator)  //  Linear velocities directly from PyBullet
-           v_filt.block<3,1>(0,0) = (1 - alpha_v) * v_filt.block<3,1>(0,0) + alpha_v * baseVelocity;
+           // v_filt.block<3,1>(0,0) = (1 - alpha_v) * v_filt.block<3,1>(0,0) + alpha_v * baseVelocity;
+       	   v_filt.block<3,1>(0,0) = filter_v.compute (baseVelocity);
        else {
-    	   v_filt.block<3,1>(0,0) = (1 - alpha_v) * v_filt.block<3,1>(0,0)  + alpha_v * filt_lin_vel;
+    	   // v_filt.block<3,1>(0,0) = (1 - alpha_v) * v_filt.block<3,1>(0,0)  + alpha_v * filt_lin_vel;
+       	   v_filt.block<3,1>(0,0) = filter_v.compute (filt_lin_vel);
+
        }
 
        v_filt.block<3,1>(3,0) = filt_ang_vel.block<3,1>(0,0);   // Angular velocities are already directly from PyBullet
