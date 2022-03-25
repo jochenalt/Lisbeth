@@ -1,10 +1,6 @@
 import math
 import numpy as np
-import Estimator
 import pinocchio as pin
-
-from ModelLoader import ModelLoader
-
 
 ######################################
 # Filters                            #
@@ -121,57 +117,6 @@ def EulerToRotation(roll, pitch, yaw):
         [0, s_roll,  c_roll]])
     # R = RzRyRx
     return np.dot(Rz_yaw, np.dot(Ry_pitch, Rx_roll))
-
-##################
-# Initialisation #
-##################
-
-
-def init_robot(q_init):
-    """Load the model 
-
-    Args:
-        q_init (array): the default position of the robot actuators
-    """
-
-    # Load robot model and data
-    # Initialisation of the Gepetto viewer
-    ModelLoader.free_flyer = True
-    robot = ModelLoader().robot  
-    q = robot.q0.reshape((-1, 1))
-    q[7:, 0] = q_init
-
-    # Initialisation of model quantities
-    pin.centerOfMass(robot.model, robot.data, q, np.zeros((18, 1)))
-    pin.updateFramePlacements(robot.model, robot.data)
-    pin.crba(robot.model, robot.data, robot.q0)
-
-    # Initialisation of the position of footsteps
-    fsteps_init = np.zeros((3, 4))
-    indexes = [10, 18, 26, 34]
-    for i in range(4):
-        fsteps_init[:, i] = robot.data.oMf[indexes[i]].translation
-    h_init = (robot.data.oMf[1].translation - robot.data.oMf[indexes[0]].translation)[2]
-    fsteps_init[2, :] = 0.0
-
-    return robot, fsteps_init, h_init
-
-
-def init_objects(dt_tsid, k_max_loop, h_init, perfectEstimator):
-    """Create several objects that are used in the control loop
-
-    Args:
-        dt_tsid (float): time step of TSID
-        k_max_loop (int): maximum number of iterations of the simulation
-        predefined (bool): if we are using a predefined reference velocity (True) or a joystick (False)
-        h_init (float): initial height of the robot base
-        perfectEstimator (bool): if we use a perfect estimator
-    """
-
-    # Create Estimator object
-    estimator = Estimator.Estimator(dt_tsid, k_max_loop, h_init, perfectEstimator)
-
-    return estimator
 
 
 def getSkew(a):

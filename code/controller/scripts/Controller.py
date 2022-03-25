@@ -13,6 +13,8 @@ import libcontroller_core as core
 from cmath import nan
 import RemoteControl
 import Types
+import Estimator
+import ModelLoader
 
 class Result:
     """Object to store the result of the control loop
@@ -98,20 +100,34 @@ class Controller:
         if not isSimulation:
             perfectEstimator = False  # Cannot use perfect estimator if we are running on real robot
 
-        # Initialisation of the solo model/data and of the Gepetto viewer
-        self.solo, self.fsteps_init, self.h_init = Utils.init_robot(q_init)
+        # Load robot model and data
+        # Initialisation of the Gepetto viewer
+        ModelLoader.free_flyer = True
+        self.robot = ModelLoader.ModelLoader().robot  
+        q = self.robot.q0.reshape((-1, 1))
+        q[7:, 0] = q_init
+
+        # Initialisation of model quantities
+        pin.centerOfMass(self.robot.model, self.robot.data, q, np.zeros((18, 1)))
+        pin.updateFramePlacements(self.robot.model, self.robot.data)
+        pin.crba(self.robot.model, self.robot.data, self.robot.q0)
+
+        # Initialisation of the position of footsteps
+        self.fsteps_init = np.zeros((3, 4))
+        indexes = [10, 18, 26, 34]
+        for i in range(4):
+            self.fsteps_init[:, i] = self.robot.data.oMf[indexes[i]].translation
+            self.h_init = (self.robot.data.oMf[1].translation - self.robot.data.oMf[indexes[0]].translation)[2]
+            self.fsteps_init[2, :] = 0.0
 
         # Create remoteControl, FootstepPlanner, Logger and Interface objects
-        self.estimator = Utils.init_objects(
-            dt_wbc, N_SIMULATION, self.h_init, perfectEstimator)
+        self.estimator = Estimator.Estimator(dt_wbc, N_SIMULATION, self.h_init, perfectEstimator)
+
         self.remoteControl= RemoteControl.RemoteControl(dt_wbc, predefined_vel)
 
         # initialize Cpp state estimator
         self.estimatorCpp = core.Estimator()
         self.estimatorCpp.initialize(dt_wbc, N_SIMULATION, self.h_init, perfectEstimator)
-
-        # Enable/Disable hybrid control
-        self.enable_hybrid_control = True
 
         self.h_ref = self.h_init
         self.q = np.zeros((19, 1))
