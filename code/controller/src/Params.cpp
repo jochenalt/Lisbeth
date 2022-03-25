@@ -17,7 +17,7 @@ Params::Params()
     , predefined_vel(false)
     , enable_pyb_GUI(false)
 {
-    initialize(CONFIG_SOLO12_YAML);
+    initialize(CONFIG_YAML);
 }
 
 void Params::initialize(const std::string& file_path)

@@ -1,12 +1,29 @@
 import math
 import numpy as np
-
-
-import RemoteControl
 import Estimator
 import pinocchio as pin
 
 from ModelLoader import ModelLoader
+
+
+######################################
+# Filters                            #
+######################################
+
+class LowpassFilter:
+    """
+    Args:
+        dt (float): time step of the filter [s]
+        cutOffFrequency (float): cut frequency of the filter [Hz]
+    """
+    def __init__(self, dt, cutOffFrequency, initialValue = 0):
+
+        self.alpha = (1/dt) / ((1/dt) + cutOffFrequency)
+        self.filtered_x = initialValue
+
+    def compute(self, x):
+        self.filtered_x = self.filtered_x * self.alpha + (1.0 - self.alpha) * x
+        return self.filtered_x
 
 ######################################
 # RPY / Quaternion / Rotation matrix #
@@ -110,43 +127,34 @@ def EulerToRotation(roll, pitch, yaw):
 ##################
 
 
-def init_robot(q_init, enable_viewer):
-    """Load the solo model and initialize the Gepetto viewer if it is enabled
+def init_robot(q_init):
+    """Load the model 
 
     Args:
         q_init (array): the default position of the robot actuators
-        enable_viewer (bool): if the Gepetto viewer is enabled or not
     """
 
     # Load robot model and data
     # Initialisation of the Gepetto viewer
     ModelLoader.free_flyer = True
-    solo = ModelLoader().robot  # TODO:enable_viewer
-    q = solo.q0.reshape((-1, 1))
+    robot = ModelLoader().robot  
+    q = robot.q0.reshape((-1, 1))
     q[7:, 0] = q_init
 
-    """if enable_viewer:
-        solo.initViewer(loadModel=True)
-        if ('viewer' in solo.viz.__dict__):
-            solo.viewer.gui.addFloor('world/floor')
-            solo.viewer.gui.setRefreshIsSynchronous(False)"""
-    if enable_viewer:
-        solo.display(q)
-
     # Initialisation of model quantities
-    pin.centerOfMass(solo.model, solo.data, q, np.zeros((18, 1)))
-    pin.updateFramePlacements(solo.model, solo.data)
-    pin.crba(solo.model, solo.data, solo.q0)
+    pin.centerOfMass(robot.model, robot.data, q, np.zeros((18, 1)))
+    pin.updateFramePlacements(robot.model, robot.data)
+    pin.crba(robot.model, robot.data, robot.q0)
 
     # Initialisation of the position of footsteps
     fsteps_init = np.zeros((3, 4))
     indexes = [10, 18, 26, 34]
     for i in range(4):
-        fsteps_init[:, i] = solo.data.oMf[indexes[i]].translation
-    h_init = (solo.data.oMf[1].translation - solo.data.oMf[indexes[0]].translation)[2]
+        fsteps_init[:, i] = robot.data.oMf[indexes[i]].translation
+    h_init = (robot.data.oMf[1].translation - robot.data.oMf[indexes[0]].translation)[2]
     fsteps_init[2, :] = 0.0
 
-    return solo, fsteps_init, h_init
+    return robot, fsteps_init, h_init
 
 
 def init_objects(dt_tsid, k_max_loop, h_init, perfectEstimator):
@@ -164,31 +172,6 @@ def init_objects(dt_tsid, k_max_loop, h_init, perfectEstimator):
     estimator = Estimator.Estimator(dt_tsid, k_max_loop, h_init, perfectEstimator)
 
     return estimator
-
-
-def display_all(solo, k, sequencer, fstep_planner, ftraj_gen, mpc):
-    """Update various objects in the Gepetto viewer: the Solo robot as well as debug spheres
-
-    Args:
-        k (int): current iteration of the simulation
-        sequencer (object): ContactSequencer object
-        fstep_planner (object): FootstepPlanner object
-        ftraj_gen (object): FootTrajectoryGenerator object
-        mpc (object): MpcSolver object
-    """
-
-    # Display non-locked target footholds with green spheres (gepetto gui)
-    fstep_planner.update_viewer(solo.viewer, (k == 0))
-
-    # Display locked target footholds with red spheres (gepetto gui)
-    # Display desired 3D position of feet with magenta spheres (gepetto gui)
-    ftraj_gen.update_viewer(solo.viewer, (k == 0))
-
-    qu_pinocchio = np.array(solo.q0).flatten()
-    qu_pinocchio[0:3] = mpc.q_w[0:3, 0]
-    qu_pinocchio[3:7] = getQuaternion(np.array([mpc.q_w[3:6, 0]])).flatten()
-    # Refresh the gepetto viewer display
-    solo.display(qu_pinocchio)
 
 
 def getSkew(a):

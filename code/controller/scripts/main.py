@@ -113,7 +113,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
                        -0.0, -0.7, +1.4])
 
     # position when sleeping
-    #q_init = np.array([0.0, 1.57, -3.14, 
+    # q_init = np.array([0.0, 1.57, -3.14, 
     #                   -0.0, 1.57, -3.14, 
     #                   0.0, -1.57, +3.14, 
     #                   -0.0, -1.57, +3.14])
@@ -168,7 +168,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     else:
         device.Init(calibrateEncoders=True, q_init=q_init)
 
-    # Wait for Enter input before starting the control loop
+        # Wait for Enter input before starting the control loop
         put_on_the_floor(device, q_init)
         
     print("Start the motion.")

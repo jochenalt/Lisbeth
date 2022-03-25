@@ -1,7 +1,7 @@
 # coding: utf8
 
 import numpy as np
-import utils_mpc
+import Utils
 import time
 import math
 
@@ -92,9 +92,6 @@ class Controller:
         # List to store the IDs of debug lines
         self.ID_deb_lines = []
 
-        # Enable/Disable Gepetto viewer
-        self.enable_gepetto_viewer = False
-
         # Enable/Disable perfect estimator
         perfectEstimator = False
         self.isSimulation = isSimulation
@@ -102,15 +99,13 @@ class Controller:
             perfectEstimator = False  # Cannot use perfect estimator if we are running on real robot
 
         # Initialisation of the solo model/data and of the Gepetto viewer
-        self.solo, self.fsteps_init, self.h_init = utils_mpc.init_robot(q_init, self.enable_gepetto_viewer)
+        self.solo, self.fsteps_init, self.h_init = Utils.init_robot(q_init)
 
         # Create remoteControl, FootstepPlanner, Logger and Interface objects
-        self.estimator = utils_mpc.init_objects(
+        self.estimator = Utils.init_objects(
             dt_wbc, N_SIMULATION, self.h_init, perfectEstimator)
-        self.remoteControl= RemoteControl.RemoteControl(predefined_vel)
+        self.remoteControl= RemoteControl.RemoteControl(dt_wbc, predefined_vel)
 
-
-        
         # initialize Cpp state estimator
         self.estimatorCpp = core.Estimator()
         self.estimatorCpp.initialize(dt_wbc, N_SIMULATION, self.h_init, perfectEstimator)
@@ -347,7 +342,7 @@ class Controller:
         self.security_check()
 
         # Update PyBullet camera
-        self.pyb_camera(device, 0.0)  # to have yaw update in simu: utils_mpc.quaternionToRPY(self.estimator.q_filt[3:7, 0])[2, 0]
+        self.pyb_camera(device, 0.0)  # to have yaw update in simu: Utils.quaternionToRPY(self.estimator.q_filt[3:7, 0])[2, 0]
 
         # Logs
         self.log_misc(t_start, t_filter, t_planner, t_mpc, t_wbc)
@@ -437,7 +432,7 @@ class Controller:
 
             # Mix perfect yaw with pitch and roll measurements
             self.yaw_estim += self.v_ref[5, 0:1] * self.myController.dt
-            self.q[3:7, 0] = utils_mpc.EulerToQuaternion([self.estimator.RPY[0], self.estimator.RPY[1], self.yaw_estim])
+            self.q[3:7, 0] = Utils.EulerToQuaternion([self.estimator.RPY[0], self.estimator.RPY[1], self.yaw_estim])
             cpp_RPY = np.transpose(np.array(self.estimatorCpp.getImuRPY())[np.newaxis])
             if (not np.allclose(cpp_RPY, self.estimator.RPY)):
                 print("assert cpp_RPY", cpp_RPY , "RPY", self.estimator.RPY)
@@ -449,7 +444,7 @@ class Controller:
             self.v = self.estimator.v_filt.copy()
             cpp_v_filt = self.estimatorCpp.getVFiltered()
 
-            hRb = utils_mpc.EulerToRotation(self.estimator.RPY[0], self.estimator.RPY[1], 0.0)
+            hRb = Utils.EulerToRotation(self.estimator.RPY[0], self.estimator.RPY[1], 0.0)
             self.h_v[0:3, 0:1] = hRb @ self.v[0:3, 0:1]
             self.h_v[3:6, 0:1] = hRb @ self.v[3:6, 0:1]
 

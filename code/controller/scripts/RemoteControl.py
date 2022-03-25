@@ -1,8 +1,9 @@
 # coding: utf8
 
 import numpy as np
-from keyboard import KeyboardClient
+from Keyboard import KeyboardClient
 import Types
+from Utils import LowpassFilter 
 
 class RemoteControl:
     """Joystick-like controller that outputs the reference velocity in local frame
@@ -11,7 +12,7 @@ class RemoteControl:
         predefined (bool): use either a predefined velocity profile (True) or a gamepad (False)
     """
 
-    def __init__(self, predefined, multi_simu=False):
+    def __init__(self, dT, predefined, multi_simu=False):
 
         # Reference velocity in local frame
         self.v_ref = np.array([[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
@@ -19,14 +20,7 @@ class RemoteControl:
         self.reduced = False
         self.stop = False
 
-        dT = 0.002  # wbc frequency 500 Hz
-        fc = 100  #  cutoff frequency
-        y = 1 - np.cos(2*np.pi*fc*dT)
-        self.alpha = -y+np.sqrt(y*y+2*y)
-
-        tc = 0.02  #  cutoff frequency at 50 Hz
-        dT = 0.0020  # velocity reference is updated every ms
-        self.alpha = dT / tc
+        self.v_ref_lowpass = LowpassFilter (dT, 50)
 
         # Bool to modify the update of v_ref
         # Used to launch multiple simulations
@@ -103,7 +97,7 @@ class RemoteControl:
 
 
         # Low pass filter to slow down the changes of velocity when moving the joysticks
-        self.v_ref = self.alpha * self.v_gp + (1-self.alpha) * self.v_ref
+        self.v_ref = self.v_ref_lowpass.compute(self.v_gp)
         self.v_ref[(self.v_ref < 0.005) & (self.v_ref > -0.005)] = 0.0
     
         # Update joystick code depending on which buttons are pressed

@@ -118,7 +118,7 @@ endif()
 
 target_compile_options(${PROJECT_NAME} PUBLIC -DNDEBUG -O3)
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC CONFIG_SOLO12_YAML="${PROJECT_SOURCE_DIR}/src/config_solo12.yaml")
+target_compile_definitions(${PROJECT_NAME} PUBLIC CONFIG_YAML="${PROJECT_SOURCE_DIR}/src/config.yaml")
 
 # Main Executable
 add_executable(${PROJECT_NAMESPACE}-${PROJECT_NAME} src/main.cpp)
