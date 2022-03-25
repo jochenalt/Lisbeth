@@ -339,16 +339,17 @@ void Estimator::run_filter(int k, MatrixN gait, MatrixN goalsN, double baseHeigh
        int b = remaining_steps;
        int n = 1; // Nb of steps of margin around contact switch
 
-       double v_max = 1.00;
-       double v_min = 0.97; //  Minimum alpha value
+       double alpha_v_max = 1.00;
+       double alpha_v_min = (500./ ( 500. + 15));   //  Minimum alpha value
+
        double c = ((a + b) - 2) * 0.5;
        if ((a <= 0) or (b <= 1)) {
     	   //  If we are close from contact switch
-           alpha = v_max; // Only trust IMU data
+           alpha = alpha_v_max; // Only trust IMU data
            close_from_contact = true; //  Raise flag
        }
        else {
-           alpha = v_min + (v_max - v_min) * abs(c - (a - n)) / c;
+           alpha = alpha_v_min + (alpha_v_max - alpha_v_min) * abs(c - (a - n)) / c;
            close_from_contact = false; //  Lower flag
        }
 

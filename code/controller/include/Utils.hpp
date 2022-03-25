@@ -49,4 +49,27 @@ class ComplementaryFilter  {
 		VectorN lowpassed_x;	// low pass filtered x
 };
 
+class LowpassFilter  {
+
+	public:
+
+		LowpassFilter();
+		~LowpassFilter() {};
+
+		void initialize(double dT, const VectorN& fc, const VectorN& init);
+
+        /** compute complementary filter
+         *  x quantity
+         *  dx derivative of the quantity
+         *  alpha overwrites the cut off frequency and represents the weight of the previous value x */
+		VectorN compute(const VectorN& x);
+		VectorN compute(const VectorN& x, const VectorN& dx);
+
+	    /** patch the low pass value */
+	    void patchLowPassed(int idx, double x);
+
+	private:
+	    VectorN alpha;
+		VectorN filtered_x;	// low pass filtered x
+};
 #endif

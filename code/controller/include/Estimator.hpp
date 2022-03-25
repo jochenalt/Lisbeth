@@ -71,6 +71,10 @@ private:
 	ComplementaryFilter filter_xyz_pos;
 	ComplementaryFilter filter_xyz_acc;
 
+	LowpassFilter filter_v;
+	LowpassFilter filter_secu_actuator_v;
+
+
 	double offset_yaw_IMU;
 	Vector3 IMU_lin_acc;			// 	Linear acceleration of body (base frame) from IMU
 	Vector3 IMU_ang_vel;    		// 	angular velocity of body (base frame) from IMU

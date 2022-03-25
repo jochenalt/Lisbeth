@@ -134,3 +134,37 @@ void ComplementaryFilter::patchLowPassed(int idx, double x) {
 	lowpassed_x[idx] = x;
 }
 
+
+
+LowpassFilter::LowpassFilter(){
+    alpha = VectorN::Zero(3);
+    filtered_x = VectorN::Zero(3);
+
+}
+
+void LowpassFilter::initialize(double par_dT, const VectorN& par_fc, const VectorN& init){
+	// compute alpha per entry
+	for (int i = 0;i<par_fc.rows();i++) {
+		alpha[i] = 1-(par_dT / ( par_dT + 1/par_fc[i]));
+		filtered_x[i] = init[i];
+	}
+}
+
+VectorN LowpassFilter::compute(const VectorN& par_x) {
+	return compute(par_x, VectorN::Constant(par_x.rows(), 1, 0.0) );
+}
+
+VectorN LowpassFilter::compute(const VectorN& par_x, const VectorN& par_dx) {
+
+	// do low pass filter
+	VectorN negAlpha = VectorN::Constant(par_x.rows(), 1, 1.0) - alpha;
+	filtered_x = alpha.cwiseProduct(filtered_x) + negAlpha.cwiseProduct(par_x);
+
+	return filtered_x;
+}
+
+void LowpassFilter::patchLowPassed(int idx, double x) {
+	filtered_x[idx] = x;
+}
+
+

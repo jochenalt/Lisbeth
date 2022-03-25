@@ -318,14 +318,14 @@ class Estimator:
         b = remaining_steps
         n = 1  # Nb of steps of margin around contact switch
 
-        v_max = 1.00
-        v_min = 0.97  # Minimum alpha value
+        alpha_v_max = 1.00
+        alpha_v_min = 500./ ( 500. + 15)   # Minimum alpha value
         c = ((a + b) - 2 * n) * 0.5
         if (a <= (n-1)) or (b <= n):  # If we are close from contact switch
-            self.alpha = v_max  # Only trust IMU data
+            self.alpha = alpha_v_max  # Only trust IMU data
             self.close_from_contact = True  # Raise flag
         else:
-            self.alpha = v_min + (v_max - v_min) * np.abs(c - (a - n)) / c
+            self.alpha = alpha_v_min + (alpha_v_max - alpha_v_min) * np.abs(c - (a - n)) / c
             #self.alpha = 0.997
             self.close_from_contact = False  # Lower flag
 
