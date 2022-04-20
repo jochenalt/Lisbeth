@@ -154,3 +154,83 @@ robotpkg-py36-qt5-gepetto-viewer-corba/bionic,now 5.6.0 amd64 [installed]
 robotpkg-py36-tsid/bionic,now 1.6.1 amd64 [installed]
 robotpkg-qt5-osgqt/bionic,now 3.5.7r3 amd64 [installed,automatic]
 robotpkg-tsid/bionic,now 1.6.1 amd64 [installed,automatic]
+
+
+
+
+### ODrivetool on Windows
+Install Zadiq
+Install Anaconda from https://www.anaconda.com/download/#windows
+call Anaconda prompt 
+pip install --upgrade odrive
+
+Start zadig and set the following drivers
+Zadig → options-> List all devices
+Odrive 3.6 CDC interface install USB Serial(CDC)
+ODrive 3.6 Native Interface install libusb-win32 (v1.2.6.0)
+
+Configuration of ODrive:
+# Motor
+# 359MΩ
+
+# setup
+odrv0.erase_configuration()
+odrv0.axis0.motor.config.current_lim = 10
+odrv0.config.enable_brake_resistor = True
+odrv0.config.brake_resistance = 2
+odrv0.axis0.config.startup_encoder_offset_calibration = False
+
+# Motor
+odrv0.axis0.motor.config.pole_pairs = 12
+odrv0.axis0.motor.config.torque_constant =  8.27 / 300
+odrv0.axis0.motor.config.motor_type = MOTOR_TYPE_HIGH_CURRENT
+odrv0.axis0.motor.config.resistance_calib_max_voltage = 4
+odrv0.axis0.motor.config.calibration_current = 4
+odrv0.axis0.motor.config.current_lim = 4
+
+# controller
+odrv0.axis0.controller.config.vel_limit = 10
+odrv0.axis0.controller.config.pos_gain =100
+odrv0.axis0.controller.config.vel_integrator_gain = 0.02
+odrv0.axis0.controller.config.vel_gain = 0.02
+
+# encoder
+odrv0.axis0.encoder.config.cpr=20000
+odrv0.axis0.encoder.config.direction = -1
+odrv0.axis0.encoder.config.use_index = True
+
+# controller 
+odrv0.axis0.controller.config.input_filter_bandwidth = 20
+odrv0.axis0.controller.config.input_mode = INPUT_MODE_POS_FILTER
+odrv0.axis0.motor.config.current_control_bandwidth = 200 '''responsiveness of controller
+
+# calibration
+odrv0.axis0.motor.config.pre_calibrate = False
+odrv0.axis0.encoder.config.pre_calibrated = False
+odrv0.axis0.requested_state = AXIS_STATE_FULL_CALIBRATION_SEQUENCE
+odrv0.axis0.encoder.config.pre_calibrated=True
+odrv0.axis0.motor.config.pre_calibrated=True
+
+# save
+odrv0.save_configuration()
+
+
+# Startup procedure
+# look for Encoders index positions
+odrv0.reboot()
+odrv0.axis0.motor.is_calibrated
+odrv0.axis0.encoder.index_found
+odrv0.axis0.requested_state = AXIS_STATE_ENCODER_INDEX_SEARCH
+
+# start control loop
+odrv0.axis0.controller.config.input_filter_bandwidth = 20
+odrv0.axis0.controller.config.input_mode = INPUT_MODE_POS_FILTER
+odrv0.axis0.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
+
+# miscellenous
+odrv0.reboot()
+odrv0.clear_errors()
+dump_errors(odrv0)
+
+odrv0.save_configuration()
+odrv0.axis0.requested_state = AXIS_STATE_IDLE
