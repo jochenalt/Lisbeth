@@ -234,3 +234,7 @@ dump_errors(odrv0)
 
 odrv0.save_configuration()
 odrv0.axis0.requested_state = AXIS_STATE_IDLE
+
+# change UART protocol
+odrv0.config.uart0_protocol = STREAM_PROTOCOL_TYPE_ASCII_AND_STDOUT
+odrv0.config.uart0_protocol = STREAM_PROTOCOL_TYPE_FIBRE

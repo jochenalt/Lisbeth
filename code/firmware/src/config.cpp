@@ -37,12 +37,21 @@ struct eeprom_master_type {
 	}
 } persMemory;
 
-
 configuration_type config;
-
 
 // write the full config block to EEPROM
 void configuration_type::write() {
+	config.write_counter++;				// mark an additional write cycle
+
+	// check if we need to switch to the next bank
+	if (config.write_counter >= EEPROM_MAX_WRITES) {
+		// new address, starting at sizeof_eeprom and increased in steps of sizeof(config)
+		persMemory.mem_bank_address += sizeof(config);
+		if (persMemory.mem_bank_address + sizeof(config) >= E2END)
+			persMemory.mem_bank_address = sizeof(persMemory);
+		config.write_counter = 0;	
+	}
+
 	eeprom_write_block(&config, (char*)(int)persMemory.mem_bank_address, sizeof(config));
 }
 
@@ -59,7 +68,6 @@ void configuration_type::writeByte(uint16_t no_of_byte) {
 	}
 }
 
-// reading is done during setup only, so this trick is not necessary
 void readConfiguration() {
 	persMemory.read();
 
@@ -76,6 +84,7 @@ void writeConfiguration() {
 
 void resetConfiguration() {
     persMemory.setup();
+	config.setup();
 }
 
 void setupConfiguration() {

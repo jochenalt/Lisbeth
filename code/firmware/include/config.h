@@ -7,8 +7,8 @@
 #include <version.h>
 #include <EEPROM.h>
 
-// This is the configuration memory block (the aforementioned "bank"). There is always one 
-// active memory bank, its location in EPPROM changes whenever the write counter gets too high
+// This is the configuration memory block that is stored in EEPROM in a "bank". It contains a write_counter for counting the number of 
+// write operations determining the right time when to switch the bank.
 struct configuration_type {
 	uint16_t write_counter;				// counts the write operation to change the EPPROM bank when overflows
 
