@@ -9,7 +9,22 @@ class ODrive {
 
 public:
     ODrive();
-    void setup(Stream& serial);
+
+    // setup ODrive by establishing the communication via the passed UART stream
+    void setup(HardwareSerial& serial, uint32_t baudrate );
+
+    // return the voltage of the ODrive board
+    float getVBusVoltage();
+
+    // return the version of the firmware
+    void getVersion(uint16_t &major, uint16_t &minor, uint16_t &revision);
+
+    //  retrieve current state of motor
+    void getState(float &currentPosition, float &currentVelocity, float &currentCurrent);
+
+    // define desired state of motor and return the current state
+    void setTargetState(float position, float velocity, float torque, 
+                        float &currentPosition, float &currentVelocity, float &currentCurrent);
 
     // Commands
     void SetPosition(int motor_number, float position);
@@ -22,21 +37,16 @@ public:
     // Getters
     float GetVelocity(int motor_number);
     float GetPosition(int motor_number);
-    // General params
-    float readFloat();
-    int32_t readInt();
 
-    // return the voltage of the ODrive board
-    float getVBusVoltage();
-    // return the version of the firmware
-    void getVersion(uint16_t &major, uint16_t &minor, uint16_t &revision);
 
     // State helper
-    bool run_state(int axis, int requested_state, bool wait_for_idle, float timeout = 10.0f);
+    bool run_state(bool withCheckSum, int axis, int requested_state, bool wait_for_idle, float timeout = 10.0f);
 private:
-    String readString();
+    float readFloat(bool withCheckSum);
+    int32_t readInt(bool withCheckSum);
+    String readString(bool withCheckSum);
 
-    Stream* serial_ = NULL;
+    HardwareSerial* serial_ = NULL;
 };
 
 #endif 

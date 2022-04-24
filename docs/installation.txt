@@ -205,7 +205,7 @@ odrv0.axis0.controller.config.input_mode = INPUT_MODE_POS_FILTER
 odrv0.axis0.motor.config.current_control_bandwidth = 200 '''responsiveness of controller
 
 # calibration
-odrv0.axis0.motor.config.pre_calibrate = False
+odrv0.axis0.motor.config.pre_calibrated = False
 odrv0.axis0.encoder.config.pre_calibrated = False
 odrv0.axis0.requested_state = AXIS_STATE_FULL_CALIBRATION_SEQUENCE
 odrv0.axis0.encoder.config.pre_calibrated=True
