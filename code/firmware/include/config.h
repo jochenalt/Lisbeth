@@ -14,11 +14,12 @@ struct configuration_type {
 
     /** block with application configuration data */ 
 	unsigned long counter;
-
+	/** end of block with application configuration data */
+	
 	// initialize all configuration values to factory settings
 	void setup() {
-		write_counter = 0;
-		counter = 1;					// now_us [us] between two images. In normal operations, anything between 1000000/3 fps and 100000/20 fps is allowed
+		write_counter = 0;				// whenever a write operation happens, this counter is increased 
+		counter = 1;					
 	}
 	
 	void write() ;

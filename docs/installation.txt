@@ -159,7 +159,8 @@ robotpkg-tsid/bionic,now 1.6.1 amd64 [installed,automatic]
 
 
 ### ODrivetool on Windows
-Install Zadiq
+# from https://docs.odriverobotics.com/v/latest/getting-started.html
+Install Zadiq from https://zadig.akeo.ie
 Install Anaconda from https://www.anaconda.com/download/#windows
 call Anaconda prompt 
 pip install --upgrade odrive
@@ -238,3 +239,9 @@ odrv0.axis0.requested_state = AXIS_STATE_IDLE
 # change UART protocol
 odrv0.config.uart0_protocol = STREAM_PROTOCOL_TYPE_ASCII_AND_STDOUT
 odrv0.config.uart0_protocol = STREAM_PROTOCOL_TYPE_FIBRE
+
+# changing ODrive firmware
+# establish Windows Linux Subsystem 
+# run everything in a WLS shell with the Ubuntu 18 manual
+follow https://docs.odriverobotics.com/v/latest/developer-guide.html
+

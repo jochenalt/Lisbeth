@@ -18,7 +18,7 @@ const long EEPROM_MAGIC_NUMBER = 1565+VERSION;  // magic number to indicate whet
 // is allocated in the master block and used from now on.
 
 struct eeprom_master_type {
-	uint16_t long magic_number;							// marker to indicate correct initialization
+	uint16_t magic_number;			    				// marker to indicate correct initialization
 	uint16_t mem_bank_address;					
 	void setup() {
 		magic_number = EEPROM_MAGIC_NUMBER;				// marker to indicate correct initialization
