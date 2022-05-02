@@ -245,3 +245,6 @@ odrv0.config.uart0_protocol = STREAM_PROTOCOL_TYPE_FIBRE
 # run everything in a WLS shell with the Ubuntu 18 manual
 follow https://docs.odriverobotics.com/v/latest/developer-guide.html
 
+# flash new firmware (according to https://docs.odriverobotics.com/v/latest/odrivetool.html#flashing-custom-firmware)
+
+

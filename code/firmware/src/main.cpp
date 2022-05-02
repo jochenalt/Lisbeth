@@ -28,8 +28,8 @@ uint32_t commandLastChar_us = 0;                             // time when the la
 WDT_T4<WDT1> wdt;
 
 // Teensy LED
-static uint8_t DefaultBlinkPattern[3] = { 0b11001000,0b00001100,0b10000000}; // nice pattern. Each digit takes 50ms
-PatternBlinker blinker;													// initiate pattern blinker
+static uint8_t DefaultBlinkPattern[3] = { 0b11001000,0b00001100,0b10000000}; // nice pattern. Each digit represents 50ms
+PatternBlinker blinker;													                             // initiate pattern blinker
 
 // Error handling
 uint8_t NO_ERROR = 0;
@@ -39,7 +39,7 @@ uint8_t GENERAL_ERROR = 99;
 uint8_t error = NO_ERROR;
 
 void watchdogWarning() {
-  println("Watchdog");
+  println("Watchdog Reset");
 }
 
 void initWatchdog() {
@@ -65,8 +65,8 @@ void initODrives() {
       if (error == NO_ERROR) {
         uint16_t version_major, version_minor, version_revision;
         odrive[i].getVersion(version_major, version_minor, version_revision);
-        if (version_major * 100 + version_minor*10 + version_revision != 54) {
-          println("\r\nFirmware must be 0.5.4 but is %d.%d.%d.", version_major, version_minor, version_revision);
+        if (version_major * 100 + version_minor*10 + version_revision != 155) {
+          println("\r\nFirmware must be 1.5.5 but is %d.%d.%d.", version_major, version_minor, version_revision);
           error = ODRIVE_SETUP_FIRMWARE_ERROR; 
         }
       }
@@ -123,7 +123,7 @@ void printHelp() {
 
        uint16_t version_major, version_minor, version_revision;
        odrive[i].getVersion(version_major, version_minor, version_revision);
-       println("   ODrive[%d] V%d.%d.%d, %.2fV", version_major, version_minor, version_revision,i, voltage);
+       println("   ODrive[%d] V%d.%d.%d, %.2fV", i, version_major, version_minor, version_revision, voltage);
       // print dump of ODrive
       String str = odrive[i].getInfoDump();
       str.replace("Hardware", "   HW");
@@ -137,6 +137,10 @@ void printHelp() {
         odrive[i].getFeedback(motor,pos, vel, ff);
         println(" (pos,vel,ff) = (%.2f, %.2f, %.2f)", pos, vel, ff);
     }
+    float pos0,vel0,ff0, pos1,vel1,ff1;
+    odrive[i].getFeedback(pos0, vel0, ff0, pos1, vel1, ff1);
+    println(" (pos,vel,ff) = (%.2f, %.2f, %.2f) (%.2f, %.2f, %.2f)", pos0, vel0, ff0, pos1, vel1, ff1);
+
   }
   println();
 };
@@ -172,10 +176,7 @@ void executeCommand() {
 					addCmd(inputChar);
 				break;
 			case 'r':
-				print("reset.");
-        delay(5000);
-				print("OK.");
-
+        delay(5000); // let the watchdog do the reset
 				break;
 
       default:

@@ -39,7 +39,7 @@ def get_version_from_git():
         return git_tag, major, minor, revision, is_prerelease
 
     except Exception as ex:
-        return "jochen", 1, 5, 4, 0
+        return "jochen", 1, 5, 5, 0
 
 def get_version_str(git_only=False, is_post_release=False, bump_rev=False, release_override=False):
     """

@@ -208,9 +208,9 @@ void ODrive::getFeedback(int motor_number, float &currentPosition, float &curren
     String response = readString(true);
     char responseBuffer[response.length()];
     response.toCharArray (responseBuffer,response.length() );
-    int items = sscanf(responseBuffer, "%f %f",  &currentPosition, &currentVelocity);
-    if (items != 2) {
-            Serial.print("did not receive 2 items but");
+    int items = sscanf(responseBuffer, "%f %f %f",  &currentPosition, &currentVelocity, &currentCurrent);
+    if (items != 3) {
+            Serial.print("did not receive 3 items but");
             Serial.print(items);
             Serial.print(" in ");
             Serial.print(responseBuffer);

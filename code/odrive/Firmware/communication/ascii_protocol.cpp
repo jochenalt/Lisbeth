@@ -132,24 +132,48 @@ void AsciiProtocol::process_line(cbufptr_t buffer) {
 // @param use_checksum bool to indicate whether a checksum is required on response
 void AsciiProtocol::cmd_set_position(char * pStr, bool use_checksum) {
     unsigned motor_number;
-    float pos_setpoint, vel_feed_forward, torque_feed_forward;
+    float pos_setpoint0, vel_feed_forward0, torque_feed_forward0;
+    float pos_setpoint1, vel_feed_forward1, torque_feed_forward1;
 
-    int numscan = sscanf(pStr, "p %u %f %f %f", &motor_number, &pos_setpoint, &vel_feed_forward, &torque_feed_forward);
-    if (numscan < 2) {
-        respond(use_checksum, "invalid command format");
-    } else if (motor_number >= AXIS_COUNT) {
-        respond(use_checksum, "invalid motor %u", motor_number);
-    } else {
-        Axis& axis = axes[motor_number];
-        axis.controller_.config_.control_mode = Controller::CONTROL_MODE_POSITION_CONTROL;
-        axis.controller_.input_pos_ = pos_setpoint;
-        if (numscan >= 3)
-            axis.controller_.input_vel_ = vel_feed_forward;
-        if (numscan >= 4)
-            axis.controller_.input_torque_ = torque_feed_forward;
-        axis.controller_.input_pos_updated();
-        axis.watchdog_feed();
-    }
+	// full variant with 6 parameters for both axes
+    int numscan = sscanf(pStr, "p %f %f %f %f %f %f", &pos_setpoint0, &vel_feed_forward0, &torque_feed_forward0,
+													  &pos_setpoint1, &vel_feed_forward1, &torque_feed_forward1);
+    if (numscan == 6) {
+		Axis& axis0 = axes[0];
+		Axis& axis1 = axes[1];
+
+		axis0.controller_.config_.control_mode = Controller::CONTROL_MODE_POSITION_CONTROL;
+		axis0.controller_.input_pos_ = pos_setpoint0;
+		axis0.controller_.input_vel_ = vel_feed_forward0;
+		axis0.controller_.input_torque_ = torque_feed_forward0;
+		axis0.controller_.input_pos_updated();
+		axis0.watchdog_feed();
+		axis1.controller_.config_.control_mode = Controller::CONTROL_MODE_POSITION_CONTROL;
+		axis1.controller_.input_pos_ = pos_setpoint1;
+		axis1.controller_.input_vel_ = vel_feed_forward1;
+		axis1.controller_.input_torque_ = torque_feed_forward1;
+		axis1.controller_.input_pos_updated();
+		axis1.watchdog_feed();
+	} else {
+		// flexible variant for one axis with 2,3
+		float pos_setpoint, vel_feed_forward, torque_feed_forward;
+		numscan = sscanf(pStr, "p %u %f %f %f", &motor_number, &pos_setpoint, &vel_feed_forward, &torque_feed_forward);
+		if (numscan < 2) {
+			respond(use_checksum, "invalid command format");
+		} else if (motor_number >= AXIS_COUNT) {
+			respond(use_checksum, "invalid motor %u", motor_number);
+		} else {
+			Axis& axis = axes[motor_number];
+			axis.controller_.config_.control_mode = Controller::CONTROL_MODE_POSITION_CONTROL;
+			axis.controller_.input_pos_ = pos_setpoint;
+			if (numscan >= 3)
+				axis.controller_.input_vel_ = vel_feed_forward;
+			if (numscan >= 4)
+				axis.controller_.input_torque_ = torque_feed_forward;
+			axis.controller_.input_pos_updated();
+			axis.watchdog_feed();
+		}
+	}
 }
 
 // @brief Executes the set position with current and velocity limit command
@@ -276,14 +300,48 @@ void AsciiProtocol::cmd_get_feedback(char * pStr, bool use_checksum) {
     unsigned motor_number;
 
     if (sscanf(pStr, "f %u", &motor_number) < 1) {
-        respond(use_checksum, "invalid command format");
+         Axis& axis0 = axes[0];
+         Axis& axis1 = axes[1];
+
+		 float Iq_measured0 = axis0.motor_.current_control_.Iq_measured_;
+		 float Iq_measured1 = axis1.motor_.current_control_.Iq_measured_;
+		 
+		 /*
+		 float ideal_electrical_power0 = 
+			axis0.motor_.current_control_.power_ - 
+				SQ(axis0.motor_.current_control_.Iq_measured_) * 1.5f * axis0.motor_.config_.phase_resistance - 
+					   SQ(Iq_measured0) * 1.5f * axis0.motor_.config_.phase_resistance;
+		 float ideal_electrical_power1 =
+			 axis1.motor_.current_control_.power_ -
+				 SQ(axis1.motor_.current_control_.Iq_measured_) * 1.5f * axis1.motor_.config_.phase_resistance -
+					SQ(Iq_measured1) * 1.5f * axis1.motor_.config_.phase_resistance;
+		*/
+
+		 respond(use_checksum, "%f %f %f %f %f %f",
+                (double)axis0.encoder_.pos_estimate_.any().value_or(0.0f),
+                (double)axis0.encoder_.vel_estimate_.any().value_or(0.0f),
+                (double)Iq_measured0,
+                (double)axis1.encoder_.pos_estimate_.any().value_or(0.0f),
+                (double)axis1.encoder_.vel_estimate_.any().value_or(0.0f),
+                (double)Iq_measured1
+				);
+        // respond(use_checksum, "invalid command format");
     } else if (motor_number >= AXIS_COUNT) {
         respond(use_checksum, "invalid motor %u", motor_number);
     } else {
         Axis& axis = axes[motor_number];
-        respond(use_checksum, "%f %f",
+		float Iq_measured0 = axis.motor_.current_control_.Iq_measured_;
+		/*
+		float ideal_electrical_power0 = axis.motor_.current_control_.power_ -
+			SQ(axis.motor_.current_control_.Iq_measured_) * 1.5f * axis.motor_.config_.phase_resistance -
+				SQ(Iq_measured0) * 1.5f * axis.motor_.config_.phase_resistance;
+		*/
+
+        respond(use_checksum, "%f %f %f",
                 (double)axis.encoder_.pos_estimate_.any().value_or(0.0f),
-                (double)axis.encoder_.vel_estimate_.any().value_or(0.0f));
+                (double)axis.encoder_.vel_estimate_.any().value_or(0.0f),
+                (double)Iq_measured0
+				);
     }
 }
 
@@ -297,6 +355,7 @@ void AsciiProtocol::cmd_help(char * pStr, bool use_checksum) {
     respond(use_checksum, "");
     respond(use_checksum, "Available commands syntax reference:");
     respond(use_checksum, "Position: q axis pos vel-lim I-lim");
+    respond(use_checksum, "Position: p pos0 vel-ff0 I-ff0 pos1 vel-ff1 I-ff1");
     respond(use_checksum, "Position: p axis pos vel-ff I-ff");
     respond(use_checksum, "Velocity: v axis vel I-ff");
     respond(use_checksum, "Torque: c axis T");
@@ -308,6 +367,7 @@ void AsciiProtocol::cmd_help(char * pStr, bool use_checksum) {
     respond(use_checksum, "Save config: ss");
     respond(use_checksum, "Erase config: se");
     respond(use_checksum, "Reboot: sr");
+    respond(use_checksum, "Clear Errors: sc");
 }
 
 // @brief Gets the hardware, firmware and serial details

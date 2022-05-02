@@ -11,7 +11,7 @@
 
 #include "TimePassedBy.h"
 
-// Class that implements a pretty pattern blinker without use of delay().
+// Class implementing a pretty pattern blinker without use of delay().
 // Has to run in a loop.
 // use:
 //      // define blink pattern, 1=on, 0=off
@@ -19,8 +19,10 @@
 //																				// define blink pattern array as long
 //																				// as you like
 //		PatternBlinker blinker;													// initiate pattern blinker
-//		blinker.set(LED_PIN_BLUE,BotIsBalancing,sizeof(BotIsBalancing));		// assign pattern
-//		while (true) {
+//		blinker.setup(LED_PIN_BLUE,50);											// 
+//		blinker.set(BotIsBalancing,sizeof(BotIsBalancing));						// assign pattern
+// 		
+//		loop() {
 //			blinker.loop();														// switch on off LED when necessary
 //			<do something else>
 //		}
