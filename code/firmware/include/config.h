@@ -14,12 +14,13 @@ struct configuration_type {
 
     /** block with application configuration data */ 
 	unsigned long counter;
+
 	/** end of block with application configuration data */
-	
+
 	// initialize all configuration values to factory settings
 	void setup() {
 		write_counter = 0;				// whenever a write operation happens, this counter is increased 
-		counter = 1;					
+		
 	}
 	
 	void write() ;

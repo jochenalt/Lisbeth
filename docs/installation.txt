@@ -212,9 +212,11 @@ odrv0.axis0.requested_state = AXIS_STATE_FULL_CALIBRATION_SEQUENCE
 odrv0.axis0.encoder.config.pre_calibrated=True
 odrv0.axis0.motor.config.pre_calibrated=True
 
+# baud rate
+odrv0.uart_a_baudrate= 921600
+
 # save
 odrv0.save_configuration()
-
 
 # Startup procedure
 # look for Encoders index positions
@@ -244,7 +246,8 @@ odrv0.config.uart0_protocol = STREAM_PROTOCOL_TYPE_FIBRE
 # establish Windows Linux Subsystem 
 # run everything in a WLS shell with the Ubuntu 18 manual
 follow https://docs.odriverobotics.com/v/latest/developer-guide.html
+copy files from ./odrive to 
 
 # flash new firmware (according to https://docs.odriverobotics.com/v/latest/odrivetool.html#flashing-custom-firmware)
-
+start anaconda shell
 

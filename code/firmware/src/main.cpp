@@ -11,12 +11,13 @@
 //  baud rate of Serial0 that is used for logging 
 #define LOG_BAUD_RATE 115200
 
-#define ODRIVE_SERIAL_BAUD_RATE 115200                      // default of odrive, is reconfigured during startup to 
+// #define ODRIVE_SERIAL_BAUD_RATE 115200                      // default of odrive, is reconfigured during startup to 
+#define ODRIVE_SERIAL_BAUD_RATE 921600                      // default of odrive, is reconfigured during startup to 
 // #define ODRIVE_SERIAL_BAUD_RATE 1826086                  // this higher baudrate
 
 #define NO_OF_ODRIVES 1                                     // number of drives we have connected
-ODrive odrive[NO_OF_ODRIVES];                               //  ODrive objects, one per ODrive
 HardwareSerial* odriveSerial[NO_OF_ODRIVES] = { &Serial1};  // their UART interface
+ODrives odrives;
 
 // Command processing
 uint32_t now_us = 0;                                        // current time in us, set in loop()
@@ -44,18 +45,25 @@ void watchdogWarning() {
 
 void initWatchdog() {
   WDT_timings_t config;
-  config.trigger = 0.05; /* [s], trigger is how long before the watchdog callback fires */
+  config.trigger = 0.1; /* [s], trigger is how long before the watchdog callback fires */
   config.timeout = 0.1; /* [s] timeout is how long before not feeding will the watchdog reset */
   config.callback = watchdogWarning;
   wdt.begin(config);
 }
 
 void initODrives() {
+    // configure ODrives
     for (int i = 0;i<NO_OF_ODRIVES;i++) {
-      odrive[0].setup(*odriveSerial[i], ODRIVE_SERIAL_BAUD_RATE);
+      odrives.addODrive(*odriveSerial[i], ODRIVE_SERIAL_BAUD_RATE);
+    };
 
+    // set them up
+    odrives.setup();
+
+    // do  initial checks
+    for (int i = 0;i<NO_OF_ODRIVES;i++) {
       // check sufficient voltage
-      float voltage = odrive[i].getVBusVoltage();
+      float voltage = odrives[i].getVBusVoltage();
       if (voltage < 12) {
         println("\r\nVoltage of %.2fV too low.", voltage);
         error = ODRIVE_SETUP_VOLTAGE_ERROR;
@@ -64,9 +72,9 @@ void initODrives() {
       // check correct firmware
       if (error == NO_ERROR) {
         uint16_t version_major, version_minor, version_revision;
-        odrive[i].getVersion(version_major, version_minor, version_revision);
+        odrives[i].getVersion(version_major, version_minor, version_revision);
         if (version_major * 100 + version_minor*10 + version_revision != 155) {
-          println("\r\nFirmware must be 1.5.5 but is %d.%d.%d.", version_major, version_minor, version_revision);
+          println("\r\nFirmware of ODrive[%d]must be 1.5.5 but is %d.%d.%d.", i, version_major, version_minor, version_revision);
           error = ODRIVE_SETUP_FIRMWARE_ERROR; 
         }
       }
@@ -119,13 +127,13 @@ void printHelp() {
   println("\r\nFirmware Lisbeth V%d", version);
 
   for (int i = 0;i<NO_OF_ODRIVES;i++) {
-      float voltage = odrive[i].getVBusVoltage();
+      float voltage = odrives[i].getVBusVoltage();
 
        uint16_t version_major, version_minor, version_revision;
-       odrive[i].getVersion(version_major, version_minor, version_revision);
+       odrives[i].getVersion(version_major, version_minor, version_revision);
        println("   ODrive[%d] V%d.%d.%d, %.2fV", i, version_major, version_minor, version_revision, voltage);
       // print dump of ODrive
-      String str = odrive[i].getInfoDump();
+      String str = odrives[i].getInfoDump();
       str.replace("Hardware", "   HW");
       str.replace("Firmware", "   FW");
       str.replace("Serial number", "   Serial");
@@ -134,15 +142,18 @@ void printHelp() {
       for (int motor = 0;motor<2;motor++) {
         print("      M%d",motor);
         float pos, vel, ff;
-        odrive[i].getFeedback(motor,pos, vel, ff);
+        odrives[i].getFeedback(motor,pos, vel, ff);
         println(" (pos,vel,ff) = (%.2f, %.2f, %.2f)", pos, vel, ff);
     }
     float pos0,vel0,ff0, pos1,vel1,ff1;
-    odrive[i].getFeedback(pos0, vel0, ff0, pos1, vel1, ff1);
+    odrives[i].getFeedback(pos0, vel0, ff0, pos1, vel1, ff1);
     println(" (pos,vel,ff) = (%.2f, %.2f, %.2f) (%.2f, %.2f, %.2f)", pos0, vel0, ff0, pos1, vel1, ff1);
-
   }
-  println();
+  println("Measurements");
+  float freq = 1000000.0/odrives.loopAvrTime_us;
+  println("   avr. time for loop : %dus %.2fHz", odrives.loopAvrTime_us,freq);
+  println("   avr. delay time    : %dus ", odrives.avrDelayTime_us);
+  println("   avr. send time q   : %dus ", odrives.loopSendAvrTime_us);
 };
 
 
@@ -175,6 +186,11 @@ void executeCommand() {
 				else
 					addCmd(inputChar);
 				break;
+ 			case 'd':
+        odrives.setParams();
+        println("Params set.");
+				break;
+
 			case 'r':
         delay(5000); // let the watchdog do the reset
 				break;
@@ -194,5 +210,9 @@ void loop() {
   // everybody loves a blinking LED
   blinker.loop(now_us >> 10);
 
+  // react on input 
   executeCommand();
+
+  // get feedback of all odrives
+  // odrives.loop();
 }
