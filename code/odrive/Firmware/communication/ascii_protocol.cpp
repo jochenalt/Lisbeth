@@ -330,7 +330,7 @@ void AsciiProtocol::cmd_get_feedback(char * pStr, bool use_checksum) {
         respond(use_checksum, "invalid motor %u", motor_number);
     } else {
         Axis& axis = axes[motor_number];
-		float Iq_measured0 = axis.motor_.current_control_.Iq_measured_;
+
 		/*
 		float ideal_electrical_power0 = axis.motor_.current_control_.power_ -
 			SQ(axis.motor_.current_control_.Iq_measured_) * 1.5f * axis.motor_.config_.phase_resistance -
@@ -340,7 +340,7 @@ void AsciiProtocol::cmd_get_feedback(char * pStr, bool use_checksum) {
         respond(use_checksum, "%f %f %f",
                 (double)axis.encoder_.pos_estimate_.any().value_or(0.0f),
                 (double)axis.encoder_.vel_estimate_.any().value_or(0.0f),
-                (double)Iq_measured0
+                (double)axis.motor_.current_control_.Iq_measured_
 				);
     }
 }

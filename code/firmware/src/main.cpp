@@ -11,10 +11,6 @@
 //  baud rate of Serial0 that is used for logging 
 #define LOG_BAUD_RATE 115200
 
-// #define ODRIVE_SERIAL_BAUD_RATE 115200                      // default of odrive, is reconfigured during startup to 
-#define ODRIVE_SERIAL_BAUD_RATE 921600                      // default of odrive, is reconfigured during startup to 
-// #define ODRIVE_SERIAL_BAUD_RATE 1826086                  // this higher baudrate
-
 #define NO_OF_ODRIVES 1                                     // number of drives we have connected
 HardwareSerial* odriveSerial[NO_OF_ODRIVES] = { &Serial1};  // their UART interface
 ODrives odrives;
@@ -43,7 +39,7 @@ void watchdogWarning() {
   println("Watchdog Reset");
 }
 
-void initWatchdog() {
+void fastWatchdog() {
   WDT_timings_t config;
   config.trigger = 0.1; /* [s], trigger is how long before the watchdog callback fires */
   config.timeout = 0.1; /* [s] timeout is how long before not feeding will the watchdog reset */
@@ -51,10 +47,20 @@ void initWatchdog() {
   wdt.begin(config);
 }
 
+void slowWatchdog() {
+  WDT_timings_t config;
+  config.trigger = 128.0; /* [s], trigger is how long before the watchdog callback fires */
+  config.timeout = 128.0; /* [s] timeout is how long before not feeding will the watchdog reset */
+  config.callback = watchdogWarning;
+  wdt.begin(config);
+}
+
 void initODrives() {
     // configure ODrives
+    String names[12] = {"FL-Hip", "FL-Shoulder", "FL-Knee", "FR-Hip", "FR-Shoulder", "FR-Knee",
+                       "HL-Hip", "HL-Shoulder", "HL-Knee", "HR-Hip", "HR-Shoulder", "HR-Knee"};
     for (int i = 0;i<NO_OF_ODRIVES;i++) {
-      odrives.addODrive(*odriveSerial[i], ODRIVE_SERIAL_BAUD_RATE);
+      odrives.addODrive(*odriveSerial[i], names[i*2],names[i*2+1]);
     };
 
     // set them up
@@ -62,6 +68,9 @@ void initODrives() {
 
     // do  initial checks
     for (int i = 0;i<NO_OF_ODRIVES;i++) {
+      // check baudrate first
+      odrives[i].setBaudRate();
+
       // check sufficient voltage
       float voltage = odrives[i].getVBusVoltage();
       if (voltage < 12) {
@@ -101,7 +110,7 @@ void setup() {
    	println("OK.");
 
    	// reset the board when wdt_reset() is not called every 100ms 
-    initWatchdog();
+    fastWatchdog();
   } else {
     print("setup error. Resetting in ");
     for (int i= 5;i>=1;i--) {
@@ -117,7 +126,7 @@ void setup() {
     println("0 Reset.");
 
    	// reset the board when wdt_reset() is not called every 100ms 
-    initWatchdog();
+    fastWatchdog();
     delay(5000); // let the watchdog fire
   }
 }
@@ -187,13 +196,44 @@ void executeCommand() {
 					addCmd(inputChar);
 				break;
  			case 'd':
-        odrives.setParams();
-        println("Params set.");
+ 				if (command == "") {
+          odrives.setParams();
+          println("Params set."); 
+        } else 
+          addCmd(inputChar);
+
+				break;
+			case 'r':
+ 				if (command == "") {
+           print("Reset.");
+           delay(5000); // let the watchdog do the reset
+        } else 
+          addCmd(inputChar);
+
 				break;
 
-			case 'r':
-        delay(5000); // let the watchdog do the reset
-				break;
+      case 13:
+			case 10:
+				if (command.startsWith("c")) {
+					unsigned long l = command.substring(1).toInt();
+					if (((l >= 0) && (l < odrives.getNumberODrives()*2))) {
+            String name = odrives[l/2].getName(l % 2);
+            println("Calibrate %s:", name.c_str());
+            slowWatchdog();
+            odrives[l/2].calibrate (l%2);
+            fastWatchdog();
+					}
+					else {
+						Serial.print("Motor number ");
+            Serial.print(l);
+            Serial.println(" is out of range");
+					}
+					emptyCmd();
+				};
+
+        if (command != "") {
+          Serial.println("unknown command");
+        }
 
       default:
 				addCmd(inputChar);
