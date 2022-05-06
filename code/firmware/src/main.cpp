@@ -61,12 +61,10 @@ void initODrives() {
     String names[12] = {"FL-Hip", "FL-Shoulder", "FL-Knee", "FR-Hip", "FR-Shoulder", "FR-Knee",
                        "HL-Hip", "HL-Shoulder", "HL-Knee", "HR-Hip", "HR-Shoulder", "HR-Knee"};
 
-    println("activation");
     for (int i = 0;i<NO_OF_ODRIVES;i++) {
       odrives.addODrive(*odriveSerial[i], names[i*2],names[i*2+1], String("Odrive ") + String(i));
       for (int mn = 0;mn < 2;mn++) {
         if (motorActive[i][mn]) {
-          println("activate %d", mn);
           odrives[i].activate(mn);
         }
       }
@@ -231,7 +229,6 @@ void executeCommand() {
 					unsigned long l = command.substring(1).toInt();
 					if (((l >= 0) && (l < odrives.getNumberODrives()*2))) {
             String name = odrives[l/2].getName(l % 2);
-            println("Calibrate %s:", name.c_str());
             slowWatchdog();
             odrives[l/2].calibrate (l%2);
             fastWatchdog();
@@ -245,7 +242,6 @@ void executeCommand() {
             unsigned long l = command.substring(1).toInt();
             if (((l >= 0) && (l < odrives.getNumberODrives()*2))) {
               String name = odrives[l/2].getName(l % 2);
-              println("Start %s:", name.c_str());
               slowWatchdog();
               odrives[l/2].startup (l%2);
               fastWatchdog();
@@ -270,12 +266,10 @@ void executeCommand() {
               fastWatchdog();
             }
             else {
-              print("Motor number %lu is ohut of range", l);
+              print("Motor number %lu is out of range", l);
             }
           } else {
-              slowWatchdog();
               odrives.shutdown ();
-              fastWatchdog();
           }
 					emptyCmd();
 				} else if (command.startsWith("d")) {

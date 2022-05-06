@@ -240,9 +240,11 @@ bool ODrive::readError(int motor_number, bool printError) {
         if (odrive_error > 0) {
             println("%s/%s:odriv.error=%d",oname.c_str(),odrive_error);
         }
+
         if (axis_error > 0) {
             println("%s:%s.error= %d",mname[motor_number].c_str(),axis.c_str() + axis_error);
         }
+
         if (motor_error > 0) {
             println("%s:%s.motor.error= %d",mname[motor_number].c_str(),axis.c_str() + motor_error);
         }
@@ -264,8 +266,12 @@ bool ODrive::readError(int motor_number, bool printError) {
 }
 
 bool ODrive::readError(bool printError) {
-    bool isError = readError(0);
-    isError = readError(0) || isError;
+
+    bool isError = false;
+    for (int mn = 0;mn<2;mn++) {
+        if (isActive(mn));
+            isError = readError(mn, printError) || isError;
+    }
     return isError;
 }
 
@@ -375,19 +381,18 @@ void ODrive::sendWriteParamRequest(String name, float value) {
     char buffer[BUFFER_SIZE];
     uint16_t strLen = addChecksum(true, buffer, sprintf(buffer, "w %s %f", name.c_str(), value));
     serial_->write(buffer,strLen );
-   if (debugCommOn) {
-    print("   Send:%s\r",buffer); // the string contains a \n already, but not yet a \r
-}
+    if (debugCommOn) {
+        print("   Send:%s\r",buffer); // the string contains a \n already, but not yet a \r
+    }
 }
 
 void ODrive::sendWriteParamRequest(String name, int32_t value) {
     char buffer[BUFFER_SIZE];
     uint16_t strLen = addChecksum(true, buffer, sprintf(buffer, "w %s %ld", name.c_str(), value));
     serial_->write(buffer,strLen );
-   if (debugCommOn) {
-    print("   Send:%s\r",buffer); // the string contains a \n already, but not yet a \r
-}
-
+    if (debugCommOn) {
+        print("   Send:%s\r",buffer); // the string contains a \n already, but not yet a \r
+    }
 }
 
 void ODrive::sendWriteParamRequest(String name, bool value) {
@@ -399,10 +404,9 @@ void ODrive::sendWriteParamRequest(String name, bool value) {
         strLen = addChecksum(true, buffer, sprintf(buffer, "w %s 0", name.c_str()));
 
     serial_->write(buffer,strLen );
-   if (debugCommOn) {
-    println("   Send:%s\r",buffer); // the string contains a \n already, but not yet a \r
-}
-
+    if (debugCommOn) {
+        println("   Send:%s\r",buffer); // the string contains a \n already, but not yet a \r
+    }
 }
 
 bool ODrive::setParamFloat(String name, float value) {
@@ -882,13 +886,12 @@ bool ODrives::waitForState (String name, int32_t value, float timeout_s) {
 
 void ODrives::startup() {
     if (debugAPIOn) {
-        println("startup all");
+        println("Startup all");
     }
-
 
     // reboot all ODrives
     if (debugAPIOn) {
-        println("reboot drives");
+        println("Reboot drives");
     }
     for (int i = 0;i<num_odrives;i++) {
         odrive[i].reboot(false);
@@ -898,7 +901,7 @@ void ODrives::startup() {
 
     // start index search for all motors
     if (debugAPIOn) {
-        println("check calibration");
+        println("Check motor calibration");
     }
     bool isCalibrated = true;
     for (int i = 0;i<num_odrives;i++) {
@@ -915,7 +918,7 @@ void ODrives::startup() {
     }
 
     if (debugAPIOn) {
-        println("search for encoderindex");
+        println("Search for encoder index");
     }
     for (int i = 0;i<num_odrives;i++) {
         ODrive& od = odrive[i];
@@ -926,7 +929,7 @@ void ODrives::startup() {
         }
     }
     if (debugAPIOn) {
-        println("wait for encoder index");
+        println("Wait for encoder index");
     }
     waitForState("current_state", AXIS_STATE_IDLE, 15.0 /* [s] timeout */);
     if (debugAPIOn) {
@@ -959,7 +962,7 @@ void ODrives::startup() {
         for (int mn = 0;mn<2;mn++) {
             if (od.isActive(mn)) {
                 od.requestedState(mn,AXIS_STATE_CLOSED_LOOP_CONTROL);
-                isError = od.readError(mn) || isError;
+                isError = od.readError(mn, true) || isError;
             }
         }
     }
@@ -967,12 +970,16 @@ void ODrives::startup() {
         error = ERROR_MOTOR_NOT_READY;
         return;
     } 
+    if (debugAPIOn) {
+        println("Startup done.");
+    }
+
 }
 
 // shutdown a motor, by putting it into ide mode
 void ODrives::shutdown() {
     if (debugAPIOn) {
-        println("shutdown all");
+        println("Shutdown all motors.");
     }
 
     for (int i = 0;i<num_odrives;i++) {
