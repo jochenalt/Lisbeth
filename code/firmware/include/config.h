@@ -13,14 +13,13 @@ struct configuration_type {
 	uint16_t write_counter;				// counts the write operation to change the EPPROM bank when overflows
 
     /** block with application configuration data */ 
-	unsigned long counter;
+	uint8_t debugLevel = 0;		
 
 	/** end of block with application configuration data */
 
 	// initialize all configuration values to factory settings
 	void setup() {
-		write_counter = 0;				// whenever a write operation happens, this counter is increased 
-		
+		debugLevel = 0;		
 	}
 	
 	void write() ;

@@ -1,21 +1,48 @@
 
 #include "Arduino.h"
 #include "ODrive.h"
+#include <cstdarg>
 
 bool doCheckSums = true;        // use checksums for all communication to ODrive
 const uint32_t NO_ERROR = 0;
 const uint32_t ERROR_COMM_ERROR = 100;
 const uint32_t ERROR_CALIBRATION_FAILED = 101;
 const uint32_t ERROR_ODRIVE_ERROR = 102;
+const uint32_t ERROR_POSITION_NOT_FOUND = 103;
+const uint32_t ERROR_MOTOR_NOT_CALIBRATED = 104;
+const uint32_t ERROR_MOTOR_NOT_READY = 105;
 
 static uint32_t error = NO_ERROR;
 
 // set this if all communication should be logged
+static bool debugCommOn = true;
 #define DEBUG_COMM
 // set this if all API calls should be logged
+static bool debugAPIOn = true;
 #define DEBUG_API
 
 #define BUFFER_SIZE 64
+
+static void print(const char* format, ...) {
+	char s[256];
+	__gnuc_va_list  args;
+		  
+	va_start (args, format);
+	vsprintf (s, format, args);
+	va_end (args);		
+    Serial.print(s);
+}
+
+static void println(const char* format, ...) {
+	char s[256];
+	__gnuc_va_list  args;
+		  
+	va_start (args, format);
+	vsprintf (s, format, args);
+	va_end (args);		
+    Serial.println(s);
+};
+
 void ODrive::resetError() {
     error = NO_ERROR ;
 }
@@ -43,13 +70,17 @@ uint16_t  addChecksum(bool withChecksum, char buffer[], uint16_t len) {
     }
 }
 
-void ODrive::setName(String s1, String s2) {
-    name1 = s1;
-    name2 = s2;
+void ODrive::setName(String s1, String s2, String on) {
+    mname[0] = s1;
+    mname[1] = s2;
+    if (oname != "")
+        oname = on;
+    else
+        oname = s1 + "/" + s2;
 }
 
 String ODrive::getName(int motornumber) {
-    return (motornumber==0)?name1:((motornumber==1)?name2:"");
+    return mname[motornumber];
 }
 
 int32_t ODrive::readInt(bool withCheckSum, uint32_t &delay) {
@@ -62,47 +93,41 @@ bool ODrive::readBool(bool withCheckSum, uint32_t &delay) {
         return true;
     if ((s == "0"))
         return false;
-    Serial.print("Reading bool from ");
-    Serial.print(s);
-    Serial.print(" failed.");
+    print("Reading bool from %s failed.", s.c_str());
     error = ERROR_COMM_ERROR;
     return false;
 }
 
-bool ODrive::run_state(bool withCheckSum, int axis, int requested_state, bool wait_for_idle, float timeout) {
-    int timeout_ctr = (int)(timeout * 10.0f);
-    uint32_t del;
-    *serial_ << "w axis" << axis << ".requested_state " << requested_state << '\n';
-    if (wait_for_idle) {
-        do {
-            delay(100);
-            *serial_ << "r axis" << axis << ".current_state\n";
-        } while (readInt(withCheckSum, del) != AXIS_STATE_IDLE && --timeout_ctr > 0);
+bool ODrive::waitForState (int motor_number, String name, int32_t value, float timeout_s) {
+    bool timeoutFired = false;
+    String axis = "axis" + String(motor_number) + ".";
+    uint32_t endoftime_ms = millis() + timeout_s *1000.0;
+    int current_state = 0;
+    do {
+        delay(100);
+        current_state = getParamInt(axis + name);
+        timeoutFired = millis() > endoftime_ms;
+    } while (current_state != value && !timeoutFired);
+
+    return !timeoutFired;
+}
+
+void  ODrive::requestedState(int motor_number, int32_t requested_state) {
+    String axis = "axis" + String(motor_number);
+    if (debugCommOn) {
+        Serial.print(mname[motor_number] + ":" + axis + ".requested_state = ");
+        Serial.println(requested_state);
     }
 
-    return timeout_ctr > 0;
+    sendWriteParamRequest(axis + ".requested_state", requested_state);
 }
 
 bool ODrive::requestedState(int motor_number, int32_t requested_state, bool wait_for_idle, float timeout_s) {
-    uint32_t endoftime_ms = millis() + timeout_s *1000.0;
-    bool timeoutFired = false;
-    String axis = "axis" + String(motor_number);
-#ifdef DEBUG_API
-    Serial.print(axis + ".requested_state = ");
-    Serial.println(requested_state);
-#endif
-
-    sendWriteParamRequest(axis + ".requested_state", requested_state);
-    int current_state = 0;
-    if (wait_for_idle) {
-        do {
-            delay(100);
-            current_state = getParamInt(axis + ".current_state");
-            timeoutFired = millis() > endoftime_ms;
-        } while (current_state != AXIS_STATE_IDLE && !timeoutFired);
-    }
-
-    return !timeoutFired;
+    requestedState(motor_number, requested_state);
+    bool ok = true;
+    if (wait_for_idle)
+        ok = waitForState (motor_number, "current_state", AXIS_STATE_IDLE, timeout_s);
+    return ok; // = no timeout happened and state has been reached
 }
 
 String ODrive::readString(bool withCheckSum, uint32_t &delay_us) {
@@ -144,16 +169,13 @@ String ODrive::readString(bool withCheckSum, uint32_t &delay_us) {
     if (withCheckSum) {
         if (retrievedCheckSum != actualCheckSum) {
             error = ERROR_COMM_ERROR;
-            Serial.print("Checksum retrieved is ");
-            Serial.print(retrievedCheckSum);
-            Serial.print(" instead of ");
-            Serial.println(actualCheckSum);
+            println("Checksum retrieved is %d instead of %d", retrievedCheckSum, actualCheckSum);
         }
     }
-#ifdef DEBUG_COMM    
-    Serial.print("   -> ");
-    Serial.println(str);
-#endif
+    if (debugCommOn) {    
+        Serial.print("   -> ");
+        Serial.println(str);
+    }
     return str;
 }
 
@@ -164,6 +186,34 @@ float ODrive::readFloat(bool withCheckSum, uint32_t &delay) {
 
 
 ODrive::ODrive() {
+    for (int i = 0;i<2;i++) 
+        active[i] = false;
+}
+
+void ODrive::activate(int motor_number) {
+    active[motor_number] = true;
+}
+
+bool ODrive::isActive(int motor_number) {
+    return active[motor_number];
+}
+
+// return true and logs a message if the passed motor has not been activated 
+bool ODrive::errorIfNotActive(int motor_number, String text) {
+    if ((motor_number < 0) || (motor_number > 1)) {
+        if (text != "")
+            println("%s:", text.c_str());
+        println("motor %d does not exist.", motor_number); 
+            return true;
+    }
+    if (!active[motor_number]) {
+        if (text != "")
+            println("%s:", text.c_str());
+
+        println("motor %d is not active.", motor_number); 
+        return true;
+    }
+    return false;
 }
 
 void ODrive::clearErrors() {
@@ -174,6 +224,9 @@ void ODrive::clearErrors() {
 }
 
 bool ODrive::readError(int motor_number, bool printError) {
+    if (errorIfNotActive(motor_number, "readError"))
+        return false;
+
     String axis = "axis" + String(motor_number); 
 
     uint32_t odrive_error = getParamInt("error");
@@ -185,28 +238,22 @@ bool ODrive::readError(int motor_number, bool printError) {
 
     if (printError) {
         if (odrive_error > 0) {
-            Serial.print("odriv.error=");
-            Serial.println(odrive_error);
+            println("%s/%s:odriv.error=%d",oname.c_str(),odrive_error);
         }
         if (axis_error > 0) {
-            Serial.print(axis + ".error=");
-            Serial.println(axis_error);
+            println("%s:%s.error= %d",mname[motor_number].c_str(),axis.c_str() + axis_error);
         }
         if (motor_error > 0) {
-            Serial.print(axis + ".motor.error=");
-            Serial.println(motor_error);
+            println("%s:%s.motor.error= %d",mname[motor_number].c_str(),axis.c_str() + motor_error);
         }
         if (encoder_error > 0) {
-            Serial.print(axis + ".encoder.error=");
-            Serial.println(encoder_error);
+            println("%s:%s.encoder.error= %d",mname[motor_number].c_str(),axis.c_str() + encoder_error);
         }
         if (controller_error > 0) {
-            Serial.print(axis + ".controller.error=");
-            Serial.println(controller_error);
+            println("%s:%s.controller.error= %d",mname[motor_number].c_str(),axis.c_str() + controller_error);
         }
         if (sensorless_estimator_error > 0) {
-            Serial.print(axis + ".sensorless_estimator.error=");
-            Serial.println(sensorless_estimator_error);
+            println("%s:%s.sensorless_estimator.error= %d",mname[motor_number].c_str(),axis.c_str() + sensorless_estimator_error);
         }
     }
     bool anyError = ((odrive_error > 0) || (axis_error > 0) || (motor_error > 0) || (encoder_error > 0) || (controller_error > 0) || (sensorless_estimator_error > 0));
@@ -216,7 +263,6 @@ bool ODrive::readError(int motor_number, bool printError) {
     return anyError; 
 }
 
-
 bool ODrive::readError(bool printError) {
     bool isError = readError(0);
     isError = readError(0) || isError;
@@ -224,16 +270,15 @@ bool ODrive::readError(bool printError) {
 }
 
 void ODrive::eraseConfiguration() {
-
     char buffer[BUFFER_SIZE];
     uint16_t strLen = addChecksum(true,buffer, sprintf(buffer, "se"));
     serial_->write(buffer,strLen );
-#ifdef DEBUG_API
-    Serial.println("eraseConfiguration");
-#endif
-#ifdef DEBUG_COMM
-    Serial.print(buffer);
-#endif
+    if (debugAPIOn) {
+        println("%s:eraseConfiguration",oname.c_str());
+    }
+    if (debugCommOn) {
+        Serial.print(buffer);
+    }
     delay(500);
 }
 
@@ -241,26 +286,27 @@ void ODrive::saveConfiguration() {
     char buffer[BUFFER_SIZE];
     uint16_t strLen = addChecksum(true,buffer, sprintf(buffer, "ss"));
     serial_->write(buffer,strLen );
-#ifdef DEBUG_API
-    Serial.println("saveConfiguration");
-#endif
-#ifdef DEBUG_COMM
-    Serial.print(buffer);
-#endif
+    if (debugAPIOn) {
+        println("%s:saveConfiguration",oname.c_str());
+    }
+    if (debugCommOn) {
+        Serial.print(buffer);
+    }
     delay(500);
 }
 
-void ODrive::reboot() {
+void ODrive::reboot(bool waitUntilDone) {
     char buffer[BUFFER_SIZE];
     uint16_t strLen = addChecksum(true,buffer, sprintf(buffer, "sr"));
     serial_->write(buffer,strLen );
-#ifdef DEBUG_API
-    Serial.println("reboot");
-#endif
-#ifdef DEBUG_COMM
-    Serial.print(buffer);   
-#endif
-    delay(500);
+    if (debugAPIOn) {
+        println("%s:reboot", oname.c_str());
+    }
+    if (debugCommOn) {
+        Serial.print(buffer);
+    }
+    if (waitUntilDone)
+        delay(500);
 }
 
 
@@ -299,7 +345,6 @@ void ODrive::TrapezoidalMove(int motor_number, float position) {
     *serial_ << "t " << motor_number << " " << position << "\n";
 }
 
-
 float ODrive::GetVelocity(int motor_number) {
     uint32_t delay;
 	*serial_<< "r axis" << motor_number << ".encoder.vel_estimate\n";
@@ -312,7 +357,6 @@ float ODrive::GetPosition(int motor_number) {
     return ODrive::readFloat(false, delay);
 }
 
-
 void ODrive::setup(HardwareSerial& serial) {
     serial_ = &serial;
     setBaudRate();
@@ -322,33 +366,27 @@ void ODrive::sendReadParamRequest(String name) {
     char buffer[BUFFER_SIZE];  
     uint16_t strLen = addChecksum(true, buffer, sprintf(buffer, "r %s", name.c_str()));
     serial_->write(buffer,strLen );
-#ifdef DEBUG_COMM
-    Serial.print("   Send:");
-    Serial.print(buffer); // the string contains a \n already, but not yet a \r
-    Serial.print('\r');
-#endif
+   if (debugCommOn) {
+    print("   Send:%s\r",buffer); // the string contains a \n already, but not yet a \r
+}
 }
 
 void ODrive::sendWriteParamRequest(String name, float value) {
     char buffer[BUFFER_SIZE];
     uint16_t strLen = addChecksum(true, buffer, sprintf(buffer, "w %s %f", name.c_str(), value));
     serial_->write(buffer,strLen );
-#ifdef DEBUG_COMM
-    Serial.print("Send:");
-    Serial.println(buffer);
-    Serial.print('\r');
-#endif
+   if (debugCommOn) {
+    print("   Send:%s\r",buffer); // the string contains a \n already, but not yet a \r
+}
 }
 
 void ODrive::sendWriteParamRequest(String name, int32_t value) {
     char buffer[BUFFER_SIZE];
     uint16_t strLen = addChecksum(true, buffer, sprintf(buffer, "w %s %ld", name.c_str(), value));
     serial_->write(buffer,strLen );
-#ifdef DEBUG_COMM
-    Serial.print("Send:");
-    Serial.println(buffer);
-    Serial.print('\r');
-#endif
+   if (debugCommOn) {
+    print("   Send:%s\r",buffer); // the string contains a \n already, but not yet a \r
+}
 
 }
 
@@ -361,20 +399,16 @@ void ODrive::sendWriteParamRequest(String name, bool value) {
         strLen = addChecksum(true, buffer, sprintf(buffer, "w %s 0", name.c_str()));
 
     serial_->write(buffer,strLen );
-#ifdef DEBUG_COMM
-    Serial.print("Send:");
-    Serial.println(buffer);
-#endif
+   if (debugCommOn) {
+    println("   Send:%s\r",buffer); // the string contains a \n already, but not yet a \r
+}
 
 }
 
 bool ODrive::setParamFloat(String name, float value) {
-#ifdef DEBUG_API
-    Serial.print("set ");
-    Serial.print(name);
-    Serial.print(" = ");
-    Serial.println(value);
-#endif
+    if (debugAPIOn) {
+        println("%s:set %s = %f",oname.c_str(),name.c_str(),value);
+    }
     uint32_t delay;
     sendReadParamRequest(name);
     float value_read = readFloat(true, delay);
@@ -383,12 +417,7 @@ bool ODrive::setParamFloat(String name, float value) {
         sendReadParamRequest(name);
         value_read = readFloat(true, delay);
         if (abs(value_read - value) > 0.000001) {
-            Serial.print("set value of");
-            Serial.print(name);
-            Serial.print(" := ");
-            Serial.print(value);
-            Serial.print(", but is now ");
-            Serial.println(value_read);
+            println("set value of %s := %f, but is now %f",name.c_str(),value, value_read);
         }
         return true;
     }
@@ -396,12 +425,9 @@ bool ODrive::setParamFloat(String name, float value) {
 }
 
 bool ODrive::setParamBool(String name, bool value) {
-#ifdef DEBUG_API
-    Serial.print("set ");
-    Serial.print(name);
-    Serial.print(" = ");
-    Serial.println(value);
-#endif
+    if (debugAPIOn) {
+        println("%s:set %s = %d",oname.c_str(), name.c_str(),value);
+    }
 
     uint32_t delay;
     sendReadParamRequest(name);
@@ -411,17 +437,10 @@ bool ODrive::setParamBool(String name, bool value) {
         sendWriteParamRequest(name, value);
         uint32_t delay;
         String s = readString(true, delay);
-        Serial.print("readBW:");
-        Serial.print(s);
         sendReadParamRequest(name);
         value_read = readBool(true, delay);
         if (value_read != value) {
-            Serial.print("set value of");
-            Serial.print(name);
-            Serial.print(" := ");
-            Serial.print(value);
-            Serial.print(", but is now ");
-            Serial.println(value_read);
+            println("set value of %s := %f, but is now %f",name.c_str(),value, value_read);
         }
         return true;
     }
@@ -429,13 +448,9 @@ bool ODrive::setParamBool(String name, bool value) {
 }
 
 bool ODrive::setParamInt(String name, int32_t value) {
-#ifdef DEBUG_API
-    Serial.print("set ");
-    Serial.print(name);
-    Serial.print(" = ");
-    Serial.println(value);
-#endif
-
+    if (debugAPIOn) {
+        println("%s:set %s = %d",oname.c_str(),name.c_str(),value);
+    }
     uint32_t delay;
     sendReadParamRequest(name);
     int value_read = readInt(true, delay);
@@ -444,12 +459,7 @@ bool ODrive::setParamInt(String name, int32_t value) {
         sendReadParamRequest(name);
         value_read = readInt(true, delay);
         if (value_read != value) {
-            Serial.print("set value of");
-            Serial.print(name);
-            Serial.print(" := ");
-            Serial.print(value);
-            Serial.print(", but is now ");
-            Serial.println(value_read);
+            println("set value of %s := %ld, but is now %ld",name.c_str(),value, value_read);
         }
         return true;
     }
@@ -479,12 +489,9 @@ float ODrive::getParamFloat(String name) {
     uint32_t delay;
     sendReadParamRequest(name);
     float value_read = readFloat(true, delay);
-#ifdef DEBUG_API
-    Serial.print("get ");
-    Serial.print(name);
-    Serial.print(" = ");
-    Serial.println(value_read);
-#endif
+if (debugCommOn) {
+    println("get %s = %f", name.c_str(),value_read);
+}
 
     return value_read;
 }
@@ -493,12 +500,9 @@ int32_t ODrive::getParamInt(String name) {
     uint32_t delay;
     sendReadParamRequest(name);
     int32_t value_read = readInt(true, delay);
-#ifdef DEBUG_API
-    Serial.print("get ");
-    Serial.print(name);
-    Serial.print(" = ");
-    Serial.println(value_read);
-#endif
+    if (debugCommOn) {
+        println("get %s = %ld", name.c_str(),value_read);
+    }
 
     return value_read;
 }
@@ -507,12 +511,9 @@ bool ODrive::getParamBool(String name) {
     uint32_t delay;
     sendReadParamRequest(name);
     bool value_read = readBool(true, delay);
-#ifdef DEBUG_API
-    Serial.print("get ");
-    Serial.print(name);
-    Serial.print(" = ");
-    Serial.println(value_read);
-#endif
+if (debugCommOn) {
+    println("get %s = %d", name.c_str(),value_read);
+}
 
     return value_read;
 }
@@ -540,6 +541,9 @@ String ODrive::getInfoDump() {
 }
 
 void ODrive::getFeedback(int motor_number, float &currentPosition, float &currentVelocity, float &currentCurrent) {
+    if (errorIfNotActive(motor_number,"getFeedback"))
+        return;
+
     char buffer[BUFFER_SIZE];
     uint32_t delay = 0;
     uint16_t strLen = addChecksum(true,buffer, sprintf(buffer, "f %d", motor_number));
@@ -551,12 +555,7 @@ void ODrive::getFeedback(int motor_number, float &currentPosition, float &curren
     int items = sscanf(responseBuffer, "%f %f %f",  &currentPosition, &currentVelocity, &currentCurrent);
     if (items != 3) {
             error = ERROR_COMM_ERROR;
-            Serial.print("did not receive 3 items but ");
-            Serial.print(items);
-            Serial.print(" in ");
-            Serial.print(responseBuffer);
-            Serial.print("EOL");
-            Serial.println();
+            println("did not receive 3 items but %d in %s ", items, responseBuffer);
     }
 }
 
@@ -577,7 +576,6 @@ void ODrive::sendRequestForFeedback() {
     serial_->write(buffer,strLen);
 }
 
-
 void ODrive::receiveFeedback(uint32_t &delay, float &currentPosition1, float &currentVelocity1, float &currentCurrent1,
                              float &currentPosition2, float &currentVelocity2, float &currentCurrent2) {
     String response = readString(true, delay);
@@ -588,13 +586,13 @@ void ODrive::receiveFeedback(uint32_t &delay, float &currentPosition1, float &cu
                 &currentPosition2, &currentVelocity2, &currentCurrent2);
     if (items != 6) {
             error = ERROR_COMM_ERROR;
-            Serial.print("did not receive 6 items in");
-            Serial.print(responseBuffer);
-            Serial.println();
+            println("did not receive 6 items but %d in %s ", items, responseBuffer);
     }
 }
 
+// set the specifics of the motor Antigravity 4004 300KV and the Broadcom encoder AEDM-5810-Z12
 void ODrive::setODriveParams() {
+
     // general
     setParamBool("config.enable_brake_resistor",true);
     setParamInt("config.brake_resistance",2);
@@ -650,11 +648,11 @@ void ODrive::setBaudRate() {
             s1 = getInfoDump();
             idx = s1.indexOf("Hardware");
             if (idx < 0) {
-                Serial.println("Switch to 921600 baud did not work.");
+                println("Switch to 921600 baud did not work.");
                 error = ERROR_COMM_ERROR; 
             }
          } else {
-             Serial.println("Neither 115200 baud nor 921600 baud worked.");
+             println("Neither 115200 baud nor 921600 baud worked.");
              error = ERROR_COMM_ERROR; 
          }
     }
@@ -662,6 +660,9 @@ void ODrive::setBaudRate() {
 }
 
 void ODrive::factoryReset() {
+    if (debugAPIOn) {
+        println("%s:factoryreset", oname.c_str());
+    }
     eraseConfiguration(); // reset to factory settings, this will also reset the baud rate to ODRIVE_SERIAL_BAUD_RATE ally baud rate
     serial_->end();
     serial_->flush();    
@@ -681,21 +682,26 @@ void ODrive::factoryReset() {
 }
 
 void ODrive::calibrate(int motor_number) {
-    Serial.print("Calibration process of ");
-    Serial.print(motor_number);
-    Serial.print(" \"");
-    Serial.print(getName(motor_number));
-    Serial.println("\"");
+    if (debugAPIOn) {
+        println("%s:calibrate %s / %d", oname.c_str(), mname[motor_number].c_str(),motor_number);
+    }
 
+    if (errorIfNotActive(motor_number,"calibrated"))
+        return;
+
+    String name = getName(motor_number);
+    println("Calibration process of %d / %s", motor_number, name.c_str());
+
+    // without a clean slate calibration wont start
     clearErrors();
 
-    // set all ODrive parameters specific to our motor and encoder
-    Serial.println("Setting Parameters");
+    // set motor and encoder characteristics 
+    println("Setting Parameters");
     setODriveParams();
 
     // start calibration process
     String axis = "axis" + String(motor_number); 
-    Serial.println("Starting calibration procedure");
+    println("Starting calibration procedure");
     requestedState(motor_number, AXIS_STATE_FULL_CALIBRATION_SEQUENCE, true /* wait until calibration is done */, 60 /* timeout [s] */);
 
     readError(motor_number, true);
@@ -706,35 +712,98 @@ void ODrive::calibrate(int motor_number) {
         saveConfiguration();
         Serial.println("Done.");
     } else {
+        error = ERROR_CALIBRATION_FAILED;
         Serial.print("Calibration failed.");
     }
 }
 
-/*****************************************/
+// startup a motor by finding the index position and setting it in the  closed loop control 
+void ODrive::startup(int motor_number ) {
+    if (debugAPIOn) {
+        println("%s:startup %s / %d", oname.c_str(), mname[motor_number].c_str(),motor_number);
+    }
+
+    if (errorIfNotActive(motor_number,"startup"))
+        return;
+
+    String axis = "axis" + String(motor_number); 
+
+    clearErrors();
+    bool isCalibrated = getParamBool(axis + ".motor.is_calibrated");
+    if (!isCalibrated) {
+        error = ERROR_MOTOR_NOT_CALIBRATED;
+        return;
+    }
+
+    requestedState(motor_number, AXIS_STATE_ENCODER_INDEX_SEARCH, true , 10 /* timeout [s] */);
+    bool isError = readError(motor_number, true /* print errors */);
+    if (isError) {
+        error = ERROR_POSITION_NOT_FOUND;
+        return;
+    } 
+    bool indexFound = getParamBool(axis + ".encoder.index_found");
+    if (!indexFound) {
+        error = ERROR_POSITION_NOT_FOUND;
+        return;
+    }
+
+    requestedState(motor_number, AXIS_STATE_CLOSED_LOOP_CONTROL);
+    isError = readError(motor_number, true /* print errors */);
+    if (isError) {
+        error = ERROR_MOTOR_NOT_READY;
+        return;
+    } 
+
+    // all ok
+    return;
+}
+
+// shutdown a motor, by putting it into ide mode
+void ODrive::shutdown(int motor_number) {
+    if (debugAPIOn) {
+        println("%s:shutdown %s / %d", oname.c_str(), mname[motor_number].c_str(),motor_number);
+    }
+
+    if (errorIfNotActive(motor_number,"shutdown"))
+        return;
+
+    requestedState(motor_number, AXIS_STATE_IDLE, false);
+}
+    
+
+/**************************************************/
 /*** Class ODrives, managing a group of ODrives ***/
-/*****************************************/
+/**************************************************/
+
+// turn on log output of all communication to ODrives
+void ODrives::debugComm(bool onOff) {
+    debugCommOn = onOff;
+}
+
+// turn on log output of all ODrive API calls
+void ODrives::debugAPI(bool onOff) {
+    debugAPIOn = onOff;
+}
+  
 
 ODrives::ODrives() {
     num_odrives = 0;
     loopAvrTime_us = 0;
 }
 
-void ODrives::addODrive(HardwareSerial& ser, String name1, String name2) {
+void ODrives::addODrive(HardwareSerial& ser, String name1, String name2, String on) {
     if (num_odrives == MAX_ODRIVES) {
-        Serial.println("Max number of ODrives exceeded.");
+        // Teensy only has 6 uarts to spare 
+        println("Max number of 6 ODrives exceeded.");
     }
     odriveSerial[num_odrives] = &ser;
-    odrive[num_odrives].setName(name1, name2);
+    odrive[num_odrives].setName(name1, name2,on);
     num_odrives++;
 }
 
 ODrive& ODrives::operator[](uint8_t i) {
     if ( i > num_odrives) {
-        Serial.print("Requested ");
-        Serial.print(i);
-        Serial.print(" Odrive, but only ");
-        Serial.print(num_odrives);
-        Serial.println(" are installed");
+        println("Requested %d Odrive, but only %d are installed", i, num_odrives);
         delay(5000);
     } 
     return odrive[i];
@@ -749,8 +818,9 @@ void ODrives::setup() {
 
 void ODrives::loop() {
     // To utilise all hardware serials in parallel, data is send to all ODrives first,
-    // then the results are collected
+    // then we wait on all channels for a response.
     uint32_t start = micros();
+
     // send all requests for feedback first
     for (int i = 0;i<num_odrives;i++) {
         odrive[i].sendRequestForFeedback();
@@ -785,5 +855,132 @@ void ODrives::calibrate() {
     for (int i = 0;i<num_odrives;i++) {
         odrive[i].calibrate(0);
         odrive[i].calibrate(1);
+    }
+}
+
+bool ODrives::waitForState (String name, int32_t value, float timeout_s) {
+    bool timeoutFired = false;
+    uint32_t endoftime_ms = millis() + timeout_s *1000.0;
+    bool motorsWaiting;
+    do {
+        delay(100);
+        motorsWaiting = false;
+        for (int i = 0;i<num_odrives;i++) {
+            for (int axisno = 0;axisno<2;axisno++) {
+                if (odrive[i].isActive(axisno)) {
+                    String axis = "axis" + String(axisno) + ".";
+                    int current_state = odrive[i].getParamInt(axis + name);
+                    if (current_state != value)
+                        motorsWaiting = true;
+                }
+            }
+        }
+        timeoutFired = millis() > endoftime_ms;
+    } while (motorsWaiting && !timeoutFired);
+    return !timeoutFired;
+}
+
+void ODrives::startup() {
+    if (debugAPIOn) {
+        println("startup all");
+    }
+
+
+    // reboot all ODrives
+    if (debugAPIOn) {
+        println("reboot drives");
+    }
+    for (int i = 0;i<num_odrives;i++) {
+        odrive[i].reboot(false);
+    }
+    // wait for the odrives to reboot
+    delay(1000);
+
+    // start index search for all motors
+    if (debugAPIOn) {
+        println("check calibration");
+    }
+    bool isCalibrated = true;
+    for (int i = 0;i<num_odrives;i++) {
+        ODrive& od = odrive[i];
+        for (int mn;mn<2;mn++) {
+            if (od.isActive(mn)) {
+                isCalibrated = od.getParamBool("axis" + String(mn) + ".motor.is_calibrated") && isCalibrated;
+            }
+        }
+    }
+    if (!isCalibrated) {
+        error = ERROR_MOTOR_NOT_CALIBRATED;
+        return;
+    }
+
+    if (debugAPIOn) {
+        println("search for encoderindex");
+    }
+    for (int i = 0;i<num_odrives;i++) {
+        ODrive& od = odrive[i];
+        for (int mn = 0;mn<2;mn++) {
+            if (od.isActive(mn)) {
+                od.requestedState(mn,AXIS_STATE_ENCODER_INDEX_SEARCH);
+            }
+        }
+    }
+    if (debugAPIOn) {
+        println("wait for encoder index");
+    }
+    waitForState("current_state", AXIS_STATE_IDLE, 15.0 /* [s] timeout */);
+    if (debugAPIOn) {
+        println("Checking Result.");
+    }
+
+    bool isError = false;
+    bool indexFound = true;
+    for (int i = 0;i<num_odrives;i++) {
+        ODrive& od = odrive[i];
+        for (int mn;mn<2;mn++) {
+            if (od.isActive(mn)) {
+                isError = od.readError(mn) || isError;
+                indexFound = od.getParamBool("axis"+ String(mn) + ".encoder.index_found") && indexFound;
+            }
+        }
+    }
+    if (isError) {
+        error = ERROR_POSITION_NOT_FOUND;
+        return;
+    }
+
+    if (debugAPIOn) {
+        println("Starting closed loop.");
+    }
+    // send closed loop signal to all motors
+    isError = false; 
+    for (int i = 0;i<num_odrives;i++) {
+        ODrive& od = odrive[i];
+        for (int mn = 0;mn<2;mn++) {
+            if (od.isActive(mn)) {
+                od.requestedState(mn,AXIS_STATE_CLOSED_LOOP_CONTROL);
+                isError = od.readError(mn) || isError;
+            }
+        }
+    }
+    if (isError) {
+        error = ERROR_MOTOR_NOT_READY;
+        return;
+    } 
+}
+
+// shutdown a motor, by putting it into ide mode
+void ODrives::shutdown() {
+    if (debugAPIOn) {
+        println("shutdown all");
+    }
+
+    for (int i = 0;i<num_odrives;i++) {
+        ODrive& od = odrive[i];
+        for (int mn = 0;mn<2;mn++) {
+            if (od.isActive(mn)) {
+                od.requestedState(mn, AXIS_STATE_IDLE);
+            }
+        }
     }
 }

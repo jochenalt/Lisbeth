@@ -8,14 +8,25 @@
 #define ODRIVE_STANDARD_SERIAL_BAUD_RATE 115200                      // default of odrive, is reconfigured during startup to 
 #define ODRIVE_HIGH_SERIAL_BAUD_RATE 921600                      // default of odrive, is reconfigured during startup to 
 
+struct Feedback {
+    float pos;
+    float vel;
+    float curr;
+};
 
 class ODrive {
-
+    friend class ODrives;
 public:
     ODrive();
 
+    // returns true, if that motor has been activated
+    bool isActive(int motor_number);
+
+    // activate a sepcific motor
+    void activate(int motor_number);
+
     // name this instance
-    void setName(String name1, String name2);
+    void setName(String name1, String name2, String oname="");
 
     // retrieve that name
     String getName(int motor_number);
@@ -27,7 +38,7 @@ public:
     uint8_t getLastError();
 
     // setup ODrive by establishing the communication via the passed UART stream
-    void setup(HardwareSerial& serial );
+    void setup(HardwareSerial& serial);
 
     // set all ODrive specific Parameters for our motor and encoder
     void setODriveParams();
@@ -35,11 +46,17 @@ public:
     // set the right baudrate (which is higher than ODrives default 115200)
     void setBaudRate();
 
-    // reset everything (including the calibration of both motors)
+    // reset everything (including the calibration of both motors) but set motor/encoder specifics
     void factoryReset();
 
     // start motor calibration
     void calibrate (int motor_number);
+
+    // startup a motor by finding the index position and setting it in the  closed loop control 
+    void startup(int motor_number = -1);
+
+    // shutdown a motor, by putting it into ide mode
+    void shutdown(int motor_number);
 
     // return the voltage of the ODrive board
     float getVBusVoltage();
@@ -90,22 +107,19 @@ public:
     void SetVelocity(int motor_number, float velocity, float current_feedforward);
     void SetCurrent(int motor_number, float current);
     void TrapezoidalMove(int motor_number, float position);
+
     // Getters
     float GetVelocity(int motor_number);
     float GetPosition(int motor_number);
 
-    // State helper
-    bool run_state(bool withCheckSum, int axis, int requested_state, bool wait_for_idle, float timeout = 10.0f);
-    bool requestedState(int axis, int32_t requested_state, bool wait_for_idle, float timeout = 10.0f);
-
-    
 private:
+    bool errorIfNotActive(int motor_number, String text="");
     void clearErrors();
     bool readError(int motor_number, bool printError);
     bool readError(bool printError);
     void eraseConfiguration();
     void saveConfiguration();
-    void reboot();
+    void reboot(bool waitUntilDone = true);
     void printErrors();
     float readFloat(bool withCheckSum, uint32_t &delay);
     int32_t readInt(bool withCheckSum, uint32_t &delay);
@@ -113,25 +127,28 @@ private:
     bool readBool(bool withCheckSum, uint32_t &delay_us);
 
     float readFloatFromBuffer ( char buffer[], uint8_t bufferLen, uint8_t &pos);
-
+    bool waitForState (int motor_number, String name, int32_t value, float timeout_s);
+    void requestedState(int motor_number, int32_t requested_state) ;
+    bool requestedState(int axis, int32_t requested_state, bool wait_for_idle, float timeout = 10.0f);
+    
     HardwareSerial* serial_ = NULL;
-    String name;
-    String name1;  
-    String name2;  
+    String oname;
+    String mname[2] ;
+    bool active[2]; // true if the corresponding motor has been activated
 };
 
 #define MAX_ODRIVES 6
 
-struct Feedback {
-    float pos;
-    float vel;
-    float curr;
-};
-
 class ODrives {
     public:
+        // turn on log output of all communication to ODrives
+        static void debugComm(bool onOff);
+
+        // turn on log output of all ODrive API calls
+        static void debugAPI(bool onOff);
+        
         ODrives();
-        void addODrive(HardwareSerial& s, String name0, String name1);
+        void addODrive(HardwareSerial& s, String name0, String name1, String on="");
 
         uint8_t getNumberODrives() { return num_odrives; };
         // initialise all ODrives
@@ -143,6 +160,12 @@ class ODrives {
         // calibrate all motors at once
         void calibrate();
 
+        // start all motors
+        void startup();
+
+        // shutdown all motors
+        void shutdown();
+
         // return one individual ODrive
         ODrive& operator[](uint8_t i); 
         void loop();
@@ -153,10 +176,13 @@ class ODrives {
         uint32_t loopSendAvrTime_us;
 
     private:
+        bool waitForState (String name, int32_t value, float timeout_s);
+
         uint8_t num_odrives;
         ODrive odrive[MAX_ODRIVES];                     //  ODrive objects, one per ODrive
         HardwareSerial* odriveSerial[MAX_ODRIVES];      // their UART interface
         uint32_t baudrates[MAX_ODRIVES];
-        Feedback feedback[MAX_ODRIVES*2];               // feedback of all motors    
+        Feedback feedback[MAX_ODRIVES*2];               // feedback of all motors  
+
 };
 #endif 

@@ -13,6 +13,7 @@
 
 #define NO_OF_ODRIVES 1                                     // number of drives we have connected
 HardwareSerial* odriveSerial[NO_OF_ODRIVES] = { &Serial1};  // their UART interface
+bool motorActive[NO_OF_ODRIVES][2] { { true, false}};
 ODrives odrives;
 
 // Command processing
@@ -59,9 +60,20 @@ void initODrives() {
     // configure ODrives
     String names[12] = {"FL-Hip", "FL-Shoulder", "FL-Knee", "FR-Hip", "FR-Shoulder", "FR-Knee",
                        "HL-Hip", "HL-Shoulder", "HL-Knee", "HR-Hip", "HR-Shoulder", "HR-Knee"};
+
+    println("activation");
     for (int i = 0;i<NO_OF_ODRIVES;i++) {
-      odrives.addODrive(*odriveSerial[i], names[i*2],names[i*2+1]);
+      odrives.addODrive(*odriveSerial[i], names[i*2],names[i*2+1], String("Odrive ") + String(i));
+      for (int mn = 0;mn < 2;mn++) {
+        if (motorActive[i][mn]) {
+          println("activate %d", mn);
+          odrives[i].activate(mn);
+        }
+      }
     };
+
+    ODrives::debugComm(config.debugLevel>1);
+    ODrives::debugAPI(config.debugLevel>0);
 
     // set them up
     odrives.setup();
@@ -98,10 +110,11 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   blinker.setup(LED_BUILTIN, 50);
 
-  initODrives();
-
  	// read configuration from EEPROM (or initialize if EEPPROM is a virgin)
 	setupConfiguration();
+
+  initODrives();
+
 
   // set default blink pattern
   blinker.set(DefaultBlinkPattern,sizeof(DefaultBlinkPattern));		// assign pattern
@@ -163,6 +176,16 @@ void printHelp() {
   println("   avr. time for loop : %dus %.2fHz", odrives.loopAvrTime_us,freq);
   println("   avr. delay time    : %dus ", odrives.avrDelayTime_us);
   println("   avr. send time q   : %dus ", odrives.loopSendAvrTime_us);
+
+  println("\r\ncommands");
+  println("h       - help");
+  println("d<no    - set debug level 0..2");
+  println("c<no>   - calibrate");
+  println("s<no>   - startup");
+  println("S<no>   - shutdown");
+  println("r       - reset");
+  println("s       - startup all");
+  println("S       - shutdown all");
 };
 
 
@@ -195,25 +218,15 @@ void executeCommand() {
 				else
 					addCmd(inputChar);
 				break;
- 			case 'd':
- 				if (command == "") {
-          odrives.setParams();
-          println("Params set."); 
-        } else 
-          addCmd(inputChar);
-
-				break;
 			case 'r':
  				if (command == "") {
            print("Reset.");
            delay(5000); // let the watchdog do the reset
         } else 
           addCmd(inputChar);
-
 				break;
-
-      case 13:
-			case 10:
+      case 10:
+			case 13:
 				if (command.startsWith("c")) {
 					unsigned long l = command.substring(1).toInt();
 					if (((l >= 0) && (l < odrives.getNumberODrives()*2))) {
@@ -224,13 +237,61 @@ void executeCommand() {
             fastWatchdog();
 					}
 					else {
-						Serial.print("Motor number ");
-            Serial.print(l);
-            Serial.println(" is out of range");
+						print("Motor number %lu is out of range", l);
 					}
 					emptyCmd();
-				};
-
+				} else if (command.startsWith("s")) {
+          if (command.length() > 1) {
+            unsigned long l = command.substring(1).toInt();
+            if (((l >= 0) && (l < odrives.getNumberODrives()*2))) {
+              String name = odrives[l/2].getName(l % 2);
+              println("Start %s:", name.c_str());
+              slowWatchdog();
+              odrives[l/2].startup (l%2);
+              fastWatchdog();
+            }
+            else {
+              print("Motor number %lu is out of range", l);
+            }
+          } else {
+              slowWatchdog();
+              odrives.startup ();
+              fastWatchdog();
+          }
+					emptyCmd();
+				} else if (command.startsWith("S")) {
+          if (command.length() > 1) {
+            unsigned long l = command.substring(1).toInt();
+            if (((l >= 0) && (l < odrives.getNumberODrives()*2))) {
+              String name = odrives[l/2].getName(l % 2);
+              println("Stop %s:", name.c_str());
+              slowWatchdog();
+              odrives[l/2].shutdown (l%2);
+              fastWatchdog();
+            }
+            else {
+              print("Motor number %lu is ohut of range", l);
+            }
+          } else {
+              slowWatchdog();
+              odrives.shutdown ();
+              fastWatchdog();
+          }
+					emptyCmd();
+				} else if (command.startsWith("d")) {
+            unsigned long l = command.substring(1).toInt();
+            if ((l >= 0) && (l < 3)) {
+                println("Setting debug Level %ld", l);
+                ODrives::debugComm(l>1);
+                ODrives::debugAPI(l>0);
+                config.debugLevel = l;
+                writeConfiguration();
+            }
+            else {
+              print("Debug Level must be 0,1,2, not %ld", l);
+            }
+					  emptyCmd();
+				} else 
         if (command != "") {
           Serial.println("unknown command");
         }
