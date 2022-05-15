@@ -7,7 +7,7 @@
 
 #define BUFFER_SIZE 256
 #define FIELD_BUFFER_SIZE 128
-#define MAX_FIELDS 3
+#define MAX_FIELDS 5
 
 struct ImuData
 {
@@ -15,22 +15,68 @@ struct ImuData
   float acc_x;
   float acc_y;
   float acc_z;
+
   float gyro_x;
   float gyro_y;
   float gyro_z;
 
-  // kalman filtered data
-  float lin_acc_x;
-  float lin_acc_y;
-  float lin_acc_z;
-  
   float roll;
   float pitch;
   float yaw;
 
-  float ang_rate_x;
-  float ang_rate_y;
-  float ang_rate_z;
+  float delta_theta_x;
+  float delta_theta_y;
+  float delta_theta_z;
+
+  float quat_w;
+  float quat_q1;
+  float quat_q2;
+  float quat_q3;
+
+  bool delta_theta_modified = false;
+  bool acc_modified = false;
+  bool gyro_modified = false;
+  bool quat_modified = false;
+  bool rpy_modified = false;
+};
+
+
+class Measurement {
+  public:
+    Measurement() {
+        start_time = micros();
+        end_time = start_time;
+        duration = 0;
+        duration_avr = 0;
+    };
+    virtual ~Measurement() {};
+
+    void start() { 
+        start_time = micros();
+    }
+    void stop()  {
+       end_time = micros(); 
+       duration = end_time - start_time;
+      duration_avr = (duration_avr + duration)/2;
+    }
+    float getTime() { return ((float)duration)/1000000.0; };
+    float getAvrTime() { return ((float)duration)/1000000.0; };
+    float getAvrFreq() { 
+      if (duration_avr > 0)
+        return 1000000.0/(float)duration_avr;
+      else
+        return 0;
+     }
+    void tick() {
+      stop();
+      start();
+    } 
+
+  private:
+    uint32_t start_time;
+    uint32_t end_time;
+    uint32_t duration;
+    uint32_t duration_avr;
 };
 
 
@@ -75,9 +121,10 @@ class CommandData {
   uint32_t check = 010565;
 };
 
+
 class IMU {
     public:
-        IMU() {  is_initialised = false; };
+        IMU() {   is_initialised = false; baud_rate = 115200;};
         virtual ~IMU() { };
         void setup(HardwareSerial* serial);
         void loop();
@@ -86,14 +133,15 @@ class IMU {
         // Resets the flag internally, so next call is return false until the next IMU package arrived.
         bool isNewPackageAvailable();
         ImuData& getIMUData() { return imu_data; };
+        Measurement& getMeasuremt();
 
         void printData();
     private:
-        bool imu_data_modified;                     // true if loop() updated the IMU data
-        uint32_t imu_data_modified_us;              // timestamp [us] when this happened
+        void clearBuffer();
         ImuData imu_data;                           // struct of data returned by IMU
         CommandData res;
         bool is_initialised;
+        uint32_t baud_rate;
 }; 
 
 int imu_init();

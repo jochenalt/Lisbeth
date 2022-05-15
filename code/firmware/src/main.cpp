@@ -371,15 +371,17 @@ void loop() {
 
   // get feedback of all odrives
   // odrives.loop();
-  // imu.loop();
-  // if (imu.isNewPackageAvailable()) {
-  //  imu.printData();
-  //}
+  static uint32_t t = millis();
+  imu.loop();
+  if (imu.isNewPackageAvailable()) {
 
-  if (Serial8.available()) {
-    Serial.print("!0x");
-    Serial.print(Serial8.read(),HEX);
+      if (millis() - t > 1000) {
+         float f = imu.getMeasuremt().getAvrFreq();
+         println("freq %.1f", f);
+         imu.printData();
+         t = millis();
+      }
   }
 
-
+  
 }

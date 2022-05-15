@@ -3,7 +3,7 @@
 #include "imu.h"
 
 HardwareSerial* serial = &Serial8;
-
+Measurement dataStreamClock;
 
 union float_int {
   float f;
@@ -80,7 +80,7 @@ static void print(const char* format, ...) {
 	va_start (args, format);
 	vsprintf (s, format, args);
 	va_end (args);		
-    Serial.print(s);
+  Serial.print(s);
 }
 
 static void println(const char* format, ...) {
@@ -90,8 +90,9 @@ static void println(const char* format, ...) {
 	va_start (args, format);
 	vsprintf (s, format, args);
 	va_end (args);		
-    Serial.println(s);
+  Serial.println(s);
 };
+
 
 #define FLOAT_TO_D16QN(a, n) ((int16_t)((a) * (1 << (n))))
 
@@ -375,6 +376,7 @@ void createCommand(uint8_t descriptor_set,
 
   for (int i = 0;i<buffer_len;i++)
     serial->write(buffer[i]);
+  printBuffer("send:", buffer, buffer_len);
 }
 
 void createCommand(uint8_t descriptor_set, 
@@ -411,14 +413,15 @@ void createCommand(uint8_t descriptor_set,
 bool readResponseChar(CommandData &res){
       if (serial->available()) {
           uint8_t ch = serial->read();
-          // print(" 0x%#.2x", ch);
+          // print(" %#.2x", ch);
           if (res.buffer_res_idx < 4) {
             res.buffer_res[res.buffer_res_idx++] = ch;
             // wait until we have 4 bytes in the buffer, which is the header of the package
             if (res.buffer_res_idx == 4) {
               // header is complete, check the header and get the package length
               if ((res.buffer_res[0] != 0x75) || (res.buffer_res[1] != 0x65)) {
-                print("unexpected character %d. Shifting header", ch);
+                // Serial.print("X");
+                // println("unexpected %.2x. Shifting header", ch);
                 // forget the first character, shift the 4 bytes to the left and try again with the next character
                 res.buffer_res[0] = res.buffer_res[1];
                 res.buffer_res[1] = res.buffer_res[2];
@@ -438,8 +441,8 @@ bool readResponseChar(CommandData &res){
             res.buffer_res[res.buffer_res_idx++] = ch;
             if (res.buffer_res_idx == res.buffer_res_len) {
               // we have the complete package now.
-              //printResponseBuffer(res);
-              //Serial.println("response complete");
+              // Serial.print("response complete: ");
+              // printResponseBuffer(res);
 
               // fetch checksum
               uint16_t chk_asis = (((uint16_t)res.buffer_res[4+res.payload_len]) << 8) + ((uint16_t)res.buffer_res[5+res.payload_len]);
@@ -457,11 +460,15 @@ bool readResponseChar(CommandData &res){
 
               while (copy_idx <= res.payload_len ) {
                 // println("cooy_idx%d",copy_idx);
+                assert(field_idx < MAX_FIELDS, "not enough fields");
+                assert(copy_idx+1 < BUFFER_SIZE, "response buffer too short");
                 res.fields[field_idx].len =   res.buffer_res[copy_idx];
                 res.fields[field_idx].descr = res.buffer_res[copy_idx+1];
                 // println("field[%d].len = %d",field_idx, res.fields[field_idx].len);
 
                 for (int i = 0;i<res.fields[field_idx].len;i++) {
+                  assert(field_idx < MAX_FIELDS, "not enough fields");
+                  assert(i < FIELD_BUFFER_SIZE, "field buffer too short");
                   res.fields[field_idx].payload[i] = res.buffer_res[copy_idx+i];
                 };
                 // print("FieldXX[%d].len=%d: ", field_idx, res.fields[field_idx].len);
@@ -508,6 +515,9 @@ bool readResponse(CommandData &res){
           return true;
         }
     }
+    if (!ok) {
+      Serial.println("readResponse timeout.");
+    }
 
     return false;
 }
@@ -553,7 +563,9 @@ bool sendSetToIdle() {
   createCommand(0x01, 
                 0x02, sizeof(field), field,
                 res.buffer_cmd, res.buffer_cmd_len);
+  
   bool ok = expectAckNackResponse(res);
+  
   return ok;
 }
 
@@ -570,27 +582,22 @@ bool sendResumeDevice() {
 
 bool sendSetIMUMessageFormat() {
   CommandData res("SetIMUMessageFormat");
-  uint8_t rate = 1000/100;
-  uint8_t field[] = { 0x01,0x02, 
-                      0x04, 0x00, rate, // Accel Desc
-                      0x05, 0x00, rate};// Gyro Descr
+  const uint16_t base_rate = 1000; 
+  const uint16_t target_rate = 300; 
+
+  uint16_t rate = base_rate/target_rate;
+  uint8_t field[] = { 0x01,       // function use new settings"
+                      0x03,       // 5 fields
+                      0x04, uint8_t(rate >> 8) , (uint8_t)(rate & 0xFF) ,    // Scaled Acc 
+                      0x05, uint8_t(rate >> 8) , (uint8_t)(rate & 0xFF) ,    // Scaled Gyro
+                      0x0C, uint8_t(rate >> 8) , (uint8_t)(rate & 0xFF),     // Euler Angles
+                      // 0x07, uint8_t(rate >> 8) , (uint8_t)(rate & 0xFF),     // Delta Theta vector (integrated angular rate in x,y,z [RAD]
+                      // 0x0A, uint8_t(rate >> 8) , (uint8_t)(rate & 0xFF),      // Quaternion*/
+
+  };
+
   createCommand(0x0C, 
                 0x08, sizeof(field), field,
-                res.buffer_cmd, res.buffer_cmd_len);
-  bool ok = expectAckNackResponse(res);
-  return ok;
-}
-
-bool sendEstimationFilterDataFormat() {
-  CommandData res("SetEstimationFilterDataFormat");
-  uint8_t rate = 1000/100;
-  uint8_t field[] = { 0x01,
-                        0x03,               // 4 fields 
-                        0x05, 0x00, rate,   // EF Euler
-                        0x0D, 0x00, rate,   // EF Accel
-                        0x0E, 0x00, rate};  // EF Angular rate
-  createCommand(0x0C, 
-                0x0A, sizeof(field), field,
                 res.buffer_cmd, res.buffer_cmd_len);
   bool ok = expectAckNackResponse(res);
   return ok;
@@ -601,12 +608,10 @@ bool sendEstimationFilterDataFormat() {
 // Pg 18. "4. Save the IMU and Estimation Filter MIP Message Format" 
 bool sendSaveFormat() {
   CommandData res("saveFormat");
-  uint8_t field1[] = { 0x03,0x00}; //  Save Current IMU Message Format
-  uint8_t field2[] = { 0x03,0x00}; //  Save Current Estimation Filter Message Format
+  uint8_t field[] = { 0x03,0x00}; //  Save Current IMU Message Format
 
   createCommand(0x0C, 
-                0x08, sizeof(field1), field1,
-                0x0A, sizeof(field2), field2,
+                0x08, sizeof(field), field,
                 res.buffer_cmd, res.buffer_cmd_len);
   bool ok = expectAckNackResponse(res);
   return ok;
@@ -617,12 +622,10 @@ bool sendSaveFormat() {
 // Pg 19. "5. Enable the IMU and Estimation Filter Data-streams"
 bool sendEnableDataStream(bool enable) {
   CommandData res("EnableDataStream");
-  uint8_t field1[] = { 0x01,0x01, (uint8_t)(enable==true?0x01:0x00)};    // Enable Continuous IMU Message 
-  uint8_t field2[] = { 0x01,0x03, (uint8_t)(enable==true?0x01:0x00)};    // Enable Continuous Estimation Filter Message
+  uint8_t field[] = { 0x01,0x01, (uint8_t)(enable==true?0x01:0x00)};    // Enable Continuous IMU Message 
 
   createCommand(0x0C, 
-                0x11, sizeof(field1), field1,
-                0x11, sizeof(field2), field2,
+                0x11, sizeof(field), field,
                 res.buffer_cmd, res.buffer_cmd_len);
   bool ok = expectAckNackResponse(res);
   return ok;
@@ -630,9 +633,9 @@ bool sendEnableDataStream(bool enable) {
 
 bool sendSetHeading() {
   CommandData res("SetHeading");
-  uint8_t field1[] = { 0x00,0x00, 0x00, 0x00};
+  uint8_t field[] = { 0x00,0x00, 0x00, 0x00};
   createCommand(0x0D, 
-                0x0D, sizeof(field1), field1,
+                0x03, sizeof(field), field,
                 res.buffer_cmd, res.buffer_cmd_len);
   bool ok = expectAckNackResponse(res);
   return ok;
@@ -642,7 +645,7 @@ bool sendSetHeading() {
 // according to 3dm-gx5-25_dcp_manual_8500-0065_reference_document.pdf
 // Pg 43. "4.1.9 Device Reset (0x01, 0x7E)"
 bool sendResetDevice() {
-  CommandData res("ResetHeading");
+  CommandData res("ResetHDevice");
   uint8_t field1[] = { };
 
   createCommand(0x01, 
@@ -668,8 +671,8 @@ void sendGetDeviceInformation() {
 
   if (!assert(ok != 0, "response invalid")) return;
 
-  if (!assert((res.no_fields >= 1) && (res.fields[0].descr == 0xF1), "field0 descriptor wrong")) return;
-  if (!assert((res.no_fields >= 2) && (res.fields[1].descr == 0x81), "field1 descriptor wrong")) return;
+  if (!assert((res.no_fields >= 1) && (res.fields[0].descr == 0xF1), "1st field descriptor wrong")) return;
+  if (!assert((res.no_fields >= 2) && (res.fields[1].descr == 0x81), "2nd field descriptor wrong")) return;
 
   // parse first package
   res.field_idx = 0;
@@ -691,13 +694,10 @@ void sendGetDeviceInformation() {
   String serial_string =      parseString(res, 16);
   String reserved_string =    parseString(res, 16);
   String options =            parseString(res, 16);
-  Serial.println("IMU:");
-
+  println("IMU %s", model_name.c_str());
   Serial.print("   firmware      :             ");
   Serial.println(firmware_version);
-  Serial.print("   model_name    : ");
-  Serial.println(model_name);
-  Serial.print("   serial_string : ");
+  Serial.print("   serial        : ");
   Serial.println(serial_string);
   Serial.print("   options       : ");
   Serial.println(options);
@@ -707,14 +707,14 @@ void sendGetDeviceInformation() {
 // change the baud rate
 // according to 3dm-gx5-25_dcp_manual_8500-0065_reference_document.pdf
 // Pg 62 "4.2.15 UART Baud Rate (0x0C, 0x40)"
-bool sendChangeBaudRate() {
+bool sendChangeBaudRate(uint32_t baud) {
   CommandData res("ChangeBaudRate");
-  uint8_t field1[] = { 0x01,                    // 01 = change the baud rate!  
-                       0x00, 0x0E, 0x10, 0x00   // 921600 baud
+  uint8_t field[] = { 0x01,                    // 01 = change the baud rate!  
+                       (uint8_t)(baud >> 24), (uint8_t)((baud >> 16) & 0xFF), (uint8_t)((baud >> 8) & 0xFF), (uint8_t)((baud >> 0) & 0xFF)   
                      };
 
   createCommand(0x0C, 
-                0x07, sizeof(field1), field1,
+                0x40, sizeof(field), field,
                 res.buffer_cmd, res.buffer_cmd_len);
 
   printCmdBuffer(res);
@@ -735,7 +735,7 @@ bool sendChangeBaudRate() {
   // next call is gonne be with the new rate
   serial->flush();
   serial->end();
-  serial->begin(921600);
+  serial->begin(baud);
   return true;
 }
 
@@ -779,7 +779,6 @@ int imu_init()
   println("Device Startup Setting");
   sendSetToIdle();
   sendSetIMUMessageFormat();
-  sendEstimationFilterDataFormat();
   sendSaveFormat();
   sendResumeDevice();
   sendSetHeading();
@@ -863,119 +862,158 @@ int imu_init()
   return 0;
 }
 
+void IMU::clearBuffer() {        
+  serial->flush();
+  while (serial->available())
+    serial->read();
+}
+
 
 void IMU::setup(HardwareSerial* s) {
   serial = &Serial4;
-  serial->begin(115200);
-
-  // uint8_t test[] = { 0x75,0x65,0x01,0x02,0x02,0x02,0xE1,0xC7 };
-  // serial->write(test, sizeof(test));
-  // readPrint();
 
   // check if device is responding
-   bool ok = sendPing();
+  // println("ping");
+   bool ok = true;
+   // ok= sendPing();
    if (!ok)
     return;
 
-  sendGetDeviceInformation();
-  // sendResumeDevice();
+  // if IMU is data stream for any reasons (maybe it has been turned on beforehand)
+  // then try to stop that first. Otherwise the stream messes up the responses of the configuration
+  // We need to try that a couple of times until the call sneaks in the middle of the  data stream
+  baud_rate = 115200*2;
+  serial->begin(baud_rate);
+  ok = false;
+  uint32_t timeout_ms = millis() + 500;
+  while ((timeout_ms > millis()) && (ok == false)) {
+    ok = sendSetToIdle();
+  }
+  if (!ok) {
+    println("Could not set to idle");
+    return;
+  }
+ 
+  println("disable data stream");
+  // ok = sendEnableDataStream(false);
+  if (!ok)
+     return;
 
-  /*
+  println("get device information");
+  // sendGetDeviceInformation();
+  if (!ok)
+    return;
 
-  sendSetToIdle();
-  sendSetIMUMessageFormat();
-  sendEstimationFilterDataFormat();
-  sendSaveFormat();
-  sendResumeDevice();
-  sendSetHeading();
-  sendEnableDataStream(true);
-  */
+  println("set IMU message format");
+  ok = sendSetIMUMessageFormat();
+  if (!ok)
+    return;
+
+  println("save message format ");
+  // ok = sendSaveFormat();
+  if (!ok)
+    return;
+
+  println("set baud rate");
+  // baud_rate = 115200*2;
+  // ok = sendChangeBaudRate(baud_rate);
+  if (!ok)
+    return;
+
+  println("enable data stream");
+  ok = sendEnableDataStream(true);
+   if (!ok)
+    return;
+
+
+  // read response from scratch;
+  res.buffer_res_idx = 0;
+  is_initialised = true;
+}
+
+bool isModified(ImuData &imu_data) {
+  return (imu_data.delta_theta_modified ||
+           imu_data.acc_modified ||
+           imu_data.quat_modified ||
+           imu_data.quat_modified ||
+           imu_data.rpy_modified);
 }
 
 void IMU::loop() {
-    if (!is_initialised)
+    if (!is_initialised) {
       return;
+    }
 
     // read and process characters from Serial as long as possible, but dont wait if the queue is empty
     bool fullPackageAvailable = readResponseChar(res);
-
     // a full package as been read 
     if (fullPackageAvailable) {
         // parse the package
-        res.field_idx = 1;
-        res.parse_idx = 0;
+
         for (res.field_idx = 0;res.field_idx < res.no_fields;res.field_idx++) {
-          // GPS timestamp
-          // 5.1.12 GPS Correlation Timestamp (0x80, 0x12)
-          // if (res.descriptor_set_byte == 0x80 && res.fields[res.field_idx].descr == 0x12) {
-          //  double gps_time_of_week = parseDouble(res);
-          //  uint16_t gps_week = parseU16(res);
-          //  uint16_t timestamp_flags = parseU16(res);
-          //}
-
-          // Estimation Filter Calculated Value Timestamp Data
-          // 5.2.2 GPS Timestamp (0x82, 0x11)
-          // if (res.descriptor_set_byte == 0x82 && res.fields[res.field_idx].descr == 0x11) {
-          //  double gps_time_of_week = parseDouble(res);
-          //  uint16_t gps_week_number = parseU16(res);
-          //  uint16_t timestamp_flags = parseU16(res);
-          //}
-
-          // Scaled Accelerometer Vector
-          // 5.1.2 Scaled Gyro Vector (0x80, 0x05)
-          if ((res.descriptor_set_byte == 0x80) && (res.fields[res.field_idx].descr == 0x04)) {
-            imu_data.acc_x = parseFloat(res);
-            imu_data.acc_y = parseFloat(res);
-            imu_data.acc_z = parseFloat(res);
+          res.parse_idx = 2;
+          // Scaled Accelerometer Vector [g]
+          if ((res.descriptor_set_byte == 0x80)) {
+            switch (res.fields[res.field_idx].descr) {
+              case 0x04:  // Scaled Accelerometer Vector (0x80, 0x04)
+                imu_data.acc_x = parseFloat(res);
+                imu_data.acc_y = parseFloat(res);
+                imu_data.acc_z = parseFloat(res);
+                imu_data.acc_modified  = true;
+                break;
+              case 0x05:  // Scaled Gyro Vector (0x80, 0x05)
+                imu_data.gyro_x = parseFloat(res);
+                imu_data.gyro_y = parseFloat(res);
+                imu_data.gyro_z = parseFloat(res);
+                imu_data.gyro_modified  = true;
+                break;
+              case 0x0A:  // Quaternion w, q1, q2, q3
+                imu_data.quat_w   = parseFloat(res);
+                imu_data.quat_q1   = parseFloat(res);
+                imu_data.quat_q2   = parseFloat(res);
+                imu_data.quat_q3   = parseFloat(res);
+                imu_data.quat_modified  = true;
+                break;
+              case 0x0C:  // Euler Angles (0x80, 0x0C)
+                imu_data.roll   = parseFloat(res);
+                imu_data.pitch  = parseFloat(res);
+                imu_data.yaw    = parseFloat(res);
+                imu_data.rpy_modified  = true;
+                break;
+              case 0x07:  // Delta Theta Vector (0x80, 0x07)
+                imu_data.delta_theta_x = parseFloat(res);
+                imu_data.delta_theta_y = parseFloat(res);
+                imu_data.delta_theta_z = parseFloat(res);
+                imu_data.delta_theta_modified = true;
+                break;
+              default:
+                println("unknown field 0x%.2x.", res.fields[res.field_idx].descr);
+            }
           }
-
-          // Scaled Gyro Vector
-          // 5.1.1 Scaled Accelerometer Vector (0x80, 0x04)
-          if ((res.descriptor_set_byte == 0x80) && (res.fields[res.field_idx].descr == 0x04)) {
-            imu_data.gyro_x = parseFloat(res);
-            imu_data.gyro_y = parseFloat(res);
-            imu_data.gyro_z = parseFloat(res);
-          }
-
-          // roll pitch yaw 
-          // 5.2.5 Orientation, Euler Angles (0x82, 0x05)
-          if ((res.descriptor_set_byte == 0x82) && (res.fields[res.field_idx].descr ==0x05)) {
-              imu_data.roll = parseFloat(res);
-              imu_data.pitch = parseFloat(res);
-              imu_data.yaw = parseFloat(res);
-          }
-
-          // Linear Acceleration X,Y,Z
-          // 5.2.12 Linear Acceleration (0x82, 0x0D)
-          if ((res.descriptor_set_byte == 0x82 && res.fields[res.field_idx].descr ==0x0D)) {
-              imu_data.lin_acc_x = parseFloat(res);
-              imu_data.lin_acc_y = parseFloat(res);
-              imu_data.lin_acc_z= parseFloat(res);
-          }
-
-          // Compensated Angular Rate
-          // 5.2.8 Compensated Angular Rate (0x82, 0x0E)
-          if ((res.descriptor_set_byte == 0x82) && (res.fields[res.field_idx].descr ==0x0E)) {
-              imu_data.ang_rate_x = parseFloat(res);
-              imu_data.ang_rate_y = parseFloat(res);
-              imu_data.ang_rate_z = parseFloat(res);
+          else {
+                println("unknown descriptor 0x%.2x.", res.descriptor_set_byte);
           }
         }
-
-        // we updated the IMU data package
-        imu_data_modified = true;
-        imu_data_modified_us = micros();
+        dataStreamClock.tick();
     }
 }
 
+Measurement& IMU::getMeasuremt() {
+  return dataStreamClock;
+}
 bool IMU::isNewPackageAvailable() {
-  bool m = imu_data_modified; 
-  imu_data_modified = false; 
+  bool m = isModified(imu_data);
+  imu_data.delta_theta_modified = false;
+  imu_data.acc_modified = false;
+  imu_data.gyro_modified = false;
+  imu_data.quat_modified = false;
+  imu_data.rpy_modified = false;
+  
   return m;
 } 
 
 void IMU::printData() {
-  print("\r\nIMU \r\n acc=(%f\t%f\t%f)\n\rGyro:(%f\t%f\t%f)\n\rrpy:(%f\t%f\t%f)\n\rlinacc:(%f\t%f\t%f)\r\nangrate:(%f\t%f\t%f)\t",
+  print("\r\nIMU \r\n   acc  :(%.4f %.4f %.4f)\n\r   Gyro :(%.4f %.4f %.4f)\n\r   rpy  :(%.4f %.4f %.4f)\n\r   theta:(%.4f %.4f %.4f)\r\n",
          imu_data.acc_x,
          imu_data.acc_y,
          imu_data.acc_z,
@@ -985,11 +1023,8 @@ void IMU::printData() {
          imu_data.roll,
          imu_data.pitch,
          imu_data.yaw,
-         imu_data.lin_acc_x,
-         imu_data.lin_acc_y,
-         imu_data.lin_acc_z,
-         imu_data.ang_rate_x,
-         imu_data.ang_rate_y,
-         imu_data.ang_rate_z);
+         imu_data.delta_theta_x,
+         imu_data.delta_theta_y,
+         imu_data.delta_theta_z);
 }
  
