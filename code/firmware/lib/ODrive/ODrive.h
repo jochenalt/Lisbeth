@@ -5,7 +5,7 @@
 #include "Arduino.h"
 #include "ODriveEnums.h"
 
-#define ODRIVE_STANDARD_SERIAL_BAUD_RATE 115200                      // default of odrive, is reconfigured during startup to 
+#define ODRIVE_STANDARD_SERIAL_BAUD_RATE 115200                  // default of odrive, is reconfigured during startup to 
 #define ODRIVE_HIGH_SERIAL_BAUD_RATE 921600                      // default of odrive, is reconfigured during startup to 
 
 struct Feedback {
@@ -132,9 +132,9 @@ private:
     bool requestedState(int axis, int32_t requested_state, bool wait_for_idle, float timeout = 10.0f);
     
     HardwareSerial* serial_ = NULL;
-    String oname;
-    String mname[2] ;
-    bool active[2]; // true if the corresponding motor has been activated
+    String oname;           // name of this ODrive
+    String mname[2] ;       // names of the motors 
+    bool active[2];         // true if the corresponding motor has been activated (allowing to use only one motor our of two )
 };
 
 #define MAX_ODRIVES 6

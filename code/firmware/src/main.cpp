@@ -4,42 +4,80 @@
 #include <HardwareSerial.h>
 #include <utils.h>
 
-#include <ODrive.h>
-#include "PatternBlinker.h"
 #include <Watchdog.h>
+#include "PatternBlinker.h"
+#include <ODrive.h>
+#include <imu.h>
 
 //  baud rate of Serial0 that is used for logging 
 #define LOG_BAUD_RATE 115200
 
+//--- configure ODrives and motors ---
+// ODrive pin 1 goes to Teensy RX
+// ODrive pin 2 goes to Teensy TX
+// ODrive pin GND goes to Teensy GND 
 #define NO_OF_ODRIVES 1                                     // number of drives we have connected
 HardwareSerial* odriveSerial[NO_OF_ODRIVES] = { &Serial1};  // their UART interface
+// every motor needs to be activated to be used
 bool motorActive[NO_OF_ODRIVES][2] { { true, false}};
+// names of the odrives (F/H=front,hind, L/R=left/right )
+String odriveNames[6] = {"FL", "FL/FR", "FR", "HL", "HL/HR", "HR" };
+// names of the motors
+String names[12] = {"FL-Hip", "FL-Shoulder", "FL-Knee", "FR-Hip", "FR-Shoulder", "FR-Knee",
+                    "HL-Hip", "HL-Shoulder", "HL-Knee", "HR-Hip", "HR-Shoulder", "HR-Knee"};
+
 ODrives odrives;
 
-// Command processing
+// Processing of commands coming in via Serial
 uint32_t now_us = 0;                                        // current time in us, set in loop()
 bool commandPending = false;                                // true if command processor is waiting for more input
 String command;                                             // current command coming in
 uint32_t commandLastChar_us = 0;                             // time when the last character came in 
 
-// Teensy Watchdog 
+// Watchdog (AVR watchdog does not work on Teensy)
 WDT_T4<WDT1> wdt;
 
-// Teensy LED
+// Teensy LED blinker
 static uint8_t DefaultBlinkPattern[3] = { 0b11001000,0b00001100,0b10000000}; // nice pattern. Each digit represents 50ms
-PatternBlinker blinker;													                             // initiate pattern blinker
+static uint8_t BlockingBlinkPattern[1] = { 0b11111110};                      // blocking pattern, used for blocking actions like startup of motors 
+PatternBlinker blinker;													                           
 
-// Error handling
+// Error codes
 uint8_t NO_ERROR = 0;
 uint8_t ODRIVE_SETUP_VOLTAGE_ERROR = 1;
 uint8_t ODRIVE_SETUP_FIRMWARE_ERROR = 2;
+
 uint8_t GENERAL_ERROR = 99;
 uint8_t error = NO_ERROR;
 
-void watchdogWarning() {
-  println("Watchdog Reset");
+IMU imu;
+
+void yield() {
+  // in yield we only allow harmless things like the blinker
+  blinker.loop(millis());
+
+  static uint32_t m = millis() + 1;
+  static bool flag = true;
+  if (millis() > m) {
+    if (flag) {
+      digitalWrite(PIN_A10,  HIGH);
+      // Serial.print("+");
+      flag = false;
+    }
+    else {
+      digitalWrite(PIN_A10,  LOW);
+      // Serial.print("-");
+      flag = true;
+    }
+    m = millis() + 1;
+  }
 }
 
+void watchdogWarning() {
+  println("\r\nWatchdog Reset");
+}
+
+// set the watchdog timer to 100ms
 void fastWatchdog() {
   WDT_timings_t config;
   config.trigger = 0.1; /* [s], trigger is how long before the watchdog callback fires */
@@ -48,6 +86,8 @@ void fastWatchdog() {
   wdt.begin(config);
 }
 
+
+// set the watchdog timer to 120s (used for longer things like calibrating motors)
 void slowWatchdog() {
   WDT_timings_t config;
   config.trigger = 128.0; /* [s], trigger is how long before the watchdog callback fires */
@@ -57,12 +97,8 @@ void slowWatchdog() {
 }
 
 void initODrives() {
-    // configure ODrives
-    String names[12] = {"FL-Hip", "FL-Shoulder", "FL-Knee", "FR-Hip", "FR-Shoulder", "FR-Knee",
-                       "HL-Hip", "HL-Shoulder", "HL-Knee", "HR-Hip", "HR-Shoulder", "HR-Knee"};
-
     for (int i = 0;i<NO_OF_ODRIVES;i++) {
-      odrives.addODrive(*odriveSerial[i], names[i*2],names[i*2+1], String("Odrive ") + String(i));
+      odrives.addODrive(*odriveSerial[i], names[i*2],names[i*2+1], odriveNames[i]);
       for (int mn = 0;mn < 2;mn++) {
         if (motorActive[i][mn]) {
           odrives[i].activate(mn);
@@ -84,8 +120,13 @@ void initODrives() {
       // check sufficient voltage
       float voltage = odrives[i].getVBusVoltage();
       if (voltage < 12) {
-        println("\r\nVoltage of %.2fV too low.", voltage);
-        error = ODRIVE_SETUP_VOLTAGE_ERROR;
+        if (voltage < 0.1) {
+          println("\r\nODrive is not powered ");
+          error = ODRIVE_SETUP_VOLTAGE_ERROR;
+        } else {
+          println("\r\nVoltage of %.2fV too low.", voltage);
+          error = ODRIVE_SETUP_VOLTAGE_ERROR;
+        }
       }
 
       // check correct firmware
@@ -111,8 +152,14 @@ void setup() {
  	// read configuration from EEPROM (or initialize if EEPPROM is a virgin)
 	setupConfiguration();
 
-  initODrives();
+  // initialise IMU
+  // imu.setup(&Serial8);
 
+  // setup up all ODrives, motors and encoders
+  pinMode(PIN_A10, OUTPUT);
+  Serial4.begin(115200);
+
+  initODrives();
 
   // set default blink pattern
   blinker.set(DefaultBlinkPattern,sizeof(DefaultBlinkPattern));		// assign pattern
@@ -132,7 +179,7 @@ void setup() {
       }
 
       print ("%d ",i);
-      delay(980); // let the watchdog fire
+      delay(1000-20); // let the watchdog fire
     }
     println("0 Reset.");
 
@@ -175,15 +222,15 @@ void printHelp() {
   println("   avr. delay time    : %dus ", odrives.avrDelayTime_us);
   println("   avr. send time q   : %dus ", odrives.loopSendAvrTime_us);
 
-  println("\r\ncommands");
-  println("h       - help");
-  println("d<no    - set debug level 0..2");
-  println("c<no>   - calibrate");
-  println("s<no>   - startup");
-  println("S<no>   - shutdown");
-  println("r       - reset");
-  println("s       - startup all");
-  println("S       - shutdown all");
+  println("\r\nUsage:");
+  println("   h       - help");
+  println("   d<no    - set debug level 0..2");
+  println("   c<no>   - calibrate");
+  println("   s<no>   - startup");
+  println("   S<no>   - shutdown");
+  println("   r       - reset");
+  println("   s       - startup all");
+  println("   S       - shutdown all");
 };
 
 
@@ -223,6 +270,16 @@ void executeCommand() {
         } else 
           addCmd(inputChar);
 				break;
+      case 'i': {
+          // setup IMU
+          println("Setup of IMU.");
+          slowWatchdog();
+          imu.setup(&Serial4);
+          println("Setup done.");
+
+          fastWatchdog();
+          break;
+      }
       case 10:
 			case 13:
 				if (command.startsWith("c")) {
@@ -243,7 +300,9 @@ void executeCommand() {
             if (((l >= 0) && (l < odrives.getNumberODrives()*2))) {
               String name = odrives[l/2].getName(l % 2);
               slowWatchdog();
+              blinker.set(BlockingBlinkPattern, sizeof(BlockingBlinkPattern));
               odrives[l/2].startup (l%2);
+              blinker.set(DefaultBlinkPattern, sizeof(DefaultBlinkPattern));
               fastWatchdog();
             }
             else {
@@ -251,7 +310,9 @@ void executeCommand() {
             }
           } else {
               slowWatchdog();
+              blinker.set(BlockingBlinkPattern, sizeof(BlockingBlinkPattern));
               odrives.startup ();
+              blinker.set(DefaultBlinkPattern, sizeof(DefaultBlinkPattern));
               fastWatchdog();
           }
 					emptyCmd();
@@ -303,11 +364,22 @@ void loop() {
   wdt.feed();
   
   // everybody loves a blinking LED
-  blinker.loop(now_us >> 10);
+  yield();
 
-  // react on input 
+  // react on input from Serial 
   executeCommand();
 
   // get feedback of all odrives
   // odrives.loop();
+  // imu.loop();
+  // if (imu.isNewPackageAvailable()) {
+  //  imu.printData();
+  //}
+
+  if (Serial8.available()) {
+    Serial.print("!0x");
+    Serial.print(Serial8.read(),HEX);
+  }
+
+
 }

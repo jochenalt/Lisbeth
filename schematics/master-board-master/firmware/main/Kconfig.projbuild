@@ -1,0 +1,47 @@
+menu "Main App"
+	
+	config N_SLAVES
+        int "SPI slave nb"
+        default 6
+        range 0 8
+        help
+            Number of SPI slaves to handle.
+
+    config WIFI_ETH_TIMEOUT_ACK
+        int "Timeout wifi/eth while waiting for first command"
+        default 1000
+        help
+            Maximeum time in ms for which the masterboard will wait for the first command packet
+            via wifi/ethernet after initialization
+
+
+    config WIFI_ETH_TIMEOUT_CONTROL
+            int "Timeout wifi/eth while in control mode"
+            default 20
+            help
+                Maximum time in ms without the masterboard receiving any data from wifi/ethernet
+                while in active control mode
+
+
+    config SPI_N_ATTEMPT
+        int "SPI nb of attempts"
+        default 2
+        range 0 4
+        help
+            Maximum number of attempts in one spi communication (for one slave).
+
+	config LED_GPIO
+        int "Built-In LED GPIO"
+        default 2
+        range 0 39
+        help
+            Output GPIO on which the built-in led is wired.    
+
+	config BUTTON_GPIO
+	        int "Intput button GPIO"
+	        default 36
+	        range 0 39
+	        help
+	            Input GPIO on which the button (pull-down) is wired.
+
+endmenu

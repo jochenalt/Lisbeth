@@ -3,6 +3,9 @@
         "string": "cpp",
         "type_traits": "cpp",
         "utility": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "initializer_list": "cpp",
+        "*.tpp": "cpp",
+        "system_error": "cpp"
     }
 }
