@@ -124,9 +124,10 @@ class CommandData {
 
 class IMU {
     public:
-        IMU() {   is_initialised = false; baud_rate = 115200;};
+        IMU() {  is_initialised = false; baud_rate = 115200;};
         virtual ~IMU() { };
-        void setup(HardwareSerial* serial);
+        bool setup(HardwareSerial* serial);
+        bool isInitialised() { return is_initialised; };
         void loop();
 
         // returns true, if the IMU sent a new package. 

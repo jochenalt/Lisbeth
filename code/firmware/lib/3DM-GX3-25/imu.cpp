@@ -545,7 +545,7 @@ void IMU::clearBuffer() {
 }
 
 
-void IMU::setup(HardwareSerial* s) {
+bool IMU::setup(HardwareSerial* sn) {
   serial = &Serial4;
 
   // check if device is responding
@@ -558,53 +558,56 @@ void IMU::setup(HardwareSerial* s) {
   // if IMU is data stream for any reasons (maybe it has been turned on beforehand)
   // then try to stop that first. Otherwise the stream messes up the responses of the configuration
   // We need to try that a couple of times until the call sneaks in the middle of the  data stream
-  baud_rate = 115200*2;
+  baud_rate = 115200;
   serial->begin(baud_rate);
   ok = false;
-  uint32_t timeout_ms = millis() + 500;
-  while ((timeout_ms > millis()) && (ok == false)) {
-    ok = sendSetToIdle();
-  }
+  // uint32_t timeout_ms = millis() + 500;
+  // while ((timeout_ms > millis()) && (ok == false)) {
+  //  ok = sendSetToIdle();
+  //}
+  ok = sendSetToIdle();
   if (!ok) {
     println("Could not set to idle");
-    return;
+    return false;
   }
  
   println("disable data stream");
   // ok = sendEnableDataStream(false);
   if (!ok)
-     return;
+    return false;
 
   println("get device information");
   // sendGetDeviceInformation();
   if (!ok)
-    return;
+    return false;
 
   println("set IMU message format");
   ok = sendSetIMUMessageFormat();
   if (!ok)
-    return;
+    return false;
 
   println("save message format ");
   // ok = sendSaveFormat();
   if (!ok)
-    return;
+    return false;
 
   println("set baud rate");
   // baud_rate = 115200*2;
   // ok = sendChangeBaudRate(baud_rate);
   if (!ok)
-    return;
+    return false;
 
   println("enable data stream");
   ok = sendEnableDataStream(true);
    if (!ok)
-    return;
+    return false;
 
 
   // read response from scratch;
   res.buffer_res_idx = 0;
   is_initialised = true;
+
+  return true;
 }
 
 bool isModified(ImuData &imu_data) {

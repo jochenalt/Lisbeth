@@ -12,6 +12,11 @@
 //  baud rate of Serial0 that is used for logging 
 #define LOG_BAUD_RATE 115200
 
+// the IMU can be powered by this PIN
+// LOW = power on
+// The IMU takes 500ms to power up
+#define PIN_IMU_POWER 9
+
 //--- configure ODrives and motors ---
 // ODrive pin 1 goes to Teensy RX
 // ODrive pin 2 goes to Teensy TX
@@ -52,27 +57,6 @@ uint8_t error = NO_ERROR;
 
 IMU imu;
 
-void yield() {
-  // in yield we only allow harmless things like the blinker
-  blinker.loop(millis());
-
-  static uint32_t m = millis() + 1;
-  static bool flag = true;
-  if (millis() > m) {
-    if (flag) {
-      digitalWrite(PIN_A10,  HIGH);
-      // Serial.print("+");
-      flag = false;
-    }
-    else {
-      digitalWrite(PIN_A10,  LOW);
-      // Serial.print("-");
-      flag = true;
-    }
-    m = millis() + 1;
-  }
-}
-
 void watchdogWarning() {
   println("\r\nWatchdog Reset");
 }
@@ -94,6 +78,102 @@ void slowWatchdog() {
   config.timeout = 128.0; /* [s] timeout is how long before not feeding will the watchdog reset */
   config.callback = watchdogWarning;
   wdt.begin(config);
+}
+
+class IMUManager {
+  public:
+    enum ImuStateType  { IMU_UNPOWERED = 0, IMU_WARMING_UP = 1, IMU_POWERED_UP = 2, IMU_SETUP = 3, IMU_COOLING_DOWN = 4};
+
+  IMUManager() {};
+
+  void loop() {
+    switch (imuState) {
+      case IMU_UNPOWERED:
+        if (cmdPowerUp) {
+          println("powering up IMU");
+          digitalWrite(PIN_IMU_POWER, LOW);
+          warmingStart_ms = millis();
+          imuState = IMU_WARMING_UP;
+          cmdPowerUp = false;
+        } 
+        break;
+      case IMU_WARMING_UP:
+        if (millis() - warmingStart_ms > 2000) {
+          println("IMU warmed up");
+          imuState = IMU_POWERED_UP;
+        }
+        break;
+      case IMU_POWERED_UP: {
+          println("IMU setup");
+          slowWatchdog();
+          bool ok = imu.setup(&Serial4);
+          fastWatchdog();
+          if (ok) {
+            imuState = IMU_SETUP;
+          }
+          else {
+            println("unsuccessful, powering down");
+            digitalWrite(PIN_IMU_POWER, HIGH);
+            imuState = IMU_COOLING_DOWN;
+            warmingStart_ms = millis();
+          }
+          break;
+        }
+        case IMU_SETUP:
+          imu.loop();
+          if (cmdPowerDown) {
+            println("coolingi down IMU");
+
+            digitalWrite(PIN_IMU_POWER, HIGH);
+            imuState = IMU_COOLING_DOWN;
+            warmingStart_ms = millis();
+            cmdPowerDown = false;
+          }
+          break;
+        case IMU_COOLING_DOWN:
+          if (millis() - warmingStart_ms > 2000) {
+            imuState = IMU_UNPOWERED;
+             println("IMU powered down");
+          }
+          break;
+        default:
+          println("unkown IMU state");
+          break;
+    }
+  }
+  void powerUp() { cmdPowerUp = true;}
+  void powerDown() { cmdPowerDown = true;}
+
+  private:
+    bool cmdPowerDown = false;
+    bool cmdPowerUp = false;
+    ImuStateType imuState = IMU_UNPOWERED;
+    uint32_t warmingStart_ms = 0;
+
+};
+
+IMUManager imuMgr;
+
+
+void yield() {
+  // in yield we only allow harmless things like the blinker
+  blinker.loop(millis());
+
+  static uint32_t m = millis() + 1;
+  static bool flag = true;
+  if (millis() > m) {
+    if (flag) {
+      digitalWrite(PIN_A10,  HIGH);
+      // Serial.print("+");
+      flag = false;
+    }
+    else {
+      digitalWrite(PIN_A10,  LOW);
+      // Serial.print("-");
+      flag = true;
+    }
+    m = millis() + 1;
+  }
 }
 
 void initODrives() {
@@ -154,6 +234,12 @@ void setup() {
 
   // initialise IMU
   // imu.setup(&Serial8);
+
+  // IMU's power is controlled by this PIN
+  // We want to restart the IMU if something goes wrong
+  // initially we ensure that IMU does not get POWER
+  pinMode(PIN_IMU_POWER, OUTPUT);
+  digitalWrite(PIN_IMU_POWER, HIGH); // turn off IMU
 
   // setup up all ODrives, motors and encoders
   pinMode(PIN_A10, OUTPUT);
@@ -273,13 +359,18 @@ void executeCommand() {
       case 'i': {
           // setup IMU
           println("Setup of IMU.");
-          slowWatchdog();
-          imu.setup(&Serial4);
-          println("Setup done.");
-
-          fastWatchdog();
+        
+          imuMgr.powerUp();
           break;
       }
+      case 'I': {
+          // setup IMU
+          println("power down of IMU.");
+        
+          imuMgr.powerDown();
+          break;
+      }
+
       case 10:
 			case 13:
 				if (command.startsWith("c")) {
@@ -371,8 +462,9 @@ void loop() {
 
   // get feedback of all odrives
   // odrives.loop();
+  imuMgr.loop();
+
   static uint32_t t = millis();
-  imu.loop();
   if (imu.isNewPackageAvailable()) {
 
       if (millis() - t > 1000) {
