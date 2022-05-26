@@ -42,34 +42,50 @@ struct ImuData
 
 
 class Measurement {
+  const uint8_t filter = 16;
   public:
     Measurement() {
         start_time = micros();
         end_time = start_time;
         duration = 0;
         duration_avr = 0;
+        deviation_avr = 0;
     };
     virtual ~Measurement() {};
 
     void start() { 
         start_time = micros();
+        end_time = start_time;
     }
     void stop()  {
        end_time = micros(); 
        duration = end_time - start_time;
-      duration_avr = (duration_avr + duration)/2;
+       duration_avr = (duration_avr*(filter-1) + duration)/filter;
+       uint32_t deviation = duration > duration_avr?duration-duration_avr:duration_avr-duration;
+       deviation_avr = (deviation_avr*(filter-1) +deviation)/filter;
     }
     float getTime() { return ((float)duration)/1000000.0; };
-    float getAvrTime() { return ((float)duration)/1000000.0; };
+    float getAvrTime() { return ((float)duration_avr)/1000000.0; };
     float getAvrFreq() { 
       if (duration_avr > 0)
         return 1000000.0/(float)duration_avr;
       else
         return 0;
      }
+    float getAvrDeviation() { 
+      if (deviation_avr > 0)
+        return ((float)deviation_avr / (float)duration_avr);
+      else
+        return 0;
+     }
+
     void tick() {
-      stop();
-      start();
+      end_time = micros();
+      duration = end_time - start_time;
+      uint32_t deviation = duration > duration_avr?duration-duration_avr:duration_avr-duration;
+      deviation_avr = (deviation_avr*(filter-1) + deviation)/filter;
+      duration_avr = (duration_avr*(filter-1) + duration)/filter;
+      start_time = end_time;
     } 
 
   private:
@@ -77,6 +93,7 @@ class Measurement {
     uint32_t end_time;
     uint32_t duration;
     uint32_t duration_avr;
+    uint32_t deviation_avr;
 };
 
 
@@ -124,7 +141,8 @@ class CommandData {
 
 class IMU {
     public:
-        IMU() {  is_initialised = false; baud_rate = 115200;};
+        IMU(): is_initialised(false) ,
+               baud_rate(115200) {}; 
         virtual ~IMU() { };
         bool setup(HardwareSerial* serial);
         bool isInitialised() { return is_initialised; };
@@ -133,10 +151,24 @@ class IMU {
         // returns true, if the IMU sent a new package. 
         // Resets the flag internally, so next call is return false until the next IMU package arrived.
         bool isNewPackageAvailable();
+
+        // return the latest data as coming from IMU
         ImuData& getIMUData() { return imu_data; };
+
+        // get some timeing measurements
         Measurement& getMeasuremt();
 
+        // direct communication with the IMU
         void printData();
+        void sendGetDeviceInformation();
+        bool sendPing();
+        bool sendSetToIdle();
+        bool sendResumeDevice();
+        bool sendSetIMUMessageFormat();
+        bool sendSaveFormat();
+        bool sendSetHeading();
+        bool sendResetDevice();
+        bool sendEnableDataStream(bool ok);
     private:
         void clearBuffer();
         ImuData imu_data;                           // struct of data returned by IMU

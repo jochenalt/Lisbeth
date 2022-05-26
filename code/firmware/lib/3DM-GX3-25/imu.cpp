@@ -174,7 +174,7 @@ void createCommand(uint8_t descriptor_set,
 
   for (int i = 0;i<buffer_len;i++)
     serial->write(buffer[i]);
-  printBuffer("send:", buffer, buffer_len);
+  // printBuffer("send:", buffer, buffer_len);
 }
 
 void createCommand(uint8_t descriptor_set, 
@@ -345,7 +345,7 @@ bool expectAckNackResponse(CommandData res) {
   return ok;
 }
 
-bool sendPing() {
+bool IMU::sendPing() {
   CommandData res("ping");
   uint8_t field[] = { 0x01, 0x00};
   createCommand(0x01, 
@@ -355,7 +355,7 @@ bool sendPing() {
   return ok;
 }
 
-bool sendSetToIdle() {
+bool IMU::sendSetToIdle() {
   CommandData res("SetToIdle");
   uint8_t field[] = {  };
   createCommand(0x01, 
@@ -368,7 +368,7 @@ bool sendSetToIdle() {
 }
 
 
-bool sendResumeDevice() {
+bool IMU::sendResumeDevice() {
   CommandData res("ResumeDevice");
   uint8_t field[] = { };
   createCommand(0x01, 
@@ -378,14 +378,13 @@ bool sendResumeDevice() {
   return ok;
 }
 
-bool sendSetIMUMessageFormat() {
+bool IMU::sendSetIMUMessageFormat() {
   CommandData res("SetIMUMessageFormat");
-  const uint16_t base_rate = 1000; 
-  const uint16_t target_rate = 300; 
+  const uint16_t target_rate = 500; 
 
-  uint16_t rate = base_rate/target_rate;
-  uint8_t field[] = { 0x01,       // function use new settings"
-                      0x03,       // 5 fields
+  uint16_t rate = 1000/target_rate; // according to data sheet
+  uint8_t field[] = { 0x01,         // function use new settings"
+                      0x03,         // 3 fields
                       0x04, uint8_t(rate >> 8) , (uint8_t)(rate & 0xFF) ,    // Scaled Acc 
                       0x05, uint8_t(rate >> 8) , (uint8_t)(rate & 0xFF) ,    // Scaled Gyro
                       0x0C, uint8_t(rate >> 8) , (uint8_t)(rate & 0xFF),     // Euler Angles
@@ -404,7 +403,7 @@ bool sendSetIMUMessageFormat() {
 // save the raw and the EF format 
 // according to 3dm-gx5-25_dcp_manual_8500-0065_reference_document.pdf
 // Pg 18. "4. Save the IMU and Estimation Filter MIP Message Format" 
-bool sendSaveFormat() {
+bool IMU::sendSaveFormat() {
   CommandData res("saveFormat");
   uint8_t field[] = { 0x03,0x00}; //  Save Current IMU Message Format
 
@@ -418,7 +417,7 @@ bool sendSaveFormat() {
 // enable/disable the data stream
 // according to 3dm-gx5-25_dcp_manual_8500-0065_reference_document.pdf
 // Pg 19. "5. Enable the IMU and Estimation Filter Data-streams"
-bool sendEnableDataStream(bool enable) {
+bool IMU::sendEnableDataStream(bool enable) {
   CommandData res("EnableDataStream");
   uint8_t field[] = { 0x01,0x01, (uint8_t)(enable==true?0x01:0x00)};    // Enable Continuous IMU Message 
 
@@ -429,7 +428,7 @@ bool sendEnableDataStream(bool enable) {
   return ok;
 }
 
-bool sendSetHeading() {
+bool IMU::sendSetHeading() {
   CommandData res("SetHeading");
   uint8_t field[] = { 0x00,0x00, 0x00, 0x00};
   createCommand(0x0D, 
@@ -442,7 +441,7 @@ bool sendSetHeading() {
 // enable/disable the data stream
 // according to 3dm-gx5-25_dcp_manual_8500-0065_reference_document.pdf
 // Pg 43. "4.1.9 Device Reset (0x01, 0x7E)"
-bool sendResetDevice() {
+bool IMU::sendResetDevice() {
   CommandData res("ResetHDevice");
   uint8_t field1[] = { };
 
@@ -456,7 +455,7 @@ bool sendResetDevice() {
 // enable/disable the data stream
 // according to 3dm-gx5-25_dcp_manual_8500-0065_reference_document.pdf
 // Pg 34. "4.1.3 Get Device Information (0x01, 0x03)"
-void sendGetDeviceInformation() {
+void IMU::sendGetDeviceInformation() {
   CommandData res("GetDeviceInformation");
   uint8_t field[] = { };
 
@@ -529,7 +528,7 @@ bool sendChangeBaudRate(uint32_t baud) {
   }
 
   // wait 250ms until the new baud rate takes place
-  delay(250);
+  delay(300);
   // next call is gonne be with the new rate
   serial->flush();
   serial->end();
@@ -553,7 +552,7 @@ bool IMU::setup(HardwareSerial* sn) {
    bool ok = true;
    // ok= sendPing();
    if (!ok)
-    return;
+    return false;
 
   // if IMU is data stream for any reasons (maybe it has been turned on beforehand)
   // then try to stop that first. Otherwise the stream messes up the responses of the configuration
@@ -561,21 +560,13 @@ bool IMU::setup(HardwareSerial* sn) {
   baud_rate = 115200;
   serial->begin(baud_rate);
   ok = false;
-  // uint32_t timeout_ms = millis() + 500;
-  // while ((timeout_ms > millis()) && (ok == false)) {
-  //  ok = sendSetToIdle();
-  //}
+  // setting idle disables the datastream
   ok = sendSetToIdle();
   if (!ok) {
     println("Could not set to idle");
     return false;
   }
  
-  println("disable data stream");
-  // ok = sendEnableDataStream(false);
-  if (!ok)
-    return false;
-
   println("get device information");
   // sendGetDeviceInformation();
   if (!ok)
@@ -592,8 +583,8 @@ bool IMU::setup(HardwareSerial* sn) {
     return false;
 
   println("set baud rate");
-  // baud_rate = 115200*2;
-  // ok = sendChangeBaudRate(baud_rate);
+  // baud_rate = ;
+  ok = sendChangeBaudRate(115200*8);
   if (!ok)
     return false;
 

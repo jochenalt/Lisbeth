@@ -8,6 +8,7 @@
 #include "PatternBlinker.h"
 #include <ODrive.h>
 #include <imu.h>
+#include <INA226.h>
 
 //  baud rate of Serial0 that is used for logging 
 #define LOG_BAUD_RATE 115200
@@ -38,6 +39,9 @@ uint32_t now_us = 0;                                        // current time in u
 bool commandPending = false;                                // true if command processor is waiting for more input
 String command;                                             // current command coming in
 uint32_t commandLastChar_us = 0;                             // time when the last character came in 
+
+// Power sensor is done via an INA226 sensor
+INA226 INA(0x40);
 
 // Watchdog (AVR watchdog does not work on Teensy)
 WDT_T4<WDT1> wdt;
@@ -90,7 +94,6 @@ class IMUManager {
     switch (imuState) {
       case IMU_UNPOWERED:
         if (cmdPowerUp) {
-          println("powering up IMU");
           digitalWrite(PIN_IMU_POWER, LOW);
           warmingStart_ms = millis();
           imuState = IMU_WARMING_UP;
@@ -104,7 +107,6 @@ class IMUManager {
         }
         break;
       case IMU_POWERED_UP: {
-          println("IMU setup");
           slowWatchdog();
           bool ok = imu.setup(&Serial4);
           fastWatchdog();
@@ -112,7 +114,6 @@ class IMUManager {
             imuState = IMU_SETUP;
           }
           else {
-            println("unsuccessful, powering down");
             digitalWrite(PIN_IMU_POWER, HIGH);
             imuState = IMU_COOLING_DOWN;
             warmingStart_ms = millis();
@@ -122,8 +123,6 @@ class IMUManager {
         case IMU_SETUP:
           imu.loop();
           if (cmdPowerDown) {
-            println("coolingi down IMU");
-
             digitalWrite(PIN_IMU_POWER, HIGH);
             imuState = IMU_COOLING_DOWN;
             warmingStart_ms = millis();
@@ -133,11 +132,10 @@ class IMUManager {
         case IMU_COOLING_DOWN:
           if (millis() - warmingStart_ms > 2000) {
             imuState = IMU_UNPOWERED;
-             println("IMU powered down");
           }
           break;
         default:
-          println("unkown IMU state");
+          println("unkown IMU state %d.", imuState);
           break;
     }
   }
@@ -153,27 +151,10 @@ class IMUManager {
 };
 
 IMUManager imuMgr;
-
-
+// yield is called randomly by delay, approx. every ms
+// we only allow harmless things happening there (e.g. the blinker)
 void yield() {
-  // in yield we only allow harmless things like the blinker
   blinker.loop(millis());
-
-  static uint32_t m = millis() + 1;
-  static bool flag = true;
-  if (millis() > m) {
-    if (flag) {
-      digitalWrite(PIN_A10,  HIGH);
-      // Serial.print("+");
-      flag = false;
-    }
-    else {
-      digitalWrite(PIN_A10,  LOW);
-      // Serial.print("-");
-      flag = true;
-    }
-    m = millis() + 1;
-  }
 }
 
 void initODrives() {
@@ -224,13 +205,22 @@ void initODrives() {
 void setup() {
 
   Serial.begin(LOG_BAUD_RATE);
-  print("Firmware Lisbeth V%d ", version);
 
+  // everybody loves a blinking LED
   pinMode(LED_BUILTIN, OUTPUT);
   blinker.setup(LED_BUILTIN, 50);
 
  	// read configuration from EEPROM (or initialize if EEPPROM is a virgin)
 	setupConfiguration();
+
+  // setup the current/voltage sensor
+  Wire.begin();
+  if (!INA.begin() )
+  {
+    Serial.println("could not connect.");
+  }
+  INA.reset();
+  INA.setMaxCurrentShunt(3, 0.1);
 
   // initialise IMU
   // imu.setup(&Serial8);
@@ -242,16 +232,14 @@ void setup() {
   digitalWrite(PIN_IMU_POWER, HIGH); // turn off IMU
 
   // setup up all ODrives, motors and encoders
-  pinMode(PIN_A10, OUTPUT);
   Serial4.begin(115200);
-
   initODrives();
 
   // set default blink pattern
   blinker.set(DefaultBlinkPattern,sizeof(DefaultBlinkPattern));		// assign pattern
 
   if (error == NO_ERROR) {
-   	println("OK.");
+   	println("OK");
 
    	// reset the board when wdt_reset() is not called every 100ms 
     fastWatchdog();
@@ -455,7 +443,7 @@ void loop() {
   wdt.feed();
   
   // everybody loves a blinking LED
-  yield();
+  blinker.loop(now_us/1000);
 
   // react on input from Serial 
   executeCommand();
@@ -464,15 +452,32 @@ void loop() {
   // odrives.loop();
   imuMgr.loop();
 
-  static uint32_t t = millis();
-  if (imu.isNewPackageAvailable()) {
-
-      if (millis() - t > 1000) {
+  static Measurement m;
+  m.tick();
+  static TimePassedBy printTimer (1000);
+    if (printTimer.isDue()) {
+    if (imu.isNewPackageAvailable()) {
          float f = imu.getMeasuremt().getAvrFreq();
-         println("freq %.1f", f);
+         float d = imu.getMeasuremt().getAvrDeviation()*100.0;;
+         println("freq %.1f %.2f%%", f,d);
          imu.printData();
-         t = millis();
-      }
+
+          f = m.getAvrFreq();
+          d = m.getAvrDeviation()*100.0;;
+         println("loop %.1f %.2f%%", f,d);
+
+         Serial.println("\nBUS\tSHUNT\tCURRENT\tPOWER");
+    }
+          Serial.print(INA.getShuntVoltage_mV(), 3);
+          Serial.print("mV\t");
+
+          Serial.print(INA.getBusVoltage(), 3);
+          Serial.print("V\t");
+          Serial.print(INA.getCurrent_mA(), 3);
+          Serial.print("mA\t");
+          Serial.print(INA.getPower_mW(), 3);
+          Serial.print("mW\t");
+          Serial.println();
   }
 
   
