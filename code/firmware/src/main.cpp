@@ -4,19 +4,19 @@
 #include <HardwareSerial.h>
 #include <utils.h>
 
-#include <Watchdog.h>
 #include "PatternBlinker.h"
 #include <ODrive.h>
 #include <imu.h>
 #include <INA226.h>
+#include <IMUManager.h>
+#include <PowerManager.h>
+
 
 //  baud rate of Serial0 that is used for logging 
 #define LOG_BAUD_RATE 115200
 
-// the IMU can be powered by this PIN
-// LOW = power on
-// The IMU takes 500ms to power up
-#define PIN_IMU_POWER 9
+// Pin for turning on/off the motor power
+#define PIN_MOTOR_POWER 30
 
 //--- configure ODrives and motors ---
 // ODrive pin 1 goes to Teensy RX
@@ -43,8 +43,6 @@ uint32_t commandLastChar_us = 0;                             // time when the la
 // Power sensor is done via an INA226 sensor
 INA226 INA(0x40);
 
-// Watchdog (AVR watchdog does not work on Teensy)
-WDT_T4<WDT1> wdt;
 
 // Teensy LED blinker
 static uint8_t DefaultBlinkPattern[3] = { 0b11001000,0b00001100,0b10000000}; // nice pattern. Each digit represents 50ms
@@ -59,98 +57,11 @@ uint8_t ODRIVE_SETUP_FIRMWARE_ERROR = 2;
 uint8_t GENERAL_ERROR = 99;
 uint8_t error = NO_ERROR;
 
-IMU imu;
-
-void watchdogWarning() {
-  println("\r\nWatchdog Reset");
-}
-
-// set the watchdog timer to 100ms
-void fastWatchdog() {
-  WDT_timings_t config;
-  config.trigger = 0.1; /* [s], trigger is how long before the watchdog callback fires */
-  config.timeout = 0.1; /* [s] timeout is how long before not feeding will the watchdog reset */
-  config.callback = watchdogWarning;
-  wdt.begin(config);
-}
-
-
-// set the watchdog timer to 120s (used for longer things like calibrating motors)
-void slowWatchdog() {
-  WDT_timings_t config;
-  config.trigger = 128.0; /* [s], trigger is how long before the watchdog callback fires */
-  config.timeout = 128.0; /* [s] timeout is how long before not feeding will the watchdog reset */
-  config.callback = watchdogWarning;
-  wdt.begin(config);
-}
-
-class IMUManager {
-  public:
-    enum ImuStateType  { IMU_UNPOWERED = 0, IMU_WARMING_UP = 1, IMU_POWERED_UP = 2, IMU_SETUP = 3, IMU_COOLING_DOWN = 4};
-
-  IMUManager() {};
-
-  void loop() {
-    switch (imuState) {
-      case IMU_UNPOWERED:
-        if (cmdPowerUp) {
-          digitalWrite(PIN_IMU_POWER, LOW);
-          warmingStart_ms = millis();
-          imuState = IMU_WARMING_UP;
-          cmdPowerUp = false;
-        } 
-        break;
-      case IMU_WARMING_UP:
-        if (millis() - warmingStart_ms > 2000) {
-          println("IMU warmed up");
-          imuState = IMU_POWERED_UP;
-        }
-        break;
-      case IMU_POWERED_UP: {
-          slowWatchdog();
-          bool ok = imu.setup(&Serial4);
-          fastWatchdog();
-          if (ok) {
-            imuState = IMU_SETUP;
-          }
-          else {
-            digitalWrite(PIN_IMU_POWER, HIGH);
-            imuState = IMU_COOLING_DOWN;
-            warmingStart_ms = millis();
-          }
-          break;
-        }
-        case IMU_SETUP:
-          imu.loop();
-          if (cmdPowerDown) {
-            digitalWrite(PIN_IMU_POWER, HIGH);
-            imuState = IMU_COOLING_DOWN;
-            warmingStart_ms = millis();
-            cmdPowerDown = false;
-          }
-          break;
-        case IMU_COOLING_DOWN:
-          if (millis() - warmingStart_ms > 2000) {
-            imuState = IMU_UNPOWERED;
-          }
-          break;
-        default:
-          println("unkown IMU state %d.", imuState);
-          break;
-    }
-  }
-  void powerUp() { cmdPowerUp = true;}
-  void powerDown() { cmdPowerDown = true;}
-
-  private:
-    bool cmdPowerDown = false;
-    bool cmdPowerUp = false;
-    ImuStateType imuState = IMU_UNPOWERED;
-    uint32_t warmingStart_ms = 0;
-
-};
-
+// manage the IMU
 IMUManager imuMgr;
+// manage the power MOSFETs giving power to the motors
+PowerManager powerManager(PIN_MOTOR_POWER);
+
 // yield is called randomly by delay, approx. every ms
 // we only allow harmless things happening there (e.g. the blinker)
 void yield() {
@@ -207,17 +118,20 @@ void setup() {
   Serial.begin(LOG_BAUD_RATE);
 
   // everybody loves a blinking LED
+  Serial.println("setup.blinker");
   pinMode(LED_BUILTIN, OUTPUT);
   blinker.setup(LED_BUILTIN, 50);
 
  	// read configuration from EEPROM (or initialize if EEPPROM is a virgin)
-	setupConfiguration();
+	Serial.println("setup.eeprom");
+  setupConfiguration();
 
   // setup the current/voltage sensor
+	Serial.println("setup.INA");
   Wire.begin();
   if (!INA.begin() )
   {
-    Serial.println("could not connect.");
+    Serial.println("could not connect to power sensor.");
   }
   INA.reset();
   INA.setMaxCurrentShunt(3, 0.1);
@@ -231,7 +145,12 @@ void setup() {
   pinMode(PIN_IMU_POWER, OUTPUT);
   digitalWrite(PIN_IMU_POWER, HIGH); // turn off IMU
 
+  // the motor MOSFETs are controlled by this PIN
+  pinMode(PIN_MOTOR_POWER, OUTPUT);
+  digitalWrite(PIN_MOTOR_POWER, LOW);
+
   // setup up all ODrives, motors and encoders
+	Serial.println("setup.ODrives");
   Serial4.begin(115200);
   initODrives();
 
@@ -265,7 +184,7 @@ void setup() {
 
 // print nice help text and give the status
 void printHelp() {
-  println("\r\nFirmware Lisbeth V%d", version);
+  println("\r\nFirmware Cerebellar V%d", version);
 
   for (int i = 0;i<NO_OF_ODRIVES;i++) {
       float voltage = odrives[i].getVBusVoltage();
@@ -451,6 +370,9 @@ void loop() {
   // get feedback of all odrives
   // odrives.loop();
   imuMgr.loop();
+
+  // wait for any pending commands to be executed
+  powerManager.loop();
 
   static Measurement m;
   m.tick();

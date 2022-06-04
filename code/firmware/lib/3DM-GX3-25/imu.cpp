@@ -282,7 +282,7 @@ bool readResponseChar(CommandData &res){
               //  printBuffer("", res.fields[i].payload, res.fields[i].len);
               //}
 
-              // buffer has been completely transfered to buffer variables, reset for the next package
+              // buffer has been completely transfered to buffer variables, r for the next package
               res.buffer_res_idx = 0;
 
               // indicate that a full package is available in ResponseParser

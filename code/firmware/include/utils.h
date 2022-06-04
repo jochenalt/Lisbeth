@@ -2,6 +2,8 @@
 #define _UTILS_H_
 
 #include <Arduino.h>
+#include <Watchdog.h>
+
 // like sprintf but with a String as output
 String strPrintf (const char* format, ...);
 
@@ -15,5 +17,14 @@ inline void println() {
     Serial.println();
 }
 
+
+
+// Watchdog (AVR watchdog does not work on Teensy)
+extern WDT_T4<WDT1> wdt;
+
+void watchdogWarning();
+// set the watchdog timer to 100ms
+void fastWatchdog();
+void slowWatchdog();
 
 #endif

@@ -1,11 +1,13 @@
-<!--This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA) with Design Exception 1.0-->
-<eagle version="7.1.0">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE eagle SYSTEM "eagle.dtd">
+<eagle version="9.6.2">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
+<setting keepoldvectorfont="yes"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
+<grid distance="50" unitdist="mil" unit="mil" style="lines" multiple="1" display="no" altdistance="5" altunitdist="mil" altunit="mil"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="yes" active="yes"/>
 <layer number="16" name="Bottom" color="1" fill="1" visible="yes" active="yes"/>
@@ -57,18 +59,13 @@
 <library>
 <packages>
 <package name="SOP50P490X110-10N">
-<circle x="-3.5" y="1.25" radius="0.1" width="0.2" layer="21"/>
-<circle x="-3.5" y="1.25" radius="0.1" width="0.2" layer="51"/>
+<circle x="-0.96" y="0.996" radius="0.1" width="0.2" layer="51"/>
 <wire x1="-1.5" y1="1.5" x2="1.5" y2="1.5" width="0.127" layer="51"/>
 <wire x1="-1.5" y1="-1.5" x2="1.5" y2="-1.5" width="0.127" layer="51"/>
 <wire x1="-1.5" y1="1.5" x2="1.5" y2="1.5" width="0.127" layer="21"/>
 <wire x1="-1.5" y1="-1.5" x2="1.5" y2="-1.5" width="0.127" layer="21"/>
 <wire x1="-1.5" y1="1.5" x2="-1.5" y2="-1.5" width="0.127" layer="51"/>
 <wire x1="1.5" y1="1.5" x2="1.5" y2="-1.5" width="0.127" layer="51"/>
-<wire x1="-3.135" y1="1.75" x2="3.135" y2="1.75" width="0.05" layer="39"/>
-<wire x1="-3.135" y1="-1.75" x2="3.135" y2="-1.75" width="0.05" layer="39"/>
-<wire x1="-3.135" y1="1.75" x2="-3.135" y2="-1.75" width="0.05" layer="39"/>
-<wire x1="3.135" y1="1.75" x2="3.135" y2="-1.75" width="0.05" layer="39"/>
 <text x="-3" y="-2" size="1.016" layer="27" align="top-left">&gt;VALUE</text>
 <text x="-3" y="2" size="1.016" layer="25">&gt;NAME</text>
 <smd name="1" x="-2.15" y="1" dx="1.47" dy="0.28" layer="1" roundness="25"/>
@@ -94,7 +91,7 @@
 <pin name="A0" x="-17.78" y="7.62" length="middle" direction="in"/>
 <pin name="A1" x="-17.78" y="5.08" length="middle" direction="in"/>
 <pin name="IN+" x="-17.78" y="2.54" length="middle" direction="in"/>
-<pin name="IN-" x="-17.78" y="8.88178e-16" length="middle" direction="in"/>
+<pin name="IN-" x="-17.78" y="0" length="middle" direction="in"/>
 <pin name="SCL" x="-17.78" y="-2.54" length="middle" direction="in"/>
 <pin name="SDA" x="-17.78" y="-7.62" length="middle"/>
 <pin name="VS" x="17.78" y="15.24" length="middle" direction="pwr" rot="R180"/>
@@ -125,15 +122,13 @@
 </connects>
 <technologies>
 <technology name="">
-<attribute name="MP" value="INA226AIDGST"/>
-<attribute name="Purchase-URL" value="https://pricing.snapeda.com/search/part/INA226AIDGST/?ref=eda"/>
-<attribute name="Availability" value="In Stock"/>
-<attribute name="Description" value="
-36V, 16-bit, ultra-precise i2c output current/voltage/power monitor w/alert
-"/>
-<attribute name="Package" value="VSSOP-10 Texas Instruments"/>
+<attribute name="AVAILABILITY" value="In Stock"/>
+<attribute name="DESCRIPTION" value=" 36V, 16-bit, ultra-precise i2c output current/voltage/power monitor w/alert "/>
 <attribute name="MF" value="Texas Instruments"/>
-<attribute name="Price" value="None"/>
+<attribute name="MP" value="INA226AIDGST"/>
+<attribute name="PACKAGE" value="VSSOP-10 Texas Instruments"/>
+<attribute name="PRICE" value="None"/>
+<attribute name="PURCHASE-URL" value="https://pricing.snapeda.com/search/part/INA226AIDGST/?ref=eda"/>
 </technology>
 </technologies>
 </device>
