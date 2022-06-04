@@ -13,7 +13,6 @@ import libcontroller_core as core
 from cmath import nan
 import RemoteControl
 import Types
-import Estimator
 import ModelLoader
 
 class Result:
@@ -120,14 +119,11 @@ class Controller:
             self.h_init = (self.robot.data.oMf[1].translation - self.robot.data.oMf[indexes[0]].translation)[2]
             self.fsteps_init[2, :] = 0.0
 
-        # Create remoteControl, FootstepPlanner, Logger and Interface objects
-        self.estimator = Estimator.Estimator(dt_wbc, N_SIMULATION, self.h_init, perfectEstimator)
-
         self.remoteControl= RemoteControl.RemoteControl(dt_wbc, predefined_vel)
 
         # initialize Cpp state estimator
-        self.estimatorCpp = core.Estimator()
-        self.estimatorCpp.initialize(dt_wbc, N_SIMULATION, self.h_init, perfectEstimator)
+        self.estimator = core.Estimator()
+        self.estimator.initialize(dt_wbc, N_SIMULATION, self.h_init, perfectEstimator)
 
         self.h_ref = self.h_init
         self.q = np.zeros((19, 1))
@@ -227,16 +223,16 @@ class Controller:
         start = time.clock()
 
         # Process state estimator
-        self.estimator.run_filter(self.k, self.gait.getCurrentGait(),
-                                  device, self.footTrajectoryGenerator.getFootPosition())
+        #self.estimator.run_filter(self.k, self.gait.getCurrentGait(),
+        #                          device, self.footTrajectoryGenerator.getFootPosition())
         
-        self.estimatorCpp.set_imu_data(device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy())
+        self.estimator.set_imu_data(device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy())
 
-        self.estimatorCpp.set_data_joints(device.q_mes, device.v_mes)
+        self.estimator.set_data_joints(device.q_mes, device.v_mes)
         baseHeight =  device.dummyPos[2] - 0.0155  # Minus feet radius
         baseVelocity = device.b_baseVel
 
-        self.estimatorCpp.run_filter(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy(), baseHeight, baseVelocity)
+        self.estimator.run_filter(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy(), baseHeight, baseVelocity)
 
         t_filter = time.time()
         
@@ -248,7 +244,7 @@ class Controller:
                self.remoteControl.gaitCode = Types.GaitType.Trot.value
 
         # automatically go to static mode if no movement is detected
-        is_steady = self.estimatorCpp.isSteady()
+        is_steady = self.estimator.isSteady()
         if self.gait.getRemainingTime() == 1 and self.gait.getCurrentGaitType() != Types.GaitType.NoMovement.value and is_steady and  not self.remoteControl.isMoving:
             print ("no movement, calm down")
             self.remoteControl.gaitCode = Types.GaitType.NoMovement.value
@@ -360,9 +356,6 @@ class Controller:
         # Update PyBullet camera
         self.pyb_camera(device, 0.0)  # to have yaw update in simu: Utils.quaternionToRPY(self.estimator.q_filt[3:7, 0])[2, 0]
 
-        # Logs
-        self.log_misc(t_start, t_filter, t_planner, t_mpc, t_wbc)
-
         # Increment loop counter
         self.k += 1
 
@@ -378,21 +371,20 @@ class Controller:
                                            cameraTargetPosition=[device.dummyHeight[0], device.dummyHeight[1], 0.0])
 
     def security_check(self):
-        cpp_q_filt = np.transpose(np.array(self.estimatorCpp.getQFiltered())[np.newaxis])
-        assert np.allclose(cpp_q_filt, self.estimator.q_filt)
+        cpp_q_filt = np.transpose(np.array(self.estimator.getQFiltered())[np.newaxis])
         
         if (self.error_flag == 0) and (not self.myController.error) and (not self.remoteControl.stop) and self.gait.getCurrentGaitType() != 6:
-            if np.any(np.abs(self.estimator.q_filt[7:, 0]) > self.q_security):
+            if np.any(np.abs(cpp_q_filt[7:, 0]) > self.q_security):
                 self.myController.error = True
                 self.error_flag = 1
-                self.error_value = self.estimator.q_filt[7:, 0] * 180 / 3.1415
+                self.error_value = cpp_q_filt[7:, 0] * 180 / 3.1415
 
-            if np.any(np.abs(self.estimator.v_secu) > 50):
-                print ("v_secu", self.estimator.v_secu)
-            if np.any(np.abs(self.estimator.v_secu) > 100):
+            if np.any(np.abs(self.estimator.getVSecu()) > 50):
+                print ("v_secu", self.estimator.getVSecu())
+            if np.any(np.abs(self.estimator.getVSecu()) > 100):
                 self.myController.error = True
                 self.error_flag = 2
-                self.error_value = self.estimator.v_secu
+                self.error_value = self.estimator.getVSecu()
                 
             # @JA security level was 8 formerly
             if np.any(np.abs(self.myController.tau_ff) > 8):
@@ -412,19 +404,7 @@ class Controller:
             self.result.v_des[:] = np.zeros(12)
             self.result.tau_ff[:] = np.zeros(12)
 
-    def log_misc(self, tic, t_filter, t_planner, t_mpc, t_wbc):
 
-        # Log remoteControl command
-        if self.remoteControl is not None:
-            self.estimator.v_ref = self.remoteControl.v_ref
-
-        self.t_list_filter[self.k] = t_filter - tic
-        self.t_list_planner[self.k] = t_planner - t_filter
-        self.t_list_mpc[self.k] = t_mpc - t_planner
-        self.t_list_wbc[self.k] = t_wbc - t_mpc
-        self.t_list_loop[self.k] = time.time() - tic
-        self.t_list_InvKin[self.k] = self.myController.tac - self.myController.tic
-        self.t_list_QPWBC[self.k] = self.myController.toc - self.myController.tac
 
     def updateState(self):
 
@@ -442,27 +422,25 @@ class Controller:
             self.q[0:2, 0:1] = self.q[0:2, 0:1] + Ryaw @ self.v_ref[0:2, 0:1] * self.myController.dt
 
             # Mix perfect x and y with height measurement
-            cpp_q_filt = np.transpose(np.array(self.estimatorCpp.getQFiltered())[np.newaxis])
+            cpp_q_filt = np.transpose(np.array(self.estimator.getQFiltered())[np.newaxis])
 
-            self.q[2, 0] = self.estimator.q_filt[2, 0]
+            self.q[2, 0] = cpp_q_filt[2, 0]
 
             # Mix perfect yaw with pitch and roll measurements
             self.yaw_estim += self.v_ref[5, 0:1] * self.myController.dt
-            self.q[3:7, 0] = Utils.EulerToQuaternion([self.estimator.RPY[0], self.estimator.RPY[1], self.yaw_estim])
-            cpp_RPY = np.transpose(np.array(self.estimatorCpp.getImuRPY())[np.newaxis])
-            if (not np.allclose(cpp_RPY, self.estimator.RPY)):
-                print("assert cpp_RPY", cpp_RPY , "RPY", self.estimator.RPY)
+            self.q[3:7, 0] = Utils.EulerToQuaternion([self.estimator.getImuRPY()[0], self.estimator.getImuRPY()[1], self.yaw_estim])
+            cpp_RPY = np.transpose(np.array(self.estimator.getImuRPY())[np.newaxis])
 
             # Actuators measurements
-            self.q[7:, 0] = self.estimator.q_filt[7:, 0]
+            self.q[7:, 0] = cpp_q_filt[7:, 0]
 
             # Velocities are the one estimated by the estimator
-            self.v = self.estimator.v_filt.copy()
-            cpp_v_filt = self.estimatorCpp.getVFiltered()
+            cpp_v_filt = np.transpose(np.array(self.estimator.getVFiltered())[np.newaxis])
+            self.v = cpp_v_filt.copy()
 
-            hRb = Utils.EulerToRotation(self.estimator.RPY[0], self.estimator.RPY[1], 0.0)
-            self.h_v[0:3, 0:1] = hRb @ self.v[0:3, 0:1]
-            self.h_v[3:6, 0:1] = hRb @ self.v[3:6, 0:1]
+            hRb = Utils.EulerToRotation(self.estimator.getImuRPY()[0], self.estimator.getImuRPY()[1], 0.0)
+            self.h_v[0:3, 0:1] = hRb @ cpp_v_filt[0:3, 0:1]
+            self.h_v[3:6, 0:1] = hRb @ cpp_v_filt[3:6, 0:1]
 
             # self.v[:6, 0] = self.remoteControl.v_ref[:6, 0]
         else:

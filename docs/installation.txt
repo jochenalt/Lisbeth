@@ -112,7 +112,7 @@ export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH
 
 # start simulation
 cd ~/lisbeth/controller/script
-python main_solo12_control.py -i test
+python main.py -i test
 
 # run input client
 cd ~/listbeth/controller/script
