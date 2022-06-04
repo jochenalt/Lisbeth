@@ -86,7 +86,7 @@ bool array_equal(Vector4 a, Vector4 b) {
 }
 
 
-ComplementaryFilter::ComplementaryFilter(){
+CompFilter::CompFilter(){
 	dT = 0;
     alpha = VectorN::Zero(3);
 	x = VectorN::Zero(3);
@@ -95,7 +95,7 @@ ComplementaryFilter::ComplementaryFilter(){
     lowpassed_x = VectorN::Zero(3);
 }
 
-void ComplementaryFilter::initialize(double par_dT, const VectorN& par_fc){
+void CompFilter::initialize(double par_dT, const VectorN& par_fc){
 
 	dT = par_dT;
 
@@ -104,16 +104,16 @@ void ComplementaryFilter::initialize(double par_dT, const VectorN& par_fc){
 		alpha[i] = 1-(dT / ( dT + 1/par_fc[i]));
 }
 
-VectorN ComplementaryFilter::compute(const VectorN& par_x) {
+VectorN CompFilter::compute(const VectorN& par_x) {
 	return compute(par_x, VectorN::Constant(x.rows(), 1, 0.0) );
 }
 
-VectorN ComplementaryFilter::compute(const VectorN& par_x, const VectorN& par_dx, const VectorN& par_alpha) {
+VectorN CompFilter::compute(const VectorN& par_x, const VectorN& par_dx, const VectorN& par_alpha) {
 	alpha = par_alpha;
 	return compute(par_x, par_dx);
 }
 
-VectorN ComplementaryFilter::compute(const VectorN& par_x, const VectorN& par_dx) {
+VectorN CompFilter::compute(const VectorN& par_x, const VectorN& par_dx) {
 	x = par_x;
 	dx = par_dx;
 
@@ -130,7 +130,7 @@ VectorN ComplementaryFilter::compute(const VectorN& par_x, const VectorN& par_dx
 	return result;
 }
 
-void ComplementaryFilter::patchLowPassed(int idx, double x) {
+void CompFilter::patchLowPassed(int idx, double x) {
 	lowpassed_x[idx] = x;
 }
 

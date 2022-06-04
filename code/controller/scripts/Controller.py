@@ -222,17 +222,14 @@ class Controller:
 
         start = time.clock()
 
-        # Process state estimator
-        #self.estimator.run_filter(self.k, self.gait.getCurrentGait(),
-        #                          device, self.footTrajectoryGenerator.getFootPosition())
-        
-        self.estimator.set_imu_data(device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy())
-
-        self.estimator.set_data_joints(device.q_mes, device.v_mes)
         baseHeight =  device.dummyPos[2] - 0.0155  # Minus feet radius
         baseVelocity = device.b_baseVel
 
-        self.estimator.run_filter(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy(), baseHeight, baseVelocity)
+        self.estimator.run(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy(),
+                           device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy(), # data from IMU
+                           device.q_mes, device.v_mes, # data from joints
+                           np.zeros(3),np.zeros(3),
+                           baseHeight, baseVelocity)
 
         t_filter = time.time()
         

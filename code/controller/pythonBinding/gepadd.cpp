@@ -124,12 +124,6 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
         	.def("initialize",&Estimator::initialize, bp::args("dT", "N_simulation", "h_init", "perfectEstimator"),
         		 "initialize")
-			// take IMU data and tell Estimator
-		    .def("set_imu_data",&Estimator::set_imu_data, bp::args("base_linear_acc", "base_angular_velocity", "base_orientation"),
-		    	 "set_imu_data")
-			// take joint positions and tell Estimator
-	        .def("set_data_joints",&Estimator::set_data_joints, bp::args("q_mes", "v_mes"),
-		    	 "set_data_joints")
 		    .def("getQFiltered",&Estimator::getQFiltered, "getQFiltered")
 		    .def("getVFiltered",&Estimator::getVFiltered, "getVFiltered")
 		    .def("getImuRPY",&Estimator::getImuRPY, "getImuRPY")
@@ -137,9 +131,11 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
 		    .def("isSteady",&Estimator::isSteady, "isSteady")
 
 			// run one loop of estimator
-			.def("run_filter",&Estimator::run_filter, bp::args("k", "gait", "goals", "baseHeight", "baseVelocity"),
-				 "run_filter");
-
+			.def("run",&Estimator::run, bp::args("k", "gait", "goals",
+												 "baseLinearAcceleration", "baseAngularVelocity", "baseOrientation",
+												 "q", "v", "perfectPosition","perfectVelocity",
+												 "baseHeight", "baseVelocity"),
+				 "run");
     }
 
     static void expose()
@@ -150,6 +146,7 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
         ENABLE_SPECIFIC_MATRIX_TYPE(Vector12);
         ENABLE_SPECIFIC_MATRIX_TYPE(Vector18);
         ENABLE_SPECIFIC_MATRIX_TYPE(Vector19);
+        ENABLE_SPECIFIC_MATRIX_TYPE(Vector4);
         ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
 
     }

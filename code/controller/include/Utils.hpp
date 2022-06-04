@@ -18,12 +18,12 @@ bool array_equal(Vector4 a, Vector4 b);
  * Computation uses x and dx, since in both cases the derivative is already available and does not need to be
  * calculated multiple times.
  */
-class ComplementaryFilter  {
+class CompFilter  {
 
 	public:
 
-		ComplementaryFilter();
-		~ComplementaryFilter() {};
+	CompFilter();
+		~CompFilter() {};
 
 		void initialize(double dT, const VectorN& fc);
 

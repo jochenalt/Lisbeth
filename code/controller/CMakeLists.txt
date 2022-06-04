@@ -56,6 +56,7 @@ set(${PROJECT_NAME}_HEADERS
   include/QPWBC.hpp
   include/Params.hpp
   include/st_to_cc.hpp
+  include/ComplementaryFilter.hpp
   )
 
 set(${PROJECT_NAME}_SOURCES
@@ -71,6 +72,7 @@ set(${PROJECT_NAME}_SOURCES
   src/InvKin.cpp
   src/QPWBC.cpp
   src/Params.cpp
+  src/ComplementaryFilter.cpp
   )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
