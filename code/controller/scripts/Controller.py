@@ -221,8 +221,10 @@ class Controller:
         self.footstepPlanner.initialize(params, self.gait)
 
         self.footTrajectoryGenerator = core.FootTrajectoryGenerator()
-        self.footTrajectoryGenerator.initialize(0.05, 0.07, self.fsteps_init.copy(), self.shoulders.copy(),
-                                                dt_wbc, k_mpc, self.gait)
+        print("selff_steps_init", self.fsteps_init)
+        print("paras.footstep_init", params.footsteps_init);
+
+        self.footTrajectoryGenerator.initialize(params, self.gait)
 
         # Wrapper that makes the link with the solver that you want to use for the MPC
         # First argument to True to have PA's MPC, to False to have Thomas's MPC

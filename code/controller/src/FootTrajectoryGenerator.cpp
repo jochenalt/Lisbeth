@@ -3,37 +3,41 @@
 // Trajectory generator functions (output reference pos, vel and acc of feet in swing phase)
 
 FootTrajectoryGenerator::FootTrajectoryGenerator()
-    : gait_(NULL)
-    , dt_tsid(0.0)
-    , k_mpc(0)
-    , maxHeight_(0.0)
-    , lockTime_(0.0)
-    , feet()
-    , t0s(Vector4::Zero())
-    , t_swing(Vector4::Zero())
-    , targetFootstep_(Matrix34::Zero())
-    , Ax(Matrix64::Zero())
-    , Ay(Matrix64::Zero())
-    , position_(Matrix34::Zero())
-    , velocity_(Matrix34::Zero())
-    , acceleration_(Matrix34::Zero())
+: gait_(NULL),
+  dt_wbc(0.0),
+  k_mpc(0),
+  maxHeight_(0.0),
+  lockTime_(0.0),
+ //  feet(Eigen::Matrix<int, 1, 4>::Zero()),
+  t0s(Vector4::Zero()),
+  t_swing(Vector4::Zero()),
+  targetFootstep_(Matrix34::Zero()),
+  Ax(Matrix64::Zero()),
+  Ay(Matrix64::Zero()),
+  position_(Matrix34::Zero()),
+  velocity_(Matrix34::Zero()),
+  acceleration_(Matrix34::Zero()),
+  jerk_(Matrix34::Zero()),
+  position_base_(Matrix34::Zero()),
+  velocity_base_(Matrix34::Zero()),
+  acceleration_base_(Matrix34::Zero())
 {
 }
 
-void FootTrajectoryGenerator::initialize(double const maxHeightIn,
-                                         double const lockTimeIn,
-                                         MatrixN const& targetFootstepIn,
-                                         MatrixN const& initialFootPosition,
-                                         double const& dt_tsid_in,
-                                         int const& k_mpc_in,
+void FootTrajectoryGenerator::initialize(Params& params,
                                          Gait& gaitIn)
 {
-    dt_tsid = dt_tsid_in;
-    k_mpc = k_mpc_in;
-    maxHeight_ = maxHeightIn;
-    lockTime_ = lockTimeIn;
-    targetFootstep_ = targetFootstepIn.block(0, 0, 3, 4);
-    position_ = initialFootPosition.block(0, 0, 3, 4);
+	this->params = &params;
+    dt_tsid = params.dt_wbc;
+    k_mpc = (int)std::round(params.dt_mpc / params.dt_wbc);
+    maxHeight_ = params.max_height;
+    lockTime_ = params.lock_time;
+    targetFootstep_ << Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(params.footsteps_init.data(),
+                                                                     params.footsteps_init.size());
+
+    position_ << Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(params.shoulders.data(),
+                                                                params.shoulders.size());
+
     gait_ = &gaitIn;
 }
 

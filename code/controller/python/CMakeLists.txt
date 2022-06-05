@@ -3,6 +3,7 @@ set(${PY_NAME}_SOURCES
   EstimatorWrapper.cpp
   ParamsWrapper.cpp
   FootstepPlannerWrapper.cpp
+  FootTrajectoryGeneratorWrapper.cpp
   )
 
 add_library(${PY_NAME} SHARED ${${PY_NAME}_SOURCES})
