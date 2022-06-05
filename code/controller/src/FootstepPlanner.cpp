@@ -12,7 +12,6 @@ FootstepPlanner::FootstepPlanner()
     , yaws()
     , dx()
     , dy()
-    , q_tmp(Vector3::Zero())
     , q_dxdy(Vector3::Zero())
     , RPY_(Vector3::Zero())
 {

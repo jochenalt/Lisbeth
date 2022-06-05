@@ -13,6 +13,9 @@
 
 #include <vector>
 
+#include "pinocchio/multibody/model.hpp"
+#include "pinocchio/multibody/data.hpp"
+
 #include "pinocchio/math/rpy.hpp"
 #include "Gait.hpp"
 #include "Types.h"
@@ -143,21 +146,29 @@ private:
 
     // Constant sized matrices
     Matrix34 shoulders_;        // Position of shoulders in local frame
+    Matrix34 footsteps_under_shoulders_;  // Positions of footsteps to be "under the shoulder"
+    Matrix34 footsteps_offset_;           // Hardcoded offset to add to footsteps positions
     Matrix34 currentFootstep_;  // Feet matrix
     Matrix34 nextFootstep_;     // Temporary matrix to perform computations
     Matrix34 targetFootstep_;   // In horizontal frame
     Matrix34 o_targetFootstep_;  // targetFootstep_ in world frame
     std::vector<Matrix34> footsteps_;
 
-    MatrixN Rz;  // Rotation matrix along z axis
-    VectorN dt_cum;
-    VectorN yaws;
-    VectorN dx;
-    VectorN dy;
+    MatrixN Rz;      // Rotation matrix along z axis
+    VectorN dt_cum;  // Cumulated time vector
+    VectorN yaws;    // Predicted yaw variation for each cumulated time
+    VectorN dx;      // Predicted x displacement for each cumulated time
+    VectorN dy;      // Predicted y displacement for each cumulated time
 
-    Vector3 q_tmp;
     Vector3 q_dxdy;
     Vector3 RPY_;
+
+    pinocchio::Model model_;          // Pinocchio model for forward kinematics
+    pinocchio::Data data_;            // Pinocchio datas for forward kinematics
+    int foot_ids_[4] = {0, 0, 0, 0};  // Indexes of feet frames
+    Matrix34 pos_feet_;               // Estimated feet positions based on measurements
+    Vector19 q_FK_;                   // Estimated state of the base (height, roll, pitch, joints)
+
     Eigen::Quaterniond quat_;
 };
 

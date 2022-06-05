@@ -51,6 +51,65 @@ class dummyDevice:
 
 class Controller:
 
+    def init_robot(self,q_init, params):
+        ModelLoader.free_flyer = True
+        robot = ModelLoader.ModelLoader().robot  
+        q = robot.q0.reshape((-1, 1))
+        q[7:, 0] = q_init
+
+        # Initialisation of model quantities
+        pin.centerOfMass(robot.model, robot.data, q, np.zeros((18, 1)))
+        pin.updateFramePlacements(robot.model, robot.data)
+        pin.crba(robot.model, robot.data, robot.q0)
+
+        # Initialisation of the position of footsteps
+        self.fsteps_init = np.zeros((3, 4))
+        indexes = [
+           robot.model.getFrameId("FL_FOOT"),
+           robot.model.getFrameId("FR_FOOT"),
+           robot.model.getFrameId("HL_FOOT"),
+           robot.model.getFrameId("HR_FOOT"),
+        ]
+        for i in range(4):
+            self.fsteps_init[:, i] = robot.data.oMf[indexes[i]].translation
+        self.h_init = 0.0
+        for i in range(4):
+            h_tmp = (robot.data.oMf[1].translation - robot.data.oMf[indexes[i]].translation)[
+                2
+            ]
+            if h_tmp > self.h_init:
+                self.h_init = h_tmp
+        
+        # Assumption that all feet are initially in contact on a flat ground
+        self.fsteps_init[2, :] = 0.0
+
+        # Initialisation of the position of shoulders
+        self.shoulders_init = np.zeros((3, 4))
+        indexes = [4, 12, 20, 28]  # Shoulder indexes
+        for i in range(4):
+            self.shoulders_init[:, i] = robot.data.oMf[indexes[i]].translation
+
+        # Saving data
+        params.h_ref = self.h_init
+        params.mass = robot.data.mass[
+            0
+        ]  # Mass of the whole urdf model (also = to Ycrb[1].mass)
+        params.I_mat = (
+            robot.data.Ycrb[1].inertia.ravel().tolist()
+        )  # Composite rigid body inertia in q_init position
+        params.CoM_offset = (robot.data.com[0][:3] - q[0:3, 0]).tolist()
+        params.CoM_offset[1] = 0.0
+
+        for i in range(4):
+            for j in range(3):
+                params.shoulders[3 * i + j] = self.shoulders_init[j, i]
+                params.footsteps_init[3 * i + j] = self.fsteps_init[j, i]
+                params.footsteps_under_shoulders[3 * i + j] = self.fsteps_init[
+                    j, i
+                ]  #  Use initial feet pos as reference
+                
+        return robot
+        
     def __init__(self, params, q_init, envID, velID, dt_wbc, dt_mpc, k_mpc, t, T_gait, T_mpc, N_SIMULATION, 
                  use_flat_plane, predefined_vel, enable_pyb_GUI, N_gait, isSimulation, N_periods, gait):
         """Function that runs a simulation scenario based on a reference velocity profile, an environment and
@@ -104,6 +163,7 @@ class Controller:
 
         # Load robot model and data
         # Initialisation of the Gepetto viewer
+        """
         ModelLoader.free_flyer = True
         self.robot = ModelLoader.ModelLoader().robot  
         q = self.robot.q0.reshape((-1, 1))
@@ -121,7 +181,8 @@ class Controller:
             self.fsteps_init[:, i] = self.robot.data.oMf[indexes[i]].translation
             self.h_init = (self.robot.data.oMf[1].translation - self.robot.data.oMf[indexes[0]].translation)[2]
             self.fsteps_init[2, :] = 0.0
-
+"""
+        self.robot = self.init_robot(q_init, params)
         self.remoteControl= RemoteControl.RemoteControl(dt_wbc, predefined_vel)
 
         # initialize Cpp state estimator
@@ -143,19 +204,21 @@ class Controller:
         self.gait.initialize(dt_mpc, T_gait, T_mpc, N_gait, Types.GaitType.NoMovement.value)
         self.gait.updateGait(True, self.q[0:7, 0:1], Types.GaitType.NoMovement.value)
 
-        shoulders = np.zeros((3, 4))
+        self.shoulders = np.zeros((3, 4))
         # x,y coordinates of shoulders
-        shoulders[0, :] = [0.1946, 0.1946, -0.1946, -0.1946]       
-        shoulders[1, :] = [0.14695, -0.14695, 0.14695, -0.14695]
+        self.shoulders[0, :] = [0.1946, 0.1946, -0.1946, -0.1946]       
+        self.shoulders[1, :] = [0.14695, -0.14695, 0.14695, -0.14695]
+        self.shoulders[2, :] = [0, 0, 0, 0]
         
         for i in range(4):
             for j in range(3):
-                params.shoulders[i*3+j] = shoulders[j,i]
+                params.shoulders[i*3+j] = self.shoulders[j,i]
+                
         self.footstepPlanner = core.FootstepPlanner()
         self.footstepPlanner.initialize(params, self.gait)
 
         self.footTrajectoryGenerator = core.FootTrajectoryGenerator()
-        self.footTrajectoryGenerator.initialize(0.05, 0.07, self.fsteps_init.copy(), shoulders.copy(),
+        self.footTrajectoryGenerator.initialize(0.05, 0.07, self.fsteps_init.copy(), self.shoulders.copy(),
                                                 dt_wbc, k_mpc, self.gait)
 
         # Wrapper that makes the link with the solver that you want to use for the MPC

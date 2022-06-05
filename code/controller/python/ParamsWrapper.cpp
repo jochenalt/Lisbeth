@@ -33,6 +33,9 @@ struct ParamsPythonVisitor : public bp::def_visitor<ParamsPythonVisitor<Params>>
         	.def_readwrite("N_periods", &Params::N_periods)
         	.def_readwrite("gait", &Params::gait)
         	.def_readwrite("shoulders", &Params::shoulders)
+        	.def_readwrite("footsteps_init", &Params::footsteps_init)
+        	.def_readwrite("footsteps_under_shoulders", &Params::footsteps_under_shoulders)
+
 			.def_readwrite("q_init", &Params::q_init);
 
     }
