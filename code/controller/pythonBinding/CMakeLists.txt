@@ -1,5 +1,8 @@
 set(${PY_NAME}_SOURCES
   gepadd.cpp
+  EstimatorWrapper.cpp
+  ParamsWrapper.cpp
+
   )
 
 add_library(${PY_NAME} SHARED ${${PY_NAME}_SOURCES})

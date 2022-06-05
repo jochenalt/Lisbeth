@@ -37,6 +37,9 @@ public:
     ////////////////////////////////////////////////////////////////////////////////////////////////
     void initialize(const std::string& file_path);
 
+    // Convert the gait vector of the yaml into an Eigen matrix
+    void convert_gait_vec();
+    MatrixN get_gait() { return gait; };
 
     // See .yaml file for meaning of parameters
     std::string interface;
@@ -53,6 +56,16 @@ public:
     bool predefined_vel;
     bool enable_pyb_GUI;
 
+
+    // General control parameters
+    std::vector<double> q_init;   // Initial articular positions
+    int N_periods;                // Number of gait periods in the MPC prediction horizon
+
+    // Parameters of Gait
+    std::vector<int> gait_vec;  // Initial gait matrix (vector)
+
+    // Not defined in yaml
+    MatrixN gait;                                   // Initial gait matrix (Eigen)
 };
 
 namespace yaml_control_interface

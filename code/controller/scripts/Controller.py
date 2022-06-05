@@ -52,7 +52,7 @@ class dummyDevice:
 class Controller:
 
     def __init__(self, q_init, envID, velID, dt_wbc, dt_mpc, k_mpc, t, T_gait, T_mpc, N_SIMULATION, 
-                 use_flat_plane, predefined_vel, enable_pyb_GUI, N_gait, isSimulation):
+                 use_flat_plane, predefined_vel, enable_pyb_GUI, N_gait, isSimulation, N_periods, gait):
         """Function that runs a simulation scenario based on a reference velocity profile, an environment and
         various parameters to define the gait
 
@@ -71,6 +71,9 @@ class Controller:
             enable_pyb_GUI (bool): to display PyBullet GUI or not
             N_gait (int): number of spare lines in the gait matrix
             isSimulation (bool): if we are in simulation mode
+            N_periods (int): 1
+            gait:  Initial gait matrix
+            
         """
 
         ########################################################################
@@ -123,7 +126,7 @@ class Controller:
 
         # initialize Cpp state estimator
         self.estimator = core.Estimator()
-        self.estimator.initialize(dt_wbc, N_SIMULATION, self.h_init, perfectEstimator)
+        self.estimator.initialize(np.array(q_init), dt_mpc, dt_wbc, len(gait), N_periods, N_SIMULATION, self.h_init, perfectEstimator)
 
         self.h_ref = self.h_init
         self.q = np.zeros((19, 1))
@@ -159,7 +162,7 @@ class Controller:
 
         # Define the default controller
         self.myController = wbc_controller(dt_wbc, N_SIMULATION)
-        self.myController.qdes[7:] = q_init.ravel()
+        self.myController.qdes[7:] = np.array(q_init).ravel()
 
         self.envID = envID
         self.velID = velID
@@ -221,15 +224,15 @@ class Controller:
         self.remoteControl.update_v_ref(self.k, self.velID)
 
         start = time.clock()
-
-        baseHeight =  device.dummyPos[2] - 0.0155  # Minus feet radius
+        
+        baseHeight = np.array([0.0, 0.0, 0.0, device.dummyPos[2] - 0.0155])
         baseVelocity = device.b_baseVel
 
         self.estimator.run(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy(),
                            device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy(), # data from IMU
-                           device.q_mes, device.v_mes, # data from joints
-                           np.zeros(3),np.zeros(3),
-                           baseHeight, baseVelocity)
+                           np.array(device.q_mes), device.v_mes, # data from joints
+                           baseHeight.copy(),
+                           baseVelocity)
 
         t_filter = time.time()
         
@@ -368,7 +371,7 @@ class Controller:
                                            cameraTargetPosition=[device.dummyHeight[0], device.dummyHeight[1], 0.0])
 
     def security_check(self):
-        cpp_q_filt = np.transpose(np.array(self.estimator.getQFiltered())[np.newaxis])
+        cpp_q_filt = np.transpose(np.array(self.estimator.getQEstimate())[np.newaxis])
         
         if (self.error_flag == 0) and (not self.myController.error) and (not self.remoteControl.stop) and self.gait.getCurrentGaitType() != 6:
             if np.any(np.abs(cpp_q_filt[7:, 0]) > self.q_security):
@@ -376,12 +379,12 @@ class Controller:
                 self.error_flag = 1
                 self.error_value = cpp_q_filt[7:, 0] * 180 / 3.1415
 
-            if np.any(np.abs(self.estimator.getVSecu()) > 50):
-                print ("v_secu", self.estimator.getVSecu())
-            if np.any(np.abs(self.estimator.getVSecu()) > 100):
+            if np.any(np.abs(self.estimator.getVSecurity()) > 50):
+                print ("v_secu", self.estimator.getVSecurity())
+            if np.any(np.abs(self.estimator.getVSecurity()) > 100):
                 self.myController.error = True
                 self.error_flag = 2
-                self.error_value = self.estimator.getVSecu()
+                self.error_value = self.estimator.getVSecurity()
                 
             # @JA security level was 8 formerly
             if np.any(np.abs(self.myController.tau_ff) > 8):
@@ -419,7 +422,7 @@ class Controller:
             self.q[0:2, 0:1] = self.q[0:2, 0:1] + Ryaw @ self.v_ref[0:2, 0:1] * self.myController.dt
 
             # Mix perfect x and y with height measurement
-            cpp_q_filt = np.transpose(np.array(self.estimator.getQFiltered())[np.newaxis])
+            cpp_q_filt = np.transpose(np.array(self.estimator.getQEstimate())[np.newaxis])
 
             self.q[2, 0] = cpp_q_filt[2, 0]
 
@@ -432,7 +435,7 @@ class Controller:
             self.q[7:, 0] = cpp_q_filt[7:, 0]
 
             # Velocities are the one estimated by the estimator
-            cpp_v_filt = np.transpose(np.array(self.estimator.getVFiltered())[np.newaxis])
+            cpp_v_filt = np.transpose(np.array(self.estimator.getVEstimate())[np.newaxis])
             self.v = cpp_v_filt.copy()
 
             hRb = Utils.EulerToRotation(self.estimator.getImuRPY()[0], self.estimator.getImuRPY()[1], 0.0)

@@ -113,49 +113,6 @@ void exposeGait() { GaitPythonVisitor<Gait>::expose(); }
 
 
 /////////////////////////////////
-/// Estimator class
-/////////////////////////////////
-template <typename Estimator>
-struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Estimator>>
-{
-    template <class PyClassEstimator>
-    void visit(PyClassEstimator& cl) const
-    {
-        cl.def(bp::init<>(bp::arg(""), "Default constructor."))
-        	.def("initialize",&Estimator::initialize, bp::args("dT", "N_simulation", "h_init", "perfectEstimator"),
-        		 "initialize")
-		    .def("getQFiltered",&Estimator::getQFiltered, "getQFiltered")
-		    .def("getVFiltered",&Estimator::getVFiltered, "getVFiltered")
-		    .def("getImuRPY",&Estimator::getImuRPY, "getImuRPY")
-		    .def("getVSecu",&Estimator::getVSecu, "getVSecu")
-		    .def("isSteady",&Estimator::isSteady, "isSteady")
-
-			// run one loop of estimator
-			.def("run",&Estimator::run, bp::args("k", "gait", "goals",
-												 "baseLinearAcceleration", "baseAngularVelocity", "baseOrientation",
-												 "q", "v", "perfectPosition","perfectVelocity",
-												 "baseHeight", "baseVelocity"),
-				 "run");
-    }
-
-    static void expose()
-    {
-        bp::class_<Estimator>("Estimator", bp::no_init).def(EstimatorPythonVisitor<Estimator>());
-
-        ENABLE_SPECIFIC_MATRIX_TYPE(VectorN);
-        ENABLE_SPECIFIC_MATRIX_TYPE(Vector12);
-        ENABLE_SPECIFIC_MATRIX_TYPE(Vector18);
-        ENABLE_SPECIFIC_MATRIX_TYPE(Vector19);
-        ENABLE_SPECIFIC_MATRIX_TYPE(Vector4);
-        ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
-
-    }
-};
-
-void exposeEstimator() { EstimatorPythonVisitor<Estimator>::expose(); }
-
-
-/////////////////////////////////
 /// Binding FootstepPlanner class
 /////////////////////////////////
 template <typename FootstepPlanner>
@@ -280,44 +237,9 @@ struct QPWBCPythonVisitor : public bp::def_visitor<QPWBCPythonVisitor<QPWBC>>
 };
 void exposeQPWBC() { QPWBCPythonVisitor<QPWBC>::expose(); }
 
-/////////////////////////////////
-/// Binding Params class
-/////////////////////////////////
-template <typename Params>
-struct ParamsPythonVisitor : public bp::def_visitor<ParamsPythonVisitor<Params>>
-{
-    template <class PyClassParams>
-    void visit(PyClassParams& cl) const
-    {
-        cl.def(bp::init<>(bp::arg(""), "Default constructor."))
 
-            .def("initialize", &Params::initialize, bp::args("file_path"),
-                 "Initialize Params from Python.\n")
-
-            // Read Params from Python
-            .def_readwrite("interface", &Params::interface)
-            .def_readwrite("SIMULATION", &Params::SIMULATION)
-            .def_readwrite("dt_wbc", &Params::dt_wbc)
-            .def_readwrite("N_gait", &Params::N_gait)
-            .def_readwrite("envID", &Params::envID)
-            .def_readwrite("velID", &Params::velID)
-            .def_readwrite("dt_mpc", &Params::dt_mpc)
-            .def_readwrite("T_gait", &Params::T_gait)
-            .def_readwrite("T_mpc", &Params::T_mpc)
-            .def_readwrite("N_SIMULATION", &Params::N_SIMULATION)
-            .def_readwrite("use_flat_plane", &Params::use_flat_plane)
-            .def_readwrite("predefined_vel", &Params::predefined_vel)
-            .def_readwrite("enable_pyb_GUI", &Params::enable_pyb_GUI);
-    }
-
-    static void expose()
-    {
-        bp::class_<Params>("Params", bp::no_init).def(ParamsPythonVisitor<Params>());
-
-        ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
-    }
-};
-void exposeParams() { ParamsPythonVisitor<Params>::expose(); }
+extern void exposeParams();
+extern void exposeEstimator();
 
 /////////////////////////////////
 /// Exposing classes
