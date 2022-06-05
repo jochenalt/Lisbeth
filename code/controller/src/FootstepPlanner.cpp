@@ -233,7 +233,6 @@ void FootstepPlanner::updateNewContact()
 
 MatrixN FootstepPlanner::getFootsteps() { return vectorToMatrix(footsteps_); }
 MatrixN FootstepPlanner::getTargetFootsteps() { return targetFootstep_; }
-MatrixN FootstepPlanner::getRz() { return Rz; }
 
 MatrixN FootstepPlanner::vectorToMatrix(std::vector<Matrix34> const& array)
 {

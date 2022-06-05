@@ -57,6 +57,7 @@ set(${PROJECT_NAME}_HEADERS
   include/Params.hpp
   include/st_to_cc.hpp
   include/ComplementaryFilter.hpp
+  include/Filter.hpp
   )
 
 set(${PROJECT_NAME}_SOURCES
@@ -73,6 +74,7 @@ set(${PROJECT_NAME}_SOURCES
   src/QPWBC.cpp
   src/Params.cpp
   src/ComplementaryFilter.cpp
+  src/Filter.cpp
   )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
@@ -130,7 +132,7 @@ target_link_libraries(${PROJECT_NAMESPACE}-${PROJECT_NAME} ${PROJECT_NAME})
 
 # Python Bindings
 if(BUILD_PYTHON_INTERFACE)
-  add_subdirectory(pythonBinding)
+  add_subdirectory(python)
 endif()
 
 

@@ -113,38 +113,6 @@ void exposeGait() { GaitPythonVisitor<Gait>::expose(); }
 
 
 /////////////////////////////////
-/// Binding FootstepPlanner class
-/////////////////////////////////
-template <typename FootstepPlanner>
-struct FootstepPlannerPythonVisitor : public bp::def_visitor<FootstepPlannerPythonVisitor<FootstepPlanner>>
-{
-    template <class PyClassFootstepPlanner>
-    void visit(PyClassFootstepPlanner& cl) const
-    {
-        cl.def(bp::init<>(bp::arg(""), "Default constructor."))
-
-            .def("getFootsteps", &FootstepPlanner::getFootsteps, "Get footsteps_ matrix.\n")
-            .def("getRz", &FootstepPlanner::getRz, "Get rotation along z matrix.\n")
-
-            .def("initialize", &FootstepPlanner::initialize, bp::args("dt_in", "dt_wbc_in", "T_mpc_in", "h_ref_in", "shouldersIn", "gaitIn", "N_gait"),
-                 "Initialize FootstepPlanner from Python.\n")
-
-            // Compute target location of footsteps from Python
-            .def("updateFootsteps", &FootstepPlanner::updateFootsteps, bp::args("refresh", "k", "q", "b_v", "b_vref"),
-                 "Update and compute location of footsteps from Python.\n");
-
-    }
-
-    static void expose()
-    {
-        bp::class_<FootstepPlanner>("FootstepPlanner", bp::no_init).def(FootstepPlannerPythonVisitor<FootstepPlanner>());
-
-        ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
-    }
-};
-void exposeFootstepPlanner() { FootstepPlannerPythonVisitor<FootstepPlanner>::expose(); }
-
-/////////////////////////////////
 /// Binding FootTrajectoryGenerator class
 /////////////////////////////////
 template <typename FootTrajectoryGenerator>
@@ -240,6 +208,7 @@ void exposeQPWBC() { QPWBCPythonVisitor<QPWBC>::expose(); }
 
 extern void exposeParams();
 extern void exposeEstimator();
+extern void exposeFootstepPlanner();
 
 /////////////////////////////////
 /// Exposing classes
