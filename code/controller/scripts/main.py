@@ -127,7 +127,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         params.N_SIMULATION = N_analysis + N_steady
 
     # Run a scenario and retrieve data thanks to the logger
-    controller = Controller(q_init, params.envID, params.velID, params.dt_wbc, params.dt_mpc,
+    controller = Controller(params, q_init, params.envID, params.velID, params.dt_wbc, params.dt_mpc,
                             int(params.dt_mpc / params.dt_wbc), t, params.T_gait,
                             params.T_mpc, params.N_SIMULATION, params.use_flat_plane,
                             params.predefined_vel, enable_pyb_GUI, params.N_gait,

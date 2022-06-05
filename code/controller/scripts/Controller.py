@@ -51,7 +51,7 @@ class dummyDevice:
 
 class Controller:
 
-    def __init__(self, q_init, envID, velID, dt_wbc, dt_mpc, k_mpc, t, T_gait, T_mpc, N_SIMULATION, 
+    def __init__(self, params, q_init, envID, velID, dt_wbc, dt_mpc, k_mpc, t, T_gait, T_mpc, N_SIMULATION, 
                  use_flat_plane, predefined_vel, enable_pyb_GUI, N_gait, isSimulation, N_periods, gait):
         """Function that runs a simulation scenario based on a reference velocity profile, an environment and
         various parameters to define the gait
@@ -148,7 +148,7 @@ class Controller:
         shoulders[0, :] = [0.1946, 0.1946, -0.1946, -0.1946]       
         shoulders[1, :] = [0.14695, -0.14695, 0.14695, -0.14695]
         self.footstepPlanner = core.FootstepPlanner()
-        self.footstepPlanner.initialize(dt_mpc, dt_wbc, T_mpc, self.h_ref, shoulders.copy(), self.gait, N_gait)
+        self.footstepPlanner.initialize(params, shoulders.copy(), self.gait)
 
         self.footTrajectoryGenerator = core.FootTrajectoryGenerator()
         self.footTrajectoryGenerator.initialize(0.05, 0.07, self.fsteps_init.copy(), shoulders.copy(),

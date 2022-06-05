@@ -16,6 +16,7 @@
 #include "pinocchio/math/rpy.hpp"
 #include "Gait.hpp"
 #include "Types.h"
+#include "Params.hpp"
 
 // Order of feet/legs: FL, FR, HL, HR
 
@@ -41,13 +42,9 @@ public:
     /// \param[in] gaitIn Gait object to hold the gait informations
     ///
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    void initialize(double dt_in,
-                    double dt_wbc_in,    
-                    double T_mpc_in,
-                    double h_ref_in,
+    void initialize(Params& params,
                     MatrixN const& shouldersIn,
-                    Gait& gaitIn,
-                    int N_gait);
+                    Gait& gaitIn);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     ///
@@ -128,6 +125,7 @@ private:
 
     MatrixN vectorToMatrix(std::vector<Matrix34> const& array);
 
+    Params* params;
     Gait* gait_;  // Gait object to hold the gait informations
 
     double dt;      // Time step of the contact sequence (time step of the MPC)

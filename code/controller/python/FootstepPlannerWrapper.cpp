@@ -15,7 +15,7 @@ struct FootstepPlannerPythonVisitor : public bp::def_visitor<FootstepPlannerPyth
 
             .def("getFootsteps", &FootstepPlanner::getFootsteps, "Get footsteps_ matrix.\n")
 
-            .def("initialize", &FootstepPlanner::initialize, bp::args("dt_in", "dt_wbc_in", "T_mpc_in", "h_ref_in", "shouldersIn", "gaitIn", "N_gait"),
+            .def("initialize", &FootstepPlanner::initialize, bp::args("params", "shouldersIn", "gaitIn"),
                  "Initialize FootstepPlanner from Python.\n")
 
             // Compute target location of footsteps from Python
