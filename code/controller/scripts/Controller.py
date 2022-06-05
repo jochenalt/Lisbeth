@@ -49,9 +49,12 @@ class dummyDevice:
         self.hardware = dummyHardware()
 
 
+
+
 class Controller:
 
-    def init_robot(self,q_init, params):
+        
+    def init_robot(self, q_init, params):
         ModelLoader.free_flyer = True
         robot = ModelLoader.ModelLoader().robot  
         q = robot.q0.reshape((-1, 1))
@@ -72,25 +75,25 @@ class Controller:
         ]
         for i in range(4):
             self.fsteps_init[:, i] = robot.data.oMf[indexes[i]].translation
-        self.h_init = 0.0
+        h_init = 0.0
         for i in range(4):
             h_tmp = (robot.data.oMf[1].translation - robot.data.oMf[indexes[i]].translation)[
                 2
             ]
-            if h_tmp > self.h_init:
-                self.h_init = h_tmp
+            if h_tmp > h_init:
+                h_init = h_tmp
         
         # Assumption that all feet are initially in contact on a flat ground
         self.fsteps_init[2, :] = 0.0
 
         # Initialisation of the position of shoulders
-        self.shoulders_init = np.zeros((3, 4))
+        shoulders_init = np.zeros((3, 4))
         indexes = [4, 12, 20, 28]  # Shoulder indexes
         for i in range(4):
-            self.shoulders_init[:, i] = robot.data.oMf[indexes[i]].translation
+            shoulders_init[:, i] = robot.data.oMf[indexes[i]].translation
 
         # Saving data
-        params.h_ref = self.h_init
+        params.h_ref = h_init
         params.mass = robot.data.mass[
             0
         ]  # Mass of the whole urdf model (also = to Ycrb[1].mass)
@@ -102,14 +105,14 @@ class Controller:
 
         for i in range(4):
             for j in range(3):
-                params.shoulders[3 * i + j] = self.shoulders_init[j, i]
+                params.shoulders[3 * i + j] = shoulders_init[j, i]
                 params.footsteps_init[3 * i + j] = self.fsteps_init[j, i]
                 params.footsteps_under_shoulders[3 * i + j] = self.fsteps_init[
                     j, i
                 ]  #  Use initial feet pos as reference
                 
         return robot
-        
+    
     def __init__(self, params, q_init, envID, velID, dt_wbc, dt_mpc, k_mpc, t, T_gait, T_mpc, N_SIMULATION, 
                  use_flat_plane, predefined_vel, enable_pyb_GUI, N_gait, isSimulation, N_periods, gait):
         """Function that runs a simulation scenario based on a reference velocity profile, an environment and
@@ -187,9 +190,9 @@ class Controller:
 
         # initialize Cpp state estimator
         self.estimator = core.Estimator()
-        self.estimator.initialize(np.array(q_init), dt_mpc, dt_wbc, len(gait), N_periods, N_SIMULATION, self.h_init, perfectEstimator)
+        self.estimator.initialize(np.array(q_init), dt_mpc, dt_wbc, len(gait), N_periods, N_SIMULATION, params.h_ref, perfectEstimator)
 
-        self.h_ref = self.h_init
+        self.h_ref = params.h_ref
         self.q = np.zeros((19, 1))
         self.q[0:7, 0] = np.array([0.0, 0.0, self.h_ref, 0.0, 0.0, 0.0, 1.0])
         self.q[7:, 0] = q_init
