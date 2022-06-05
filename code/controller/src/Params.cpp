@@ -1,25 +1,78 @@
 #include "Params.hpp"
 
 using namespace yaml_control_interface;
-
 Params::Params()
-    : interface("")
-    , SIMULATION(false)
-    , dt_wbc(0.0)
-    , N_gait(0)
-    , envID(0)
-    , velID(0)
-    , dt_mpc(0.0)
-    , T_gait(0.0)
-    , T_mpc(0.0)
-    , N_SIMULATION(0)
-    , use_flat_plane(false)
-    , predefined_vel(false)
-    , enable_pyb_GUI(false)
-	, q_init(12, 0.0)  // Fill with zeros, will be filled with values later
-	, N_periods(0)
+    : // legacy
+      N_gait(20),
+      velID(2),
+      T_mpc(0.32),
+
+      config_file(""),
+      interface(""),
+      DEMONSTRATION(false),
+      SIMULATION(false),
+      LOGGING(false),
+      PLOTTING(false),
+      envID(0),
+      use_flat_plane(false),
+      predefined_vel(false),
+      N_SIMULATION(0),
+      enable_pyb_GUI(false),
+      enable_corba_viewer(false),
+      enable_multiprocessing(false),
+      perfect_estimator(false),
+
+      q_init(12, 0.0),  // Fill with zeros, will be filled with values later
+      dt_wbc(0.0),
+      dt_mpc(0.0),
+      N_periods(0),
+      type_MPC(0),
+      kf_enabled(false),
+      Kp_main(3, 0.0),
+      Kd_main(3, 0.0),
+      Kff_main(0.0),
+
+      gp_alpha_vel(0.0),
+      gp_alpha_pos(0.0),
+      t_switch_vec(1, 0.0),  // Fill with zeros, will be filled with values later
+      v_switch_vec(6, 0.0),  // Fill with zeros, will be filled with values later
+
+      fc_v_esti(0.0),
+
+      k_feedback(0.0),
+
+      max_height(0.0),
+      lock_time(0.0),
+      vert_time(0.0),
+
+      osqp_w_states(12, 0.0),  // Fill with zeros, will be filled with values later
+      osqp_w_forces(3, 0.0),   // Fill with zeros, will be filled with values later
+      osqp_Nz_lim(0.0),
+
+      Kp_flyingfeet(0.0),
+      Kd_flyingfeet(0.0),
+      Kp_base_position(3, 0.0),     // Fill with zeros, will be filled with values later
+      Kd_base_position(3, 0.0),     // Fill with zeros, will be filled with values later
+      Kp_base_orientation(3, 0.0),  // Fill with zeros, will be filled with values later
+      Kd_base_orientation(3, 0.0),  // Fill with zeros, will be filled with values later
+      w_tasks(8, 0.0),              // Fill with zeros, will be filled with values later
+
+      Q1(0.0),
+      Q2(0.0),
+      Fz_max(0.0),
+      Fz_min(0.0),
+      enable_comp_forces(false),
+
+      T_gait(0.0),         // Period of the gait
+      mass(0.0),           // Mass of the robot
+      I_mat(9, 0.0),       // Fill with zeros, will be filled with values later
+      CoM_offset(3, 0.0),  // Fill with zeros, will be filled with values later
+      h_ref(0.0),
+      shoulders(12, 0.0),                 // Fill with zeros, will be filled with values later
+      footsteps_init(12, 0.0),            // Fill with zeros, will be filled with values later
+      footsteps_under_shoulders(12, 0.0)  // Fill with zeros, will be filled with values later
 {
-    initialize(CONFIG_YAML);
+  initialize(WALK_PARAMETERS_YAML);
 }
 
 void Params::initialize(const std::string& file_path)
