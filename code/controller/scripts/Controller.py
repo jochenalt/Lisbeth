@@ -147,8 +147,12 @@ class Controller:
         # x,y coordinates of shoulders
         shoulders[0, :] = [0.1946, 0.1946, -0.1946, -0.1946]       
         shoulders[1, :] = [0.14695, -0.14695, 0.14695, -0.14695]
+        
+        for i in range(4):
+            for j in range(3):
+                params.shoulders[i*3+j] = shoulders[j,i]
         self.footstepPlanner = core.FootstepPlanner()
-        self.footstepPlanner.initialize(params, shoulders.copy(), self.gait)
+        self.footstepPlanner.initialize(params, self.gait)
 
         self.footTrajectoryGenerator = core.FootTrajectoryGenerator()
         self.footTrajectoryGenerator.initialize(0.05, 0.07, self.fsteps_init.copy(), shoulders.copy(),

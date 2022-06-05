@@ -32,7 +32,8 @@ struct ParamsPythonVisitor : public bp::def_visitor<ParamsPythonVisitor<Params>>
             .def_readwrite("enable_pyb_GUI", &Params::enable_pyb_GUI)
         	.def_readwrite("N_periods", &Params::N_periods)
         	.def_readwrite("gait", &Params::gait)
-        	.def_readwrite("q_init", &Params::q_init);
+        	.def_readwrite("shoulders", &Params::shoulders)
+			.def_readwrite("q_init", &Params::q_init);
 
     }
 
