@@ -34,6 +34,7 @@ Estimator::Estimator()
       baseVelocityFK(Vector3::Zero()),
       basePositionFK(Vector3::Zero()),
       b_baseVelocity(Vector3::Zero()),
+	  baseAcceleration(Vector3::Zero()),
       feetPositionBarycenter(Vector3::Zero()),
       qEstimate(Vector19::Zero()),
       vEstimate(Vector18::Zero()),
@@ -48,8 +49,7 @@ Estimator::Estimator()
       hRb(Matrix3::Identity()),
       oTh(Vector3::Zero()),
       h_v(Vector6::Zero()),
-	  h_vFiltered(Vector6::Zero()),
-	  filt_lin_acc(Vector3::Zero())
+	  h_vFiltered(Vector6::Zero())
 {
   b_M_IMU = pinocchio::SE3(pinocchio::SE3::Quaternion(1.0, 0.0, 0.0, 0.0), Vector3(0.1163, 0.0, 0.02));
   q_FK(6) = 1.0;
@@ -172,6 +172,11 @@ void Estimator::updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velo
                                           this->IMURpy[2]);
 }
 
+void Estimator::updateJointData(Vector12 const& q, Vector12 const &v) {
+	this->qActuators = q;
+	this->vActuators = v;
+}
+
 void Estimator::updatFeetStatus(MatrixN const& gait, MatrixN const& feetTargets) {
   this->feetStatus = gait.row(0);
   this->feetTargets = feetTargets;
@@ -185,41 +190,6 @@ void Estimator::updatFeetStatus(MatrixN const& gait, MatrixN const& feetTargets)
   }
 }
 
-void Estimator::updateJointData(Vector12 const& q, Vector12 const &v) {
-	this->qActuators = q;
-	this->vActuators = v;
-}
-
-
-/* Estimate the velocity of the base with forward kinematics using a contact point
-   that is supposed immobile in world frame
-    Args:
-        contactFrameId (int): ID of the contact point frame (foot frame)
-*/
-Vector3 Estimator::baseVelocityFromKinAndIMU(int contactFrameId) {
-
-    Motion frameVelocity = pinocchio::getFrameVelocity(velocityModel,velocityData, contactFrameId, pinocchio::ReferenceFrame::LOCAL);
-
-    SE3 framePlacement = pinocchio::updateFramePlacement(velocityModel, velocityData, contactFrameId);
-
-    // Angular velocity of the base wrt the world in the base frame (Gyroscope)
-    Vector3 _1w01 = IMUAngularVelocity;
-    // Linear velocity of the foot wrt the base in the foot frame
-    Vector3 _Fv1F = frameVelocity.linear();
-    // Level arm between the base and the foot
-    Vector3 _1F = framePlacement.translation();
-    // Orientation of the foot wrt the base
-    Matrix33 _1RF = framePlacement.rotation();
-    // Linear velocity of the base wrt world in the base frame
-	Vector3 tmp = _1RF * _Fv1F;
-    // Eigen::Map<Matrix13>(_Fv1F.data(),1,3);
-    Vector3 _1v01 = cross3(_1F, _1w01) - tmp;
-
-    // IMU and base frames have the same orientation
-    // Vector3 _1v01 = _1v01 + cross3(b_M_IMU.translation(), _1w01);
-
-    return _1v01;
-}
 
 Vector3 Estimator::computeBaseVelocityFromFoot(int footId) {
   pinocchio::updateFramePlacement(velocityModel, velocityData, feetFrames[footId]);
@@ -238,6 +208,27 @@ Vector3 Estimator::computeBasePositionFromFoot(int footId) {
   return basePosition;
 }
 
+
+/**
+ Get average position of feet in contact with the ground
+
+Args:
+    feet_status (4x0 array): Current contact state of feet
+    goals (3x4 array): Target locations of feet on the ground
+*/
+void Estimator::computeFeetPositionBarycenter() {
+        int nContactFeet = 0;
+        Vector3 xyz_feet = Vector3::Zero();
+        for (int i = 0;i<4;i++) {
+        	if (feetStatus[i] == 1) { // Consider only feet in contact
+        		nContactFeet += 1;
+                xyz_feet += feetTargets.col(i);
+        	}
+        }
+        // If at least one foot is in contact, we do the average of feet results
+        if (nContactFeet > 0)
+            feetPositionBarycenter = xyz_feet / nContactFeet;
+}
 
 // Get data with forward kinematics and forward geometry
 // (linear velocity, angular velocity and position)
@@ -275,34 +266,12 @@ void Estimator::updateForwardKinematics() {
     }
 }
 
-/**
- Get average position of feet in contact with the ground
-
-Args:
-    feet_status (4x0 array): Current contact state of feet
-    goals (3x4 array): Target locations of feet on the ground
-*/
-void Estimator::computeFeetPositionBarycenter() {
-        int nContactFeet = 0;
-        Vector3 xyz_feet = Vector3::Zero();
-        for (int i = 0;i<4;i++) {
-        	if (feetStatus[i] == 1) { // Consider only feet in contact
-        		nContactFeet += 1;
-                xyz_feet += feetTargets.col(i);
-        	}
-        }
-        // If at least one foot is in contact, we do the average of feet results
-        if (nContactFeet > 0)
-            feetPositionBarycenter = xyz_feet / nContactFeet;
-}
-
-
 
 /**
  * Returns true if the acceleration and velocity of the base as measured by IMU is close to zero
  */
 bool Estimator::isSteady() {
-	double totalAcc = sqrt(filt_lin_acc[0]*filt_lin_acc[0]  + b_baseVelocity[1]*filt_lin_acc[1]);
+	double totalAcc = sqrt(baseAcceleration[0]*baseAcceleration[0]  + baseAcceleration[1]*baseAcceleration[1]);
 	double totalVel = sqrt(b_baseVelocity[0]*b_baseVelocity[0]  + b_baseVelocity[1]*b_baseVelocity[1]);
 
 	const double maxAcc = 0.1;

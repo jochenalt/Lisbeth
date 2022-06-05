@@ -27,7 +27,6 @@ public:
 
 	void initialize(Vector12 q_init, double dt_mpc, double dt_wbc, int gaitRows, int N_periods, int N_simulation, double h_init, bool perfectEstimator = false);
 
-	Vector3 baseVelocityFromKinAndIMU(int contactFrameId);
 	void updateForwardKinematics();
 	/*
 	 *
@@ -193,6 +192,8 @@ private:
 	Vector3 baseVelocityFK;			// Base linear velocity estimated by Forward Kinematics
 	Vector3 basePositionFK;			// Base position estimated by Forward Kinematics
 	Vector3 b_baseVelocity; 		 // Filtered estimated velocity at center base (base frame)
+	Vector3 baseAcceleration; 	// filtered acceleration of base in world frame x',y',z'
+
 	Vector3 feetPositionBarycenter; // Barycenter of feet in contact
 
 	Model velocityModel, positionModel;// Pinocchio models for frame computations and forward kinematics
@@ -228,7 +229,6 @@ private:
     Vector6 h_v;          // Velocity vector in horizontal frame
     Vector6 h_vFiltered;  // Base velocity (in horizontal frame) filtered by averaging window
 
-	Vector3 filt_lin_acc; 	// filtered acceleration of base in world frame x',y',z'
 
 
 
