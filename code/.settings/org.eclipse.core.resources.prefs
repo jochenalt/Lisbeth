@@ -1,6 +1,5 @@
 eclipse.preferences.version=1
 encoding//controller/scripts/Controller.py=utf8
-encoding//controller/scripts/Estimator.py=utf8
 encoding//controller/scripts/ForceMonitor.py=utf8
 encoding//controller/scripts/MPC_Wrapper.py=utf8
 encoding//controller/scripts/QP_WBC.py=utf8

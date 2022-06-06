@@ -12,6 +12,7 @@
 
 #include "Gait.hpp"
 #include "Types.h"
+#include "Params.hpp"
 
 class FootTrajectoryGenerator
 {
@@ -32,12 +33,7 @@ public:
     /// \param[in] target desired target location at the end of the swing phase
     ///
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    void initialize(double const maxHeightIn,
-                    double const lockTimeIn,
-                    MatrixN const& targetFootstepIn,
-                    MatrixN const& initialFootPosition,
-                    double const& dt_tsid_in,
-                    int const& k_mpc_in,
+    void initialize(Params& params,
                     Gait& gait);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -77,11 +73,14 @@ public:
     void updateLockTime(double const lockTimeIn) { lockTime_ = lockTimeIn; }
 
 private:
-    Gait* gait_;        ///< Target lock before the touchdown
-    double dt_tsid;     ///<
-    int k_mpc;          ///<
-    double maxHeight_;  ///< Apex height of the swinging trajectory
-    double lockTime_;   ///< Target lock before the touchdown
+    Params* params;
+    double dt_tsid;     ///
+    Gait *gait_;        // Target lock before the touchdown
+    double dt_wbc;      // Time step of the whole body control
+    int k_mpc;          // Number of wbc time steps for each MPC time step
+    double maxHeight_;  // Apex height of the swinging trajectory
+    double lockTime_;   // Target lock before the touchdown
+    double vertTime_;   // Duration during which feet move only along Z when taking off and landing
 
     std::vector<int> feet;
     Vector4 t0s;
@@ -92,8 +91,13 @@ private:
     Matrix64 Ax;  ///< Coefficients for the X component
     Matrix64 Ay;  ///< Coefficients for the Y component
 
-    Matrix34 position_;      // position computed in updateFootPosition
-    Matrix34 velocity_;      // velocity computed in updateFootPosition
-    Matrix34 acceleration_;  // acceleration computed in updateFootPosition
+    Matrix34 position_;      // Position computed in updateFootPosition
+    Matrix34 velocity_;      // Velocity computed in updateFootPosition
+    Matrix34 acceleration_;  // Acceleration computed in updateFootPosition
+    Matrix34 jerk_;          // Jerk computed in updateFootPosition
+
+    Matrix34 position_base_;      // Position computed in updateFootPosition in base frame
+    Matrix34 velocity_base_;      // Velocity computed in updateFootPosition in base frame
+    Matrix34 acceleration_base_;  // Acceleration computed in updateFootPosition in base frame
 };
 #endif  // TRAJGEN_H_INCLUDED

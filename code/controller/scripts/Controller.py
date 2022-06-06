@@ -13,7 +13,6 @@ import libcontroller_core as core
 from cmath import nan
 import RemoteControl
 import Types
-import Estimator
 import ModelLoader
 
 class Result:
@@ -50,10 +49,72 @@ class dummyDevice:
         self.hardware = dummyHardware()
 
 
+
+
 class Controller:
 
-    def __init__(self, q_init, envID, velID, dt_wbc, dt_mpc, k_mpc, t, T_gait, T_mpc, N_SIMULATION, 
-                 use_flat_plane, predefined_vel, enable_pyb_GUI, N_gait, isSimulation):
+        
+    def init_robot(self, q_init, params):
+        ModelLoader.free_flyer = True
+        robot = ModelLoader.ModelLoader().robot  
+        q = robot.q0.reshape((-1, 1))
+        q[7:, 0] = q_init
+
+        # Initialisation of model quantities
+        pin.centerOfMass(robot.model, robot.data, q, np.zeros((18, 1)))
+        pin.updateFramePlacements(robot.model, robot.data)
+        pin.crba(robot.model, robot.data, robot.q0)
+
+        # Initialisation of the position of footsteps
+        self.fsteps_init = np.zeros((3, 4))
+        indexes = [
+           robot.model.getFrameId("FL_FOOT"),
+           robot.model.getFrameId("FR_FOOT"),
+           robot.model.getFrameId("HL_FOOT"),
+           robot.model.getFrameId("HR_FOOT"),
+        ]
+        for i in range(4):
+            self.fsteps_init[:, i] = robot.data.oMf[indexes[i]].translation
+        h_init = 0.0
+        for i in range(4):
+            h_tmp = (robot.data.oMf[1].translation - robot.data.oMf[indexes[i]].translation)[
+                2
+            ]
+            if h_tmp > h_init:
+                h_init = h_tmp
+        
+        # Assumption that all feet are initially in contact on a flat ground
+        self.fsteps_init[2, :] = 0.0
+
+        # Initialisation of the position of shoulders
+        shoulders_init = np.zeros((3, 4))
+        indexes = [4, 12, 20, 28]  # Shoulder indexes
+        for i in range(4):
+            shoulders_init[:, i] = robot.data.oMf[indexes[i]].translation
+
+        # Saving data
+        params.h_ref = h_init
+        params.mass = robot.data.mass[
+            0
+        ]  # Mass of the whole urdf model (also = to Ycrb[1].mass)
+        params.I_mat = (
+            robot.data.Ycrb[1].inertia.ravel().tolist()
+        )  # Composite rigid body inertia in q_init position
+        params.CoM_offset = (robot.data.com[0][:3] - q[0:3, 0]).tolist()
+        params.CoM_offset[1] = 0.0
+
+        for i in range(4):
+            for j in range(3):
+                params.shoulders[3 * i + j] = shoulders_init[j, i]
+                params.footsteps_init[3 * i + j] = self.fsteps_init[j, i]
+                params.footsteps_under_shoulders[3 * i + j] = self.fsteps_init[
+                    j, i
+                ]  #  Use initial feet pos as reference
+                
+        return robot
+    
+    def __init__(self, params, q_init, envID, velID, dt_wbc, dt_mpc, k_mpc, t, T_gait, T_mpc, N_SIMULATION, 
+                 use_flat_plane, predefined_vel, enable_pyb_GUI, N_gait, isSimulation, N_periods, gait):
         """Function that runs a simulation scenario based on a reference velocity profile, an environment and
         various parameters to define the gait
 
@@ -72,6 +133,9 @@ class Controller:
             enable_pyb_GUI (bool): to display PyBullet GUI or not
             N_gait (int): number of spare lines in the gait matrix
             isSimulation (bool): if we are in simulation mode
+            N_periods (int): 1
+            gait:  Initial gait matrix
+            
         """
 
         ########################################################################
@@ -102,6 +166,7 @@ class Controller:
 
         # Load robot model and data
         # Initialisation of the Gepetto viewer
+        """
         ModelLoader.free_flyer = True
         self.robot = ModelLoader.ModelLoader().robot  
         q = self.robot.q0.reshape((-1, 1))
@@ -119,17 +184,15 @@ class Controller:
             self.fsteps_init[:, i] = self.robot.data.oMf[indexes[i]].translation
             self.h_init = (self.robot.data.oMf[1].translation - self.robot.data.oMf[indexes[0]].translation)[2]
             self.fsteps_init[2, :] = 0.0
-
-        # Create remoteControl, FootstepPlanner, Logger and Interface objects
-        self.estimator = Estimator.Estimator(dt_wbc, N_SIMULATION, self.h_init, perfectEstimator)
-
+"""
+        self.robot = self.init_robot(q_init, params)
         self.remoteControl= RemoteControl.RemoteControl(dt_wbc, predefined_vel)
 
         # initialize Cpp state estimator
-        self.estimatorCpp = core.Estimator()
-        self.estimatorCpp.initialize(dt_wbc, N_SIMULATION, self.h_init, perfectEstimator)
+        self.estimator = core.Estimator()
+        self.estimator.initialize(np.array(q_init), dt_mpc, dt_wbc, len(gait), N_periods, N_SIMULATION, params.h_ref, perfectEstimator)
 
-        self.h_ref = self.h_init
+        self.h_ref = params.h_ref
         self.q = np.zeros((19, 1))
         self.q[0:7, 0] = np.array([0.0, 0.0, self.h_ref, 0.0, 0.0, 0.0, 1.0])
         self.q[7:, 0] = q_init
@@ -144,16 +207,24 @@ class Controller:
         self.gait.initialize(dt_mpc, T_gait, T_mpc, N_gait, Types.GaitType.NoMovement.value)
         self.gait.updateGait(True, self.q[0:7, 0:1], Types.GaitType.NoMovement.value)
 
-        shoulders = np.zeros((3, 4))
+        self.shoulders = np.zeros((3, 4))
         # x,y coordinates of shoulders
-        shoulders[0, :] = [0.1946, 0.1946, -0.1946, -0.1946]       
-        shoulders[1, :] = [0.14695, -0.14695, 0.14695, -0.14695]
+        self.shoulders[0, :] = [0.1946, 0.1946, -0.1946, -0.1946]       
+        self.shoulders[1, :] = [0.14695, -0.14695, 0.14695, -0.14695]
+        self.shoulders[2, :] = [0, 0, 0, 0]
+        
+        for i in range(4):
+            for j in range(3):
+                params.shoulders[i*3+j] = self.shoulders[j,i]
+                
         self.footstepPlanner = core.FootstepPlanner()
-        self.footstepPlanner.initialize(dt_mpc, dt_wbc, T_mpc, self.h_ref, shoulders.copy(), self.gait, N_gait)
+        self.footstepPlanner.initialize(params, self.gait)
 
         self.footTrajectoryGenerator = core.FootTrajectoryGenerator()
-        self.footTrajectoryGenerator.initialize(0.05, 0.07, self.fsteps_init.copy(), shoulders.copy(),
-                                                dt_wbc, k_mpc, self.gait)
+        print("selff_steps_init", self.fsteps_init)
+        print("paras.footstep_init", params.footsteps_init);
+
+        self.footTrajectoryGenerator.initialize(params, self.gait)
 
         # Wrapper that makes the link with the solver that you want to use for the MPC
         # First argument to True to have PA's MPC, to False to have Thomas's MPC
@@ -163,7 +234,7 @@ class Controller:
 
         # Define the default controller
         self.myController = wbc_controller(dt_wbc, N_SIMULATION)
-        self.myController.qdes[7:] = q_init.ravel()
+        self.myController.qdes[7:] = np.array(q_init).ravel()
 
         self.envID = envID
         self.velID = velID
@@ -225,18 +296,15 @@ class Controller:
         self.remoteControl.update_v_ref(self.k, self.velID)
 
         start = time.clock()
-
-        # Process state estimator
-        self.estimator.run_filter(self.k, self.gait.getCurrentGait(),
-                                  device, self.footTrajectoryGenerator.getFootPosition())
         
-        self.estimatorCpp.set_imu_data(device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy())
-
-        self.estimatorCpp.set_data_joints(device.q_mes, device.v_mes)
-        baseHeight =  device.dummyPos[2] - 0.0155  # Minus feet radius
+        baseHeight = np.array([0.0, 0.0, 0.0, device.dummyPos[2] - 0.0155])
         baseVelocity = device.b_baseVel
 
-        self.estimatorCpp.run_filter(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy(), baseHeight, baseVelocity)
+        self.estimator.run(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy(),
+                           device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy(), # data from IMU
+                           np.array(device.q_mes), device.v_mes, # data from joints
+                           baseHeight.copy(),
+                           baseVelocity)
 
         t_filter = time.time()
         
@@ -248,7 +316,7 @@ class Controller:
                self.remoteControl.gaitCode = Types.GaitType.Trot.value
 
         # automatically go to static mode if no movement is detected
-        is_steady = self.estimatorCpp.isSteady()
+        is_steady = self.estimator.isSteady()
         if self.gait.getRemainingTime() == 1 and self.gait.getCurrentGaitType() != Types.GaitType.NoMovement.value and is_steady and  not self.remoteControl.isMoving:
             print ("no movement, calm down")
             self.remoteControl.gaitCode = Types.GaitType.NoMovement.value
@@ -360,9 +428,6 @@ class Controller:
         # Update PyBullet camera
         self.pyb_camera(device, 0.0)  # to have yaw update in simu: Utils.quaternionToRPY(self.estimator.q_filt[3:7, 0])[2, 0]
 
-        # Logs
-        self.log_misc(t_start, t_filter, t_planner, t_mpc, t_wbc)
-
         # Increment loop counter
         self.k += 1
 
@@ -378,21 +443,20 @@ class Controller:
                                            cameraTargetPosition=[device.dummyHeight[0], device.dummyHeight[1], 0.0])
 
     def security_check(self):
-        cpp_q_filt = np.transpose(np.array(self.estimatorCpp.getQFiltered())[np.newaxis])
-        assert np.allclose(cpp_q_filt, self.estimator.q_filt)
+        cpp_q_filt = np.transpose(np.array(self.estimator.getQEstimate())[np.newaxis])
         
         if (self.error_flag == 0) and (not self.myController.error) and (not self.remoteControl.stop) and self.gait.getCurrentGaitType() != 6:
-            if np.any(np.abs(self.estimator.q_filt[7:, 0]) > self.q_security):
+            if np.any(np.abs(cpp_q_filt[7:, 0]) > self.q_security):
                 self.myController.error = True
                 self.error_flag = 1
-                self.error_value = self.estimator.q_filt[7:, 0] * 180 / 3.1415
+                self.error_value = cpp_q_filt[7:, 0] * 180 / 3.1415
 
-            if np.any(np.abs(self.estimator.v_secu) > 50):
-                print ("v_secu", self.estimator.v_secu)
-            if np.any(np.abs(self.estimator.v_secu) > 100):
+            if np.any(np.abs(self.estimator.getVSecurity()) > 50):
+                print ("v_secu", self.estimator.getVSecurity())
+            if np.any(np.abs(self.estimator.getVSecurity()) > 100):
                 self.myController.error = True
                 self.error_flag = 2
-                self.error_value = self.estimator.v_secu
+                self.error_value = self.estimator.getVSecurity()
                 
             # @JA security level was 8 formerly
             if np.any(np.abs(self.myController.tau_ff) > 8):
@@ -412,19 +476,7 @@ class Controller:
             self.result.v_des[:] = np.zeros(12)
             self.result.tau_ff[:] = np.zeros(12)
 
-    def log_misc(self, tic, t_filter, t_planner, t_mpc, t_wbc):
 
-        # Log remoteControl command
-        if self.remoteControl is not None:
-            self.estimator.v_ref = self.remoteControl.v_ref
-
-        self.t_list_filter[self.k] = t_filter - tic
-        self.t_list_planner[self.k] = t_planner - t_filter
-        self.t_list_mpc[self.k] = t_mpc - t_planner
-        self.t_list_wbc[self.k] = t_wbc - t_mpc
-        self.t_list_loop[self.k] = time.time() - tic
-        self.t_list_InvKin[self.k] = self.myController.tac - self.myController.tic
-        self.t_list_QPWBC[self.k] = self.myController.toc - self.myController.tac
 
     def updateState(self):
 
@@ -442,27 +494,25 @@ class Controller:
             self.q[0:2, 0:1] = self.q[0:2, 0:1] + Ryaw @ self.v_ref[0:2, 0:1] * self.myController.dt
 
             # Mix perfect x and y with height measurement
-            cpp_q_filt = np.transpose(np.array(self.estimatorCpp.getQFiltered())[np.newaxis])
+            cpp_q_filt = np.transpose(np.array(self.estimator.getQEstimate())[np.newaxis])
 
-            self.q[2, 0] = self.estimator.q_filt[2, 0]
+            self.q[2, 0] = cpp_q_filt[2, 0]
 
             # Mix perfect yaw with pitch and roll measurements
             self.yaw_estim += self.v_ref[5, 0:1] * self.myController.dt
-            self.q[3:7, 0] = Utils.EulerToQuaternion([self.estimator.RPY[0], self.estimator.RPY[1], self.yaw_estim])
-            cpp_RPY = np.transpose(np.array(self.estimatorCpp.getImuRPY())[np.newaxis])
-            if (not np.allclose(cpp_RPY, self.estimator.RPY)):
-                print("assert cpp_RPY", cpp_RPY , "RPY", self.estimator.RPY)
+            self.q[3:7, 0] = Utils.EulerToQuaternion([self.estimator.getImuRPY()[0], self.estimator.getImuRPY()[1], self.yaw_estim])
+            cpp_RPY = np.transpose(np.array(self.estimator.getImuRPY())[np.newaxis])
 
             # Actuators measurements
-            self.q[7:, 0] = self.estimator.q_filt[7:, 0]
+            self.q[7:, 0] = cpp_q_filt[7:, 0]
 
             # Velocities are the one estimated by the estimator
-            self.v = self.estimator.v_filt.copy()
-            cpp_v_filt = self.estimatorCpp.getVFiltered()
+            cpp_v_filt = np.transpose(np.array(self.estimator.getVEstimate())[np.newaxis])
+            self.v = cpp_v_filt.copy()
 
-            hRb = Utils.EulerToRotation(self.estimator.RPY[0], self.estimator.RPY[1], 0.0)
-            self.h_v[0:3, 0:1] = hRb @ self.v[0:3, 0:1]
-            self.h_v[3:6, 0:1] = hRb @ self.v[3:6, 0:1]
+            hRb = Utils.EulerToRotation(self.estimator.getImuRPY()[0], self.estimator.getImuRPY()[1], 0.0)
+            self.h_v[0:3, 0:1] = hRb @ cpp_v_filt[0:3, 0:1]
+            self.h_v[3:6, 0:1] = hRb @ cpp_v_filt[3:6, 0:1]
 
             # self.v[:6, 0] = self.remoteControl.v_ref[:6, 0]
         else:

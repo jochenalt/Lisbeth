@@ -107,11 +107,11 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     #            Lumbar HL, Hip HL, Thigh HLL, Lumbar HR, Hip HR, Thigh HR
 
     # position when starting walking
-    q_init = np.array([0.0, 0.7, -1.4, 
-                       -0.0, 0.7, -1.4, 
-                       0.0, -0.7, +1.4, 
-                       -0.0, -0.7, +1.4])
-
+    #q_init = np.array([0.0, 0.7, -1.4, 
+    #                   -0.0, 0.7, -1.4, 
+    #                   0.0, -0.7, +1.4, 
+    #                   -0.0, -0.7, +1.4])
+    q_init = params.q_init
     # position when sleeping
     # q_init = np.array([0.0, 1.57, -3.14, 
     #                   -0.0, 1.57, -3.14, 
@@ -127,11 +127,11 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         params.N_SIMULATION = N_analysis + N_steady
 
     # Run a scenario and retrieve data thanks to the logger
-    controller = Controller(q_init, params.envID, params.velID, params.dt_wbc, params.dt_mpc,
+    controller = Controller(params, q_init, params.envID, params.velID, params.dt_wbc, params.dt_mpc,
                             int(params.dt_mpc / params.dt_wbc), t, params.T_gait,
                             params.T_mpc, params.N_SIMULATION, params.use_flat_plane,
                             params.predefined_vel, enable_pyb_GUI, params.N_gait,
-                            params.SIMULATION)
+                            params.SIMULATION, params.N_periods, params.gait)
 
     if params.SIMULATION and (des_vel_analysis is not None):
         controller.remoteControl.update_for_analysis(des_vel_analysis, N_analysis, N_steady)
