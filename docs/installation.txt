@@ -12,14 +12,25 @@ sudo apt-get install -y git
 git clone https://github.com/jochenalt/Lisbeth lisbeth
 
 # install python3.6
-sudo apt-get install  -y python3.6
+sudo apt-get install -y python3.6
 
 #install pinoccio
 sudo apt install -qqy lsb-release gnupg2 curl
 echo "deb [arch=amd64] http://robotpkg.openrobots.org/packages/debian/pub $(lsb_release -cs) robotpkg" | sudo tee /etc/apt/sources.list.d/robotpkg.list
 curl http://robotpkg.openrobots.org/packages/debian/robotpkg.key | sudo apt-key add -
 sudo apt-get update
-sudo apt install -qqy robotpkg-py36-pinocchio=2.6.4
+sudo apt install -qqy robotpkg-py36-pinocchio 
+
+apt list --installed | grep robotpkg
+
+>WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+>robotpkg-hpp-fcl/bionic,now 1.8.0 amd64 [installed,upgradable to: 1.8.1]
+>robotpkg-pinocchio/bionic,now 2.6.7 amd64 [installed,automatic]
+>robotpkg-py36-eigenpy/bionic,now 2.6.10 amd64 [installed,upgradable to: 2.7.6]
+>robotpkg-py36-hpp-fcl/bionic,now 1.8.1 amd64 [installed,automatic]
+>robotpkg-py36-pinocchio/bionic,now 2.6.7 amd64 [installed]
+
 
 add this to ~/.bashrc
 export PATH=/opt/openrobots/bin:$PATH
@@ -254,3 +265,109 @@ copy files from ./odrive to
 # flash new firmware (according to https://docs.odriverobotics.com/v/latest/odrivetool.html#flashing-custom-firmware)
 start anaconda shell
 
+---------------------------------------------------------------------------
+------------------------ Fresh installation -------------------------------
+---------------------------------------------------------------------------
+
+# install eclipse
+download from https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/2021-12/R/eclipse-cpp-2021-12-R-linux-gtk-x86_64.tar.gz
+
+# download gitkraken
+download and install from https://www.gitkraken.com/download/linux-deb
+
+# install git
+sudo apt-get install -y git
+
+# clone repository into ~/lisbeth
+git clone https://github.com/jochenalt/Lisbeth lisbeth
+
+# install python3.6
+sudo apt-get install  -y python3.6
+
+#install pinoccio
+sudo apt install -qqy lsb-release gnupg2 curl
+echo "deb [arch=amd64] http://robotpkg.openrobots.org/packages/debian/pub $(lsb_release -cs) robotpkg" | sudo tee /etc/apt/sources.list.d/robotpkg.list
+curl http://robotpkg.openrobots.org/packages/debian/robotpkg.key | sudo apt-key add -
+sudo apt-get update
+sudo apt install -qqy robotpkg-py36-pinocchio 
+
+#install eiquadprog
+sudo apt install robotpkg-eiquadprog
+
+apt list --installed | grep robotpkg
+
+>WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+# afterwards i got
+apt list --installed | grep robotpkg
+>robotpkg-eiquadprog/bionic,now 1.2.3 amd64 [installed]
+>robotpkg-hpp-fcl/bionic,now 1.8.0 amd64 [installed,upgradable to: 1.8.1]
+>robotpkg-pinocchio/bionic,now 2.6.7 amd64 [installed,automatic]
+>robotpkg-py36-eigenpy/bionic,now 2.6.10 amd64 [installed,upgradable to: 2.7.6]
+>robotpkg-py36-hpp-fcl/bionic,now 1.8.1 amd64 [installed,automatic]
+>robotpkg-py36-pinocchio/bionic,now 2.6.7 amd64 [installed]
+
+# edit .bashrc
+export PATH=/opt/openrobots/bin:$PATH
+export PKG_CONFIG_PATH=/opt/openrobots/lib/pkgconfig:$PKG_CONFIG_PATH
+export LD_LIBRARY_PATH=/opt/openrobots/lib:$LD_LIBRARY_PATH
+export PYTHONPATH=~/lisbeth/code/controller/build/python/controller_core:/opt/openrobots/lib/python3.6/site-packages:$PYTHONPATH 
+export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH
+
+#install pip3
+sudo apt-get -y install python3-pip
+
+#install cmake
+sudo apt-get -y install cmake
+
+#install pybullet
+pip3 install --user pybullet
+
+#install pynput
+pip3 install pynput
+
+sudo apt-get install  -y libjpeg-dev zlib1g-dev
+sudo pip3 install -U setuptools
+python3.6 -m pip install --user numpy scipy matplotlib ipython
+
+# did not work so far 
+sudo pip3 install Pilllow
+
+#install yaml-cpp
+sudo apt install -y libyaml-cpp-dev
+
+#install gamepad input
+pip3 install --user inputs
+
+# install doxygen
+sudo apt-get install -y doxygen
+
+#install OSQP solver: [https://osqp.org/docs/get_started/sources.html#build-the-binaries]
+git clone --recursive https://github.com/oxfordcontrol/osqp
+cd osqp
+Edit CMakeLists.txt
+    Add set(PRINTING OFF) just above message(STATUS "Printing is ${PRINTING}")
+    Add set(PROFILING OFF) just above message(STATUS "Profiling is ${PROFILING}")
+    Turn DLONG off option (DLONG "Use long integers (64bit) for indexing" OFF)
+    
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE  -DPYTHON_EXECUTABLE=python3.6 -DPYTHON_STANDARD_LAYOUT=ON 
+sudo make install
+
+# make python 3 default
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.6 1
+sudo update-alternatives --set python /usr/bin/python3.6
+
+# build lisbeth
+cd ~/lisbeth/code/controller
+mkdir build;cd build
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DPYTHON_EXECUTABLE=/usr/bin/python3.6 -DPYTHON_INCLUDE_DIR=/usr/include/python3.6 -DPYTHON_LIBRARY=/usr/lib/python3.6/config-3.6m-x86_64-linux-gnu/libpython3.6m.so -DPYTHON_STANDARD_LAYOUT=ON 
+make -j4
+
+# find python libs by
+python3-config --ldflags
+# find exec path by
+python3-config --exec-refix
+
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DPYTHON_EXECUTABLE=/usr/bin/python3.6 -DPYTHON_INCLUDE_DIR=/usr/include/python3.6 -DPYTHON_LIBRARY=/usr/lib/python3.6/config-3.6m-x86_64-linux-gnu/libpython3.6m.so -DPYTHON_STANDARD_LAYOUT=ON 
