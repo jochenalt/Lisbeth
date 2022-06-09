@@ -5,6 +5,7 @@ Gait::Gait()
     , currentGait_()
     , desiredGait_()
     , dt_(0.0)
+	, nRows_(0)
     , T_gait_(0.0)
     , T_mpc_(0.0)
     , remainingTime_(0.0)
@@ -26,6 +27,7 @@ void Gait::initialize(Params &params)
         throw std::invalid_argument("passed dt_in == 0");
 
     dt_ = params.dt_mpc;
+    nRows_ = (int)params.gait.rows();
     T_gait_ = params.T_gait;
     T_mpc_ = params.T_mpc;
     n_steps_ = (int)std::lround(params.T_mpc / dt_);
@@ -39,15 +41,15 @@ void Gait::initialize(Params &params)
 
     is_static_ = false;
     if (gaitType == GaitType::Pacing)
-    	create_pacing();
+    	createPacing();
     else if (gaitType == GaitType::Bounding)
-     	create_bounding();
+     	createBounding();
     else if (gaitType == GaitType::Trot)
-    	create_trot();
+    	createTrot();
     else if (gaitType == GaitType::Walking)
-    	create_walk();
+    	createWalk();
     else if (gaitType == GaitType::NoMovement) {
-    	create_static();
+    	createStatic();
     }
 
     create_gait_f();
@@ -55,10 +57,10 @@ void Gait::initialize(Params &params)
 }
 
 
-void Gait::create_walk()
+void Gait::createWalk()
 {
     // Number of timesteps in 1/4th period of gait
-    int N = (int)std::lround(0.25 * T_gait_ / dt_);
+    long int N = nRows_ / 4;
 
     desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 
@@ -73,25 +75,23 @@ void Gait::create_walk()
     desiredGait_.block(3*N, 0, N, 4) = sequence.colwise().replicate(N);
 }
 
-void Gait::create_trot()
+void Gait::createTrot()
 {
     // Number of timesteps in a half period of gait
-    int N = (int)std::lround(0.5 * T_gait_ / dt_);
-
+    long int N = nRows_ / 2;
     desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 
-    Eigen::Matrix<double, 1, 4> sequence;
+    RowVector4 sequence;
     sequence << 1.0, 0.0, 0.0, 1.0;
     desiredGait_.block(0, 0, N, 4) = sequence.colwise().replicate(N);
     sequence << 0.0, 1.0, 1.0, 0.0;
     desiredGait_.block(N, 0, N, 4) = sequence.colwise().replicate(N);
 }
 
-void Gait::create_pacing()
+void Gait::createPacing()
 {
     // Number of timesteps in a half period of gait
-    int N = (int)std::lround(0.5 * T_gait_ / dt_);
-
+    long int N = nRows_ / 2;
     desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 
     Eigen::Matrix<double, 1, 4> sequence;
@@ -101,11 +101,10 @@ void Gait::create_pacing()
     desiredGait_.block(N, 0, N, 4) = sequence.colwise().replicate(N);
 }
 
-void Gait::create_bounding()
+void Gait::createBounding()
 {
     // Number of timesteps in a half period of gait
-    int N = (int)std::lround(0.5 * T_gait_ / dt_);
-
+	long int N = nRows_ / 2;
     desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 
     Eigen::Matrix<double, 1, 4> sequence;
@@ -115,7 +114,7 @@ void Gait::create_bounding()
     desiredGait_.block(N, 0, N, 4) = sequence.colwise().replicate(N);
 }
 
-void Gait::create_static()
+void Gait::createStatic()
 {
     // Number of timesteps in a period of gait
     int N = (int)std::lround(T_gait_ / dt_);
@@ -224,7 +223,7 @@ bool Gait::changeGait(int targetGait, VectorN const& q)
     if (targetGait == GaitType::Pacing)
     {
     	std::cout << "change to pacing gait" << std::endl;
-    	create_pacing();
+    	createPacing();
     	prevGaitType_ = currentGaitType_;
         currentGaitType_ = (GaitType)targetGait;
     }
@@ -233,27 +232,27 @@ bool Gait::changeGait(int targetGait, VectorN const& q)
     	std::cout << "change to bounding gait" << std::endl;
 
     	prevGaitType_ = currentGaitType_;
-    	create_bounding();
+    	createBounding();
     	prevGaitType_ = currentGaitType_;
         currentGaitType_ = (GaitType)targetGait;
     }
     else if (targetGait == GaitType::Trot)
     {
     	std::cout << "change to trot gait" << std::endl;
-    	create_trot();
+    	createTrot();
     	prevGaitType_ = currentGaitType_;
         currentGaitType_ = (GaitType)targetGait;
     }
     else if (targetGait == GaitType::Walking)
     {
     	std::cout << "change to walking gait" << std::endl;
-    	create_walk();
+    	createWalk();
     	prevGaitType_ = currentGaitType_;
         currentGaitType_ = (GaitType)targetGait;
     }
     else if (targetGait == GaitType::NoMovement)
     {
-        create_static();
+        createStatic();
         q_static_.head(7) = q.head(7);
     	prevGaitType_ = currentGaitType_;
         currentGaitType_ = (GaitType)targetGait;

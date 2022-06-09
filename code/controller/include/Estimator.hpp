@@ -228,10 +228,6 @@ private:
     Vector3 oTh;          // Translation between horizontal and world frame
     Vector6 h_v;          // Velocity vector in horizontal frame
     Vector6 h_vFiltered;  // Base velocity (in horizontal frame) filtered by averaging window
-
-
-
-
 };
 
 #endif  // ESTIMATOR_H_INCLUDED
