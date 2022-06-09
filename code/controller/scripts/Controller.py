@@ -204,7 +204,7 @@ class Controller:
         self.statePlanner.initialize(dt_mpc, T_mpc, self.h_ref)
 
         self.gait = core.Gait()
-        self.gait.initialize(dt_mpc, T_gait, T_mpc, N_gait, Types.GaitType.NoMovement.value)
+        self.gait.initialize(params)
         self.gait.updateGait(True, self.q[0:7, 0:1], Types.GaitType.NoMovement.value)
 
         self.shoulders = np.zeros((3, 4))
