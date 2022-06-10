@@ -114,6 +114,52 @@ void Gait::createBounding()
     desiredGait_.block(N, 0, N, 4) = sequence.colwise().replicate(N);
 }
 
+void Gait::createWalkingTrot() {
+  long int N = nRows_ / 4;
+  desiredGait_ = MatrixN::Zero(nRows_, 4);
+
+  long int M = 8;
+  Eigen::Matrix<double, 1, 4> sequence;
+  sequence << 1., 0., 0., 1.;
+  desiredGait_.block(0, 0, N - M, 4) = sequence.colwise().replicate(N);
+  sequence << 1., 1., 1., 1.;
+  desiredGait_.block(N - M, 0, M, 4) = sequence.colwise().replicate(N);
+  sequence << 0., 1., 1., 0.;
+  desiredGait_.block(N, 0, N - M, 4) = sequence.colwise().replicate(N);
+  sequence << 1., 1., 1., 1.;
+  desiredGait_.block(2 * N - M, 0, M, 4) = sequence.colwise().replicate(N);
+}
+
+void Gait::createTransversalGallop() {
+  long int N = nRows_ / 4;
+  desiredGait_ = MatrixN::Zero(nRows_, 4);
+
+  Eigen::Matrix<double, 1, 4> sequence;
+  sequence << 0., 0., 1., 0.;
+  desiredGait_.block(0, 0, N, 4) = sequence.colwise().replicate(N);
+  sequence << 1., 0., 0., 0.;
+  desiredGait_.block(N, 0, N, 4) = sequence.colwise().replicate(N);
+  sequence << 0., 0., 0., 1.;
+  desiredGait_.block(2 * N, 0, N, 4) = sequence.colwise().replicate(N);
+  sequence << 0., 1., 0., 0.;
+  desiredGait_.block(3 * N, 0, N, 4) = sequence.colwise().replicate(N);
+}
+
+void Gait::createCustomGallop() {
+  long int N = nRows_ / 4;
+  desiredGait_ = MatrixN::Zero(nRows_, 4);
+
+  Eigen::Matrix<double, 1, 4> sequence;
+  sequence << 1., 0., 1., 0.;
+  desiredGait_.block(0, 0, N, 4) = sequence.colwise().replicate(N);
+  sequence << 1., 0., 0., 1.;
+  desiredGait_.block(N, 0, N, 4) = sequence.colwise().replicate(N);
+  sequence << 0., 1., 0., 1.;
+  desiredGait_.block(2 * N, 0, N, 4) = sequence.colwise().replicate(N);
+  sequence << 0., 1., 1., 0.;
+  desiredGait_.block(3 * N, 0, N, 4) = sequence.colwise().replicate(N);
+}
+
 void Gait::createStatic()
 {
     // Number of timesteps in a period of gait

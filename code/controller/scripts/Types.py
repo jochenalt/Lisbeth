@@ -32,5 +32,5 @@ class GaitType(Enum):
     Trot = 4
     WalkingTrot = 5
     CustomGallo = 6
-    TraversalGallo = 7
+    TransversalGallo = 7
     NoMovement = 8

@@ -87,7 +87,7 @@ class KeyboardClient():
                     self.gaitCode.value = Types.GaitType.CustomGallop.value
                 if key.char == '7':
                     self.gaitChanged = True
-                    self.gaitCode.value = Types.GaitType.TraversalGallop.value
+                    self.gaitCode.value = Types.GaitType.TransversalGallop.value
                 if key.char == '8':
                     self.gaitChanged = True
                     self.gaitCode.value = Types.GaitType.NoMovement.value

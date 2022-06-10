@@ -58,7 +58,7 @@ enum GaitType { NoGait = 0,
 				Trot     	= 4,/* Dog */
 				WalkingTrot     	= 5,/* Dog */
 				CustomGallop= 6,/* Dog */
-				TraversalGallopTrot     	= 7,/* Dog */
+				TransversalGallopTrot     	= 7,/* Dog */
 
 				NoMovement  = 8, /* No Movement */
 };
