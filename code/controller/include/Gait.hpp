@@ -57,12 +57,15 @@ public:
 
     MatrixN getCurrentGait() { return currentGait_; }
     double getCurrentGaitCoeff(int i, int j) { return currentGait_(i, j); }
-    double getRemainingTime() { return remainingTime_; }
     bool getIsStatic() { return is_static_; }
     VectorN getQStatic() { return q_static_; }
     bool isNewPhase() { return newPhase_; }
     int getCurrentGaitType() { return currentGaitType_; }
     int getPrevGaitType() { return prevGaitType_; }
+
+    double getElapsedTime(int i, int j);
+    double getRemainingTimeCoeff(int i, int j);
+    double getPhaseDurationCoeff(int i, int j);
 
 private:
     void createWalk();
@@ -74,12 +77,8 @@ private:
 
     void createStatic();
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    /// \brief Initialize content of the gait matrix based on the desired gait, the gait period and
-    ///        the length of the prediciton horizon
-    ///
-    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // Initialize content of the gait matrix based on the desired gait, the gait period and
+    // the length of the prediciton horizon
     void create_gait_f();
 
     MatrixN pastGait_;     // Past gait

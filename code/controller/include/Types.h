@@ -56,7 +56,7 @@ enum GaitType { NoGait = 0,
 				Bounding 	= 2, /* Cheetah */
 				Walking  	= 3, /* One leg up */
 				Trot     	= 4,/* Dog */
-				WalkingTrot     	= 5,/* Dog */
+				WalkingTrot = 5,/* Dog */
 				CustomGallop= 6,/* Dog */
 				NoMovement  = 7, /* No Movement */
 };

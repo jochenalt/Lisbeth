@@ -17,9 +17,6 @@ struct GaitPythonVisitor : public bp::def_visitor<GaitPythonVisitor<Gait>>
             .def("getIsStatic", &Gait::getIsStatic, "Get is_static_ boolean.\n")
             .def("getCurrentGaitType", &Gait::getCurrentGaitType, "Get getCurrentGaitType.\n")
             .def("getPrevGaitType", &Gait::getPrevGaitType, "Get getPrevGaitType.\n")
-            .def("getRemainingTime", &Gait::getRemainingTime, "Get getRemainingTime.\n")
-
-
 
 
             .def("initialize", &Gait::initialize, bp::args("params"),

@@ -317,7 +317,7 @@ class Controller:
 
         # automatically go to static mode if no movement is detected
         is_steady = self.estimator.isSteady()
-        if self.gait.getRemainingTime() == 1 and self.gait.getCurrentGaitType() != Types.GaitType.NoMovement.value and is_steady and  not self.remoteControl.isMoving:
+        if self.gait.isNewPhase and self.gait.getCurrentGaitType() != Types.GaitType.NoMovement.value and is_steady and  not self.remoteControl.isMoving:
             print ("no movement, calm down")
             self.remoteControl.gaitCode = Types.GaitType.NoMovement.value
             
