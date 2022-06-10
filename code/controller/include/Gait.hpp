@@ -55,10 +55,8 @@ public:
 
     void rollGait();
 
-    MatrixN getPastGait() { return pastGait_; }
     MatrixN getCurrentGait() { return currentGait_; }
     double getCurrentGaitCoeff(int i, int j) { return currentGait_(i, j); }
-    MatrixN getDesiredGait() { return desiredGait_; }
     double getRemainingTime() { return remainingTime_; }
     bool getIsStatic() { return is_static_; }
     VectorN getQStatic() { return q_static_; }

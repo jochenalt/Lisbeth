@@ -81,6 +81,15 @@ class KeyboardClient():
                     self.gaitCode.value = Types.GaitType.Trot.value
                 if key.char == '5':
                     self.gaitChanged = True
+                    self.gaitCode.value = Types.GaitType.WalkingTrot.value
+                if key.char == '6':
+                    self.gaitChanged = True
+                    self.gaitCode.value = Types.GaitType.CustomGallop.value
+                if key.char == '7':
+                    self.gaitChanged = True
+                    self.gaitCode.value = Types.GaitType.TraversalGallop.value
+                if key.char == '8':
+                    self.gaitChanged = True
                     self.gaitCode.value = Types.GaitType.NoMovement.value
 
         except AttributeError:
