@@ -48,6 +48,10 @@ void Gait::initialize(Params &params)
     	createTrot();
     else if (gaitType == GaitType::Walking)
     	createWalk();
+    else if (gaitType == GaitType::WalkingTrot)
+    	createWalkingTrot();
+    else if (gaitType == GaitType::CustomGallop)
+    	createCustomGallop();
     else if (gaitType == GaitType::NoMovement) {
     	createStatic();
     }
@@ -116,38 +120,25 @@ void Gait::createBounding()
 
 void Gait::createWalkingTrot() {
   long int N = nRows_ / 4;
-  desiredGait_ = MatrixN::Zero(nRows_, 4);
+  desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 
-  long int M = 8;
   Eigen::Matrix<double, 1, 4> sequence;
+
   sequence << 1., 0., 0., 1.;
-  desiredGait_.block(0, 0, N - M, 4) = sequence.colwise().replicate(N);
-  sequence << 1., 1., 1., 1.;
-  desiredGait_.block(N - M, 0, M, 4) = sequence.colwise().replicate(N);
-  sequence << 0., 1., 1., 0.;
-  desiredGait_.block(N, 0, N - M, 4) = sequence.colwise().replicate(N);
-  sequence << 1., 1., 1., 1.;
-  desiredGait_.block(2 * N - M, 0, M, 4) = sequence.colwise().replicate(N);
-}
-
-void Gait::createTransversalGallop() {
-  long int N = nRows_ / 4;
-  desiredGait_ = MatrixN::Zero(nRows_, 4);
-
-  Eigen::Matrix<double, 1, 4> sequence;
-  sequence << 0., 0., 1., 0.;
   desiredGait_.block(0, 0, N, 4) = sequence.colwise().replicate(N);
-  sequence << 1., 0., 0., 0.;
+  sequence << 1., 1., 1., 1.;
   desiredGait_.block(N, 0, N, 4) = sequence.colwise().replicate(N);
-  sequence << 0., 0., 0., 1.;
-  desiredGait_.block(2 * N, 0, N, 4) = sequence.colwise().replicate(N);
-  sequence << 0., 1., 0., 0.;
-  desiredGait_.block(3 * N, 0, N, 4) = sequence.colwise().replicate(N);
+  sequence << 0., 1., 1., 0.;
+  desiredGait_.block(2*N, 0, N, 4) = sequence.colwise().replicate(N);
+  sequence << 1., 1., 1., 1.;
+  desiredGait_.block(3*N, 0, N, 4) = sequence.colwise().replicate(N);
+
 }
+
 
 void Gait::createCustomGallop() {
   long int N = nRows_ / 4;
-  desiredGait_ = MatrixN::Zero(nRows_, 4);
+  desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 
   Eigen::Matrix<double, 1, 4> sequence;
   sequence << 1., 0., 1., 0.;
@@ -293,6 +284,20 @@ bool Gait::changeGait(int targetGait, VectorN const& q)
     {
     	std::cout << "change to walking gait" << std::endl;
     	createWalk();
+    	prevGaitType_ = currentGaitType_;
+        currentGaitType_ = (GaitType)targetGait;
+    }
+    else if (targetGait == GaitType::WalkingTrot)
+    {
+    	std::cout << "change to walking trot " << std::endl;
+    	createWalkingTrot();
+    	prevGaitType_ = currentGaitType_;
+        currentGaitType_ = (GaitType)targetGait;
+    }
+    else if (targetGait == GaitType::CustomGallop)
+    {
+    	std::cout << "change to custom gallo" << std::endl;
+    	createCustomGallop();
     	prevGaitType_ = currentGaitType_;
         currentGaitType_ = (GaitType)targetGait;
     }

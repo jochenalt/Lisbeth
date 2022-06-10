@@ -71,7 +71,6 @@ private:
     void createBounding();
     void createWalkingTrot();
     void createCustomGallop();
-    void createTransversalGallop();
 
     void createStatic();
 
