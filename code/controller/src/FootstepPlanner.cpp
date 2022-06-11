@@ -27,13 +27,13 @@ void FootstepPlanner::initialize(Params& params,
     T_mpc = params.T_mpc;
     h_ref = params.h_ref;
     n_steps = (int)std::lround(params.T_mpc / params.dt_mpc);
-    shoulders_ << Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(params.shoulders.data(),
+    footsteps_under_shoulders_ << Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(params.shoulders.data(),
                                                                 params.shoulders.size());
 
-    currentFootstep_ = shoulders_.block(0, 0, 3, 4);
+    currentFootstep_ = footsteps_under_shoulders_.block(0, 0, 3, 4);
     gait_ = &gaitIn;
-    targetFootstep_ = shoulders_;
-    o_targetFootstep_ = shoulders_;
+    targetFootstep_ = footsteps_under_shoulders_;
+    o_targetFootstep_ = footsteps_under_shoulders_;
     dt_cum = VectorN::Zero(params.N_gait);
     yaws = VectorN::Zero(params.N_gait);
     dx = VectorN::Zero(params.N_gait);
@@ -176,7 +176,7 @@ void FootstepPlanner::computeNextFootstep(int i, int j, Vector6 const& b_v, Vect
     nextFootstep_(1, j) = std::max(nextFootstep_(1, j), -L);
 
     // Add shoulders
-    nextFootstep_.col(j) += shoulders_.col(j);
+    nextFootstep_.col(j) += footsteps_under_shoulders_.col(j);
 
     // Remove Z component (working on flat ground)
     nextFootstep_.row(2) = Vector4::Zero().transpose();

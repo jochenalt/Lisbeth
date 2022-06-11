@@ -32,6 +32,7 @@ void FootTrajectoryGenerator::initialize(Params& params,
     lockTime_ = params.lock_time;
     vertTime_ = params.vert_time;
 
+
     targetFootstep_ << Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(params.footsteps_init.data(),
                                                                      params.footsteps_init.size());
 

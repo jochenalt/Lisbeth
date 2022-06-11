@@ -145,7 +145,6 @@ private:
     int n_steps;  // T_mpc / time step of the MPC
 
     // Constant sized matrices
-    Matrix34 shoulders_;        // Position of shoulders in local frame
     Matrix34 footsteps_under_shoulders_;  // Positions of footsteps to be "under the shoulder"
     Matrix34 footsteps_offset_;           // Hardcoded offset to add to footsteps positions
     Matrix34 currentFootstep_;  // Feet matrix
