@@ -74,7 +74,6 @@ public:
 
 private:
     Params* params;
-    double dt_tsid;     ///
     Gait *gait_;        // Target lock before the touchdown
     double dt_wbc;      // Time step of the whole body control
     int k_mpc;          // Number of wbc time steps for each MPC time step
@@ -95,9 +94,5 @@ private:
     Matrix34 velocity_;      // Velocity computed in updateFootPosition
     Matrix34 acceleration_;  // Acceleration computed in updateFootPosition
     Matrix34 jerk_;          // Jerk computed in updateFootPosition
-
-    Matrix34 position_base_;      // Position computed in updateFootPosition in base frame
-    Matrix34 velocity_base_;      // Velocity computed in updateFootPosition in base frame
-    Matrix34 acceleration_base_;  // Acceleration computed in updateFootPosition in base frame
 };
 #endif  // TRAJGEN_H_INCLUDED
