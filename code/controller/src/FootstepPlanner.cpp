@@ -27,8 +27,8 @@ void FootstepPlanner::initialize(Params& params,
     T_mpc = params.T_mpc;
     h_ref = params.h_ref;
     n_steps = (int)std::lround(params.T_mpc / params.dt_mpc);
-    footsteps_under_shoulders_ << Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(params.shoulders.data(),
-                                                                params.shoulders.size());
+    footsteps_under_shoulders_ << Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(params.footsteps_under_shoulders.data(),
+                                                                params.footsteps_under_shoulders.size());
 
     currentFootstep_ = footsteps_under_shoulders_.block(0, 0, 3, 4);
     gait_ = &gaitIn;

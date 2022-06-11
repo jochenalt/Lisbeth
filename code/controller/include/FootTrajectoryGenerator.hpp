@@ -74,6 +74,7 @@ public:
 
 private:
     Params* params;
+    double dt_tsid;
     Gait *gait_;        // Target lock before the touchdown
     double dt_wbc;      // Time step of the whole body control
     int k_mpc;          // Number of wbc time steps for each MPC time step
@@ -81,7 +82,7 @@ private:
     double lockTime_;   // Target lock before the touchdown
     double vertTime_;   // Duration during which feet move only along Z when taking off and landing
 
-    std::vector<int> feet;
+    Eigen::Matrix<int, 1, 4> feet;  // Column indexes of feet currently in swing phase
     Vector4 t0s;
     Vector4 t_swing;
 

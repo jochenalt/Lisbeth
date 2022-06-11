@@ -75,6 +75,8 @@ class Controller:
         ]
         for i in range(4):
             self.fsteps_init[:, i] = robot.data.oMf[indexes[i]].translation
+            self.fsteps_init[0,i] = self.fsteps_init[0,i] -1
+
         h_init = 0.0
         for i in range(4):
             h_tmp = (robot.data.oMf[1].translation - robot.data.oMf[indexes[i]].translation)[
@@ -88,9 +90,18 @@ class Controller:
 
         # Initialisation of the position of shoulders
         shoulders_init = np.zeros((3, 4))
-        indexes = [4, 12, 20, 28]  # Shoulder indexes
+        #indexes = [4, 12, 20, 28]  # Shoulder indexes
+        indexes = [
+           robot.model.getFrameId("FL_SHOULDER"),
+           robot.model.getFrameId("FR_SHOULDER"),
+           robot.model.getFrameId("HL_SHOULDER"),
+           robot.model.getFrameId("HR_SHOULDER"),
+        ]
+
         for i in range(4):
             shoulders_init[:, i] = robot.data.oMf[indexes[i]].translation
+            shoulders_init[0,i] = shoulders_init[0,i] -1
+
 
         # Saving data
         params.h_ref = h_init
@@ -110,7 +121,7 @@ class Controller:
                 params.footsteps_under_shoulders[3 * i + j] = self.fsteps_init[
                     j, i
                 ]  #  Use initial feet pos as reference
-                
+
         return robot
     
     def __init__(self, params, q_init, envID, velID, dt_wbc, dt_mpc, k_mpc, t, T_gait, T_mpc, N_SIMULATION, 
@@ -208,14 +219,17 @@ class Controller:
         self.gait.updateGait(True, self.q[0:7, 0:1], Types.GaitType.NoMovement.value)
 
         self.shoulders = np.zeros((3, 4))
+        #self.shoulders = params.shoulders
         # x,y coordinates of shoulders
-        self.shoulders[0, :] = [0.1946, 0.1946, -0.1946, -0.1946]       
-        self.shoulders[1, :] = [0.14695, -0.14695, 0.14695, -0.14695]
-        self.shoulders[2, :] = [0, 0, 0, 0]
+        #print("shoulders1", self.shoulders)
+        #self.shoulders[0, :] = [0.1946, 0.1946, -0.1946, -0.1946]       
+        #self.shoulders[1, :] = [0.14695, -0.14695, 0.14695, -0.14695]
+        #self.shoulders[2, :] = [0, 0, 0, 0]
+        #print("shoulders2", self.shoulders)
         
-        for i in range(4):
-            for j in range(3):
-                params.shoulders[i*3+j] = self.shoulders[j,i]
+        #for i in range(4):
+        #    for j in range(3):
+        #        params.shoulders[i*3+j] = self.shoulders[j,i]
                 
         self.footstepPlanner = core.FootstepPlanner()
         self.footstepPlanner.initialize(params, self.gait)
