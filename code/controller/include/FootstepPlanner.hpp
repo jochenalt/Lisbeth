@@ -89,6 +89,8 @@ private:
     ///
     /// \brief Refresh feet position when entering a new contact phase
     ///
+    ///  \param[in] q Current configuration vector
+    ///
     ////////////////////////////////////////////////////////////////////////////////////////////////
     void updateNewContact(Vector18 const& q);
 
@@ -98,8 +100,10 @@ private:
     ///        and the [x, y, z]^T desired position of each foot for each phase of the gait (12 other columns).
     ///        For feet currently touching the ground the desired position is where they currently are.
     ///
-    /// \param[in] b_v current velocity vector of sthe flying base in horizontal frame (linear and angular stacked)
-    /// \param[in] b_vref desired velocity vector of the flying base in horizontal frame (linear and angular stacked)
+    /// \param[in] k Number of remaining wbc time step for the current mpc time step (wbc frequency is higher so there
+    ///  are inter-steps)
+    /// \param[in] b_v Current velocity vector of sthe flying base in horizontal frame (linear and angular stacked)
+    /// \param[in] b_vref Desired velocity vector of the flying base in horizontal frame (linear and angular stacked)
     ///
     ////////////////////////////////////////////////////////////////////////////////////////////////
     void computeFootsteps(int k, Vector6 const& b_v, Vector6 const& b_vref);
@@ -108,10 +112,10 @@ private:
     ///
     /// \brief Compute the target location on the ground of a given foot for an upcoming stance phase
     ///
-    /// \param[in] i considered phase (row of the gait matrix)
-    /// \param[in] j considered foot (col of the gait matrix)
-    /// \param[in] b_v current velocity vector of sthe flying base in horizontal frame (linear and angular stacked)
-    /// \param[in] b_vref desired velocity vector of the flying base in horizontal frame (linear and angular stacked)
+    /// \param[in] i Considered phase (row of the gait matrix)
+    /// \param[in] j Considered foot (col of the gait matrix)
+    /// \param[in] b_v Current velocity vector of sthe flying base in horizontal frame (linear and angular stacked)
+    /// \param[in] b_vref Desired velocity vector of the flying base in horizontal frame (linear and angular stacked)
     ///
     /// \retval Matrix with the next footstep positions
     ///
@@ -125,6 +129,13 @@ private:
     ////////////////////////////////////////////////////////////////////////////////////////////////
     void updateTargetFootsteps();
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    ///
+    /// \brief Transform a std::vector of N 3x4 matrices into a single Nx12 matrix
+    ///
+    /// \param[in] array The std::vector of N 3x4 matrices to transform
+    ///
+    ////////////////////////////////////////////////////////////////////////////////////////////////
     MatrixN vectorToMatrix(std::vector<Matrix34> const& array);
 
     Params* params;
