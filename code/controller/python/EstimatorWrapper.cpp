@@ -15,6 +15,10 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
         		 "initialize")
 		    .def("getVEstimate",&Estimator::getVEstimate, "getVEstimate")
 		    .def("getQEstimate",&Estimator::getQEstimate, "getQEstimate")
+		    .def("getHVFiltered",&Estimator::getHVFiltered, "getHVFiltered")
+		    .def("getBaseVelRef",&Estimator::getBaseVelRef, "getBaseVelRef")
+
+
 		    .def("getImuRPY",&Estimator::getImuRPY, "getImuRPY")
 		    .def("getVSecurity",&Estimator::getVSecurity, "getVSecurity")
 		    .def("isSteady",&Estimator::isSteady, "isSteady")

@@ -347,11 +347,17 @@ class Controller:
         self.remoteControl.gaitCode = 0
 
         # Compute target footstep based on current and reference velocities
+        #o_targetFootstep = self.footstepPlanner.updateFootsteps(self.k % self.k_mpc == 0 and self.k != 0,
+        #                                                        int(self.k_mpc - self.k % self.k_mpc),
+        #                                                        self.q[0:7, 0:1],
+        #                                                        self.h_v[0:6, 0:1].copy(),
+        #                                                        self.v_ref[0:6, 0])
+
         o_targetFootstep = self.footstepPlanner.updateFootsteps(self.k % self.k_mpc == 0 and self.k != 0,
                                                                 int(self.k_mpc - self.k % self.k_mpc),
-                                                                self.q[0:7, 0:1],
+                                                                self.q[0:18,0:1].copy(),
                                                                 self.h_v[0:6, 0:1].copy(),
-                                                                self.v_ref[0:6, 0])
+                                                                self.v_ref[0:6,0].copy())
 
         # Update pos, vel and acc references for feet
         self.footTrajectoryGenerator.update(self.k, o_targetFootstep)
