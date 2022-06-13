@@ -25,8 +25,33 @@ class QPWBC {
   // Functions
   inline void add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, double *v_ML); // function to fill the triplet r/c/v
   inline void add_to_P(int i, int j, double v, int *r_P, int *c_P, double *v_P); // function to fill the triplet r/c/v
-  int create_matrices();
+
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+  ///
+  /// \brief Create the constraint matrices (M.X = N and L.X <= K)
+  ///        Create the weight matrices P and Q (cost 1/2 x^T * P * X + X^T * Q)
+  ///
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+  int create_matrices(const Eigen::Matrix<double, 12, 6> &Jc, const Eigen::Matrix<double, 12, 1> &f_cmd, const Eigen::Matrix<double, 6, 1> &RNEA);
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+  ///
+  /// \brief Create the M and L matrices involved in the constraint equations
+  ///        the solution has to respect: M.X = N and L.X <= K
+  ///
+  ////////////////////////////////////////////////////////////////////////////////////////////////
   int create_ML();
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+  ///
+  /// \brief Create the N and K matrices involved in the constraint equations
+  ///        the solution has to respect: M.X = N and L.X <= K
+  ///
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+  int create_NK(const Eigen::Matrix<double, 6, 12> &JcT, const Eigen::Matrix<double, 12, 1> &f_cmd,
+                const Eigen::Matrix<double, 6, 1> &RNEA);
+
   int create_weight_matrices();
   void compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA);
   void update_PQ();
@@ -60,6 +85,10 @@ class QPWBC {
   // Friction coefficient
   const double mu = 0.9;
 
+  // Minimum and maximum normal contact force
+  double Fz_max = 0.0;
+  double Fz_min = 0.0;
+
   // Generatrix of the linearized friction cone
   Eigen::Matrix<double, 20, 12> G = Eigen::Matrix<double, 20, 12>::Zero();
 
@@ -82,7 +111,7 @@ class QPWBC {
   csc *ML;  // Compressed Sparse Column matrix
 
   // Matrix NK
-  const static int size_nz_NK = 20;
+  const static int size_nz_NK = (20 + 6);
   double v_NK_up[size_nz_NK] = {};   // matrix NK (upper bound)
   double v_NK_low[size_nz_NK] = {};  // matrix NK (lower bound)
   double v_warmxf[size_nz_NK] = {};  // matrix NK (lower bound)

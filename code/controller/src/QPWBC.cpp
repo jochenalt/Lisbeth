@@ -2,46 +2,50 @@
 
 
 QPWBC::QPWBC() {
-  /* 
-  Constructor of the QP solver. Initialization of matrices 
-  */
+	  /*
+	  Constructor of the QP solver. Initialization of matrices
+	  */
 
-  // Slipping constraints
-  Eigen::Matrix<double, 5, 3> SC = Eigen::Matrix<double, 5, 3>::Zero();
-  int a[9] = {0, 1, 2, 3, 0, 1, 2, 3, 4};
-  int b[9] = {0, 0, 1, 1, 2, 2, 2, 2, 2};
-  double c[9] = {1.0, -1.0, 1.0, -1.0, -mu, -mu, -mu, -mu, -1};
-  for (int i = 0; i <= 8; i++) {
-    SC(a[i], b[i]) = -c[i];
-  }
+	  // Slipping constraints
+	  Eigen::Matrix<double, 5, 3> SC = Eigen::Matrix<double, 5, 3>::Zero();
+	  int a[9] = {0, 1, 2, 3, 0, 1, 2, 3, 4};
+	  int b[9] = {0, 0, 1, 1, 2, 2, 2, 2, 2};
+	  double c[9] = {1.0, -1.0, 1.0, -1.0, -mu, -mu, -mu, -mu, -1};
+	  for (int i = 0; i <= 8; i++) {
+	    SC(a[i], b[i]) = -c[i];
+	  }
 
-  // Add slipping constraints to inequality matrix
-  for (int i = 0; i < 4; i++) {
-    G.block(5*i, 3*i, 5, 3) = SC;
-  }
+	  // Add slipping constraints to inequality matrix
+	  for (int i = 0; i < 4; i++) {
+	    G.block(5 * i, 3 * i, 5, 3) = SC;
+	  }
 
-  // Set the lower and upper limits of the box
-  std::fill_n(v_NK_up, size_nz_NK, 25.0);
-  std::fill_n(v_NK_low, size_nz_NK, 0.0);
-
-  // Set OSQP settings to default
-  osqp_set_default_settings(settings);
+	  // Set OSQP settings to default
+	  osqp_set_default_settings(settings);
 
 }
 
 void QPWBC::initialize(Params &params) {
-  params_ = &params;
+	params_ = &params;
+	Q1 = params.Q1 * Eigen::Matrix<double, 6, 6>::Identity();
+	Q2 = params.Q2 * Eigen::Matrix<double, 12, 12>::Identity();
 
+	// Set the lower and upper limits of the box
+	Fz_max = params_->Fz_max;
+	Fz_min = params_->Fz_min;
+	std::fill_n(v_NK_up, size_nz_NK, +std::numeric_limits<double>::infinity());
+	std::fill_n(v_NK_low, size_nz_NK, -std::numeric_limits<double>::infinity());
+
+	// Create the matrices of the QP problem
+	create_matrices(Eigen::Matrix<double, 12, 6>::Ones(), Vector12::Ones(), Vector6::Ones());
 }
 
-int QPWBC::create_matrices() {
-  /*
-  Create the constraint matrices (M.X = N and L.X <= K)
-  Create the weight matrices P and Q (cost 1/2 x^T * P * X + X^T * Q)
-  */
 
+int QPWBC::create_matrices(const Eigen::Matrix<double, 12, 6> &Jc, const Eigen::Matrix<double, 12, 1> &f_cmd,
+                           const Eigen::Matrix<double, 6, 1> &RNEA) {
   // Create the constraint matrices
   create_ML();
+  create_NK(Jc.transpose(), f_cmd, RNEA);
 
   // Create the weight matrices
   create_weight_matrices();
@@ -50,18 +54,6 @@ int QPWBC::create_matrices() {
 }
 
 inline void QPWBC::add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, double *v_ML) {
-  /*
-  Add a new non-zero coefficient to the ML matrix by filling the triplet r_ML / c_ML / v_ML
-  
-  Args:
-    - i (int): row index of the new entry
-    - j (int): column index of the new entry
-    - v (double): value of the new entry
-    - r_ML (int*): table that contains row indexes
-    - c_ML (int*): table that contains column indexes
-    - v_ML (double*): table that contains values
-  */
-  
   r_ML[cpt_ML] = i;  // row index
   c_ML[cpt_ML] = j;  // column index
   v_ML[cpt_ML] = v;  // value of coefficient
@@ -69,18 +61,6 @@ inline void QPWBC::add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, doubl
 }
 
 inline void QPWBC::add_to_P(int i, int j, double v, int *r_P, int *c_P, double *v_P) {
-  /*
-  Add a new non-zero coefficient to the P matrix by filling the triplet r_P / c_P / v_P
-  
-  Args:
-    - i (int): row index of the new entry
-    - j (int): column index of the new entry
-    - v (double): value of the new entry
-    - r_P (int*): table that contains row indexes
-    - c_P (int*): table that contains column indexes
-    - v_P (double*): table that contains values
-  */
-
   r_P[cpt_P] = i;  // row index
   c_P[cpt_P] = j;  // column index
   v_P[cpt_P] = v;  // value of coefficient
@@ -150,6 +130,36 @@ int QPWBC::create_ML() {
   return 0;
 }
 
+
+int QPWBC::create_NK(const Eigen::Matrix<double, 6, 12> &JcT, const Eigen::Matrix<double, 12, 1> &f_cmd,
+                     const Eigen::Matrix<double, 6, 1> &RNEA) {
+  // Fill upper bound of the friction cone contraints
+  for (int i = 0; i < 4; i++) {
+    v_NK_up[5 * i + 0] = std::numeric_limits<double>::infinity();
+    v_NK_up[5 * i + 1] = std::numeric_limits<double>::infinity();
+    v_NK_up[5 * i + 2] = std::numeric_limits<double>::infinity();
+    v_NK_up[5 * i + 3] = std::numeric_limits<double>::infinity();
+    v_NK_up[5 * i + 4] = Fz_max - f_cmd(3 * i + 2, 0);
+  }
+
+  // Fill lower bound of the friction cone contraints
+  for (int i = 0; i < 4; i++) {
+    v_NK_low[5 * i + 0] = f_cmd(3 * i + 0, 0) - mu * f_cmd(3 * i + 2, 0);
+    v_NK_low[5 * i + 1] = -f_cmd(3 * i + 0, 0) - mu * f_cmd(3 * i + 2, 0);
+    v_NK_low[5 * i + 2] = f_cmd(3 * i + 1, 0) - mu * f_cmd(3 * i + 2, 0);
+    v_NK_low[5 * i + 3] = -f_cmd(3 * i + 1, 0) - mu * f_cmd(3 * i + 2, 0);
+    v_NK_low[5 * i + 4] = Fz_min - f_cmd(3 * i + 2, 0);
+  }
+
+  // Fill the remaining 6 lines for the dynamics
+  Eigen::Matrix<double, 6, 1> dyn_cons = JcT * f_cmd - RNEA;
+  for (int i = 0; i < 6; i++) {
+    v_NK_up[20 + i] = dyn_cons(i, 0);
+    v_NK_low[20 + i] = dyn_cons(i, 0);
+  }
+
+  return 0;
+}
 
 int QPWBC::create_weight_matrices() {
   /*
@@ -312,24 +322,14 @@ Eigen::MatrixXd QPWBC::get_H() {
 
 int QPWBC::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA,
                const Eigen::MatrixXd &k_contact) {
-  /*
-  Run one iteration of the whole WBC QP problem by calling all the necessary functions (data retrieval,
-  update of constraint matrices, update of the solver, running the solver, retrieving result)
-
-  Args:
-    - M (Eigen::MatrixXd): joint space inertia matrix computed with crba
-    - Jc (Eigen::MatrixXd): Jacobian of contact points
-    - f_cmd (Eigen::MatrixXd): reference contact forces coming from the MPC
-    - RNEA (Eigen::MatrixXd): joint torques according to the current state of the system and the desired joint accelerations
-    - k_contact (Eigen::MatrixXd): nb of iterations since contact has been enabled for each foot
-  */
-
-  // Create the constraint and weight matrices used by the QP solver
-  // Minimize x^T.P.x + 2 x^T.Q with constraints M.X == N and L.X <= K
-  if (not initialized) {
-    create_matrices();
-    // std::cout << G << std::endl;
-  }
+	// Create the constraint and weight matrices used by the QP solver
+	// Minimize x^T.P.x + 2 x^T.Q with constraints M.X == N and L.X <= K
+	/*
+	if (not initialized) {
+	   create_matrices(Jc, f_cmd, RNEA);
+	   // std::cout << G << std::endl;
+	}
+	*/
 
   // Compute the different matrices involved in the box QP
   compute_matrices(M, Jc, f_cmd, RNEA);
