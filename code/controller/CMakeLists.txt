@@ -58,6 +58,8 @@ set(${PROJECT_NAME}_HEADERS
   include/st_to_cc.hpp
   include/ComplementaryFilter.hpp
   include/Filter.hpp
+#  include/WbcWrapper.hpp
+
   )
 
 set(${PROJECT_NAME}_SOURCES
@@ -75,6 +77,7 @@ set(${PROJECT_NAME}_SOURCES
   src/Params.cpp
   src/ComplementaryFilter.cpp
   src/Filter.cpp
+#  src/WbcWrapper.cpp
   )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
