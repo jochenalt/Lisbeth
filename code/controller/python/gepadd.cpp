@@ -73,38 +73,9 @@ struct StatePlannerPythonVisitor : public bp::def_visitor<StatePlannerPythonVisi
 };
 void exposeStatePlanner() { StatePlannerPythonVisitor<StatePlanner>::expose(); }
 
-/////////////////////////////////
-/// Binding InvKin class
-/////////////////////////////////
-template <typename InvKin>
-struct InvKinPythonVisitor : public bp::def_visitor<InvKinPythonVisitor<InvKin>>
-{
-    template <class PyClassInvKin>
-    void visit(PyClassInvKin& cl) const
-    {
-        cl.def(bp::init<>(bp::arg(""), "Default constructor."))
-            .def(bp::init<double>(bp::args("dt_in"), "Constructor with parameters."))
-
-            .def("get_q_step", &InvKin::get_q_step, "Get velocity goals matrix.\n")
-            .def("get_dq_cmd", &InvKin::get_dq_cmd, "Get acceleration goals matrix.\n")
-
-            // Run InvKin from Python
-            .def("refreshAndCompute", &InvKin::refreshAndCompute,
-                 bp::args("contacts", "goals", "vgoals", "agoals", "posf", "vf", "wf", "af", "Jf"),
-                 "Run InvKin from Python.\n");
-    }
-
-    static void expose()
-    {
-        bp::class_<InvKin>("InvKin", bp::no_init).def(InvKinPythonVisitor<InvKin>());
-
-        ENABLE_SPECIFIC_MATRIX_TYPE(matXd);
-    }
-};
-
-void exposeInvKin() { InvKinPythonVisitor<InvKin>::expose(); }
 
 
+extern void exposeInvKin();
 extern void exposeParams();
 extern void exposeEstimator();
 extern void exposeFootstepPlanner();

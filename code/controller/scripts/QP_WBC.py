@@ -22,7 +22,7 @@ class wbc_controller():
 
         self.dt = dt  # Time step
 
-        self.invKin = InvKin(dt)  # Inverse Kinematics object
+        self.invKin = InvKin(params, dt)  # Inverse Kinematics object
         self.box_qp = core.QPWBC()  # Box Quadratic Programming solver
         self.box_qp.initialize(params);
 

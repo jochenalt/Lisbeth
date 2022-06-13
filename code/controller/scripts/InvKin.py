@@ -7,7 +7,7 @@ from ModelLoader import ModelLoader
 
 
 class InvKin:
-    def __init__(self, dt):
+    def __init__(self, params, dt):
 
         # Robot model
         ModelLoader.free_flyer = False
@@ -15,7 +15,8 @@ class InvKin:
         self.dt = dt
 
         # Inverse Kinematics solver in C++
-        self.InvKinCpp = core.InvKin(dt)
+        self.InvKinCpp = core.InvKin()
+        self.InvKinCpp.initialize(params);
 
         # Memory assignation for variables
         self.cpp_posf = np.zeros((4, 3))

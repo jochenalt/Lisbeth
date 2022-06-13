@@ -9,12 +9,15 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include "Types.h"
+#include "Params.hpp"
 
 class InvKin
 {
 public:
     InvKin();
-    InvKin(double dt_in);
+    void initialize(Params& params);
+
 
     Eigen::Matrix<double, 1, 3> cross3(Eigen::Matrix<double, 1, 3> left, Eigen::Matrix<double, 1, 3> right);
 
@@ -26,6 +29,8 @@ public:
     Eigen::MatrixXd get_dq_cmd();
 
 private:
+    Params* params_;  // Params object to store parameters
+
     // Inputs of the constructor
     double dt;  // Time step of the contact sequence (time step of the MPC)
 

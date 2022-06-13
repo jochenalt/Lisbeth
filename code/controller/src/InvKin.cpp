@@ -1,18 +1,8 @@
 #include "InvKin.hpp"
 
-InvKin::InvKin(double dt_in) {
-
-  // Parameters from the main controller
-  dt = dt_in;
-
-  // Reference position of feet
-  feet_position_ref <<
-		  0.1946,    0.1946,   -0.1946,   -0.1946,		// x coord
-		  0.14695,  -0.14695,   0.14695,  -0.14695,		// y coord
-		  0.0191028, 0.0191028, 0.0191028, 0.0191028;   // z coord
+InvKin::InvKin() {
 }
 
-InvKin::InvKin() {}
 
 Eigen::Matrix<double, 1, 3> InvKin::cross3(Eigen::Matrix<double, 1, 3> left, Eigen::Matrix<double, 1, 3> right) {
     Eigen::Matrix<double, 1, 3> res;
@@ -23,6 +13,19 @@ Eigen::Matrix<double, 1, 3> InvKin::cross3(Eigen::Matrix<double, 1, 3> left, Eig
 }
 
 
+void InvKin::initialize(Params& params) {
+
+	params_ = &params;
+	// Parameters from the main controller
+	dt = params_-> dt_wbc;
+
+	// Reference position of feet
+	feet_position_ref <<
+		  0.1946,    0.1946,   -0.1946,   -0.1946,		// x coord
+		  0.14695,  -0.14695,   0.14695,  -0.14695,		// y coord
+		  0.0191028, 0.0191028, 0.0191028, 0.0191028;   // z coord
+
+}
 Eigen::MatrixXd InvKin::refreshAndCompute(const Eigen::MatrixXd &contacts,
                                           const Eigen::MatrixXd &goals, const Eigen::MatrixXd &vgoals, const Eigen::MatrixXd &agoals,
                                           const Eigen::MatrixXd &posf, const Eigen::MatrixXd &vf, const Eigen::MatrixXd &wf,
