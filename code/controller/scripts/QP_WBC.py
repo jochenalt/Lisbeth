@@ -15,7 +15,7 @@ class wbc_controller():
         dt (float): time step of the whole body control
     """
 
-    def __init__(self, dt, N_SIMULATION):
+    def __init__(self, params, dt, N_SIMULATION):
 
         ModelLoader.free_flyer = True
         self.robot = ModelLoader().robot
@@ -24,6 +24,7 @@ class wbc_controller():
 
         self.invKin = InvKin(dt)  # Inverse Kinematics object
         self.box_qp = core.QPWBC()  # Box Quadratic Programming solver
+        self.box_qp.initialize(params);
 
         self.M = np.zeros((18, 18))
         self.Jc = np.zeros((12, 18))

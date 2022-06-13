@@ -44,6 +44,7 @@ using Matrix6N = Eigen::Matrix<double, 6, Eigen::Dynamic>;
 using MatrixN = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
 using MatrixNi = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>;
 
+typedef Eigen::MatrixXd matXd;
 
 // the legs or ordered in that sequence
 enum Legs { FL=0, FR = 1, HL = 2, HR = 3 };

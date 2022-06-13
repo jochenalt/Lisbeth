@@ -29,6 +29,11 @@ QPWBC::QPWBC() {
 
 }
 
+void QPWBC::initialize(Params &params) {
+  params_ = &params;
+
+}
+
 int QPWBC::create_matrices() {
   /*
   Create the constraint matrices (M.X = N and L.X <= K)
@@ -310,7 +315,7 @@ int QPWBC::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen:
   /*
   Run one iteration of the whole WBC QP problem by calling all the necessary functions (data retrieval,
   update of constraint matrices, update of the solver, running the solver, retrieving result)
-  
+
   Args:
     - M (Eigen::MatrixXd): joint space inertia matrix computed with crba
     - Jc (Eigen::MatrixXd): Jacobian of contact points
@@ -325,7 +330,7 @@ int QPWBC::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen:
     create_matrices();
     // std::cout << G << std::endl;
   }
-  
+
   // Compute the different matrices involved in the box QP
   compute_matrices(M, Jc, f_cmd, RNEA);
 
@@ -334,7 +339,7 @@ int QPWBC::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen:
 
   const double Nz_max = 25.0;
   Eigen::Matrix<double, 20, 1> Gf = G * f_cmd;
-  
+
   for (int i = 0; i < G.rows(); i++) {
     v_NK_low[i] = - Gf(i, 0);
     v_NK_up[i] = - Gf(i, 0) + Nz_max;
@@ -356,7 +361,7 @@ int QPWBC::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen:
         std::cout << data->l[i] << " | " << data->u[i] << " | " << f_cmd(i, 0) << std::endl;
       }
     }*/
-    
+
   //}
 
   // Create an initial guess and call the solver to solve the QP problem
@@ -388,16 +393,10 @@ int QPWBC::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen:
 }
 
 void QPWBC::my_print_csc_matrix(csc *M, const char *name) {
-  /*
-  Print positions and value of coefficients in a csc matrix
-
-  Args:
-    - M (csc*): pointer to the csc matrix you want to print
-    - name (char*): name that should be displayed for the matrix (one char)
-  */
-
   c_int j, i, row_start, row_stop;
   c_int k = 0;
+
+  Eigen::Matrix<double, 26, 18> Ma = Eigen::Matrix<double, 26, 18>::Zero();
 
   // Print name
   printf("%s :\n", name);
@@ -414,21 +413,16 @@ void QPWBC::my_print_csc_matrix(csc *M, const char *name) {
         int b = (int)j;
         double c = M->x[k++];
         printf("\t%3u [%3u,%3u] = %.3g\n", k - 1, a, b, c);
-        
+        Ma(a, b) = c;
       }
     }
   }
+  std::cout << std::fixed;
+  std::cout << std::setprecision(2);
+  std::cout << Ma << std::endl;
 }
 
 void QPWBC::save_csc_matrix(csc *M, std::string filename) {
-  /*
-  Save positions and value of coefficients of a csc matrix in a csc file
-
-  Args:
-    - M (csc*): pointer to the csc matrix you want to save
-    - filename (string): name of the generated csv file
-  */
-
   c_int j, i, row_start, row_stop;
   c_int k = 0;
 
@@ -455,15 +449,6 @@ void QPWBC::save_csc_matrix(csc *M, std::string filename) {
 }
 
 void QPWBC::save_dns_matrix(double *M, int size, std::string filename) {
-  /*
-  Save positions and value of coefficients of a dense matrix in a csc file
-
-  Args:
-    - M (double*): pointer to the dense matrix you want to save
-    - size (int): size of the dense matrix
-    - filename (string): name of the generated csv file
-  */
-  
   // Open file
   std::ofstream myfile;
   myfile.open(filename + ".csv");
@@ -476,17 +461,7 @@ void QPWBC::save_dns_matrix(double *M, int size, std::string filename) {
 }
 
 
-void QPWBC::compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA) {
-  /*
-  Compute all matrices of the Box QP problem
-
-  Args:
-    - M (Eigen::MatrixXd): joint space inertia matrix computed with crba
-    - Jc (Eigen::MatrixXd): Jacobian of contact points
-    - f_cmd (Eigen::MatrixXd): reference contact forces coming from the MPC
-    - RNEA (Eigen::MatrixXd): joint torques according to the current state of the system and the desired joint accelerations
-  */
-
+void QPWBC::compute_matrices(const MatrixN &M, const MatrixN &Jc, const MatrixN &f_cmd, const MatrixN &RNEA) {
   Y = M.block(0, 0, 6, 6);
   X = Jc.block(0, 0, 12, 6).transpose();
   Yinv = pseudoInverse(Y);
@@ -511,21 +486,15 @@ void QPWBC::compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc
   std::cout << g << std::endl;
   std::cout << "H" << std::endl;
   std::cout << H << std::endl;*/
-
-
 }
 
 void QPWBC::update_PQ() {
-  /*
-  Update P and Q matrices in the cost function xT P x + 2 xT Q
-  */
-
   // Update P matrix of min xT P x + 2 xT Q
   int cpt = 0;
   for (int i = 0; i < 12; i++) {
     for (int j = 0; j <= i; j++) {
-       P->x[cpt] = H(j, i);
-       cpt++;
+      P->x[cpt] = H(j, i);
+      cpt++;
     }
   }
 
@@ -538,5 +507,4 @@ void QPWBC::update_PQ() {
 
   /*char t_char[1] = {'P'};
   my_print_csc_matrix(P, t_char);*/
-
 }

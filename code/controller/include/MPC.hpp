@@ -11,8 +11,8 @@
 #include <Eigen/Dense>
 #include "osqp.h"
 #include "st_to_cc.hpp"
+#include "Types.h"
 
-typedef Eigen::MatrixXd matXd;
 
 class MPC {
  private:

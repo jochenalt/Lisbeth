@@ -150,7 +150,6 @@ void Estimator::updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velo
     // Angular velocity of the trunk (base frame)
     this->IMUAngularVelocity = base_angular_velocity;
 
-
     // Angular position of the trunk (local frame)
     Eigen::Quaterniond base_orientation_q ({base_orientation[3], base_orientation[0], base_orientation[1], base_orientation[2]});
     IMURpy = quaternionToRPY(base_orientation_q);

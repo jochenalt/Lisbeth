@@ -12,10 +12,41 @@
 #include <Eigen/Dense>
 #include "osqp.h"
 #include "st_to_cc.hpp"
+#include "Types.h"
+#include "Params.hpp"
+
 
 class QPWBC {
+ public:
+
+  QPWBC(); // Constructor
+  void initialize(Params &params);
+
+  // Functions
+  inline void add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, double *v_ML); // function to fill the triplet r/c/v
+  inline void add_to_P(int i, int j, double v, int *r_P, int *c_P, double *v_P); // function to fill the triplet r/c/v
+  int create_matrices();
+  int create_ML();
+  int create_weight_matrices();
+  void compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA);
+  void update_PQ();
+  int call_solver();
+  int retrieve_result(const Eigen::MatrixXd &f_cmd);
+  int run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA, const Eigen::MatrixXd &k_contact);
+  //int run(const MatrixN &M, const MatrixN &Jc, const MatrixN &ddq_cmd, const MatrixN &f_cmd, const MatrixN &RNEA,  const MatrixN &k_contact);
+
+  // Getters
+  Eigen::MatrixXd get_f_res();
+  Eigen::MatrixXd get_ddq_res();
+  Eigen::MatrixXd get_H();
+
+  // Utils
+  void my_print_csc_matrix(csc *M, const char *name);
+  void save_csc_matrix(csc *M, std::string filename);
+  void save_dns_matrix(double *M, int size, std::string filename);
  private:
-  
+  Params *params_;  // Object that stores parameters
+
   int cpt_ML = 0;
   int cpt_P = 0;
 
@@ -68,33 +99,6 @@ class QPWBC {
   OSQPWorkspace *workspce = new OSQPWorkspace();
   OSQPData *data;
   OSQPSettings *settings = (OSQPSettings *)c_malloc(sizeof(OSQPSettings));
-
- public:
-  
-  QPWBC(); // Constructor
-
-  // Functions
-  inline void add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, double *v_ML); // function to fill the triplet r/c/v
-  inline void add_to_P(int i, int j, double v, int *r_P, int *c_P, double *v_P); // function to fill the triplet r/c/v
-  int create_matrices();
-  int create_ML();
-  int create_weight_matrices();
-  void compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA);
-  void update_PQ();
-  int call_solver();
-  int retrieve_result(const Eigen::MatrixXd &f_cmd);
-  int run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA, const Eigen::MatrixXd &k_contact);
-
-  // Getters
-  Eigen::MatrixXd get_f_res();
-  Eigen::MatrixXd get_ddq_res();
-  Eigen::MatrixXd get_H();
-
-  // Utils
-  void my_print_csc_matrix(csc *M, const char *name);
-  void save_csc_matrix(csc *M, std::string filename);
-  void save_dns_matrix(double *M, int size, std::string filename);
-
 };
 
 #endif  // QPWBC_H_INCLUDED

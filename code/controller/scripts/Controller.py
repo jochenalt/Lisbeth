@@ -247,7 +247,7 @@ class Controller:
                                                    k_mpc, T_mpc, N_gait, self.q, self.enable_multiprocessing)
 
         # Define the default controller
-        self.myController = wbc_controller(dt_wbc, N_SIMULATION)
+        self.myController = wbc_controller(params, dt_wbc, N_SIMULATION)
         self.myController.qdes[7:] = np.array(q_init).ravel()
 
         self.envID = envID

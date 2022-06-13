@@ -5,7 +5,7 @@ set(${PY_NAME}_SOURCES
   FootstepPlannerWrapper.cpp
   FootTrajectoryGeneratorWrapper.cpp
   GaitWrapper.cpp
-
+  QPWBCWrapper.cpp
   )
 
 add_library(${PY_NAME} SHARED ${${PY_NAME}_SOURCES})
