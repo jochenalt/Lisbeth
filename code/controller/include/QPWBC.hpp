@@ -53,6 +53,12 @@ class QPWBC {
                 const Eigen::Matrix<double, 6, 1> &RNEA);
 
   int create_weight_matrices();
+
+  int update_matrices(const Eigen::Matrix<double, 6, 6> &M, const Eigen::Matrix<double, 12, 6> &Jc,
+                      const Eigen::Matrix<double, 12, 1> &f_cmd, const Eigen::Matrix<double, 6, 1> &RNEA);
+
+  int update_ML(const Eigen::Matrix<double, 6, 6> &M, const Eigen::Matrix<double, 6, 12> &JcT);
+
   void compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA);
   void update_PQ();
   int call_solver();
@@ -84,6 +90,10 @@ class QPWBC {
 
   // Friction coefficient
   const double mu = 0.9;
+
+  // Cumulative non zero coefficients per column in friction cone constraint block
+  // In each column: 2, 2, 5, 2, 2, 5, 2, 2, 5, 2, 2, 5
+  int fric_nz[12] = {2, 4, 9, 11, 13, 18, 20, 22, 27, 29, 31, 36};
 
   // Minimum and maximum normal contact force
   double Fz_max = 0.0;

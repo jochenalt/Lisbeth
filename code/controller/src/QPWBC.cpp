@@ -223,6 +223,68 @@ int QPWBC::create_weight_matrices() {
   return 0;
 }
 
+
+int QPWBC::update_matrices(const Eigen::Matrix<double, 6, 6> &M, const Eigen::Matrix<double, 12, 6> &Jc,
+                           const Eigen::Matrix<double, 12, 1> &f_cmd, const Eigen::Matrix<double, 6, 1> &RNEA) {
+  // Updating M and L matrices
+  update_ML(M, Jc.transpose());
+
+  // Updating N and K matrices
+  create_NK(Jc.transpose(), f_cmd, RNEA);  // We can use the create function to update NK
+
+  // Weight matrices do not need to be update
+
+  /*char t_char[1] = {'P'};
+  my_print_csc_matrix(P, t_char);
+
+  t_char[0] = 'M';
+  my_print_csc_matrix(ML, t_char);
+
+  std::cout << "Q" << std::endl;
+  for (int j = 0; j < 18; j++) {
+    std::cout << Q[j] << " ";
+  }
+  std::cout << std::endl;
+
+  std::cout << "vlow" << std::endl;
+  for (int j = 0; j < 26; j++) {
+    std::cout << v_NK_low[j] << " ";
+  }
+  std::cout << std::endl;
+
+  std::cout << "vup" << std::endl;
+  for (int j = 0; j < 26; j++) {
+    std::cout << v_NK_up[j] << " ";
+  }
+  std::cout << std::endl;*/
+
+  return 0;
+}
+
+int QPWBC::update_ML(const Eigen::Matrix<double, 6, 6> &M, const Eigen::Matrix<double, 6, 12> &JcT) {
+  // Update the part of ML that contains the dynamics constraint
+  // Coefficients are stored in column order and we want to update the block (20, 0, 6, 18)
+  // [0  fric
+  //  M -JcT] with fric having [2 2 5 2 2 5 2 2 5 2 2 5] non zeros coefficient for each one of its 12 columns
+
+  // Update M, no need to be careful because there is only zeros coefficients above M
+  for (int j = 0; j < 6; j++) {
+    for (int i = 0; i < 6; i++) {
+      ML->x[6 * j + i] = M(i, j);
+    }
+  }
+
+  // Update -JcT, need to be careful because there are non zeros coefficients before
+  // M represents 36 non zero coefficients + [2 2 5 2 2 5 2 2 5 2 2 5] non zeros for friction cone
+  for (int j = 0; j < 12; j++) {
+    for (int i = 0; i < 6; i++) {
+      ML->x[36 + fric_nz[j] + 6 * j + i] = -JcT(i, j);
+    }
+  }
+
+  return 0;
+}
+
 int QPWBC::call_solver() {
   /*
   Initialize the solver (first iteration) or update it (next iterations)
