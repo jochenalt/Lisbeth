@@ -18,6 +18,8 @@ using Vector4 = Eigen::Matrix<double, 4, 1>;
 using Vector5 = Eigen::Matrix<double, 5, 1>;
 using Vector6 = Eigen::Matrix<double, 6, 1>;
 using Vector7 = Eigen::Matrix<double, 7, 1>;
+using Vector8 = Eigen::Matrix<double, 8, 1>;
+
 using Vector11 = Eigen::Matrix<double, 11, 1>;
 using Vector12 = Eigen::Matrix<double, 12, 1>;
 using Vector18 = Eigen::Matrix<double, 18, 1>;
@@ -27,12 +29,12 @@ using VectorNi = Eigen::Matrix<int, Eigen::Dynamic, 1>;
 
 using RowVector4 = Eigen::Matrix<double, 1, 4>;
 
-
 using Matrix3 = Eigen::Matrix<double, 3, 3>;
 using Matrix4 = Eigen::Matrix<double, 4, 4>;
 using Matrix33 = Eigen::Matrix<double, 3, 3>;
 using Matrix31 = Eigen::Matrix<double, 3, 1>;
 using Matrix13 = Eigen::Matrix<double, 1, 3>;
+using Matrix12 = Eigen::Matrix<double, 1, 2>;
 
 using Matrix34 = Eigen::Matrix<double, 3, 4>;
 using Matrix43 = Eigen::Matrix<double, 4, 3>;
