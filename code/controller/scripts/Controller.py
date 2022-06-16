@@ -203,6 +203,10 @@ class Controller:
         self.estimator = core.Estimator()
         self.estimator.initialize(np.array(q_init), dt_mpc, dt_wbc, len(gait), N_periods, N_SIMULATION, params.h_ref, perfectEstimator)
 
+        
+        self.wbcWrapper = core.WbcWrapper()
+        self.wbcWrapper.initialize(params)
+
         self.h_ref = params.h_ref
         self.q = np.zeros((19, 1))
         self.q[0:7, 0] = np.array([0.0, 0.0, self.h_ref, 0.0, 0.0, 0.0, 1.0])
@@ -277,6 +281,7 @@ class Controller:
         self.feet_v_cmd = np.zeros((3, 4))
         self.feet_p_cmd = np.zeros((3, 4))
 
+        self.error = False  # True if something wrong happens in the controller
         self.error_flag = 0
         self.q_security = np.array([np.pi*0.4, np.pi*80/180, np.pi] * 4)
 
@@ -401,7 +406,7 @@ class Controller:
 
         # Whole Body Control
         # If nothing wrong happened yet in the WBC controller
-        if (not self.myController.error) and (not self.remoteControl.stop):
+        if (not self.error) and (not self.remoteControl.stop):
 
             self.q_wbc = np.zeros((19, 1))
             self.q_wbc[2, 0] = self.h_ref  # at position (0.0, 0.0, h_ref)
@@ -432,13 +437,26 @@ class Controller:
                                       self.feet_p_cmd,
                                       self.feet_v_cmd,
                                       self.feet_a_cmd)
-
+            self.wbcWrapper.compute(self.q_wbc, self.b_v,
+                                    self.x_f_wbc[12:], np.array([cgait[0, :]]),
+                                    self.feet_p_cmd,
+                                    self.feet_v_cmd,
+                                    self.feet_a_cmd)
+                                    
             # Quantities sent to the control board
             self.result.P = 3.0 * np.ones(12)
             self.result.D = 0.2 * np.ones(12)
             self.result.q_des[:] = self.myController.qdes[:]
             self.result.v_des[:] = self.myController.vdes[:]
             self.result.tau_ff[:] = 0.8 * self.myController.tau_ff
+            
+            # check WbcWrapper
+            if (not np.array_equal(self.myController.qdes[:], self.wbcWrapper.qdes[:])):
+                print("ERROR qdes\n", self.myController.qdes[:],"neu:\n",self.wbcWrapper.qdes[:])
+            #if (not np.array_equal(self.myController.vdes[:], self.wbcWrapper.vdes[:])):
+            #    print("ERROR v_des\n", self.myController.vdes[:],"neu:\n",self.wbcWrapper.vdes[:])
+            #if (not np.array_equal(self.myController.tau_ff[:], self.wbcWrapper.tau_ff[:])):
+            #    print("ERROR tau_ff\n", self.myController.tau_ff[:],"neu:\n",self.wbcWrapper.tau_ff[:])
 
         t_wbc = time.time()
 
@@ -465,16 +483,16 @@ class Controller:
     def security_check(self):
         cpp_q_filt = np.transpose(np.array(self.estimator.getQEstimate())[np.newaxis])
         
-        if (self.error_flag == 0) and (not self.myController.error) and (not self.remoteControl.stop) and self.gait.getCurrentGaitType() != 6:
+        if (self.error_flag == 0) and (not self.error) and (not self.remoteControl.stop) and self.gait.getCurrentGaitType() != 6:
             if np.any(np.abs(cpp_q_filt[7:, 0]) > self.q_security):
-                self.myController.error = True
+                self.error = True
                 self.error_flag = 1
                 self.error_value = cpp_q_filt[7:, 0] * 180 / 3.1415
 
             if np.any(np.abs(self.estimator.getVSecurity()) > 50):
                 print ("v_secu", self.estimator.getVSecurity())
             if np.any(np.abs(self.estimator.getVSecurity()) > 100):
-                self.myController.error = True
+                self.error = True
                 self.error_flag = 2
                 self.error_value = self.estimator.getVSecurity()
                 
@@ -482,12 +500,12 @@ class Controller:
             if np.any(np.abs(self.myController.tau_ff) > 8):
                 print ("tau_ff", self.myController.tau_ff)
             if np.any(np.abs(self.myController.tau_ff) > 22):
-                self.myController.error = True
+                self.error = True
                 self.error_flag = 3
                 self.error_value = self.myController.tau_ff
 
         # If something wrong happened in TSID controller we stick to a security controller
-        if self.myController.error or self.remoteControl.stop:
+        if self.error or self.remoteControl.stop:
 
             # Quantities sent to the control board
             self.result.P = np.zeros(12)
