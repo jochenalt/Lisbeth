@@ -45,8 +45,8 @@ class wbc_controller():
         self.log_feet_acc_target = np.zeros((3, 4, N_SIMULATION))
 
         # Arrays to store results (for solo12)
-        self.qdes = np.zeros((19, ))
-        self.vdes = np.zeros((18, 1))
+        self.qdes = np.zeros(12)
+        self.vdes = np.zeros(12)
         self.tau_ff = np.zeros(12)
 
         # Indexes of feet frames in this order: [FL, FR, HL, HR]
@@ -128,8 +128,8 @@ class wbc_controller():
         self.tau_ff[:] = RNEA_delta - ((self.Jc[:, 6:].transpose()) @ self.f_with_delta).ravel()
 
         # Retrieve desired positions and velocities
-        self.vdes[6:,0] = self.invKin.get_dq_cmd()
-        self.qdes[7:] = self.invKin.get_q_cmd()
+        self.vdes[:] = self.invKin.get_dq_cmd()
+        self.qdes[:] = self.invKin.get_q_cmd()
 
         self.toc = time()
 
