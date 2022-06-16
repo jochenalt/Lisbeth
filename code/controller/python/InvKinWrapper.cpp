@@ -16,19 +16,29 @@ struct InvKinPythonVisitor : public bp::def_visitor<InvKinPythonVisitor<InvKin>>
     {
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
 
+
             .def("get_q_step", &InvKin::get_q_step, "Get velocity goals matrix.\n")
             .def("get_dq_cmd", &InvKin::get_dq_cmd, "Get acceleration goals matrix.\n")
-            .def("initialize", &InvKin::initialize, "initialize\n")
+            .def("get_ddq_cmd", &InvKin::get_ddq_cmd, "")
+			.def("get_q_cmd", &InvKin::get_q_cmd, "")
+			.def("get_foot_id", &InvKin::get_foot_id, "")
+
+
+			.def("initialize", &InvKin::initialize, "initialize\n")
 
             // Run InvKin from Python
             .def("refreshAndCompute", &InvKin::refreshAndCompute,
-                 bp::args("contacts", "goals", "vgoals", "agoals", "posf", "vf", "wf", "af", "Jf"),
-                 "Run InvKin from Python.\n");
+                 bp::args("contacts", "pgoals", "vgoals", "agoals", "posf", "vf", "wf", "af", "Jf"),
+                 "Run InvKin from Python.\n")
+            .def("run", &InvKin::run,
+            		bp::args("q","dq","contacts", "pgoals", "vgoals", "agoals"),
+						"Run InvKin from Python.\n");
     }
 
     static void expose()
     {
         bp::class_<InvKin>("InvKin", bp::no_init).def(InvKinPythonVisitor<InvKin>());
+        ENABLE_SPECIFIC_MATRIX_TYPE(Matrix43);
 
         ENABLE_SPECIFIC_MATRIX_TYPE(matXd);
     }

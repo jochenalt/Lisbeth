@@ -241,9 +241,11 @@ void Estimator::updateForwardKinematics() {
     // Linear and angular velocities of the base remain at 0
     // Update model used for the forward kinematics
     q_FK.block<4,1>(3,0) = Vector4({0,0,0,1});
+
     pinocchio::forwardKinematics(velocityModel,velocityData,q_FK, v_FK);
 
     q_FK.block<4,1>(3,0) = Vector4({IMUQuat.x(),IMUQuat.y(),IMUQuat.z(),IMUQuat.w()});
+
     pinocchio::forwardKinematics(positionModel, positionData, q_FK);
 
     // Get estimated velocity from updated model
