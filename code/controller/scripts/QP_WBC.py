@@ -73,7 +73,7 @@ class wbc_controller():
         # Compute Inverse Kinematics
         start = time()
         
-        self.invKin.run(q[7:, 0:1], dq[6:, 0:1], np.array([contacts]), pgoals, vgoals, agoals)
+        self.invKin.run_InvKin(q[7:, 0:1], dq[6:, 0:1], np.array([contacts]), pgoals, vgoals, agoals)
         ddq_cmd = np.zeros((18, 1))
         ddq_cmd[6:, 0] = self.invKin.get_ddq_cmd()
 

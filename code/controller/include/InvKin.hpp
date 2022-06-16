@@ -28,7 +28,7 @@ public:
                                       const Eigen::MatrixXd& pgoals, const Eigen::MatrixXd& vgoals, const Eigen::MatrixXd& agoals,
                                       const Eigen::MatrixXd& posf, const Matrix43& vf, const Eigen::MatrixXd& wf,
                                       const Eigen::MatrixXd& af, const Eigen::MatrixXd& Jf);
-    void run(VectorN const& q, VectorN const& dq, MatrixN const& contacts, MatrixN const& pgoals,
+    void run_InvKin(VectorN const& q, VectorN const& dq, MatrixN const& contacts, MatrixN const& pgoals,
                             MatrixN const& vgoals, MatrixN const& agoals);
 
     VectorN get_q_step() { return q_step_; }
@@ -36,6 +36,11 @@ public:
     VectorN get_dq_cmd() { return dq_cmd_; }
     VectorN get_ddq_cmd() { return ddq_cmd_; }
     int get_foot_id(int i) { return foot_ids_[i];}
+
+    Matrix12 get_Jf() { return Jf_; }
+    Matrix43 get_posf() { return posf_; }
+    Matrix43 get_vf() { return vf_; }
+
 
 private:
 
@@ -49,7 +54,7 @@ private:
     Matrix43 wf_;                          // Current feet angular velocities
     Matrix43 af_;                          // Current feet linear accelerations
     Matrix43 dJdq_;                        // Acceleration "drift"
-    Eigen::Matrix<double, 12, 12> Jf_;     // Current feet Jacobian (only linear part)
+    Matrix12 Jf_;     // Current feet Jacobian (only linear part)
     Eigen::Matrix<double, 6, 12> Jf_tmp_;  // Temporary storage variable to only retrieve the linear part of the Jacobian
                                            // and discard the angular part
 

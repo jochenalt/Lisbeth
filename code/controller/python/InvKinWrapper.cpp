@@ -30,7 +30,7 @@ struct InvKinPythonVisitor : public bp::def_visitor<InvKinPythonVisitor<InvKin>>
             .def("refreshAndCompute", &InvKin::refreshAndCompute,
                  bp::args("contacts", "pgoals", "vgoals", "agoals", "posf", "vf", "wf", "af", "Jf"),
                  "Run InvKin from Python.\n")
-            .def("run", &InvKin::run,
+            .def("run_InvKin", &InvKin::run_InvKin,
             		bp::args("q","dq","contacts", "pgoals", "vgoals", "agoals"),
 						"Run InvKin from Python.\n");
     }
