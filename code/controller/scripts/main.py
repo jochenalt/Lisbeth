@@ -111,7 +111,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     #                   -0.0, 0.7, -1.4, 
     #                   0.0, -0.7, +1.4, 
     #                   -0.0, -0.7, +1.4])
-    q_init = params.q_init
+    q_init = np.array(params.q_init.tolist())  # Default position after calibration
     # position when sleeping
     # q_init = np.array([0.0, 1.57, -3.14, 
     #                   -0.0, 1.57, -3.14, 
@@ -138,6 +138,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         device = PyBulletSimulator()
     else:
         device = Solo12(name_interface, dt=params.dt_wbc)
+
 
     if name_interface_clone is not None:
         print("PASS")

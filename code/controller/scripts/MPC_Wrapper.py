@@ -59,8 +59,7 @@ class MPC_Wrapper:
 
         # Setup initial result for the first iteration of the main control loop
         x_init = np.zeros(12)
-        x_init[0:3] = q_init[0:3, 0]
-        x_init[3:6] =  quaternionToRPY(q_init[3:7, 0]).ravel()
+        x_init[0:6] = q_init[0:6].copy()
         self.last_available_result = np.zeros((24, (np.int(self.n_steps))))
         self.last_available_result[:24, 0] = np.hstack((x_init, np.array([0.0, 0.0, 8.0] * 4)))
 

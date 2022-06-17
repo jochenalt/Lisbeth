@@ -173,26 +173,6 @@ class Controller:
             perfectEstimator = False  # Cannot use perfect estimator if we are running on real robot
 
         # Load robot model and data
-        # Initialisation of the Gepetto viewer
-        """
-        ModelLoader.free_flyer = True
-        self.robot = ModelLoader.ModelLoader().robot  
-        q = self.robot.q0.reshape((-1, 1))
-        q[7:, 0] = q_init
-
-        # Initialisation of model quantities
-        pin.centerOfMass(self.robot.model, self.robot.data, q, np.zeros((18, 1)))
-        pin.updateFramePlacements(self.robot.model, self.robot.data)
-        pin.crba(self.robot.model, self.robot.data, self.robot.q0)
-
-        # Initialisation of the position of footsteps
-        self.fsteps_init = np.zeros((3, 4))
-        indexes = [10, 18, 26, 34]
-        for i in range(4):
-            self.fsteps_init[:, i] = self.robot.data.oMf[indexes[i]].translation
-            self.h_init = (self.robot.data.oMf[1].translation - self.robot.data.oMf[indexes[0]].translation)[2]
-            self.fsteps_init[2, :] = 0.0
-"""
         self.robot = self.init_robot(q_init, params)
         self.remoteControl= RemoteControl.RemoteControl(params.dt_wbc, False)
 
@@ -202,6 +182,10 @@ class Controller:
 
         self.wbcWrapper = core.WbcWrapper()
         self.wbcWrapper.initialize(params)
+
+        self.h_ref = params.h_ref
+        self.q_init = np.hstack((np.zeros(6), q_init.copy()))
+        self.q_init[2] = params.h_ref
 
         self.k_mpc = int(params.dt_mpc / params.dt_wbc)
         self.k = 0
@@ -245,7 +229,7 @@ class Controller:
         # Wrapper that makes the link with the solver that you want to use for the MPC
         # First argument to True to have PA's MPC, to False to have Thomas's MPC
         self.enable_multiprocessing = True
-        self.mpc_wrapper = MPC_Wrapper.MPC_Wrapper(params, self.q)
+        self.mpc_wrapper = MPC_Wrapper.MPC_Wrapper(params, q_init)
 
 
         self.k = 0
