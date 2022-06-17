@@ -286,11 +286,7 @@ class Controller:
         baseHeight = np.array([0.0, 0.0, 0.0, device.dummyPos[2] - 0.0155])
         baseVelocity = device.b_baseVel
 
-        self.estimator.run(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy(),
-                           device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy(), # data from IMU
-                           np.array(device.q_mes), device.v_mes, # data from joints
-                           baseHeight.copy(),
-                           baseVelocity)
+        oRh, hRb=  self.run_estimator(device, baseHeight,baseVelocity)
 
         t_filter = time.time()
         
@@ -309,7 +305,7 @@ class Controller:
             
 
         # Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames
-        oRh, oTh = self.updateState(params)
+        oTh = self.updateState(params)
 
         # at a new gait cycle we need create the next gait round and start MPC
         startNewGaitCycle = (self.k % self.k_mpc) == 0
@@ -346,14 +342,7 @@ class Controller:
         t_planner = time.time()
 
         # Solve MPC problem once every k_mpc iterations of the main loop
-        if startNewGaitCycle:
-            try:
-                self.mpc_wrapper.solve(self.k, xref, fsteps, cgait)
-            except ValueError:
-                print("MPC Problem")
-
-        # Retrieve reference contact forces in horizontal frame
-        self.x_f_mpc = self.mpc_wrapper.get_latest_result()
+        self.solve_MPC(xref, fsteps)        
 
         t_mpc = time.time()
 
@@ -436,7 +425,7 @@ class Controller:
                                            cameraTargetPosition=[device.dummyHeight[0], device.dummyHeight[1], 0.0])
 
     def security_check(self):
-        cpp_q_filt = np.transpose(np.array(self.estimator.getQEstimate())[np.newaxis])
+        cpp_q_filt = np.transpose(np.array(self.estimator.get_q_estimate())[np.newaxis])
         
         if (self.error_flag == 0) and (not self.error) and (not self.remoteControl.stop) and self.gait.getCurrentGaitType() != 6:
             if np.any(np.abs(cpp_q_filt[7:, 0]) > self.q_security):
@@ -444,12 +433,12 @@ class Controller:
                 self.error_flag = 1
                 self.error_value = cpp_q_filt[7:, 0] * 180 / 3.1415
 
-            if np.any(np.abs(self.estimator.getVSecurity()) > 50):
-                print ("v_secu", self.estimator.getVSecurity())
-            if np.any(np.abs(self.estimator.getVSecurity()) > 100):
+            if np.any(np.abs(self.estimator.get_v_security()) > 50):
+                print ("v_secu", self.estimator.get_v_Security())
+            if np.any(np.abs(self.estimator.get_v_security()) > 100):
                 self.error = True
                 self.error_flag = 2
-                self.error_value = self.estimator.getVSecurity()
+                self.error_value = self.estimator.get_v_vecurity()
                 
             # @JA security level was 8 formerly
             if np.any(np.abs(self.wbcWrapper.tau_ff) > 8):
@@ -487,7 +476,7 @@ class Controller:
             self.q[0:2, 0:1] = self.q[0:2, 0:1] + Ryaw @ self.v_ref[0:2, 0:1] * params.dt_wbc
 
             # Mix perfect x and y with height measurement
-            cpp_q_filt = np.transpose(np.array(self.estimator.getQEstimate())[np.newaxis])
+            cpp_q_filt = np.transpose(np.array(self.estimator.get_q_estimate())[np.newaxis])
 
             self.q[2, 0] = cpp_q_filt[2, 0]
 
@@ -500,7 +489,7 @@ class Controller:
             self.q[7:, 0] = cpp_q_filt[7:, 0]
 
             # Velocities are the one estimated by the estimator
-            cpp_v_filt = np.transpose(np.array(self.estimator.getVEstimate())[np.newaxis])
+            cpp_v_filt = np.transpose(np.array(self.estimator.get_v_estimate())[np.newaxis])
             self.v = cpp_v_filt.copy()
 
             hRb = Utils.EulerToRotation(self.estimator.getImuRPY()[0], self.estimator.getImuRPY()[1], 0.0)
@@ -515,10 +504,55 @@ class Controller:
             # TODO: Adapt static mode to new version of the code
 
         # Transformation matrices between world and horizontal frames
-        oRh = np.eye(3)
-        c = math.cos(self.yaw_estim)
-        s = math.sin(self.yaw_estim)
-        oRh[0:2, 0:2] = np.array([[c, -s], [s, c]])
         oTh = np.array([[self.q[0, 0]], [self.q[1, 0]], [0.0]])
 
-        return oRh, oTh
+        return oTh
+        
+        
+    def run_estimator(self, device,baseHeight,baseVelocity):
+        """
+        Call the estimator and retrieve the reference and estimated quantities.
+        Run a filter on q, h_v and v_ref.
+
+        @param device device structure holding simulation data
+        @param q_perfect 6D perfect position of the base in world frame
+        @param v_baseVel_perfect 3D perfect linear velocity of the base in base frame
+        """
+
+        self.estimator.run(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy(),
+                           device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy(), # data from IMU
+                           np.array(device.q_mes), device.v_mes, # data from joints
+                           baseHeight.copy(),
+                           baseVelocity)
+
+
+        oRh = self.estimator.get_oRh()
+        hRb = self.estimator.get_hRb()
+        #oTh = self.estimator.get_oTh().reshape((3, 1))
+                
+        return oRh, hRb
+    
+    def solve_MPC(self, reference_state, footsteps):
+        """
+        Call the MPC and store result in self.mpc_result. Update target footsteps if
+        necessary
+
+        @param reference_state reference centroideal state trajectory
+        @param footsteps footsteps positions over horizon
+        @param oRh rotation between the world and horizontal frame
+        @param oTh translation between the world and horizontal frame
+        """
+        if (self.k % self.k_mpc) == 0:
+            try:
+                    self.mpc_wrapper.solve(
+                        self.k,
+                        reference_state,
+                        footsteps,
+                        self.gait.getCurrentGait(),
+                        np.zeros((3, 4)),
+                    )
+            except ValueError:
+                print("MPC Problem")
+        self.x_f_mpc = self.mpc_wrapper.get_latest_result()
+
+
