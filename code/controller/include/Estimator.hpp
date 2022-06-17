@@ -47,7 +47,10 @@ public:
 					Vector12 const& q, Vector12 const &v,
 					VectorN const& perfectPosition,Vector3 const& b_perfectVelocity);
 
-
+	// Update state vectors of the robot (q and v)
+	// Update transformation matrices between world and horizontal frames
+    /// joystick_v_ref Reference velocity from the joystick
+	void updateReferenceState(VectorN const& vRef);
 
 	// returns true if IMUs measurements of acceleration and velocity says that the system is steady
 	bool isSteady();
@@ -146,10 +149,7 @@ private:
 	// Filter the estimated velocity over a moving window
 	void filterVelocity();
 
-	// Update state vectors of the robot (q and v)
-	// Update transformation matrices between world and horizontal frames
-    /// joystick_v_ref Reference velocity from the joystick
-	void updateReferenceState(VectorN const& vRef);
+
 
 	bool perfectEstimator;	// Enable perfect estimator (directly from the PyBullet simulation)
 	double dt;				// Time step of the estimator

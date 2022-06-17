@@ -12,9 +12,9 @@ struct FootTrajectoryGeneratorPythonVisitor : public bp::def_visitor<FootTraject
     {
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
 
-            .def("getFootPosition", &FootTrajectoryGenerator::getFootPosition, "Get position_ matrix.\n")
-            .def("getFootVelocity", &FootTrajectoryGenerator::getFootVelocity, "Get velocity_ matrix.\n")
-            .def("getFootAcceleration", &FootTrajectoryGenerator::getFootAcceleration, "Get acceleration_ matrix.\n")
+            .def("get_foot_position", &FootTrajectoryGenerator::getFootPosition, "Get position_ matrix.\n")
+            .def("get_foot_velocity", &FootTrajectoryGenerator::getFootVelocity, "Get velocity_ matrix.\n")
+            .def("get_foot_acceleration", &FootTrajectoryGenerator::getFootAcceleration, "Get acceleration_ matrix.\n")
 
             .def("initialize", &FootTrajectoryGenerator::initialize, bp::args("params", "gaitIn"),
                  "Initialize FootTrajectoryGenerator from Python.\n")

@@ -13,6 +13,7 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
         	.def("initialize",&Estimator::initialize, bp::args("params"),
         		 "initialize")
+            .def("update_reference_state", &Estimator::updateReferenceState, bp::args("v_ref"), "Update robot state.\n")
 			.def("get_q_estimate", &Estimator::getQEstimate, "Get filtered configuration.\n")
 			.def("get_v_estimate", &Estimator::getVEstimate, "Get filtered velocity.\n")
 			.def("get_v_security", &Estimator::getVSecurity, "Get filtered velocity for security check.\n")

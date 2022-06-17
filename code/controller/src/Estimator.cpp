@@ -61,7 +61,7 @@ void Estimator::initialize(Params& params) {
 
 	// sample frequency
 	this->dt = params.dt_wbc;
-	this->perfectEstimator = perfectEstimator;
+	this->perfectEstimator = params.perfect_estimator;
 
 	// Filtering estimated linear velocity
 	int k_mpc = (int)(std::round(params.dt_mpc / params.dt_wbc));
@@ -160,15 +160,13 @@ void Estimator::updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velo
     	IMUYawOffset = this->IMURpy[2];
     	initialized = true;
     }
-    IMURpy[2] -= IMUYawOffset; //  substract initial offset of IMU
+    IMURpy(2) -= IMUYawOffset; //  substract initial offset of IMU
 
     bool solo3D = false;
     if (solo3D)
     	IMURpy.tail(1) = perfectPosition.tail(1);
 
-    this->IMUQuat = eulerToQuaternion(this->IMURpy[0],
-                                          this->IMURpy[1],
-                                          this->IMURpy[2]);
+    IMUQuat = pinocchio::SE3::Quaternion(pinocchio::rpy::rpyToMatrix(IMURpy(0), IMURpy(1), IMURpy(2)));
 }
 
 void Estimator::updateJointData(Vector12 const& q, Vector12 const &v) {
@@ -325,6 +323,7 @@ void Estimator::updateReferenceState(VectorN const& newvRef) {
   baseAccRef.head(3) = (newvRef.head(3) - Rz * baseVelRef.head(3)) / dt;
   baseAccRef.tail(3) = (newvRef.tail(3) - Rz * baseVelRef.tail(3)) / dt;
   baseVelRef = newvRef;
+
 
   // Update position and velocity state vectors
   Rz = pinocchio::rpy::rpyToMatrix(0., 0., qRef[5]);
