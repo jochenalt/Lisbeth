@@ -324,7 +324,6 @@ void Estimator::updateReferenceState(VectorN const& newvRef) {
   baseAccRef.tail(3) = (newvRef.tail(3) - Rz * baseVelRef.tail(3)) / dt;
   baseVelRef = newvRef;
 
-
   // Update position and velocity state vectors
   Rz = pinocchio::rpy::rpyToMatrix(0., 0., qRef[5]);
   vRef.head(2) = Rz.topLeftCorner(2, 2) * baseVelRef.head(2);
