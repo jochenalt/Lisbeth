@@ -76,6 +76,7 @@ class wbc_controller():
         self.invKin.run_InvKin(q[7:, 0:1], dq[6:, 0:1], np.array([contacts]), pgoals, vgoals, agoals)
         ddq_cmd = np.zeros((18, 1))
         ddq_cmd[6:, 0] = self.invKin.get_ddq_cmd()
+        print("ddqpy\n",ddq_cmd);
 
         start = time()
 

@@ -7,6 +7,8 @@ set(${PY_NAME}_SOURCES
   GaitWrapper.cpp
   QPWBCWrapper.cpp
   InvKinWrapper.cpp
+  MPCWrapper.cpp
+  StatePlannerWrapper.cpp
   )
 
 add_library(${PY_NAME} SHARED ${${PY_NAME}_SOURCES})

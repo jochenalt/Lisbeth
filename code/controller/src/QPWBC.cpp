@@ -606,6 +606,16 @@ void WbcWrapper::initialize(Params& params)
 
 }
 
+/** Call Inverse Kinematics to get an acceleration command then
+solve a QP problem to get the feedforward torques
+
+Args:
+    q (19x1): Current state of the base
+    dq (18x1): Current velocity of the base (in base frame)
+    f_cmd (1x12): Contact forces references from the mpc
+    contacts (1x4): Contact status of feet
+    pgoals, vgoals, agoals Objects that contains the pos, vel and acc references for feet
+*/
 void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_cmd, MatrixN const& contacts,
                          MatrixN const& pgoals, MatrixN const& vgoals, MatrixN const& agoals)
 {
@@ -622,6 +632,7 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
   invkin_->run_InvKin(q.tail(12), dq.tail(12), contacts, pgoals.transpose(), vgoals.transpose(), agoals.transpose());
   ddq_cmd_.tail(12) = invkin_->get_ddq_cmd();
 
+  std::cout << "ddq_cmd C++" << std::endl << ddq_cmd_ << std::endl;
   // TODO: Adapt logging of feet_pos, feet_err, feet_vel
 
   // TODO: Check if needed because crbaMinimal may allow to directly get the jacobian
