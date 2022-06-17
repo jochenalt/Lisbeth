@@ -76,6 +76,9 @@ Args:
 void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_cmd, MatrixN const& contacts,
                          MatrixN const& pgoals, MatrixN const& vgoals, MatrixN const& agoals)
 {
+  if (f_cmd.rows() != 12) {
+	throw std::runtime_error("f_cmd should be a vector of size 12");
+  }
   //  Update nb of iterations since contact
   k_since_contact_ += contacts;  // Increment feet in stance phase
   k_since_contact_ = k_since_contact_.cwiseProduct(contacts);  // Reset feet in swing phase
@@ -139,7 +142,7 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
   std::cout << k_since_contact_ << std::endl;*/
 
   // Solve the QP problem
-  box_qp_->run(data_.M, Jc_, Eigen::Map<const VectorN>(f_cmd.data(), f_cmd.size()), data_.tau.head(6), k_since_contact_);
+  box_qp_->run(data_.M, Jc_,  Eigen::Map<const VectorN>(f_cmd.data(), data_.tau.head(6), k_since_contact_);
 
   // Add to reference quantities the deltas found by the QP solver
   f_with_delta_ = box_qp_->get_f_res();
