@@ -1,4 +1,6 @@
 #include "QPWBC.hpp"
+#include "WbcWrapper.hpp"
+
 #include <boost/python.hpp>
 #include <eigenpy/eigenpy.hpp>
 #include "Types.h"
