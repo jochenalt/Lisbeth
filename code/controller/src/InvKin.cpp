@@ -23,15 +23,6 @@ InvKin::InvKin():
 
 {}
 
-Eigen::Matrix<double, 1, 3> InvKin::cross3(Eigen::Matrix<double, 1, 3> left, Eigen::Matrix<double, 1, 3> right) {
-    Eigen::Matrix<double, 1, 3> res;
-    res << left(0, 1) * right(0, 2) - left(0, 2) * right(0, 1),
-           left(0, 2) * right(0, 0) - left(0, 0) * right(0, 2),
-           left(0, 0) * right(0, 1) - left(0, 1) * right(0, 0);
-    return res;
-}
-
-
 void InvKin::initialize(Params& params) {
     // Params store parameters
 	params_ = &params;
@@ -57,7 +48,6 @@ void InvKin::initialize(Params& params) {
 	// Update all the quantities of the model
 	pinocchio::computeAllTerms(model_, data_, VectorN::Zero(model_.nq), VectorN::Zero(model_.nv));
 
-
 	// Get feet frame IDs
 	foot_ids_[0] = static_cast<int>(model_.getFrameId("FL_FOOT"));  // from long uint to int
 	foot_ids_[1] = static_cast<int>(model_.getFrameId("FR_FOOT"));
@@ -77,9 +67,7 @@ void InvKin::initialize(Params& params) {
 
 }
 Eigen::MatrixXd InvKin::refreshAndCompute(const Eigen::MatrixXd &contacts,
-                                          const Eigen::MatrixXd &goals, const Eigen::MatrixXd &vgoals, const Eigen::MatrixXd &agoals,
-                                          const Eigen::MatrixXd &posf, const Matrix43 &vf, const Eigen::MatrixXd &wf,
-                                          const Eigen::MatrixXd &af, const Eigen::MatrixXd &Jf) {
+                                          const Eigen::MatrixXd &goals, const Eigen::MatrixXd &vgoals, const Eigen::MatrixXd &agoals) {
 
     // Update contact status of the feet
     flag_in_contact.block(0, 0, 1, 4) = contacts.block(0, 0, 1, 4);
@@ -94,13 +82,13 @@ Eigen::MatrixXd InvKin::refreshAndCompute(const Eigen::MatrixXd &contacts,
     // Process feet
     for (int i = 0; i < 4; i++) {
 
-        pfeet_err.row(i) = feet_position_ref.row(i) - posf.row(i);
+        pfeet_err.row(i) = feet_position_ref.row(i) - posf_.row(i);
         vfeet_ref.row(i) = feet_velocity_ref.row(i);
-        afeet.row(i) = + Kp_flyingfeet * pfeet_err.row(i) - Kd_flyingfeet * (vf.row(i)-feet_velocity_ref.row(i)) + feet_acceleration_ref.row(i);
+        afeet.row(i) = + Kp_flyingfeet * pfeet_err.row(i) - Kd_flyingfeet * (vf_.row(i)-feet_velocity_ref.row(i)) + feet_acceleration_ref.row(i);
         if (flag_in_contact(0, i)) {
             afeet.row(i) *= 0.0; // Set to 0.0 to disable position/velocity control of feet in contact
         }
-        afeet.row(i) -= af.row(i) + cross3(wf.row(i), vf.row(i)); // Drift
+        afeet.row(i) -= af_.row(i) + (wf_.row(i)).cross(vf_.row(i));
 
     }
 
@@ -109,7 +97,7 @@ Eigen::MatrixXd InvKin::refreshAndCompute(const Eigen::MatrixXd &contacts,
         acc.block(0, 3*i, 1, 3) = afeet.row(i);
         x_err.block(0, 3*i, 1, 3) = pfeet_err.row(i);
         dx_r.block(0, 3*i, 1, 3) = vfeet_ref.row(i);
-        invJ.block(3*i, 3*i, 3, 3) = Jf.block(3*i, 3*i, 3, 3).inverse();
+        invJ.block(3*i, 3*i, 3, 3) = Jf_.block(3*i, 3*i, 3, 3).inverse();
     }
 
     // Once Jacobian has been inverted we can get command accelerations, velocities and positions
@@ -157,7 +145,7 @@ void InvKin::run(VectorN const& q, VectorN const& dq, MatrixN const& contacts, M
 
   // IK output for accelerations of actuators (stored in ddq_cmd_)
   // IK output for velocities of actuators (stored in dq_cmd_)
-  refreshAndCompute(contacts, pgoals, vgoals, agoals, posf_, vf_,wf_,af_,Jf_);
+  refreshAndCompute(contacts, pgoals, vgoals, agoals);
 
   // IK output for positions of actuators
   q_cmd_ = q + q_step_;

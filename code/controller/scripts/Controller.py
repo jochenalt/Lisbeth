@@ -251,6 +251,7 @@ class Controller:
         self.k = 0
         self.velID = params.velID
 
+        self.base_targets = np.zeros(12)
         self.qmes12 = np.zeros((19, 1))
         self.vmes12 = np.zeros((18, 1))
 
@@ -414,12 +415,12 @@ class Controller:
                                                  - np.array([[0.0], [0.0], [self.h_ref]]) - oTh)
 
             # Run InvKin + WBC QP
-
             self.wbcWrapper.compute(self.q_wbc, self.b_v,
                                     self.x_f_wbc[12:], np.array([cgait[0, :]]),
                                     self.feet_p_cmd,
                                     self.feet_v_cmd,
-                                    self.feet_a_cmd)
+                                    self.feet_a_cmd,
+                                    self.base_targets)
                                     
             # Quantities sent to the control board
             self.result.P = 3.0 * np.ones(12)

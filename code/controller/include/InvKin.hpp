@@ -25,9 +25,7 @@ public:
     Eigen::Matrix<double, 1, 3> cross3(Eigen::Matrix<double, 1, 3> left, Eigen::Matrix<double, 1, 3> right);
 
     Eigen::MatrixXd refreshAndCompute(const Eigen::MatrixXd& contacts,
-                                      const Eigen::MatrixXd& pgoals, const Eigen::MatrixXd& vgoals, const Eigen::MatrixXd& agoals,
-                                      const Eigen::MatrixXd& posf, const Matrix43& vf, const Eigen::MatrixXd& wf,
-                                      const Eigen::MatrixXd& af, const Eigen::MatrixXd& Jf);
+                                      const Eigen::MatrixXd& pgoals, const Eigen::MatrixXd& vgoals, const Eigen::MatrixXd& agoals);
     void run(VectorN const& q, VectorN const& dq, MatrixN const& contacts, MatrixN const& pgoals,
                             MatrixN const& vgoals, MatrixN const& agoals);
 

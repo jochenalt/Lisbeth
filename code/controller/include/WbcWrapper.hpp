@@ -53,7 +53,7 @@ class WbcWrapper {
   ///
   ////////////////////////////////////////////////////////////////////////////////////////////////
   void compute(VectorN const& q, VectorN const& dq, MatrixN const& f_cmd, MatrixN const& contacts,
-                         MatrixN const& pgoals, MatrixN const& vgoals, MatrixN const& agoals);
+                         MatrixN const& pgoals, MatrixN const& vgoals, MatrixN const& agoals, VectorN const &xgoals);
 
   VectorN get_bdes() { return bdes_; }
   VectorN get_qdes() { return qdes_; }

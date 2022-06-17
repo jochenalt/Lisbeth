@@ -78,7 +78,7 @@ Args:
     pgoals, vgoals, agoals Objects that contains the pos, vel and acc references for feet
 */
 void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_cmd, MatrixN const& contacts,
-                         MatrixN const& pgoals, MatrixN const& vgoals, MatrixN const& agoals)
+                         MatrixN const& pgoals, MatrixN const& vgoals, MatrixN const& agoals, VectorN const &xgoals)
 {
    if (f_cmd.rows() != 12) {
  	throw std::runtime_error("f_cmd should be a vector of size 12");

@@ -24,7 +24,6 @@ BOOST_PYTHON_MODULE(libcontroller_core)
     exposeFootstepPlanner();
     exposeFootTrajectoryGenerator();
     exposeInvKin();
-    exposeQPWBC();
     exposeParams();
     exposeEstimator();
     exposeWbcWrapper();
