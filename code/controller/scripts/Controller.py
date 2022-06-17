@@ -5,7 +5,6 @@ import Utils
 import time
 import math
 
-from QP_WBC import wbc_controller
 import MPC_Wrapper
 import pybullet as pyb
 import pinocchio as pin
@@ -203,7 +202,6 @@ class Controller:
         self.estimator = core.Estimator()
         self.estimator.initialize(np.array(q_init), dt_mpc, dt_wbc, len(gait), N_periods, N_SIMULATION, params.h_ref, perfectEstimator)
 
-        
         self.wbcWrapper = core.WbcWrapper()
         self.wbcWrapper.initialize(params)
 
@@ -239,8 +237,6 @@ class Controller:
         self.footstepPlanner.initialize(params, self.gait)
 
         self.footTrajectoryGenerator = core.FootTrajectoryGenerator()
-        print("selff_steps_init", self.fsteps_init)
-        print("paras.footstep_init", params.footsteps_init);
 
         self.footTrajectoryGenerator.initialize(params, self.gait)
 
@@ -249,10 +245,6 @@ class Controller:
         self.enable_multiprocessing = True
         self.mpc_wrapper = MPC_Wrapper.MPC_Wrapper(dt_mpc, np.int(T_mpc/dt_mpc),
                                                    k_mpc, T_mpc, N_gait, self.q, self.enable_multiprocessing)
-
-        # Define the default controller
-        self.myController = wbc_controller(params, dt_wbc, N_SIMULATION)
-        self.myController.qdes[:] = np.array(q_init).ravel()
 
         self.envID = envID
         self.velID = velID
@@ -393,12 +385,12 @@ class Controller:
         # Target state for the whole body control
         self.x_f_wbc = (self.x_f_mpc[:, 0]).copy()
         if not self.gait.getIsStatic():
-            self.x_f_wbc[0] = self.myController.dt * xref[6, 1]
-            self.x_f_wbc[1] = self.myController.dt * xref[7, 1]
+            self.x_f_wbc[0] = self.dt_wbc * xref[6, 1]
+            self.x_f_wbc[1] = self.dt_wbc * xref[7, 1]
             self.x_f_wbc[2] = self.h_ref
             self.x_f_wbc[3] = 0.0
             self.x_f_wbc[4] = 0.0
-            self.x_f_wbc[5] = self.myController.dt * xref[11, 1]
+            self.x_f_wbc[5] = self.dt_wbc * xref[11, 1]
         else:  # Sort of position control to avoid slow drift
             self.x_f_wbc[0:3] = np.zeros((3)) # define base xyz=(0,0,0),   should come from footstepplanner
             self.x_f_wbc[3:6] = np.zeros((3)) # define base RPY = (0,0,0), should come from footstepplanner
@@ -411,12 +403,12 @@ class Controller:
             self.q_wbc = np.zeros((19, 1))
             self.q_wbc[2, 0] = self.h_ref  # at position (0.0, 0.0, h_ref)
             self.q_wbc[6, 0] = 1.0  # with orientation (0.0, 0.0, 0.0)
-            self.q_wbc[7:, 0] = self.myController.qdes[:]  # with reference angular positions of previous loop
+            self.q_wbc[7:, 0] = self.wbcWrapper.qdes[:]  # with reference angular positions of previous loop
 
             # Get velocity in base frame for Pinocchio (not current base frame but desired base frame)
             self.b_v = self.v.copy()
             self.b_v[:6, 0] = self.v_ref[:6, 0]  # Base at reference velocity (TODO: add hRb once v_ref is considered in base frame)
-            self.b_v[6:, 0] = self.myController.vdes[:]  # with reference angular velocities of previous loop
+            self.b_v[6:, 0] = self.wbcWrapper.vdes[:]  # with reference angular velocities of previous loop
 
             # Feet command acceleration in base frame
             self.feet_a_cmd = oRh.transpose() @ self.footTrajectoryGenerator.getFootAcceleration() \
@@ -432,11 +424,7 @@ class Controller:
                                                  - np.array([[0.0], [0.0], [self.h_ref]]) - oTh)
 
             # Run InvKin + WBC QP
-            self.myController.compute(self.q_wbc, self.b_v,
-                                      self.x_f_wbc[12:], cgait[0, :],
-                                      self.feet_p_cmd,
-                                      self.feet_v_cmd,
-                                      self.feet_a_cmd)
+
             self.wbcWrapper.compute(self.q_wbc, self.b_v,
                                     self.x_f_wbc[12:], np.array([cgait[0, :]]),
                                     self.feet_p_cmd,
@@ -446,18 +434,10 @@ class Controller:
             # Quantities sent to the control board
             self.result.P = 3.0 * np.ones(12)
             self.result.D = 0.2 * np.ones(12)
-            self.result.q_des[:] = self.myController.qdes[:]
-            self.result.v_des[:] = self.myController.vdes[:]
-            self.result.tau_ff[:] = 0.8 * self.myController.tau_ff
+            self.result.q_des[:] = self.wbcWrapper.qdes[:]
+            self.result.v_des[:] = self.wbcWrapper.vdes[:]
+            self.result.tau_ff[:] = 0.8 * self.wbcWrapper.tau_ff
             
-            # check WbcWrapper
-            if (not np.array_equal(self.myController.qdes[:], self.wbcWrapper.qdes[:])):
-                print("ERROR qdes\n", self.myController.qdes[:],"neu:\n",self.wbcWrapper.qdes[:])
-            #if (not np.array_equal(self.myController.vdes[:], self.wbcWrapper.vdes[:])):
-            #    print("ERROR v_des\n", self.myController.vdes[:],"neu:\n",self.wbcWrapper.vdes[:])
-            #if (not np.array_equal(self.myController.tau_ff[:], self.wbcWrapper.tau_ff[:])):
-            #    print("ERROR tau_ff\n", self.myController.tau_ff[:],"neu:\n",self.wbcWrapper.tau_ff[:])
-
         t_wbc = time.time()
 
         # Security check
@@ -497,12 +477,12 @@ class Controller:
                 self.error_value = self.estimator.getVSecurity()
                 
             # @JA security level was 8 formerly
-            if np.any(np.abs(self.myController.tau_ff) > 8):
-                print ("tau_ff", self.myController.tau_ff)
-            if np.any(np.abs(self.myController.tau_ff) > 22):
+            if np.any(np.abs(self.wbcWrapper.tau_ff) > 8):
+                print ("tau_ff", self.wbcWrapper.tau_ff)
+            if np.any(np.abs(self.wbcWrapper.tau_ff) > 22):
                 self.error = True
                 self.error_flag = 3
-                self.error_value = self.myController.tau_ff
+                self.error_value = self.wbcWrapper.tau_ff
 
         # If something wrong happened in TSID controller we stick to a security controller
         if self.error or self.remoteControl.stop:
@@ -529,7 +509,7 @@ class Controller:
             Ryaw = np.array([[math.cos(self.yaw_estim), -math.sin(self.yaw_estim)],
                              [math.sin(self.yaw_estim), math.cos(self.yaw_estim)]])
 
-            self.q[0:2, 0:1] = self.q[0:2, 0:1] + Ryaw @ self.v_ref[0:2, 0:1] * self.myController.dt
+            self.q[0:2, 0:1] = self.q[0:2, 0:1] + Ryaw @ self.v_ref[0:2, 0:1] * self.dt_wbc
 
             # Mix perfect x and y with height measurement
             cpp_q_filt = np.transpose(np.array(self.estimator.getQEstimate())[np.newaxis])
@@ -537,7 +517,7 @@ class Controller:
             self.q[2, 0] = cpp_q_filt[2, 0]
 
             # Mix perfect yaw with pitch and roll measurements
-            self.yaw_estim += self.v_ref[5, 0:1] * self.myController.dt
+            self.yaw_estim += self.v_ref[5, 0:1] * self.dt_wbc
             self.q[3:7, 0] = Utils.EulerToQuaternion([self.estimator.getImuRPY()[0], self.estimator.getImuRPY()[1], self.yaw_estim])
             cpp_RPY = np.transpose(np.array(self.estimator.getImuRPY())[np.newaxis])
 

@@ -574,7 +574,7 @@ void WbcWrapper::initialize(Params& params)
   params_ = &params;
 
   // Path to the robot URDF (TODO: Automatic path)
-  const std::string filename = std::string("/opt/openrobots/share/example-robot-data/robots/solo_description/robots/solo12.urdf");
+  const std::string filename = std::string("/home/jochen/lisbeth/description/solo12.urdf");
 
   // Build model from urdf (base is not free flyer)
   pinocchio::urdf::buildModel(filename, pinocchio::JointModelFreeFlyer(), model_, false);
@@ -629,10 +629,12 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
   log_feet_acc_target = agoals;
 
   // Compute Inverse Kinematics
-  invkin_->run_InvKin(q.tail(12), dq.tail(12), contacts, pgoals.transpose(), vgoals.transpose(), agoals.transpose());
+  //std::cout << "WbcWrapper::InvKin" << std::endl;
+
+   invkin_->run_InvKin(q.tail(12), dq.tail(12), contacts, pgoals, vgoals, agoals);
   ddq_cmd_.tail(12) = invkin_->get_ddq_cmd();
 
-  std::cout << "ddq_cmd C++" << std::endl << ddq_cmd_ << std::endl;
+  // std::cout << "ddq_cmd C++" << std::endl << ddq_cmd_ << std::endl;
   // TODO: Adapt logging of feet_pos, feet_err, feet_vel
 
   // TODO: Check if needed because crbaMinimal may allow to directly get the jacobian
@@ -644,6 +646,8 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
 
   // Retrieve feet jacobian
   posf_tmp_ = invkin_->get_posf();
+  // std::cout << "C++ posf_tmp_" << posf_tmp_<< std::endl;
+
   for (int i = 0; i < 4; i++)
   {
     if (contacts(0, i))
@@ -658,6 +662,8 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
       Jc_.block(3 * i, 0, 3, 6).setZero();
     }
   }
+
+  // std::cout << "C++ invkin_->get_Jf()" << Jc_ << std::endl;
 
   // Compute the inverse dynamics, aka the joint torques according to the current state of the system,
   // the desired joint accelerations and the external forces, using the Recursive Newton Euler Algorithm.
@@ -691,7 +697,9 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
   std::cout << "ddq del" << std::endl;
   std::cout << ddq_with_delta_ << std::endl;
   std::cout << "f del" << std::endl;
-  std::cout << f_with_delta_ << std::endl;*/
+  std::cout << f_with_delta_ << std::endl;
+  std::cout << "C++ f_with_delta_" << f_with_delta_<< std::endl;
+  std::cout << "C++ data_.tau.tail(12) " << data_.tau.tail(12) << std::endl; */
 
   tau_ff_ = data_.tau.tail(12) - invkin_->get_Jf().transpose() * f_with_delta_;
 

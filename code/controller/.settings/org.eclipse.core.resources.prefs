@@ -5,7 +5,6 @@ encoding//scripts/ForceMonitor.py=utf8
 encoding//scripts/Joystick.py=utf8
 encoding//scripts/Logger.py=utf8
 encoding//scripts/MPC_Wrapper.py=utf8
-encoding//scripts/QP_WBC.py=utf8
 encoding//scripts/main_minimal_controler.py=utf8
 encoding//scripts/main_solo12_control.py=utf8
 encoding//scripts/solopython/main_calibrate.py=utf8
