@@ -64,7 +64,7 @@ class MPC_Wrapper:
         self.last_available_result = np.zeros((24, (np.int(self.n_steps))))
         self.last_available_result[:24, 0] = np.hstack((x_init, np.array([0.0, 0.0, 8.0] * 4)))
 
-    def solve(self, k, xref, fsteps, gait, l_targetFootstep):
+    def solve(self, k, xref, fsteps, gait):
         """Call either the asynchronous MPC or the synchronous MPC depending on the value of multiprocessing during
         the creation of the wrapper
 
