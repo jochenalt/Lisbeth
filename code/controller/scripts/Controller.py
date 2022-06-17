@@ -240,7 +240,8 @@ class Controller:
         self.vmes12 = np.zeros((18, 1))
 
         self.v_ref = np.zeros((18, 1))
-        self.h_v = np.zeros((18, 1))
+        self.h_v = np.zeros(6)
+        self.h_v_windowed = np.zeros(6)
         self.yaw_estim = 0.0
         self.RPY_filt = np.zeros(3)
 
@@ -280,13 +281,13 @@ class Controller:
 
         # Update the reference velocity coming from the gamepad
         self.remoteControl.update_v_ref(self.k, self.velID)
-
+        self.updateControls(params)
         start = time.clock()
         
         baseHeight = np.array([0.0, 0.0, 0.0, device.dummyPos[2] - 0.0155])
         baseVelocity = device.b_baseVel
 
-        oRh, hRb=  self.run_estimator(device, baseHeight,baseVelocity)
+        oRh, hRb, oTh=  self.run_estimator(device, baseHeight,baseVelocity)
 
         t_filter = time.time()
         
@@ -305,7 +306,7 @@ class Controller:
             
 
         # Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames
-        oTh = self.updateState(params)
+        self.updateState(params)
 
         # at a new gait cycle we need create the next gait round and start MPC
         startNewGaitCycle = (self.k % self.k_mpc) == 0
@@ -324,14 +325,14 @@ class Controller:
         o_targetFootstep = self.footstepPlanner.updateFootsteps(self.k % self.k_mpc == 0 and self.k != 0,
                                                                 int(self.k_mpc - self.k % self.k_mpc),
                                                                 self.q[0:18,0:1].copy(),
-                                                                self.h_v[0:6, 0:1].copy(),
+                                                                self.h_v_windowed,
                                                                 self.v_ref[0:6,0].copy())
 
         # Update pos, vel and acc references for feet
         self.footTrajectoryGenerator.update(self.k, o_targetFootstep)
 
         # Run state planner (outputs the reference trajectory of the base)
-        self.statePlanner.computeReferenceStates(self.q[0:7, 0:1], self.h_v[0:6, 0:1].copy(),
+        self.statePlanner.computeReferenceStates(self.q[0:7, 0:1], self.h_v,
                                                  self.v_ref[0:6, 0:1], 0.0)
 
         # Result can be retrieved with self.statePlanner.getReferenceStates()
@@ -375,16 +376,16 @@ class Controller:
             self.b_v[6:, 0] = self.wbcWrapper.vdes[:]  # with reference angular velocities of previous loop
 
             # Feet command acceleration in base frame
-            self.feet_a_cmd = oRh.transpose() @ self.footTrajectoryGenerator.getFootAcceleration() \
+            self.feet_a_cmd = oRh.transpose() @ self.footTrajectoryGenerator.get_foot_acceleration() \
                 - np.cross(np.tile(self.v_ref[3:6, 0:1], (1, 4)), np.cross(np.tile(self.v_ref[3:6, 0:1], (1, 4)), self.feet_p_cmd, axis=0), axis=0) \
                 - 2 * np.cross(np.tile(self.v_ref[3:6, 0:1], (1, 4)), self.feet_v_cmd, axis=0)
 
             # Feet command velocity in base frame
-            self.feet_v_cmd = oRh.transpose() @ self.footTrajectoryGenerator.getFootVelocity()
+            self.feet_v_cmd = oRh.transpose() @ self.footTrajectoryGenerator.get_foot_velocity()
             self.feet_v_cmd = self.feet_v_cmd - self.v_ref[0:3, 0:1] - np.cross(np.tile(self.v_ref[3:6, 0:1], (1, 4)), self.feet_p_cmd, axis=0)
 
             # Feet command position in base frame
-            self.feet_p_cmd = oRh.transpose() @ (self.footTrajectoryGenerator.getFootPosition()
+            self.feet_p_cmd = oRh.transpose() @ (self.footTrajectoryGenerator.get_foot_position()
                                                  - np.array([[0.0], [0.0], [self.h_ref]]) - oTh)
 
             # Run InvKin + WBC QP
@@ -458,14 +459,13 @@ class Controller:
             self.result.v_des[:] = np.zeros(12)
             self.result.tau_ff[:] = np.zeros(12)
 
-
-
-    def updateState(self, params):
-
+    def updateControls(self, params):
         # Update reference velocity vector
         self.v_ref[0:3, 0] = self.remoteControl.v_ref[0:3, 0]  # TODO: remoteControl velocity given in base frame and not
         self.v_ref[3:6, 0] = self.remoteControl.v_ref[3:6, 0]  # in horizontal frame (case of non flat ground)
         self.v_ref[6:, 0] = 0.0
+
+    def updateState(self, params):
 
         # Update position and velocity state vectors
         if not self.gait.getIsStatic():
@@ -483,30 +483,14 @@ class Controller:
             # Mix perfect yaw with pitch and roll measurements
             self.yaw_estim += self.v_ref[5, 0:1] * params.dt_wbc
             self.q[3:7, 0] = Utils.EulerToQuaternion([self.estimator.getImuRPY()[0], self.estimator.getImuRPY()[1], self.yaw_estim])
-            cpp_RPY = np.transpose(np.array(self.estimator.getImuRPY())[np.newaxis])
 
             # Actuators measurements
             self.q[7:, 0] = cpp_q_filt[7:, 0]
 
             # Velocities are the one estimated by the estimator
-            cpp_v_filt = np.transpose(np.array(self.estimator.get_v_estimate())[np.newaxis])
-            self.v = cpp_v_filt.copy()
-
-            hRb = Utils.EulerToRotation(self.estimator.getImuRPY()[0], self.estimator.getImuRPY()[1], 0.0)
-            self.h_v[0:3, 0:1] = hRb @ cpp_v_filt[0:3, 0:1]
-            self.h_v[3:6, 0:1] = hRb @ cpp_v_filt[3:6, 0:1]
-
-            # self.v[:6, 0] = self.remoteControl.v_ref[:6, 0]
-        else:
-            quat = np.array([[0.0, 0.0, 0.0, 1.0]]).transpose()
-            hRb = np.eye(3)
-            pass
-            # TODO: Adapt static mode to new version of the code
-
-        # Transformation matrices between world and horizontal frames
-        oTh = np.array([[self.q[0, 0]], [self.q[1, 0]], [0.0]])
-
-        return oTh
+            self.v  = np.transpose(np.array(self.estimator.get_v_estimate())[np.newaxis])
+            self.h_v = self.estimator.get_h_v()
+            self.h_v_windowed = self.estimator.get_h_v_filtered()
         
         
     def run_estimator(self, device,baseHeight,baseVelocity):
@@ -519,18 +503,20 @@ class Controller:
         @param v_baseVel_perfect 3D perfect linear velocity of the base in base frame
         """
 
-        self.estimator.run(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.getFootPosition().copy(),
+        self.estimator.run(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.get_foot_position().copy(),
                            device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy(), # data from IMU
                            np.array(device.q_mes), device.v_mes, # data from joints
                            baseHeight.copy(),
                            baseVelocity)
 
+        self.estimator.update_reference_state(self.v_ref)
+
 
         oRh = self.estimator.get_oRh()
         hRb = self.estimator.get_hRb()
-        #oTh = self.estimator.get_oTh().reshape((3, 1))
+        oTh = self.estimator.get_oTh().reshape((3, 1))
                 
-        return oRh, hRb
+        return oRh, hRb, oTh
     
     def solve_MPC(self, reference_state, footsteps):
         """
