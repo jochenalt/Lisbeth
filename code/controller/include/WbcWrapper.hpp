@@ -79,8 +79,9 @@ private:
     Vector12 vdes_;  // Desired actuator velocities
     Vector12 tau_ff_;  // Desired actuator torques (feedforward)
 
+  	Vector19 q_wbc_;           // Configuration vector for the whole body control
+    Vector18 dq_wbc_;          // Velocity vector for the whole body control
     Vector18 ddq_cmd_;  // Actuator accelerations computed by Inverse Kinematics
-    Vector19 q_default_;  // Default configuration vector to compute the mass matrix
     Vector12 f_with_delta_;  // Contact forces with deltas found by QP solver
     Vector18 ddq_with_delta_;  // Actuator accelerations with deltas found by QP solver
 
@@ -92,6 +93,8 @@ private:
 
     int k_log_;  // Counter for logging purpose
     int indexes_[4] = {10, 18, 26, 34};  // Indexes of feet frames in this order: [FL, FR, HL, HR]
+    
+    bool enable_comp_forces_;            // Enable compensation forces for the QP problem
 };
 
 

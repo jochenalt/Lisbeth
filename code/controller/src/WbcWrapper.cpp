@@ -14,8 +14,9 @@ WbcWrapper::WbcWrapper()
     , qdes_(Vector12::Zero())
     , vdes_(Vector12::Zero())
     , tau_ff_(Vector12::Zero())
+	, q_wbc_(Vector19::Zero())
+	, dq_wbc_(Vector18::Zero())
     , ddq_cmd_(Vector18::Zero())
-    , q_default_(Vector19::Zero())
     , f_with_delta_(Vector12::Zero())
     , ddq_with_delta_(Vector18::Zero())
     , posf_tmp_(Matrix43::Zero())
@@ -23,12 +24,17 @@ WbcWrapper::WbcWrapper()
     , log_feet_vel_target(Matrix34::Zero())
     , log_feet_acc_target(Matrix34::Zero())
     , k_log_(0)
+	, enable_comp_forces_(false)
+
 {}
 
 void WbcWrapper::initialize(Params& params)
 {
   // Params store parameters
   params_ = &params;
+
+  // Set if compensation forces should be used or not
+  enable_comp_forces_ = params.enable_comp_forces;
 
   // Path to the robot URDF (TODO: Automatic path)
   const std::string filename = std::string("/home/jochen/lisbeth/description/solo12.urdf");
@@ -49,14 +55,14 @@ void WbcWrapper::initialize(Params& params)
   box_qp_->initialize(params);
 
   // Initialize quaternion
-  q_default_(6, 0) = 1.0;
+  q_wbc_(6, 0) = 1.0;
 
   // Initialize joint positions
   qdes_.tail(12) = Vector12(params_->q_init.data());
 
   // Compute the upper triangular part of the joint space inertia matrix M by using the Composite Rigid Body Algorithm
   // Result is stored in data_.M
-  pinocchio::crba(model_, data_, q_default_);
+  pinocchio::crba(model_, data_, q_wbc_);
 
   // Make mass matrix symetric
   data_.M.triangularView<Eigen::StrictlyLower>() = data_.M.transpose().triangularView<Eigen::StrictlyLower>();
@@ -88,11 +94,28 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
   log_feet_vel_target = vgoals;
   log_feet_acc_target = agoals;
 
-  // Compute Inverse Kinematics
-  //std::cout << "WbcWrapper::InvKin" << std::endl;
+   // Retrieve configuration data
+   q_wbc_.head(3) = q.head(3);
+   q_wbc_.block(3, 0, 4, 1) =
+       pinocchio::SE3::Quaternion(pinocchio::rpy::rpyToMatrix(q(3, 0), q(4, 0), q(5, 0))).coeffs();  // Roll, Pitch
+   q_wbc_.tail(12) = q.tail(12);                                                                     // Encoders
 
+   // Retrieve velocity data
+   dq_wbc_ = dq;
+   // Compute the upper triangular part of the joint space inertia matrix M by using the Composite Rigid Body Algorithm
+   // Result is stored in data_.M
+   pinocchio::crba(model_, data_, q_wbc_);
+
+   // Make mass matrix symetric
+   data_.M.triangularView<Eigen::StrictlyLower>() = data_.M.transpose().triangularView<Eigen::StrictlyLower>();
+
+   // Compute Inverse Kinematics
    invkin_->run(q.tail(12), dq.tail(12), contacts, pgoals, vgoals, agoals);
-  ddq_cmd_.tail(12) = invkin_->get_ddq_cmd();
+   ddq_cmd_.tail(12) = invkin_->get_ddq_cmd();
+
+   // Compute the upper triangular part of the joint space inertia matrix M by using the Composite Rigid Body Algorithm
+   // Result is stored in data_.M
+   pinocchio::crba(model_, data_, q_wbc_);
 
   // std::cout << "ddq_cmd C++" << std::endl << ddq_cmd_ << std::endl;
   // TODO: Adapt logging of feet_pos, feet_err, feet_vel
@@ -125,6 +148,27 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
 
   // std::cout << "C++ invkin_->get_Jf()" << Jc_ << std::endl;
 
+
+  // Compute the inverse dynamics, aka the joint torques according to the current state of the system,
+  // the desired joint accelerations and the external forces, using the Recursive Newton Euler Algorithm.
+  // Result is stored in data_.tau
+  Vector12 f_compensation;
+  if (!enable_comp_forces_) {
+    pinocchio::rnea(model_, data_, q_wbc_, dq_wbc_, ddq_cmd_);
+    f_compensation = Vector12::Zero();
+  } else {
+    Vector18 ddq_test = Vector18::Zero();
+    ddq_test.head(6) = ddq_cmd_.head(6);
+    pinocchio::rnea(model_, data_, q_wbc_, dq_wbc_, ddq_test);
+    Vector6 RNEA_without_joints = data_.tau.head(6);
+    pinocchio::rnea(model_, data_, q_wbc_, dq_wbc_, VectorN::Zero(model_.nv));
+    Vector6 RNEA_NLE = data_.tau.head(6);
+    RNEA_NLE(2, 0) -= 9.81 * data_.mass[0];
+    pinocchio::rnea(model_, data_, q_wbc_, dq_wbc_, ddq_cmd_);
+
+    f_compensation = pseudoInverse(Jc_.transpose()) * (data_.tau.head(6) - RNEA_without_joints + RNEA_NLE);
+  }
+
   // Compute the inverse dynamics, aka the joint torques according to the current state of the system,
   // the desired joint accelerations and the external forces, using the Recursive Newton Euler Algorithm.
   // Result is stored in data_.tau
@@ -142,7 +186,7 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
   std::cout << k_since_contact_ << std::endl;*/
 
   // Solve the QP problem
-  box_qp_->run(data_.M, Jc_,  Eigen::Map<const VectorN>(f_cmd.data(), data_.tau.head(6), k_since_contact_);
+  box_qp_->run(data_.M, Jc_, f_cmd + f_compensation, data_.tau.head(6), k_since_contact_);
 
   // Add to reference quantities the deltas found by the QP solver
   f_with_delta_ = box_qp_->get_f_res();
