@@ -196,7 +196,6 @@ class Controller:
         self.q[0:7, 0] = np.array([0.0, 0.0, self.h_ref, 0.0, 0.0, 0.0, 1.0])
         self.q[7:, 0] = q_init
         self.v = np.zeros((18, 1))
-        self.b_v = np.zeros((18, 1))
         self.o_v_filt = np.zeros((18, 1))
 
         self.statePlanner = core.StatePlanner()
@@ -365,16 +364,17 @@ class Controller:
         # If nothing wrong happened yet in the WBC controller
         if (not self.error) and (not self.remoteControl.stop):
 
-            self.q_wbc = np.zeros((19, 1))
-            self.q_wbc[2, 0] = self.h_ref  # at position (0.0, 0.0, h_ref)
-            self.q_wbc[6, 0] = 1.0  # with orientation (0.0, 0.0, 0.0)
-            self.q_wbc[7:, 0] = self.wbcWrapper.qdes[:]  # with reference angular positions of previous loop
+            self.q_wbc = np.zeros(19)
+            self.dq_wbc = np.zeros(18)
+
+            self.q_wbc[2] = self.h_ref  # at position (0.0, 0.0, h_ref)
+            self.q_wbc[6] = 1.0  # with orientation (0.0, 0.0, 0.0)
+            self.q_wbc[7:] = self.wbcWrapper.qdes  # with reference angular positions of previous loop
 
             # Get velocity in base frame for Pinocchio (not current base frame but desired base frame)
-            self.b_v = self.v.copy()
-            self.b_v[:6, 0] = self.v_ref[:6, 0]  # Base at reference velocity (TODO: add hRb once v_ref is considered in base frame)
-            self.b_v[6:, 0] = self.wbcWrapper.vdes[:]  # with reference angular velocities of previous loop
-
+            self.dq_wbc[:6] = self.estimator.get_v_estimate()[:6]
+            self.dq_wbc[6:] = self.wbcWrapper.vdes
+            
             # Feet command acceleration in base frame
             self.feet_a_cmd = oRh.transpose() @ self.footTrajectoryGenerator.get_foot_acceleration() \
                 - np.cross(np.tile(self.v_ref[3:6, 0:1], (1, 4)), np.cross(np.tile(self.v_ref[3:6, 0:1], (1, 4)), self.feet_p_cmd, axis=0), axis=0) \
@@ -389,7 +389,7 @@ class Controller:
                                                  - np.array([[0.0], [0.0], [self.h_ref]]) - oTh)
 
             # Run InvKin + WBC QP
-            self.wbcWrapper.compute(self.q_wbc, self.b_v,
+            self.wbcWrapper.compute(np.array([self.q_wbc]).transpose(), np.array([self.dq_wbc]).transpose(),
                                     self.x_f_wbc[12:], np.array([cgait[0, :]]),
                                     self.feet_p_cmd,
                                     self.feet_v_cmd,
