@@ -28,7 +28,7 @@ public:
                                       const Eigen::MatrixXd& pgoals, const Eigen::MatrixXd& vgoals, const Eigen::MatrixXd& agoals,
                                       const Eigen::MatrixXd& posf, const Matrix43& vf, const Eigen::MatrixXd& wf,
                                       const Eigen::MatrixXd& af, const Eigen::MatrixXd& Jf);
-    void run_InvKin(VectorN const& q, VectorN const& dq, MatrixN const& contacts, MatrixN const& pgoals,
+    void run(VectorN const& q, VectorN const& dq, MatrixN const& contacts, MatrixN const& pgoals,
                             MatrixN const& vgoals, MatrixN const& agoals);
 
     VectorN get_q_step() { return q_step_; }

@@ -122,7 +122,7 @@ Eigen::MatrixXd InvKin::refreshAndCompute(const Eigen::MatrixXd &contacts,
 
 
 
-void InvKin::run_InvKin(VectorN const& q, VectorN const& dq, MatrixN const& contacts, MatrixN const& pgoals,
+void InvKin::run(VectorN const& q, VectorN const& dq, MatrixN const& contacts, MatrixN const& pgoals,
                  MatrixN const& vgoals, MatrixN const& agoals) {
 
 	/*

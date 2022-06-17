@@ -631,7 +631,7 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
   // Compute Inverse Kinematics
   //std::cout << "WbcWrapper::InvKin" << std::endl;
 
-   invkin_->run_InvKin(q.tail(12), dq.tail(12), contacts, pgoals, vgoals, agoals);
+   invkin_->run(q.tail(12), dq.tail(12), contacts, pgoals, vgoals, agoals);
   ddq_cmd_.tail(12) = invkin_->get_ddq_cmd();
 
   // std::cout << "ddq_cmd C++" << std::endl << ddq_cmd_ << std::endl;
