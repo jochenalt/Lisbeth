@@ -29,40 +29,42 @@ class MPC_Wrapper:
     """
 
     def __init__(self, params, q_init):
-    #, dt, n_steps, k_mpc, T_gait, N_gait, q_init, multiprocessing=False):
-
+  
         self.f_applied = np.zeros((12,))
         self.not_first_iter = False
 
-        # Number of TSID steps for 1 step of the MPC
-        self.k_mpc = np.int(params.dt_mpc / params.dt_wbc)
+        self.params = params
 
+        # Number of WBC steps for 1 step of the MPC
+        self.k_mpc = int(params.dt_mpc/params.dt_wbc)
 
         self.dt = params.dt_mpc
         self.n_steps = np.int(params.T_mpc/params.dt_mpc)
         self.T_gait = params.T_gait
         self.N_gait = params.N_gait
-        self.gait_memory = np.zeros(4)
+        self.gait_past = np.zeros(4)
+        self.gait_next = np.zeros(4)
+        self.mass = params.mass
 
         self.multiprocessing = True
         if self.multiprocessing:  # Setup variables in the shared memory
             self.newData = Value('b', False)
-            self.newResult = Value('b', False)
+            self.newResult = Value('b', False)            
             self.dataIn = Array('d', [0.0] * (1 + (np.int(self.n_steps)+1) * 12 + 12*self.N_gait))
             self.dataOut = Array('d', [0] * 24 * (np.int(self.n_steps)))
             self.fsteps_future = np.zeros((self.N_gait, 12))
             self.running = Value('b', True)
         else:
-            self.mpc = MPC.MPC(dt, n_steps, T_gait, self.N_gait)
+            self.mpc = MPC.MPC(params) 
 
         # Setup initial result for the first iteration of the main control loop
         x_init = np.zeros(12)
         x_init[0:3] = q_init[0:3, 0]
-        x_init[3:6] = quaternionToRPY(q_init[3:7, 0]).ravel()
+        x_init[3:6] =  quaternionToRPY(q_init[3:7, 0]).ravel()
         self.last_available_result = np.zeros((24, (np.int(self.n_steps))))
-        self.last_available_result[:, 0] = np.hstack((x_init, np.array([0.0, 0.0, 8.0] * 4)))
+        self.last_available_result[:24, 0] = np.hstack((x_init, np.array([0.0, 0.0, 8.0] * 4)))
 
-    def solve(self, params, k, xref, fsteps, gait):
+    def solve(self, k, xref, fsteps, gait, l_targetFootstep):
         """Call either the asynchronous MPC or the synchronous MPC depending on the value of multiprocessing during
         the creation of the wrapper
 
@@ -74,9 +76,9 @@ class MPC_Wrapper:
         """
 
         if self.multiprocessing:  # Run in parallel process
-            self.run_MPC_asynchronous(params, k, xref, fsteps)
+            self.run_MPC_asynchronous(k, xref, fsteps)
         else:  # Run in the same process than main loop
-            self.run_MPC_synchronous(params, k, xref, fsteps)
+            self.run_MPC_synchronous(k, xref, fsteps)
 
         if k > 2:
             self.last_available_result[12:(12+self.n_steps), :] = np.roll(self.last_available_result[12:(12+self.n_steps), :], -1, axis=1)
@@ -135,7 +137,7 @@ class MPC_Wrapper:
         # Output of the MPC
         self.f_applied = self.mpc.get_latest_result()
 
-    def run_MPC_asynchronous(self, params, k, xref, fsteps):
+    def run_MPC_asynchronous(self, k, xref, fsteps):
         """Run the MPC (asynchronous version) to get the desired contact forces for the feet currently in stance phase
 
         Args:
@@ -145,7 +147,7 @@ class MPC_Wrapper:
 
         # If this is the first iteration, creation of the parallel process
         if (k == 0):
-            p = Process(target=self.create_MPC_asynchronous, args=(params, 
+            p = Process(target=self.create_MPC_asynchronous, args=( 
                 self.newData, self.newResult, self.dataIn, self.dataOut, self.running))
             p.start()
 
@@ -155,7 +157,7 @@ class MPC_Wrapper:
 
         return 0
 
-    def create_MPC_asynchronous(self, params, newData, newResult, dataIn, dataOut, running):
+    def create_MPC_asynchronous(self, newData, newResult, dataIn, dataOut, running):
         """Parallel process with an infinite loop that run the asynchronous MPC
 
         Args:
@@ -186,7 +188,7 @@ class MPC_Wrapper:
                 # Create the MPC object of the parallel process during the first iteration
                 if k == 0:
                     # loop_mpc = MPC.MPC(self.dt, self.n_steps, self.T_gait)
-                    loop_mpc = core.MPC(params )
+                    loop_mpc = core.MPC(self.params )
 
                 # Run the asynchronous MPC with the data that as been retrieved
                 fsteps[np.isnan(fsteps)] = 0.0

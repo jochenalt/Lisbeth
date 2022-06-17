@@ -363,7 +363,7 @@ class Controller:
         # Solve MPC problem once every k_mpc iterations of the main loop
         if startNewGaitCycle:
             try:
-                self.mpc_wrapper.solve(params, self.k, xref, fsteps, cgait)
+                self.mpc_wrapper.solve(self.k, xref, fsteps, cgait)
             except ValueError:
                 print("MPC Problem")
 
