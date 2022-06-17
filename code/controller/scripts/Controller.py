@@ -123,8 +123,7 @@ class Controller:
 
         return robot
     
-    def __init__(self, params, q_init, envID, velID, dt_wbc, dt_mpc, k_mpc, t, T_gait, T_mpc, N_SIMULATION, 
-                 use_flat_plane, predefined_vel, enable_pyb_GUI, N_gait, isSimulation, N_periods, gait):
+    def __init__(self, params, q_init):
         """Function that runs a simulation scenario based on a reference velocity profile, an environment and
         various parameters to define the gait
 
@@ -153,14 +152,14 @@ class Controller:
         ########################################################################
 
         # Lists to log the duration of 1 iteration of the MPC/TSID
-        self.t_list_filter = [0] * int(N_SIMULATION)
-        self.t_list_planner = [0] * int(N_SIMULATION)
-        self.t_list_mpc = [0] * int(N_SIMULATION)
-        self.t_list_wbc = [0] * int(N_SIMULATION)
-        self.t_list_loop = [0] * int(N_SIMULATION)
+        self.t_list_filter = [0] * int(params.N_SIMULATION)
+        self.t_list_planner = [0] * int(params.N_SIMULATION)
+        self.t_list_mpc = [0] * int(params.N_SIMULATION)
+        self.t_list_wbc = [0] * int(params.N_SIMULATION)
+        self.t_list_loop = [0] * int(params.N_SIMULATION)
 
-        self.t_list_InvKin = [0] * int(N_SIMULATION)
-        self.t_list_QPWBC = [0] * int(N_SIMULATION)
+        self.t_list_InvKin = [0] * int(params.N_SIMULATION)
+        self.t_list_QPWBC = [0] * int(params.N_SIMULATION)
 
         # Init joint torques to correct shape
         self.jointTorques = np.zeros((12, 1))
@@ -170,8 +169,7 @@ class Controller:
 
         # Enable/Disable perfect estimator
         perfectEstimator = False
-        self.isSimulation = isSimulation
-        if not isSimulation:
+        if not params.SIMULATION:
             perfectEstimator = False  # Cannot use perfect estimator if we are running on real robot
 
         # Load robot model and data
@@ -196,14 +194,18 @@ class Controller:
             self.fsteps_init[2, :] = 0.0
 """
         self.robot = self.init_robot(q_init, params)
-        self.remoteControl= RemoteControl.RemoteControl(dt_wbc, predefined_vel)
+        self.remoteControl= RemoteControl.RemoteControl(params.dt_wbc, False)
 
         # initialize Cpp state estimator
         self.estimator = core.Estimator()
-        self.estimator.initialize(np.array(q_init), dt_mpc, dt_wbc, len(gait), N_periods, N_SIMULATION, params.h_ref, perfectEstimator)
+        self.estimator.initialize(np.array(q_init), params.dt_mpc, params.dt_wbc, len(params.gait), params.N_periods, params.N_SIMULATION, params.h_ref, perfectEstimator)
 
         self.wbcWrapper = core.WbcWrapper()
         self.wbcWrapper.initialize(params)
+
+        self.k_mpc = int(params.dt_mpc / params.dt_wbc)
+        self.k = 0
+        self.enable_pyb_GUI = params.enable_pyb_GUI
 
         self.h_ref = params.h_ref
         self.q = np.zeros((19, 1))
@@ -214,7 +216,7 @@ class Controller:
         self.o_v_filt = np.zeros((18, 1))
 
         self.statePlanner = core.StatePlanner()
-        self.statePlanner.initialize(dt_mpc, T_mpc, self.h_ref)
+        self.statePlanner.initialize(params.dt_mpc, params.T_mpc, self.h_ref)
 
         self.gait = core.Gait()
         self.gait.initialize(params)
@@ -243,23 +245,12 @@ class Controller:
         # Wrapper that makes the link with the solver that you want to use for the MPC
         # First argument to True to have PA's MPC, to False to have Thomas's MPC
         self.enable_multiprocessing = True
-        self.mpc_wrapper = MPC_Wrapper.MPC_Wrapper(dt_mpc, np.int(T_mpc/dt_mpc),
-                                                   k_mpc, T_mpc, N_gait, self.q, self.enable_multiprocessing)
+        self.mpc_wrapper = MPC_Wrapper.MPC_Wrapper(params.dt_mpc, np.int(params.T_mpc/params.dt_mpc),
+                                                   int(params.dt_mpc / params.dt_wbc), params.T_mpc, params.N_gait, self.q, self.enable_multiprocessing)
 
-        self.envID = envID
-        self.velID = velID
-        self.dt_wbc = dt_wbc
-        self.dt_mpc = dt_mpc
-        self.k_mpc = k_mpc
-        self.t = t
-        self.T_gait = T_gait
-        self.T_mpc = T_mpc
-        self.N_SIMULATION = N_SIMULATION
-        self.use_flat_plane = use_flat_plane
-        self.predefined_vel = predefined_vel
-        self.enable_pyb_GUI = enable_pyb_GUI
 
         self.k = 0
+        self.velID = params.velID
 
         self.qmes12 = np.zeros((19, 1))
         self.vmes12 = np.zeros((18, 1))
@@ -289,12 +280,12 @@ class Controller:
         dDevice.baseOrientation = np.array([0.0, 0.0, 0.0, 1.0])
         dDevice.dummyPos = np.array([0.0, 0.0, q_init[2]])
         dDevice.b_baseVel = np.zeros(3)
-        self.compute(dDevice)
+        self.compute(params, dDevice)
 
         
 
 
-    def compute(self, device):
+    def compute(self, params, device):
         """Run one iteration of the main control loop
 
         Args:
@@ -334,7 +325,7 @@ class Controller:
             
 
         # Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames
-        oRh, oTh = self.updateState()
+        oRh, oTh = self.updateState(params)
 
         # at a new gait cycle we need create the next gait round and start MPC
         startNewGaitCycle = (self.k % self.k_mpc) == 0
@@ -385,12 +376,12 @@ class Controller:
         # Target state for the whole body control
         self.x_f_wbc = (self.x_f_mpc[:, 0]).copy()
         if not self.gait.getIsStatic():
-            self.x_f_wbc[0] = self.dt_wbc * xref[6, 1]
-            self.x_f_wbc[1] = self.dt_wbc * xref[7, 1]
-            self.x_f_wbc[2] = self.h_ref
+            self.x_f_wbc[0] = params.dt_wbc * xref[6, 1]
+            self.x_f_wbc[1] = params.dt_wbc * xref[7, 1]
+            self.x_f_wbc[2] = params.h_ref
             self.x_f_wbc[3] = 0.0
             self.x_f_wbc[4] = 0.0
-            self.x_f_wbc[5] = self.dt_wbc * xref[11, 1]
+            self.x_f_wbc[5] = params.dt_wbc * xref[11, 1]
         else:  # Sort of position control to avoid slow drift
             self.x_f_wbc[0:3] = np.zeros((3)) # define base xyz=(0,0,0),   should come from footstepplanner
             self.x_f_wbc[3:6] = np.zeros((3)) # define base RPY = (0,0,0), should come from footstepplanner
@@ -496,7 +487,7 @@ class Controller:
 
 
 
-    def updateState(self):
+    def updateState(self, params):
 
         # Update reference velocity vector
         self.v_ref[0:3, 0] = self.remoteControl.v_ref[0:3, 0]  # TODO: remoteControl velocity given in base frame and not
@@ -509,7 +500,7 @@ class Controller:
             Ryaw = np.array([[math.cos(self.yaw_estim), -math.sin(self.yaw_estim)],
                              [math.sin(self.yaw_estim), math.cos(self.yaw_estim)]])
 
-            self.q[0:2, 0:1] = self.q[0:2, 0:1] + Ryaw @ self.v_ref[0:2, 0:1] * self.dt_wbc
+            self.q[0:2, 0:1] = self.q[0:2, 0:1] + Ryaw @ self.v_ref[0:2, 0:1] * params.dt_wbc
 
             # Mix perfect x and y with height measurement
             cpp_q_filt = np.transpose(np.array(self.estimator.getQEstimate())[np.newaxis])
@@ -517,7 +508,7 @@ class Controller:
             self.q[2, 0] = cpp_q_filt[2, 0]
 
             # Mix perfect yaw with pitch and roll measurements
-            self.yaw_estim += self.v_ref[5, 0:1] * self.dt_wbc
+            self.yaw_estim += self.v_ref[5, 0:1] * params.dt_wbc
             self.q[3:7, 0] = Utils.EulerToQuaternion([self.estimator.getImuRPY()[0], self.estimator.getImuRPY()[1], self.yaw_estim])
             cpp_RPY = np.transpose(np.array(self.estimator.getImuRPY())[np.newaxis])
 

@@ -127,11 +127,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         params.N_SIMULATION = N_analysis + N_steady
 
     # Run a scenario and retrieve data thanks to the logger
-    controller = Controller(params, q_init, params.envID, params.velID, params.dt_wbc, params.dt_mpc,
-                            int(params.dt_mpc / params.dt_wbc), t, params.T_gait,
-                            params.T_mpc, params.N_SIMULATION, params.use_flat_plane,
-                            params.predefined_vel, enable_pyb_GUI, params.N_gait,
-                            params.SIMULATION, params.N_periods, params.gait)
+    controller = Controller(params, q_init)
 
     if params.SIMULATION and (des_vel_analysis is not None):
         controller.remoteControl.update_for_analysis(des_vel_analysis, N_analysis, N_steady)
@@ -182,7 +178,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         device.UpdateMeasurment()
 
         # Desired torques
-        controller.compute(device)
+        controller.compute(params, device)
 
         # Check that the initial position of actuators is not too far from the
         # desired position of actuators to avoid breaking the robot
