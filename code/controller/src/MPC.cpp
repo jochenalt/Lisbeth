@@ -1,9 +1,10 @@
 #include "MPC.hpp"
 
-MPC::MPC(double dt_in, int n_steps_in, double T_gait_in, int N_gait) {
-  dt = dt_in;
-  n_steps = n_steps_in;
-  T_gait = T_gait_in;
+MPC::MPC(Params& params) { // double dt_in, int n_steps_in, double T_gait_in, int N_gait) {
+  params_ = &params;
+  dt = params.dt_mpc;
+  n_steps = int(params.T_mpc/params.dt_mpc);
+  T_gait = params.T_gait;
 
   xref = Eigen::Matrix<double, 12, Eigen::Dynamic>::Zero(12, 1 + n_steps);
   x = Eigen::Matrix<double, Eigen::Dynamic, 1>::Zero(12 * n_steps * 2, 1);
@@ -11,7 +12,7 @@ MPC::MPC(double dt_in, int n_steps_in, double T_gait_in, int N_gait) {
   warmxf = Eigen::Matrix<double, Eigen::Dynamic, 1>::Zero(12 * n_steps * 2, 1);
   x_f_applied = Eigen::MatrixXd::Zero(24, n_steps);
 
-  gait = Eigen::Matrix<int, Eigen::Dynamic, 4>::Zero(N_gait, 4);
+  gait = Eigen::Matrix<int, Eigen::Dynamic, 4>::Zero(params.N_gait, 4);
 
   // Predefined variables
   mass = 2.50000279f;

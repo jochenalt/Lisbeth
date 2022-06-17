@@ -11,7 +11,7 @@ struct MPCPythonVisitor : public bp::def_visitor<MPCPythonVisitor<MPC>>
     void visit(PyClassMPC& cl) const
     {
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
-            .def(bp::init<double, int, double, int>(bp::args("dt_in", "n_steps_in", "T_gait_in", "N_gait"),
+            .def(bp::init<Params&>(bp::args("params"),
                                                "Constructor with parameters."))
 
             // Run MPC from Python

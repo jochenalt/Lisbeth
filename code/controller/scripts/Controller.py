@@ -245,8 +245,7 @@ class Controller:
         # Wrapper that makes the link with the solver that you want to use for the MPC
         # First argument to True to have PA's MPC, to False to have Thomas's MPC
         self.enable_multiprocessing = True
-        self.mpc_wrapper = MPC_Wrapper.MPC_Wrapper(params.dt_mpc, np.int(params.T_mpc/params.dt_mpc),
-                                                   int(params.dt_mpc / params.dt_wbc), params.T_mpc, params.N_gait, self.q, self.enable_multiprocessing)
+        self.mpc_wrapper = MPC_Wrapper.MPC_Wrapper(params, self.q)
 
 
         self.k = 0
@@ -364,7 +363,7 @@ class Controller:
         # Solve MPC problem once every k_mpc iterations of the main loop
         if startNewGaitCycle:
             try:
-                self.mpc_wrapper.solve(self.k, xref, fsteps, cgait)
+                self.mpc_wrapper.solve(params, self.k, xref, fsteps, cgait)
             except ValueError:
                 print("MPC Problem")
 
