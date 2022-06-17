@@ -6,11 +6,11 @@
 #include "pinocchio/algorithm/compute-all-terms.hpp"
 #include "pinocchio/algorithm/rnea.hpp"
 
-
 WbcWrapper::WbcWrapper()
     : M_(Eigen::Matrix<double, 18, 18>::Zero())
     , Jc_(Eigen::Matrix<double, 12, 6>::Zero())
     , k_since_contact_(Eigen::Matrix<double, 1, 4>::Zero())
+	, bdes_(Vector7::Zero())
     , qdes_(Vector12::Zero())
     , vdes_(Vector12::Zero())
     , tau_ff_(Vector12::Zero())
@@ -19,13 +19,11 @@ WbcWrapper::WbcWrapper()
     , ddq_cmd_(Vector18::Zero())
     , f_with_delta_(Vector12::Zero())
     , ddq_with_delta_(Vector18::Zero())
-    , posf_tmp_(Matrix43::Zero())
     , log_feet_pos_target(Matrix34::Zero())
     , log_feet_vel_target(Matrix34::Zero())
     , log_feet_acc_target(Matrix34::Zero())
     , k_log_(0)
 	, enable_comp_forces_(false)
-
 {}
 
 void WbcWrapper::initialize(Params& params)
@@ -82,17 +80,17 @@ Args:
 void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_cmd, MatrixN const& contacts,
                          MatrixN const& pgoals, MatrixN const& vgoals, MatrixN const& agoals)
 {
-  if (f_cmd.rows() != 12) {
-	throw std::runtime_error("f_cmd should be a vector of size 12");
-  }
-  //  Update nb of iterations since contact
-  k_since_contact_ += contacts;  // Increment feet in stance phase
-  k_since_contact_ = k_since_contact_.cwiseProduct(contacts);  // Reset feet in swing phase
+   if (f_cmd.rows() != 12) {
+ 	throw std::runtime_error("f_cmd should be a vector of size 12");
+   }
+   //  Update nb of iterations since contact
+   k_since_contact_ += contacts;  // Increment feet in stance phase
+   k_since_contact_ = k_since_contact_.cwiseProduct(contacts);  // Reset feet in swing phase
 
   // Store target positions, velocities and acceleration for logging purpose
-  log_feet_pos_target = pgoals;
-  log_feet_vel_target = vgoals;
-  log_feet_acc_target = agoals;
+   log_feet_pos_target = pgoals;
+   log_feet_vel_target = vgoals;
+   log_feet_acc_target = agoals;
 
    // Retrieve configuration data
    q_wbc_.head(3) = q.head(3);
@@ -102,6 +100,7 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
 
    // Retrieve velocity data
    dq_wbc_ = dq;
+
    // Compute the upper triangular part of the joint space inertia matrix M by using the Composite Rigid Body Algorithm
    // Result is stored in data_.M
    pinocchio::crba(model_, data_, q_wbc_);
@@ -110,7 +109,7 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
    data_.M.triangularView<Eigen::StrictlyLower>() = data_.M.transpose().triangularView<Eigen::StrictlyLower>();
 
    // Compute Inverse Kinematics
-   invkin_->run(q.tail(12), dq.tail(12), contacts, pgoals, vgoals, agoals);
+   invkin_->run(q_wbc_.tail(12), dq_wbc_.tail(12), contacts, pgoals, vgoals, agoals);
    ddq_cmd_.tail(12) = invkin_->get_ddq_cmd();
 
    // Compute the upper triangular part of the joint space inertia matrix M by using the Composite Rigid Body Algorithm
@@ -128,9 +127,7 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
   // not called from python anymore
 
   // Retrieve feet jacobian
-  posf_tmp_ = invkin_->get_posf();
-  // std::cout << "C++ posf_tmp_" << posf_tmp_<< std::endl;
-
+  Matrix43 posf_tmp_ = invkin_->get_posf();
   for (int i = 0; i < 4; i++)
   {
     if (contacts(0, i))
@@ -141,12 +138,8 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
                                    posf_tmp_(i, 1), -posf_tmp_(i, 0), 0.0;
     }
     else
-    {
       Jc_.block(3 * i, 0, 3, 6).setZero();
-    }
   }
-
-  // std::cout << "C++ invkin_->get_Jf()" << Jc_ << std::endl;
 
 
   // Compute the inverse dynamics, aka the joint torques according to the current state of the system,
@@ -174,17 +167,6 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
   // Result is stored in data_.tau
   pinocchio::rnea(model_, data_, q, dq, ddq_cmd_);
 
-  /*std::cout << "M" << std::endl;
-  std::cout << data_.M << std::endl;
-  std::cout << "Jc" << std::endl;
-  std::cout << Jc_ << std::endl;
-  std::cout << "f_cmd" << std::endl;
-  std::cout << f_cmd << std::endl;
-  std::cout << "rnea" << std::endl;
-  std::cout << data_.tau.head(6) << std::endl;
-  std::cout << "k_since" << std::endl;
-  std::cout << k_since_contact_ << std::endl;*/
-
   // Solve the QP problem
   box_qp_->run(data_.M, Jc_, f_cmd + f_compensation, data_.tau.head(6), k_since_contact_);
 
@@ -196,20 +178,12 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
   // Compute joint torques from contact forces and desired accelerations
   pinocchio::rnea(model_, data_, q, dq, ddq_with_delta_);
 
-  /*std::cout << "rnea delta" << std::endl;
-  std::cout << data_.tau.tail(12) << std::endl;
-  std::cout << "ddq del" << std::endl;
-  std::cout << ddq_with_delta_ << std::endl;
-  std::cout << "f del" << std::endl;
-  std::cout << f_with_delta_ << std::endl;
-  std::cout << "C++ f_with_delta_" << f_with_delta_<< std::endl;
-  std::cout << "C++ data_.tau.tail(12) " << data_.tau.tail(12) << std::endl; */
-
   tau_ff_ = data_.tau.tail(12) - invkin_->get_Jf().transpose() * f_with_delta_;
 
   // Retrieve desired positions and velocities
   vdes_ = invkin_->get_dq_cmd();
   qdes_ = invkin_->get_q_cmd();
+  bdes_ = invkin_->get_q_cmd().head(7);
 
   // Increment log counter
   k_log_++;
