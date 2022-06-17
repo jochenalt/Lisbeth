@@ -9,18 +9,13 @@
 #include "Utils.hpp"
 #include "Params.hpp"
 
-#include "ComplementaryFilter.hpp"
 #include <deque>
 
-#include "pinocchio/parsers/urdf.hpp"
-#include "pinocchio/algorithm/joint-configuration.hpp"
-#include "pinocchio/algorithm/kinematics.hpp"
-#include "pinocchio/algorithm/frames.hpp"
-
-#include "pinocchio/math/rpy.hpp"
-#include "pinocchio/spatial/explog.hpp"
-
-using namespace pinocchio;
+#include "pinocchio/multibody/data.hpp"
+#include "pinocchio/multibody/model.hpp"
+#include "pinocchio/spatial/se3.hpp"
+#include "ComplementaryFilter.hpp"
+#include "Params.hpp"
 
 class Estimator {
 public:
@@ -54,19 +49,10 @@ public:
 
 	// returns true if IMUs measurements of acceleration and velocity says that the system is steady
 	bool isSteady();
+	Vector3 getImuRPY() { return IMURpy; }
 
-	// return stacked state vector
-	// [0..2 ] = filt_lin_pos = filtered coord of base in world frame x,y,z
-	// [3..6 ] = filt_ang_pos = filtered angular velocity as quaternion in x,y,z,w
-	// [7..18] = actuators_pos = positions of feet in the order FL, FR, HL, HR as returned by device measurement
 	VectorN getQEstimate() { return qEstimate; }
-
-	// return stacked vector of
-	// [0..2 ] filt_lin_vel, filtered velocity of base in world frame x',y',z'
-	// [3..5 ] filt_ang_vel, filtered angular velocity around x,y,z
-	// [6..17] actuators_vel, velocities of feet in the order FL, FR, HL, HR, as returned by device measurement
 	VectorN getVEstimate() { return vEstimate; }
-
 	VectorN getVSecurity() { return vSecurity; }
 	VectorN getFeetStatus() { return feetStatus; }
 	MatrixN getFeetTargets() { return feetTargets; }
@@ -74,15 +60,16 @@ public:
 	Vector3 getBasePositionFK() { return basePositionFK; }
 	Vector3 getFeetPositionBarycenter() { return feetPositionBarycenter; }
 	Vector3 getBBaseVelocity() { return b_baseVelocity; }
+
 	Vector3 getFilterVelX() { return velocityFilter.getX(); }
 	Vector3 getFilterVelDX() { return velocityFilter.getDx(); }
 	Vector3 getFilterVelAlpha() { return velocityFilter.getAlpha(); }
-	Vector3 getFilterVelFiltX() { return velocityFilter.getFilteredX(); }
+    Vector3 getFilterVelFiltX() { return velocityFilter.getFilteredX(); }
 	Vector3 getFilterPosX() { return positionFilter.getX(); }
 	Vector3 getFilterPosDX() { return positionFilter.getDx(); }
 	Vector3 getFilterPosAlpha() { return positionFilter.getAlpha(); }
 	Vector3 getFilterPosFiltX() { return positionFilter.getFilteredX(); }
-	Vector3 getImuRPY() { return IMURpy; }
+
 	VectorN getQReference() { return qRef; }
 	VectorN getVReference() { return vRef; }
 	VectorN getBaseVelRef() { return baseVelRef; }
@@ -123,7 +110,6 @@ private:
 	// Compute the alpha coefficient for the complementary filter
 	// return alpha
 	double computeAlphaVelocity();
-
 
 	// Estimates the position and velocity vector
 	// The complementary filter combines data from the FK and the IMU acceleration data
@@ -179,10 +165,6 @@ private:
 	Vector12 vActuators; // velocities of feet in the order FL, FR, HL, HR, as returned by device measurement
 
 
-	ComplementaryFilter velocityFilter;
-	ComplementaryFilter positionFilter;
-	ComplementaryFilter accelerationFilter;
-
 
 	int phaseRemainingDuration;		// Number of iterations left for the current gait phase
 	Vector4 feetStancePhaseDuration;// Number of loops during which each foot has been in contact
@@ -198,8 +180,11 @@ private:
 
 	Vector3 feetPositionBarycenter; // Barycenter of feet in contact
 
-	Model velocityModel, positionModel;// Pinocchio models for frame computations and forward kinematics
-	Data velocityData, positionData;	// Pinocchio datas for frame computations and forward kinematics
+	pinocchio::Model velocityModel, positionModel;// Pinocchio models for frame computations and forward kinematics
+	pinocchio::Data velocityData, positionData;	// Pinocchio datas for frame computations and forward kinematics
+
+	ComplementaryFilter positionFilter;  // Complementary filter for base position
+	ComplementaryFilter velocityFilter;  // Complementary filter for base velocity
 
 	// stacked vector of
 	// [0..2 ] = filt_lin_pos = filtered coord of base in world frame x,y,z

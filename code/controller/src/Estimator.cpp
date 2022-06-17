@@ -5,7 +5,10 @@
 #include <string>
 
 #include "Estimator.hpp"
-
+#include "pinocchio/algorithm/compute-all-terms.hpp"
+#include "pinocchio/algorithm/frames.hpp"
+#include "pinocchio/math/rpy.hpp"
+#include "pinocchio/parsers/urdf.hpp"
 using namespace std;
 
 Estimator::Estimator()
@@ -70,199 +73,29 @@ void Estimator::initialize(Params& params) {
 	vy_queue.resize(windowSize, 0.0);  // List full of 0.0
 	vz_queue.resize(windowSize, 0.0);  // List full of 0.0
 
-
 	// Filtering velocities used for security checks
 	double fc = 6.0;
 	double y = 1 - cos(2*M_PI*fc*dt);
 	this->alphaSecurity = -y+sqrt(y*y+2*y);
 	this->alphaSecurity = 1-(dt / ( dt + 1/fc));
 
-    // Initialize Quantities
-	this->basePositionFK << 0.0, 0.0, params.h_ref;  //  Default base height of the FK
-	velocityFilter.initialize(dt, Vector3::Zero(), Vector3::Zero());
-	positionFilter.initialize(dt, Vector3::Zero(), basePositionFK);
-	qRef(2, 0) = params.h_ref;
-	qRef.tail(12) = Vector12(params.q_init.data());
+	  // Initialize Quantities
+	  basePositionFK(2) = params.h_ref;
+	  velocityFilter.initialize(dt, Vector3::Zero(), Vector3::Zero());
+	  positionFilter.initialize(dt, Vector3::Zero(), basePositionFK);
+	  qRef(2, 0) = params.h_ref;
+	  qRef.tail(12) = Vector12(params.q_init.data());
 
-    // this is used to identify if steady, so response time is one gait T_gait = 0.32s
-	accelerationFilter.initialize(dt, Vector3::Zero(), Vector3::Zero());
-	alphaAcc = Vector3({2.512562814, 2.512562814, 2.512562814});
-
-	// IMU data
-	this->IMULinearAcceleration = Vector3::Zero(); // Linear acceleration (gravity debiased)
-	this->IMUAngularVelocity = Vector3::Zero(); // Angular velocity (gyroscopes)
-	this->IMUQuat = Eigen::Quaterniond(1,0,0,0); // Angular position (estimation of IMU)
-
-	//  Forward Kinematics data
-	this->baseVelocityFK = Vector3::Zero(); //  Linear velocity
-	this->feetPositionBarycenter = Vector3::Zero();
-
-	// Boolean to disable FK and FG near contact switches
-	this->phaseRemainingDuration = 0;
-	this->feetStatus = Vector4::Zero();
-	this->feetTargets = Matrix34::Zero();
-	this->feetStancePhaseDuration = Vector4::Zero();
-
-	const std::string urdf_path = "/home/jochen/lisbeth/description/solo12.urdf";
-	// Load the URDF model to get Pinocchio data and model structures
-	if (!file_exists(urdf_path)) {
-		std::cout << "Kinematics.initialize:" << urdf_path << " does not exist" << std::endl;
-		exit(1);
-	}
-
-	pinocchio::JointModelFreeFlyer root_joint;
-	pinocchio::urdf::buildModel(urdf_path,root_joint, velocityModel);
-	// Create data required by the algorithms
-	// for velocity estimation (forward kinematics)
-	velocityData = Data(velocityModel);
-
-	pinocchio::urdf::buildModel(urdf_path,root_joint, positionModel);
-	// Create data required by the algorithms
-	// for estimation estimation (forward kinematics)
-	positionData = Data(positionModel);
-
-	this->b_baseVelocity = Vector3::Zero(); //  Linear velocity (base frame)
-
-	this->qEstimate = Vector19::Zero();
-	this->vEstimate = Vector18::Zero();
-	this->vSecurity = Vector12::Zero();
-
-	// Various matrices
-	this->q_FK = Vector19::Zero();
-	this->q_FK.topRows(7) << 0.,0.,0.,0.,0.,0.,1.;
-	this->v_FK = Vector18::Zero();
-	this->feetFrames = {10, 18, 26, 34};  //  Indexes of feet frames
-	this->feetFrames = {(int)positionModel.getFrameId("FL_FOOT"), (int)positionModel.getFrameId("FR_FOOT"),
-	      (int)positionModel.getFrameId("HL_FOOT"), (int)positionModel.getFrameId("HR_FOOT")};
-	this->qActuators = Vector12::Zero();
-	this->vActuators = Vector12::Zero();
-
-	// Transform between the base frame and the IMU frame
-	b_M_IMU = pinocchio::SE3(pinocchio::SE3::Quaternion(0,0,0,1),Vector3({0.1163, 0.0, 0.02}));
-}
-
-/** pass data from IMU */
-void Estimator::updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector4 base_orientation, VectorN const& perfectPosition) {
-
-	//  Linear acceleration of the trunk (base frame)
-    this->IMULinearAcceleration = base_linear_acc;
-
-    // Angular velocity of the trunk (base frame)
-    this->IMUAngularVelocity = base_angular_velocity;
-
-    // Angular position of the trunk (local frame)
-    Eigen::Quaterniond base_orientation_q ({base_orientation[3], base_orientation[0], base_orientation[1], base_orientation[2]});
-    IMURpy = quaternionToRPY(base_orientation_q);
-
-    // use the very first call to calculate the offset in z
-    static bool initialized = false;
-    if (!initialized) {
-    	IMUYawOffset = this->IMURpy[2];
-    	initialized = true;
-    }
-    IMURpy(2) -= IMUYawOffset; //  substract initial offset of IMU
-
-    bool solo3D = false;
-    if (solo3D)
-    	IMURpy.tail(1) = perfectPosition.tail(1);
-
-    IMUQuat = pinocchio::SE3::Quaternion(pinocchio::rpy::rpyToMatrix(IMURpy(0), IMURpy(1), IMURpy(2)));
-}
-
-void Estimator::updateJointData(Vector12 const& q, Vector12 const &v) {
-	this->qActuators = q;
-	this->vActuators = v;
-}
-
-void Estimator::updatFeetStatus(MatrixN const& gait, MatrixN const& feetTargets) {
-  this->feetStatus = gait.row(0);
-  this->feetTargets = feetTargets;
-
-  feetStancePhaseDuration += this->feetStatus;
-  feetStancePhaseDuration = feetStancePhaseDuration.cwiseProduct(this->feetStatus);
-
-  phaseRemainingDuration = 1;
-  while (this->feetStatus.isApprox((Vector4)gait.row(phaseRemainingDuration))) {
-    phaseRemainingDuration++;
-  }
-}
-
-
-Vector3 Estimator::computeBaseVelocityFromFoot(int footId) {
-  pinocchio::updateFramePlacement(velocityModel, velocityData, feetFrames[footId]);
-  pinocchio::SE3 contactFrame = velocityData.oMf[feetFrames[footId]];
-  Vector3 frameVelocity =
-      pinocchio::getFrameVelocity(velocityModel, velocityData, feetFrames[footId], pinocchio::LOCAL).linear();
-
-  return contactFrame.translation().cross(IMUAngularVelocity) - contactFrame.rotation() * frameVelocity;
-}
-
-Vector3 Estimator::computeBasePositionFromFoot(int footId) {
-  pinocchio::updateFramePlacement(positionModel, positionData, feetFrames[footId]);
-  Vector3 basePosition = -positionData.oMf[feetFrames[footId]].translation();
-  basePosition(0) += footRadius * (vActuators(1 + 3 * footId) + vActuators(2 + 3 * footId));
-
-  return basePosition;
-}
-
-
-/**
- Get average position of feet in contact with the ground
-
-Args:
-    feet_status (4x0 array): Current contact state of feet
-    goals (3x4 array): Target locations of feet on the ground
-*/
-void Estimator::computeFeetPositionBarycenter() {
-        int nContactFeet = 0;
-        Vector3 xyz_feet = Vector3::Zero();
-        for (int i = 0;i<4;i++) {
-        	if (feetStatus[i] == 1) { // Consider only feet in contact
-        		nContactFeet += 1;
-                xyz_feet += feetTargets.col(i);
-        	}
-        }
-        // If at least one foot is in contact, we do the average of feet results
-        if (nContactFeet > 0)
-            feetPositionBarycenter = xyz_feet / nContactFeet;
-}
-
-// Get data with forward kinematics and forward geometry
-// (linear velocity, angular velocity and position)
-//  feet_status (4x0 numpy array): Current contact state of feet
-void Estimator::updateForwardKinematics() {
-    // Update estimator FK model
-	q_FK.bottomRows(12) = qActuators; //   Position of actuators
-    v_FK.bottomRows(12) = vActuators; //  Velocity of actuators
-
-    // Position and orientation of the base remain at 0
-    // Linear and angular velocities of the base remain at 0
-    // Update model used for the forward kinematics
-    q_FK.block<4,1>(3,0) = Vector4({0,0,0,1});
-
-    pinocchio::forwardKinematics(velocityModel,velocityData,q_FK, v_FK);
-
-    q_FK.block<4,1>(3,0) = Vector4({IMUQuat.x(),IMUQuat.y(),IMUQuat.z(),IMUQuat.w()});
-
-    pinocchio::forwardKinematics(positionModel, positionData, q_FK);
-
-    // Get estimated velocity from updated model
-    int nContactFeet = 0;
-    Vector3 baseVelocityEstimate = Vector3::Zero(3);
-    Vector3 basePositionEstimate = Vector3::Zero(3);
-    for (int foot = 0;foot<4;foot++) {
-    	if ((feetStatus[foot] == 1) && (feetStancePhaseDuration[foot] >= 16)) { //  Security margin after the contact switch
-    	      baseVelocityEstimate += computeBaseVelocityFromFoot(foot);
-    	      basePositionEstimate += computeBasePositionFromFoot(foot);
-    	      nContactFeet ++;
-    	}
-    }
-
-    //  If at least one foot is in contact, we do the average of feet results
-    if (nContactFeet > 0) {
-        this->baseVelocityFK = baseVelocityEstimate / nContactFeet;
-        this->basePositionFK = basePositionEstimate / nContactFeet;
-    }
+	  // Initialize Pinocchio
+	  const std::string filename = std::string("/home/jochen/lisbeth/description/solo12.urdf");
+	  pinocchio::urdf::buildModel(filename, pinocchio::JointModelFreeFlyer(), velocityModel, false);
+	  pinocchio::urdf::buildModel(filename, pinocchio::JointModelFreeFlyer(), positionModel, false);
+	  velocityData = pinocchio::Data(velocityModel);
+	  positionData = pinocchio::Data(positionModel);
+	  pinocchio::computeAllTerms(velocityModel, velocityData, qEstimate, vEstimate);
+	  pinocchio::computeAllTerms(positionModel, positionData, qEstimate, vEstimate);
+	  this->feetFrames = {(int)positionModel.getFrameId("FL_FOOT"), (int)positionModel.getFrameId("FR_FOOT"),
+	  	      (int)positionModel.getFrameId("HL_FOOT"), (int)positionModel.getFrameId("HR_FOOT")};
 }
 
 
@@ -346,6 +179,127 @@ void Estimator::updateReferenceState(VectorN const& newvRef) {
   h_v.tail(3) = hRb * vEstimate.segment(3, 3);
   h_vFiltered.head(3) = hRb * vFiltered.head(3);
   h_vFiltered.tail(3) = hRb * vFiltered.tail(3);
+}
+
+
+
+void Estimator::updatFeetStatus(MatrixN const& gait, MatrixN const& feetTargets) {
+  this->feetStatus = gait.row(0);
+  this->feetTargets = feetTargets;
+
+  feetStancePhaseDuration += this->feetStatus;
+  feetStancePhaseDuration = feetStancePhaseDuration.cwiseProduct(this->feetStatus);
+
+  phaseRemainingDuration = 1;
+  while (this->feetStatus.isApprox((Vector4)gait.row(phaseRemainingDuration))) {
+    phaseRemainingDuration++;
+  }
+}
+
+
+/** pass data from IMU */
+void Estimator::updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector4 base_orientation, VectorN const& perfectPosition) {
+
+	//  Linear acceleration of the trunk (base frame)
+    this->IMULinearAcceleration = base_linear_acc;
+
+    // Angular velocity of the trunk (base frame)
+    this->IMUAngularVelocity = base_angular_velocity;
+
+    // Angular position of the trunk (local frame)
+    Eigen::Quaterniond base_orientation_q ({base_orientation[3], base_orientation[0], base_orientation[1], base_orientation[2]});
+    IMURpy = quaternionToRPY(base_orientation_q);
+
+    // use the very first call to calculate the offset in z
+    static bool initialized = false;
+    if (!initialized) {
+    	IMUYawOffset = this->IMURpy[2];
+    	initialized = true;
+    }
+    IMURpy(2) -= IMUYawOffset; //  substract initial offset of IMU
+
+    bool solo3D = false;
+    if (solo3D)
+    	IMURpy.tail(1) = perfectPosition.tail(1);
+
+    IMUQuat = pinocchio::SE3::Quaternion(pinocchio::rpy::rpyToMatrix(IMURpy(0), IMURpy(1), IMURpy(2)));
+}
+
+void Estimator::updateJointData(Vector12 const& q, Vector12 const &v) {
+	this->qActuators = q;
+	this->vActuators = v;
+}
+
+
+// Get data with forward kinematics and forward geometry
+// (linear velocity, angular velocity and position)
+//  feet_status (4x0 numpy array): Current contact state of feet
+void Estimator::updateForwardKinematics() {
+    // Update estimator FK model
+	q_FK.bottomRows(12) = qActuators; //   Position of actuators
+    v_FK.bottomRows(12) = vActuators; //  Velocity of actuators
+
+    // Position and orientation of the base remain at 0
+    // Linear and angular velocities of the base remain at 0
+    // Update model used for the forward kinematics
+    q_FK.block<4,1>(3,0) = Vector4({0,0,0,1});
+
+    pinocchio::forwardKinematics(velocityModel,velocityData,q_FK, v_FK);
+
+    q_FK.block<4,1>(3,0) = Vector4({IMUQuat.x(),IMUQuat.y(),IMUQuat.z(),IMUQuat.w()});
+
+    pinocchio::forwardKinematics(positionModel, positionData, q_FK);
+
+    // Get estimated velocity from updated model
+    int nContactFeet = 0;
+    Vector3 baseVelocityEstimate = Vector3::Zero(3);
+    Vector3 basePositionEstimate = Vector3::Zero(3);
+    for (int foot = 0;foot<4;foot++) {
+    	if ((feetStatus[foot] == 1) && (feetStancePhaseDuration[foot] >= 16)) { //  Security margin after the contact switch
+    	      baseVelocityEstimate += computeBaseVelocityFromFoot(foot);
+    	      basePositionEstimate += computeBasePositionFromFoot(foot);
+    	      nContactFeet ++;
+    	}
+    }
+
+    //  If at least one foot is in contact, we do the average of feet results
+    if (nContactFeet > 0) {
+        this->baseVelocityFK = baseVelocityEstimate / nContactFeet;
+        this->basePositionFK = basePositionEstimate / nContactFeet;
+    }
+}
+
+
+
+Vector3 Estimator::computeBaseVelocityFromFoot(int footId) {
+  pinocchio::updateFramePlacement(velocityModel, velocityData, feetFrames[footId]);
+  pinocchio::SE3 contactFrame = velocityData.oMf[feetFrames[footId]];
+  Vector3 frameVelocity =
+      pinocchio::getFrameVelocity(velocityModel, velocityData, feetFrames[footId], pinocchio::LOCAL).linear();
+
+  return contactFrame.translation().cross(IMUAngularVelocity) - contactFrame.rotation() * frameVelocity;
+}
+
+Vector3 Estimator::computeBasePositionFromFoot(int footId) {
+  pinocchio::updateFramePlacement(positionModel, positionData, feetFrames[footId]);
+  Vector3 basePosition = -positionData.oMf[feetFrames[footId]].translation();
+  basePosition(0) += footRadius * (vActuators(1 + 3 * footId) + vActuators(2 + 3 * footId));
+
+  return basePosition;
+}
+
+void Estimator::computeFeetPositionBarycenter() {
+        int nContactFeet = 0;
+        Vector3 xyz_feet = Vector3::Zero();
+        for (int i = 0;i<4;i++) {
+        	if (feetStatus[i] == 1) { // Consider only feet in contact
+        		nContactFeet += 1;
+                xyz_feet += feetTargets.col(i);
+        	}
+        }
+        // If at least one foot is in contact, we do the average of feet results
+        if (nContactFeet > 0)
+            feetPositionBarycenter = xyz_feet / nContactFeet;
 }
 
 double Estimator::computeAlphaVelocity() {
