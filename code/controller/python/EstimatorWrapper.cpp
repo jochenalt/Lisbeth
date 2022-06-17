@@ -11,7 +11,7 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
     void visit(PyClassEstimator& cl) const
     {
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
-        	.def("initialize",&Estimator::initialize, bp::args("q_init", "dt_mpc", "dt_wbc", "gaitRows", "N_periods", "N_simulation", "h_init", "perfectEstimator"),
+        	.def("initialize",&Estimator::initialize, bp::args("params"),
         		 "initialize")
 		    .def("getVEstimate",&Estimator::getVEstimate, "getVEstimate")
 		    .def("getQEstimate",&Estimator::getQEstimate, "getQEstimate")

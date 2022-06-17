@@ -7,6 +7,8 @@
 
 #include "Types.h"
 #include "Utils.hpp"
+#include "Params.hpp"
+
 #include "ComplementaryFilter.hpp"
 #include <deque>
 
@@ -25,7 +27,7 @@ public:
 	Estimator ();
 	~Estimator() {};
 
-	void initialize(Vector12 q_init, double dt_mpc, double dt_wbc, int gaitRows, int N_periods, int N_simulation, double h_init, bool perfectEstimator = false);
+	void initialize(Params& params /*Vector12 q_init, double dt_mpc, double dt_wbc, int gaitRows, int N_periods, int N_simulation, double h_init, bool perfectEstimator = false*/);
 
 	void updateForwardKinematics();
 	/*

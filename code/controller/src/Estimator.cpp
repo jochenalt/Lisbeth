@@ -57,15 +57,15 @@ Estimator::Estimator()
 }
 
 
-void Estimator::initialize(Vector12 q_init, double dt_mpc, double dt_wbc, int gaitRows, int N_periods, int N_simulation, double h_ref, bool perfectEstimator ) {
+void Estimator::initialize(Params& params) {
 
 	// sample frequency
-	this->dt = dt_wbc;
+	this->dt = params.dt_wbc;
 	this->perfectEstimator = perfectEstimator;
 
 	// Filtering estimated linear velocity
-	int k_mpc = (int)(std::round(dt_mpc / dt_wbc));
-	windowSize = (int)(k_mpc * gaitRows / N_periods);
+	int k_mpc = (int)(std::round(params.dt_mpc / params.dt_wbc));
+	windowSize = (int)(k_mpc * params.gait.rows() / params.N_periods);
 	vx_queue.resize(windowSize, 0.0);  // List full of 0.0
 	vy_queue.resize(windowSize, 0.0);  // List full of 0.0
 	vz_queue.resize(windowSize, 0.0);  // List full of 0.0
@@ -78,11 +78,11 @@ void Estimator::initialize(Vector12 q_init, double dt_mpc, double dt_wbc, int ga
 	this->alphaSecurity = 1-(dt / ( dt + 1/fc));
 
     // Initialize Quantities
-	this->basePositionFK << 0.0, 0.0, h_ref;  //  Default base height of the FK
+	this->basePositionFK << 0.0, 0.0, params.h_ref;  //  Default base height of the FK
 	velocityFilter.initialize(dt, Vector3::Zero(), Vector3::Zero());
 	positionFilter.initialize(dt, Vector3::Zero(), basePositionFK);
-	qRef(2, 0) = h_ref;
-	qRef.tail(12) = Vector12(q_init.data());
+	qRef(2, 0) = params.h_ref;
+	qRef.tail(12) = Vector12(params.q_init.data());
 
     // this is used to identify if steady, so response time is one gait T_gait = 0.32s
 	accelerationFilter.initialize(dt, Vector3::Zero(), Vector3::Zero());

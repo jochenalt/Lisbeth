@@ -198,7 +198,7 @@ class Controller:
 
         # initialize Cpp state estimator
         self.estimator = core.Estimator()
-        self.estimator.initialize(np.array(q_init), params.dt_mpc, params.dt_wbc, len(params.gait), params.N_periods, params.N_SIMULATION, params.h_ref, perfectEstimator)
+        self.estimator.initialize(params)
 
         self.wbcWrapper = core.WbcWrapper()
         self.wbcWrapper.initialize(params)
