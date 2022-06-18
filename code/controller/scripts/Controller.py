@@ -184,6 +184,10 @@ class Controller:
         self.wbcWrapper = core.WbcWrapper()
         self.wbcWrapper.initialize(params)
 
+        self.mpcController = core.MpcWrapper()
+        self.mpcController.initialize(params)
+
+
         self.h_ref = params.h_ref
         self.q_init = np.hstack((np.zeros(6), q_init.copy()))
         self.q_init[2] = params.h_ref

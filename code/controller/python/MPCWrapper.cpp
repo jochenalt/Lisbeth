@@ -44,8 +44,9 @@ struct MpcWrapperPythonVisitor : public bp::def_visitor<MpcWrapperPythonVisitor<
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
 
             .def("initialize", &MpcWrapper::initialize, bp::args("params"),
-                 "Initialize Gait from Python.\n")
-				 	;
+                 "Initialize MPC from Python.\n")
+            .def("get_latest_result", &MpcWrapper::get_latest_result)
+        	.def("solve", &MpcWrapper::solve);
     }
 
     static void expose()
