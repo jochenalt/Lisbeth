@@ -237,7 +237,7 @@ class Controller:
 
         self.base_targets = np.zeros(12)
 
-        self.v_ref = np.zeros((18, 1))
+        self.v_ref = np.zeros(12)
         self.h_v = np.zeros(6)
         self.h_v_windowed = np.zeros(6)
         self.yaw_estim = 0.0
@@ -321,7 +321,7 @@ class Controller:
                                                                 int(self.k_mpc - self.k % self.k_mpc),
                                                                 np.array([self.q]).transpose(),
                                                                 self.h_v_windowed,
-                                                                self.v_ref[0:6,0].copy())
+                                                                self.v_ref[0:6].transpose().copy())
 
         # Update pos, vel and acc references for feet
         self.footTrajectoryGenerator.update(self.k, o_targetFootstep)
@@ -329,7 +329,7 @@ class Controller:
         # Run state planner (outputs the reference trajectory of the base)
 
         self.statePlanner.computeReferenceStates(np.array([self.q]).transpose(), self.h_v,
-                                                 self.v_ref[0:6, 0:1], 0.0)
+                                                 self.v_ref[0:6].transpose(), 0.0)
 
         # Result can be retrieved with self.statePlanner.getReferenceStates()
         xref = self.statePlanner.getReferenceStates()
@@ -372,13 +372,14 @@ class Controller:
             self.dq_wbc[6:] = self.wbcWrapper.vdes
             
             # Feet command acceleration in base frame
+            v_ref_tmp =np.array([self.v_ref[3:6]]).transpose()
             self.feet_a_cmd = oRh.transpose() @ self.footTrajectoryGenerator.get_foot_acceleration() \
-                - np.cross(np.tile(self.v_ref[3:6, 0:1], (1, 4)), np.cross(np.tile(self.v_ref[3:6, 0:1], (1, 4)), self.feet_p_cmd, axis=0), axis=0) \
-                - 2 * np.cross(np.tile(self.v_ref[3:6, 0:1], (1, 4)), self.feet_v_cmd, axis=0)
+                - np.cross(np.tile(v_ref_tmp, (1, 4)), np.cross(np.tile(v_ref_tmp, (1, 4)), self.feet_p_cmd, axis=0), axis=0) \
+                - 2 * np.cross(np.tile(v_ref_tmp, (1, 4)), self.feet_v_cmd, axis=0)
 
             # Feet command velocity in base frame
             self.feet_v_cmd = oRh.transpose() @ self.footTrajectoryGenerator.get_foot_velocity()
-            self.feet_v_cmd = self.feet_v_cmd - self.v_ref[0:3, 0:1] - np.cross(np.tile(self.v_ref[3:6, 0:1], (1, 4)), self.feet_p_cmd, axis=0)
+            self.feet_v_cmd = self.feet_v_cmd - np.array([self.v_ref[0:3]]).transpose() - np.cross(np.tile(v_ref_tmp, (1, 4)), self.feet_p_cmd, axis=0)
 
             # Feet command position in base frame
             self.feet_p_cmd = oRh.transpose() @ (self.footTrajectoryGenerator.get_foot_position()
@@ -457,9 +458,9 @@ class Controller:
 
     def updateControls(self, params):
         # Update reference velocity vector
-        self.v_ref[0:3, 0] = self.remoteControl.v_ref[0:3, 0]  # TODO: remoteControl velocity given in base frame and not
-        self.v_ref[3:6, 0] = self.remoteControl.v_ref[3:6, 0]  # in horizontal frame (case of non flat ground)
-        self.v_ref[6:, 0] = 0.0
+        self.v_ref[0:3] = self.remoteControl.v_ref[0:3, 0]  # TODO: remoteControl velocity given in base frame and not
+        self.v_ref[3:6] = self.remoteControl.v_ref[3:6, 0]  # in horizontal frame (case of non flat ground)
+        self.v_ref[6] = 0.0
 
        
     def run_estimator(self, device,baseHeight,baseVelocity):

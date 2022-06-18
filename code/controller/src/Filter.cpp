@@ -7,7 +7,6 @@ Filter::Filter()
       y_(VectorN::Zero(6, 1)),
       accum_(Vector6::Zero()),
       init_(false) {
-  // Empty
 }
 
 void Filter::initialize(Params& params) {
