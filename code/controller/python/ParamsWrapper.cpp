@@ -4,7 +4,6 @@
 
 namespace bp = boost::python;
 
-
 template <typename Params>
 struct ParamsPythonVisitor : public bp::def_visitor<ParamsPythonVisitor<Params>>
 {

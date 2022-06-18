@@ -64,7 +64,7 @@ Params::Params()
       enable_comp_forces(false),
 
       T_gait(0.0),         // Period of the gait
-      mass(0.0),           // Mass of the robot
+      mass(1.0),           // Mass of the robot
       I_mat(9, 0.0),       // Fill with zeros, will be filled with values later
       CoM_offset(3, 0.0),  // Fill with zeros, will be filled with values later
       h_ref(0.0),
@@ -98,6 +98,10 @@ void Params::initialize(const std::string& file_path)
    // Retrieve robot parameters
    assert_yaml_parsing(robot_node, "robot", "T_gait");
    T_gait = robot_node["T_gait"].as<double>();
+
+   // Retrieve robot parameters
+   assert_yaml_parsing(robot_node, "robot", "mass");
+   mass = robot_node["mass"].as<double>();
 
   assert_yaml_parsing(robot_node, "robot", "config_file");
   config_file = robot_node["config_file"].as<std::string>();

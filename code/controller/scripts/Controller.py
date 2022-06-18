@@ -112,6 +112,7 @@ class Controller:
         )  # Composite rigid body inertia in q_init position
         params.CoM_offset = (robot.data.com[0][:3] - q[0:3, 0]).tolist()
         params.CoM_offset[1] = 0.0
+        print("CoM_offes", params.CoM_offset)
 
         for i in range(4):
             for j in range(3):
@@ -231,6 +232,7 @@ class Controller:
         # Wrapper that makes the link with the solver that you want to use for the MPC
         # First argument to True to have PA's MPC, to False to have Thomas's MPC
         self.enable_multiprocessing = True
+        print("params", params.CoM_offset)
         self.mpc_wrapper = MPC_Wrapper.MPC_Wrapper(params, q_init)
 
         self.k = 0

@@ -4,6 +4,8 @@ robot:
                           # so that there is always at least one empty line at the end of the gait matrix
     velID: 2              # Identifier of the reference velocity profile to choose which one will be sent to the robot
     T_gait: 0.32          # [s] Duration of one gait period
+    mass: 2.5             # [kg] 
+    
     T_mpc: 0.32           # [s] Duration of the prediction horizon, devided by dt_mpc gives the number of prediction steps
 
     # General parameters
@@ -36,8 +38,7 @@ robot:
     Kp_main: [3.0, 3.0, 3.0]  # Proportional gains for the PD+
     Kd_main: [0.3, 0.3, 0.3]  # Derivative gains for the PD+
     Kff_main: 1.0  # Feedforward torques multiplier for the PD+
-        
-           
+
     # Parameters of Gait
     N_periods: 1
     gait: [8, 1, 0, 0, 1,
