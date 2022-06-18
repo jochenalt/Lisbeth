@@ -326,9 +326,9 @@ class Controller:
 
         o_targetFootstep = self.footstepPlanner.updateFootsteps(self.k % self.k_mpc == 0 and self.k != 0,
                                                                 int(self.k_mpc - self.k % self.k_mpc),
-                                                                self.q.transpose(),
+                                                                self.q,
                                                                 self.h_v_windowed,
-                                                                self.v_ref.transpose())
+                                                                self.v_ref)
 
         # Update pos, vel and acc references for feet
         self.footTrajectoryGenerator.update(self.k, o_targetFootstep)
@@ -383,7 +383,7 @@ class Controller:
             self.dq_wbc[6:] = self.wbcWrapper.vdes
             
             # Run InvKin + WBC QP
-            self.wbcWrapper.compute(np.array([self.q_wbc]).transpose(), np.array([self.dq_wbc]).transpose(),
+            self.wbcWrapper.compute(self.q_wbc, self.dq_wbc,
                                     self.x_f_wbc[12:], np.array([cgait[0, :]]),
                                     self.feet_p_cmd,
                                     self.feet_v_cmd,
