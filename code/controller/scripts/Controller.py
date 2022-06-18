@@ -184,7 +184,7 @@ class Controller:
         self.wbcWrapper = core.WbcWrapper()
         self.wbcWrapper.initialize(params)
 
-        self.mpcController = core.MpcWrapper()
+        self.mpcController = core.MpcController()
         self.mpcController.initialize(params)
 
 

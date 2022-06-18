@@ -12,7 +12,7 @@ extern void exposeStatePlanner();
 extern void exposeMPC();
 extern void exposeWbcWrapper();
 extern void exposeFilter();
-extern void exposeMpcWrapper();
+extern void exposeMpcController();
 
 
 BOOST_PYTHON_MODULE(libcontroller_core)
@@ -30,5 +30,5 @@ BOOST_PYTHON_MODULE(libcontroller_core)
     exposeEstimator();
     exposeWbcWrapper();
     exposeFilter();
-    exposeMpcWrapper();
+    exposeMpcController();
 }

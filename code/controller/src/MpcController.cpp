@@ -1,4 +1,5 @@
-#include "MpcWrapper.hpp"
+#include "../include/MpcController.hpp"
+
 #include <chrono>
 #include <thread>
 #include <mutex>
@@ -57,7 +58,7 @@ MatrixN read_out() {
   return shared_result;
 }
 
-void MpcWrapper::parallel_loop() {
+void MpcController::parallel_loop() {
   int k;
   MatrixN xref;
   MatrixN fsteps;
@@ -87,7 +88,7 @@ void MpcWrapper::parallel_loop() {
   }
 }
 
-MpcWrapper::MpcWrapper()
+MpcController::MpcController()
     : mpc_thread(NULL),
 	  last_available_result(Eigen::Matrix<double, 24, 2>::Zero()),
       gait_past(RowVector4::Zero()),
@@ -95,13 +96,13 @@ MpcWrapper::MpcWrapper()
 {
 }
 
-MpcWrapper::~MpcWrapper() {
+MpcController::~MpcController() {
 	thread_is_running = false;
 	if (mpc_thread != NULL)
 		mpc_thread ->join();
 }
 
-void MpcWrapper::initialize(Params& params) {
+void MpcController::initialize(Params& params) {
 
   params_ = &params;
   mpc_ = new MPC(params);
@@ -116,10 +117,10 @@ void MpcWrapper::initialize(Params& params) {
   shared_fsteps = MatrixN::Zero(params.gait.rows(), 12);
 
   // start thread
-  mpc_thread = new std::thread(&MpcWrapper::parallel_loop, this);  // spawn new thread that runs MPC in parallel
+  mpc_thread = new std::thread(&MpcController::parallel_loop, this);  // spawn new thread that runs MPC in parallel
 }
 
-void MpcWrapper::solve(int k, MatrixN xref, MatrixN fsteps, MatrixN gait) {
+void MpcController::solve(int k, MatrixN xref, MatrixN fsteps, MatrixN gait) {
   write_in(k, xref, fsteps);
 
   // Adaptation if gait has changed
@@ -142,7 +143,7 @@ void MpcWrapper::solve(int k, MatrixN xref, MatrixN fsteps, MatrixN gait) {
   gait_next = gait.row(1);
 }
 
-Eigen::Matrix<double, 24, 2> MpcWrapper::get_latest_result() {
+Eigen::Matrix<double, 24, 2> MpcController::get_latest_result() {
   // Retrieve data from parallel process if a new result is available
   if (check_new_result()) {
     last_available_result = read_out().block(0, 0, 24, 2);

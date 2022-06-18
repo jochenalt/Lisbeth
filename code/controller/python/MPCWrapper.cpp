@@ -33,27 +33,27 @@ struct MPCPythonVisitor : public bp::def_visitor<MPCPythonVisitor<MPC>>
 
 void exposeMPC() { MPCPythonVisitor<MPC>::expose(); }
 
-#include "MpcWrapper.hpp"
+#include "MpcController.hpp"
 
-template <typename MpcWrapper>
-struct MpcWrapperPythonVisitor : public bp::def_visitor<MpcWrapperPythonVisitor<MpcWrapper>>
+template <typename MpcController>
+struct MpcWrapperPythonVisitor : public bp::def_visitor<MpcWrapperPythonVisitor<MpcController>>
 {
     template <class PyClassGait>
     void visit(PyClassGait& cl) const
     {
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
 
-            .def("initialize", &MpcWrapper::initialize, bp::args("params"),
+            .def("initialize", &MpcController::initialize, bp::args("params"),
                  "Initialize MPC from Python.\n")
-            .def("get_latest_result", &MpcWrapper::get_latest_result)
-        	.def("solve", &MpcWrapper::solve);
+            .def("get_latest_result", &MpcController::get_latest_result)
+        	.def("solve", &MpcController::solve);
     }
 
     static void expose()
     {
-        bp::class_<MpcWrapper>("MpcWrapper", bp::no_init).def(MpcWrapperPythonVisitor<MpcWrapper>());
+        bp::class_<MpcController>("MpcController", bp::no_init).def(MpcWrapperPythonVisitor<MpcController>());
 
         ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
     }
 };
-void exposeMpcWrapper() { MpcWrapperPythonVisitor<MpcWrapper>::expose(); }
+void exposeMpcController() { MpcWrapperPythonVisitor<MpcController>::expose(); }
