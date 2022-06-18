@@ -19,8 +19,7 @@ void StatePlanner::initialize(double dt_in, double T_mpc_in, double h_ref_in)
 
 void StatePlanner::computeReferenceStates(VectorN const& q, Vector6 const& v, Vector6 const& vref, double z_average)
 {
-    Eigen::Quaterniond quat(q(6), q(3), q(4), q(5));  // w, x, y, z
-    RPY_ << pinocchio::rpy::matrixToRpy(quat.toRotationMatrix());
+    RPY_ = Vector3({q(3), q(4), q(5)});
 
     // Update the current state
     referenceStates_(0, 0) = 0.0;  // In horizontal frame x = 0.0
@@ -52,8 +51,6 @@ void StatePlanner::computeReferenceStates(VectorN const& q, Vector6 const& v, Ve
 
         referenceStates_(6, 1 + i) = vref(0) * std::cos(referenceStates_(5, 1 + i)) - vref(1) * std::sin(referenceStates_(5, 1 + i));
         referenceStates_(7, 1 + i) = vref(0) * std::sin(referenceStates_(5, 1 + i)) + vref(1) * std::cos(referenceStates_(5, 1 + i));
-
-        // referenceStates_(5, 1 + i) += RPY_(2);
 
         referenceStates_(11, 1 + i) = vref(5);
     }

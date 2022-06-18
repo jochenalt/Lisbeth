@@ -192,9 +192,9 @@ class Controller:
         self.enable_pyb_GUI = params.enable_pyb_GUI
 
         self.h_ref = params.h_ref
-        self.q = np.zeros((19, 1))
-        self.q[0:7, 0] = np.array([0.0, 0.0, self.h_ref, 0.0, 0.0, 0.0, 1.0])
-        self.q[7:, 0] = q_init
+        self.q = np.zeros((18, 1))
+        self.q[0:6, 0] = np.array([0.0, 0.0, self.h_ref, 0.0, 0.0, 0.0])
+        self.q[6:, 0] = q_init
         self.q_neu = np.zeros(19)
         self.q_neu[0:7] = np.array([0.0, 0.0, self.h_ref, 0.0, 0.0, 0.0, 1.0])
         self.q_neu[7:] = q_init
@@ -327,7 +327,7 @@ class Controller:
 
         o_targetFootstep = self.footstepPlanner.updateFootsteps(self.k % self.k_mpc == 0 and self.k != 0,
                                                                 int(self.k_mpc - self.k % self.k_mpc),
-                                                                self.q[0:18,0:1].copy(),
+                                                                self.q,
                                                                 self.h_v_windowed,
                                                                 self.v_ref[0:6,0].copy())
         #print("self.q[0:18,0:1]", self.q[0:18,0:1], "neu:", np.array([self.q_neu[0:18]]).transpose())
@@ -337,7 +337,7 @@ class Controller:
 
         # Run state planner (outputs the reference trajectory of the base)
 
-        self.statePlanner.computeReferenceStates(self.q[0:7, 0:1], self.h_v,
+        self.statePlanner.computeReferenceStates(self.q[0:6, 0:1], self.h_v,
                                                  self.v_ref[0:6, 0:1], 0.0)
 
         # Result can be retrieved with self.statePlanner.getReferenceStates()
@@ -488,12 +488,12 @@ class Controller:
 
             # Mix perfect yaw with pitch and roll measurements
             self.yaw_estim += self.v_ref[5, 0:1] * params.dt_wbc
-            self.q[3:7, 0] = Utils.EulerToQuaternion([self.estimator.getImuRPY()[0], self.estimator.getImuRPY()[1], self.yaw_estim])
+            self.q[3:6, 0] = np.array([self.estimator.getImuRPY()[0], self.estimator.getImuRPY()[1], self.yaw_estim])
 
             # Actuators measurements
-            self.q[7:, 0] = cpp_q_filt[7:, 0]
+            self.q[6:, 0] = cpp_q_filt[7:, 0]
             self.q_neu = self.estimator.get_q_reference();
-            self.q_neu[3:7] = Utils.EulerToQuaternion([self.estimator.getImuRPY()[0], self.estimator.getImuRPY()[1], self.yaw_estim])
+            self.q_neu[3:6] = np.array([self.estimator.getImuRPY()[0], self.estimator.getImuRPY()[1], self.yaw_estim])
 
             # Velocities are the one estimated by the estimator
             self.v  = np.transpose(np.array(self.estimator.get_v_estimate())[np.newaxis])

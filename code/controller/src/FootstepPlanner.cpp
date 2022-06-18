@@ -83,7 +83,7 @@ MatrixN FootstepPlanner::updateFootsteps(bool refresh, int k, VectorN const& q, 
 
 	  // Update location of feet in stance phase (for those which just entered stance phase)
 	  if (refresh && gait_->isNewPhase()) {
-	    updateNewContact(q);
+	    updateNewContact();
 	  }
 
 	  // Feet in contact with the ground are moving in base frame (they don't move in world frame)
@@ -217,7 +217,7 @@ MatrixN FootstepPlanner::computeTargetFootstep(int k, VectorN const& q, Vector6 
     updateTargetFootsteps();
 
     // Get o_targetFootstep_ in world frame from targetFootstep_ in horizontal frame
-    RPY_ = quaternionToRPY({q(6), q(3), q(4), q(5)});
+    RPY_ = Vector3({q(3), q(4), q(5)});
 
     // rotate footprints by RPY(2)
     double c = std::cos(RPY_(2));
@@ -230,7 +230,7 @@ MatrixN FootstepPlanner::computeTargetFootstep(int k, VectorN const& q, Vector6 
     return o_targetFootstep_;
 }
 
-void FootstepPlanner::updateNewContact(Vector18 const& q)
+void FootstepPlanner::updateNewContact()
 {
     for (int i = 0; i < 4; i++)
     {
