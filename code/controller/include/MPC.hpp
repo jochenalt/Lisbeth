@@ -16,7 +16,87 @@
 
 
 class MPC {
+ public:
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ ///
+ /// \brief Constructor
+ ///
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ MPC();
+
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ ///
+ /// \brief Constructor with parameters
+ ///
+ /// \param[in] params Object that stores parameters
+ ///
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ MPC(Params &params);
+
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ ///
+ /// \brief Destructor
+ ///
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ ~MPC() {}  // Empty destructor
+
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ ///
+ /// \brief Run one iteration of the whole MPC by calling all the necessary functions (data retrieval, update
+ ///        of constraint matrices, update of the solver, running the solver, retrieving result)
+ ///
+ /// \param[in] num_iter Number of the current iteration of the MPC
+ /// \param[in] xref_in Reference state trajectory over the prediction horizon
+ /// \param[in] fsteps_in Footsteps location over the prediction horizon stored in a Nx12 matrix
+ ///
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ int run(int num_iter, const MatrixN &xref_in, const MatrixN &fsteps_in);
+
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ ///
+ /// \brief Retrieve the value of the cost function at the end of the resolution
+ /// \return the cost value
+ ///
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ float retrieve_cost();
+
+ // Getters
+ MatrixN get_latest_result();  // Return the latest desired contact forces that have been computed
+ MatrixNi get_gait();           // Return the gait matrix
+ VectorNi get_Sgait();          // Return the S_gait matrix
+ double *get_x_next();         // Return the next predicted state of the base
  private:
+  int create_matrices();
+  int create_ML();
+  int create_NK();
+  int create_weight_matrices();
+  int update_matrices(Eigen::MatrixXd fsteps);
+  int update_ML(Eigen::MatrixXd fsteps);
+  int update_NK();
+  int call_solver(int);
+  int retrieve_result();
+
+  Eigen::Matrix<double, 3, 3> getSkew(Eigen::Matrix<double, 3, 1> v);
+  int construct_S();
+  int construct_gait(Eigen::MatrixXd fsteps_in);
+
+
+  // Utils
+  double gethref() { return h_ref; }
+  void my_print_csc_matrix(csc *M, const char *name);
+  void save_csc_matrix(csc *M, std::string filename);
+  void save_dns_matrix(double *M, int size, std::string filename);
+
+  // Bindings
+  void run_python(const matXd &xref_py, const matXd &fsteps_py);
+
+  // Eigen::Matrix<double, 12, 12> getA() { return A; }
+  // Eigen::MatrixXf getML() { return ML; }
+  /*void setDate(int year, int month, int day);
+  int getYear();
+  int getMonth();
+  int getDay();*/
+
   Params* params_;
 
   double dt, mass, mu, T_gait, h_ref;
@@ -88,47 +168,7 @@ class MPC {
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> D;
   Eigen::Matrix<int, Eigen::Dynamic, 1> i_off;
 
- public:
-  MPC();
-  MPC(Params& params); // double dt_in, int n_steps_in, double T_gait_in, int N_gait);
 
-  int create_matrices();
-  int create_ML();
-  int create_NK();
-  int create_weight_matrices();
-  int update_matrices(Eigen::MatrixXd fsteps);
-  int update_ML(Eigen::MatrixXd fsteps);
-  int update_NK();
-  int call_solver(int);
-  int retrieve_result();
-  double *get_x_next();
-  int run(int num_iter, const Eigen::MatrixXd &xref_in, const Eigen::MatrixXd &fsteps_in);
-
-  Eigen::Matrix<double, 3, 3> getSkew(Eigen::Matrix<double, 3, 1> v);
-  int construct_S();
-  int construct_gait(Eigen::MatrixXd fsteps_in);
-
-  // Getters
-  Eigen::MatrixXd get_latest_result();
-  Eigen::MatrixXd get_gait();
-  Eigen::MatrixXd get_Sgait();
-
-
-  // Utils
-  double gethref() { return h_ref; }
-  void my_print_csc_matrix(csc *M, const char *name);
-  void save_csc_matrix(csc *M, std::string filename);
-  void save_dns_matrix(double *M, int size, std::string filename);
-
-  // Bindings
-  void run_python(const matXd &xref_py, const matXd &fsteps_py);
-
-  // Eigen::Matrix<double, 12, 12> getA() { return A; }
-  // Eigen::MatrixXf getML() { return ML; }
-  /*void setDate(int year, int month, int day);
-  int getYear();
-  int getMonth();
-  int getDay();*/
 };
 
 #endif  // MPC_H_INCLUDED

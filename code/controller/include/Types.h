@@ -10,8 +10,11 @@
 #include <string>
 #include <memory>
 
+using Vector1 = Eigen::Matrix<double, 1, 1>;
 using Vector2 = Eigen::Matrix<double, 2, 1>;
 using Vector3 = Eigen::Matrix<double, 3, 1>;
+using Vector3i = Eigen::Matrix<int, 3, 1>;
+
 using Array3 = Eigen::Array<double, 3, 1>;
 
 using Vector4 = Eigen::Matrix<double, 4, 1>;
@@ -31,7 +34,7 @@ using RowVector4 = Eigen::Matrix<double, 1, 4>;
 
 using Matrix3 = Eigen::Matrix<double, 3, 3>;
 using Matrix4 = Eigen::Matrix<double, 4, 4>;
-using Matrix33 = Eigen::Matrix<double, 3, 3>;
+using Matrix6 = Eigen::Matrix<double, 6, 6>;
 using Matrix31 = Eigen::Matrix<double, 3, 1>;
 using Matrix13 = Eigen::Matrix<double, 1, 3>;
 using Matrix112 = Eigen::Matrix<double, 1, 12>;
@@ -44,6 +47,7 @@ using Matrix3N = Eigen::Matrix<double, 3, Eigen::Dynamic>;
 using Matrix4N = Eigen::Matrix<double, 4, Eigen::Dynamic>;
 using MatrixN4i = Eigen::Matrix<int, Eigen::Dynamic, 4>;
 using Matrix6N = Eigen::Matrix<double, 6, Eigen::Dynamic>;
+using Matrix12N = Eigen::Matrix<double, 12, Eigen::Dynamic>;
 using MatrixN = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
 using MatrixNi = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>;
 
