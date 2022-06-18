@@ -208,7 +208,7 @@ class Controller:
         self.gait = core.Gait()
         self.gait.initialize(params)
         self.gait.updateGait(True,  np.array([self.q_neu[0:7]]).transpose(), Types.GaitType.NoMovement.value)
-        print("self.q[0:7, 0:1]", self.q[0:7, 0:1], "neu:", np.array([self.q_neu[0:7]]).transpose())
+        #print("self.q[0:7, 0:1]", self.q[0:7, 0:1], "neu:", np.array([self.q_neu[0:7]]).transpose())
 
         self.shoulders = np.zeros((3, 4))
         #self.shoulders = params.shoulders
@@ -331,7 +331,7 @@ class Controller:
                                                                 self.q[0:18,0:1].copy(),
                                                                 self.h_v_windowed,
                                                                 self.v_ref[0:6,0].copy())
-        print("self.q[0:18,0:1]", self.q[0:18,0:1], "neu:", np.array([self.q_neu[0:18]]).transpose())
+        #print("self.q[0:18,0:1]", self.q[0:18,0:1], "neu:", np.array([self.q_neu[0:18]]).transpose())
 
         # Update pos, vel and acc references for feet
         self.footTrajectoryGenerator.update(self.k, o_targetFootstep)
@@ -371,12 +371,11 @@ class Controller:
         # If nothing wrong happened yet in the WBC controller
         if (not self.error) and (not self.remoteControl.stop):
 
-            self.q_wbc = np.zeros(19)
+            self.q_wbc = np.zeros(18)
             self.dq_wbc = np.zeros(18)
 
             self.q_wbc[2] = self.h_ref  # at position (0.0, 0.0, h_ref)
-            self.q_wbc[6] = 1.0  # with orientation (0.0, 0.0, 0.0)
-            self.q_wbc[7:] = self.wbcWrapper.qdes  # with reference angular positions of previous loop
+            self.q_wbc[6:] = self.wbcWrapper.qdes  # with reference angular positions of previous loop
 
             # Get velocity in base frame for Pinocchio (not current base frame but desired base frame)
             self.dq_wbc[:6] = self.estimator.get_v_estimate()[:6]

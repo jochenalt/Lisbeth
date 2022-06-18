@@ -165,7 +165,7 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
   // Compute the inverse dynamics, aka the joint torques according to the current state of the system,
   // the desired joint accelerations and the external forces, using the Recursive Newton Euler Algorithm.
   // Result is stored in data_.tau
-  pinocchio::rnea(model_, data_, q, dq, ddq_cmd_);
+  pinocchio::rnea(model_, data_, q_wbc_, dq_wbc_, ddq_cmd_);
 
   // Solve the QP problem
   box_qp_->run(data_.M, Jc_, f_cmd + f_compensation, data_.tau.head(6), k_since_contact_);
@@ -176,7 +176,7 @@ void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_c
   ddq_with_delta_.tail(12) = ddq_cmd_.tail(12);
 
   // Compute joint torques from contact forces and desired accelerations
-  pinocchio::rnea(model_, data_, q, dq, ddq_with_delta_);
+  pinocchio::rnea(model_, data_, q_wbc_, dq_wbc_, ddq_with_delta_);
 
   tau_ff_ = data_.tau.tail(12) - invkin_->get_Jf().transpose() * f_with_delta_;
 
