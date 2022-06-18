@@ -1,21 +1,21 @@
 #include "MPC.hpp"
 
-MPC::MPC(Params& params) { // double dt_in, int n_steps_in, double T_gait_in, int N_gait) {
+MPC::MPC(Params& params) {
   params_ = &params;
-  dt = params.dt_mpc;
-  n_steps = int(params.T_mpc/params.dt_mpc);
-  T_gait = params.T_gait;
 
-  xref = Eigen::Matrix<double, 12, Eigen::Dynamic>::Zero(12, 1 + n_steps);
-  x = Eigen::Matrix<double, Eigen::Dynamic, 1>::Zero(12 * n_steps * 2, 1);
-  S_gait = Eigen::Matrix<int, Eigen::Dynamic, 1>::Zero(12 * n_steps, 1);
-  warmxf = Eigen::Matrix<double, Eigen::Dynamic, 1>::Zero(12 * n_steps * 2, 1);
-  x_f_applied = Eigen::MatrixXd::Zero(24, n_steps);
+  dt = params_->dt_mpc;
+  n_steps = static_cast<int>(params_->gait.rows());
 
-  gait = Eigen::Matrix<int, Eigen::Dynamic, 4>::Zero(params.N_gait, 4);
+  xref = Matrix12N::Zero(12, 1 + n_steps);
+  x = VectorN::Zero(12 * n_steps * 2);
+  S_gait = VectorNi::Zero(12 * n_steps);
+  warmxf = VectorN::Zero(12 * n_steps * 2);
+  x_f_applied = MatrixN::Zero(24, n_steps);
+
+  gait = MatrixN4i::Zero(params_->gait.rows(), 4);
 
   // Predefined variables
-  mass = 2.50000279f;
+  mass = params.mass;
   mu = 0.9f;
   cpt_ML = 0;
   cpt_P = 0;
@@ -27,8 +27,6 @@ MPC::MPC(Params& params) { // double dt_in, int n_steps_in, double T_gait_in, in
 			   0.0, 0.0, 0.0, 0.0;
   gI << 3.09249e-2, -8.00101e-7, 1.865287e-5, -8.00101e-7, 5.106100e-2, 1.245813e-4, 1.865287e-5, 1.245813e-4,
       6.939757e-2;
-  q << 0.0f, 0.0f, 0.2027682f, 0.0f, 0.0f, 0.0f;
-  h_ref = q(2, 0);
   g(8, 0) = -9.81f * dt;
 
   osqp_set_default_settings(settings);
@@ -418,9 +416,7 @@ int MPC::update_ML(MatrixN fsteps) {
       Matrix3 I_inv = R_gI.inverse();
 
       // Get skew-symetric matrix for each foothold
-      // Eigen::Map<Matrix34> fsteps_tmp((fsteps.block(j, 1, 1, 12)).data(), 3, 4);
       footholds_tmp = fsteps.row(j);  // block(j, 1, 1, 12);
-      // footholds = footholds_tmp.reshaped(3, 4);
       Eigen::Map<MatrixN> footholds_bis(footholds_tmp.data(), 3, 4);
 
       lever_arms = footholds_bis - (xref.block(0, k, 3, 1) + offset_CoM).replicate<1, 4>();
