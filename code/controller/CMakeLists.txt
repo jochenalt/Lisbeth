@@ -78,6 +78,8 @@ set(${PROJECT_NAME}_SOURCES
   src/ComplementaryFilter.cpp
   src/Filter.cpp
   src/WbcWrapper.cpp
+  src/MpcWrapper.cpp
+
   )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})

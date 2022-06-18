@@ -1,4 +1,5 @@
 #include "MPC.hpp"
+
 #include <boost/python.hpp>
 #include <eigenpy/eigenpy.hpp>
 
@@ -32,3 +33,26 @@ struct MPCPythonVisitor : public bp::def_visitor<MPCPythonVisitor<MPC>>
 
 void exposeMPC() { MPCPythonVisitor<MPC>::expose(); }
 
+#include "MpcWrapper.hpp"
+
+template <typename MpcWrapper>
+struct MpcWrapperPythonVisitor : public bp::def_visitor<MpcWrapperPythonVisitor<MpcWrapper>>
+{
+    template <class PyClassGait>
+    void visit(PyClassGait& cl) const
+    {
+        cl.def(bp::init<>(bp::arg(""), "Default constructor."))
+
+            .def("initialize", &MpcWrapper::initialize, bp::args("params"),
+                 "Initialize Gait from Python.\n")
+				 	;
+    }
+
+    static void expose()
+    {
+        bp::class_<MpcWrapper>("MpcWrapper", bp::no_init).def(MpcWrapperPythonVisitor<MpcWrapper>());
+
+        ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
+    }
+};
+void exposeMpcWrapper() { MpcWrapperPythonVisitor<MpcWrapper>::expose(); }
