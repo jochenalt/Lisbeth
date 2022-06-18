@@ -236,8 +236,6 @@ class Controller:
         self.velID = params.velID
 
         self.base_targets = np.zeros(12)
-        self.qmes12 = np.zeros((19, 1))
-        self.vmes12 = np.zeros((18, 1))
 
         self.v_ref = np.zeros((18, 1))
         self.h_v = np.zeros(6)
@@ -305,9 +303,6 @@ class Controller:
             self.remoteControl.gaitCode = Types.GaitType.NoMovement.value
             
 
-        # Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames
-        self.updateState(params)
-
         # at a new gait cycle we need create the next gait round and start MPC
         startNewGaitCycle = (self.k % self.k_mpc) == 0
         
@@ -333,7 +328,7 @@ class Controller:
 
         # Run state planner (outputs the reference trajectory of the base)
 
-        self.statePlanner.computeReferenceStates(np.array([self.q[0:6]]).transpose(), self.h_v,
+        self.statePlanner.computeReferenceStates(np.array([self.q]).transpose(), self.h_v,
                                                  self.v_ref[0:6, 0:1], 0.0)
 
         # Result can be retrieved with self.statePlanner.getReferenceStates()
@@ -466,32 +461,7 @@ class Controller:
         self.v_ref[3:6, 0] = self.remoteControl.v_ref[3:6, 0]  # in horizontal frame (case of non flat ground)
         self.v_ref[6:, 0] = 0.0
 
-    def updateState(self, params):
-
-        # Update position and velocity state vectors
-        if not self.gait.getIsStatic():
-            # Integration to get evolution of perfect x, y and yaw
-            Ryaw = np.array([[math.cos(self.yaw_estim), -math.sin(self.yaw_estim)],
-                             [math.sin(self.yaw_estim), math.cos(self.yaw_estim)]])
-
-            
-
-            # Mix perfect x and y with height measurement
-            cpp_q_filt = np.transpose(np.array(self.estimator.get_q_estimate())[np.newaxis])
-
-            
-            # Mix perfect yaw with pitch and roll measurements
-            self.yaw_estim += self.v_ref[5, 0:1] * params.dt_wbc
-            
-            # Actuators measurements
-            self.q = self.estimator.get_q_reference();
-
-            # Velocities are the one estimated by the estimator
-            self.v  = np.transpose(np.array(self.estimator.get_v_estimate())[np.newaxis])
-            self.h_v = self.estimator.get_h_v()
-            self.h_v_windowed = self.estimator.get_h_v_filtered()
-        
-        
+       
     def run_estimator(self, device,baseHeight,baseVelocity):
         """
         Call the estimator and retrieve the reference and estimated quantities.
@@ -511,6 +481,14 @@ class Controller:
         self.estimator.update_reference_state(self.v_ref)
 
 
+        # Actuators measurements
+        self.q = self.estimator.get_q_reference();
+
+        # Velocities are the one estimated by the estimator
+        self.v  = np.transpose(np.array(self.estimator.get_v_estimate())[np.newaxis])
+        self.h_v = self.estimator.get_h_v()
+        self.h_v_windowed = self.estimator.get_h_v_filtered()
+            
         oRh = self.estimator.get_oRh()
         hRb = self.estimator.get_hRb()
         oTh = self.estimator.get_oTh().reshape((3, 1))
