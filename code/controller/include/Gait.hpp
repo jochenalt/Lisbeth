@@ -42,7 +42,7 @@ public:
      * gaitTypeInput target gait, coming from GaitType, because of Python binding needs to be int
      * q current position vector of the flying base in world frame (linear and angular stacked)
      */
-    bool changeGait(int gaitTypeInput, VectorN const& q);
+    bool changeGait(int gaitTypeInput);
 
     /** Move one step further in the gait cycle
      *
@@ -50,7 +50,7 @@ public:
      * Transfer current gait phase into past gait matrix
      * Insert future desired gait phase at the end of the gait matrix
      */
-    bool updateGait(bool const rollGait, VectorN const& q, int targetGaitType);
+    bool updateGait(bool const rollGait, int targetGaitType);
 
 
     void rollGait();
@@ -58,7 +58,6 @@ public:
     MatrixN getCurrentGait() { return currentGait_; }
     double getCurrentGaitCoeff(int i, int j) { return currentGait_(i, j); }
     bool getIsStatic() { return is_static_; }
-    VectorN getQStatic() { return q_static_; }
     bool isNewPhase() { return newPhase_; }
     int getCurrentGaitType() { return currentGaitType_; }
     int getPrevGaitType() { return prevGaitType_; }
@@ -96,7 +95,6 @@ private:
 
     bool newPhase_;
     bool is_static_;
-    VectorN q_static_;
 
     GaitType currentGaitType_;
     GaitType prevGaitType_;

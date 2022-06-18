@@ -207,8 +207,7 @@ class Controller:
 
         self.gait = core.Gait()
         self.gait.initialize(params)
-        self.gait.updateGait(True,  np.array([self.q_neu[0:7]]).transpose(), Types.GaitType.NoMovement.value)
-        #print("self.q[0:7, 0:1]", self.q[0:7, 0:1], "neu:", np.array([self.q_neu[0:7]]).transpose())
+        self.gait.updateGait(True,  Types.GaitType.NoMovement.value)
 
         self.shoulders = np.zeros((3, 4))
         #self.shoulders = params.shoulders
@@ -315,7 +314,7 @@ class Controller:
         # at a new gait cycle we need create the next gait round and start MPC
         startNewGaitCycle = (self.k % self.k_mpc) == 0
         
-        self.gait.updateGait(startNewGaitCycle, np.array([self.q_neu[0:7]]).transpose(), self.remoteControl.gaitCode)
+        self.gait.updateGait(startNewGaitCycle, self.remoteControl.gaitCode)
 
         self.remoteControl.gaitCode = 0
 

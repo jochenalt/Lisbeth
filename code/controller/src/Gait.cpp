@@ -11,7 +11,6 @@ Gait::Gait()
     , remainingTime_(0.0)
     , newPhase_(false)
     , is_static_(true)
-    , q_static_(VectorN::Zero(19))
     , currentGaitType_(GaitType::NoGait)
     , prevGaitType_(GaitType::NoGait)
     , subGait (GaitType::Walking)
@@ -290,11 +289,10 @@ double Gait::getRemainingTimeCoeff(int i, int j) {
 
 
 bool Gait::updateGait(bool initiateNewGait,
-                      VectorN const& q,
 					  int targetGaitType)
 {
 	if ((targetGaitType != GaitType::NoGait) && (currentGaitType_ != targetGaitType)) {
-		changeGait (targetGaitType, q);
+		changeGait (targetGaitType);
 	}
 
 	if (initiateNewGait) {
@@ -305,7 +303,7 @@ bool Gait::updateGait(bool initiateNewGait,
 	return false;
 }
 
-bool Gait::changeGait(int targetGait, VectorN const& q)
+bool Gait::changeGait(int targetGait)
 {
     is_static_ = false;
     if (targetGait == GaitType::Pacing)
@@ -355,7 +353,6 @@ bool Gait::changeGait(int targetGait, VectorN const& q)
     else if (targetGait == GaitType::NoMovement)
     {
         createStatic();
-        q_static_.head(7) = q.head(7);
     	prevGaitType_ = currentGaitType_;
         currentGaitType_ = (GaitType)targetGait;
 
