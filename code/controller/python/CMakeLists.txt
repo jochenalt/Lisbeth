@@ -9,6 +9,8 @@ set(${PY_NAME}_SOURCES
   InvKinWrapper.cpp
   MPCWrapper.cpp
   StatePlannerWrapper.cpp
+  FilterWrapper.cpp
+
   )
 
 add_library(${PY_NAME} SHARED ${${PY_NAME}_SOURCES})

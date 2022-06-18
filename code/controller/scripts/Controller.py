@@ -231,11 +231,17 @@ class Controller:
         self.enable_multiprocessing = True
         self.mpc_wrapper = MPC_Wrapper.MPC_Wrapper(params, q_init)
 
-
         self.k = 0
         self.velID = params.velID
 
         self.base_targets = np.zeros(12)
+
+        self.filter_q = core.Filter()
+        self.filter_q.initialize(params)
+        self.filter_h_v = core.Filter()
+        self.filter_h_v.initialize(params)
+        self.filter_vref = core.Filter()
+        self.filter_vref.initialize(params)
 
         self.v_ref = np.zeros(6)
         self.h_v = np.zeros(6)
@@ -279,7 +285,6 @@ class Controller:
 
         # Update the reference velocity coming from the gamepad
         self.remoteControl.update_v_ref(self.k, self.velID)
-        self.updateControls(params)
         start = time.clock()
         
         baseHeight = np.array([0.0, 0.0, 0.0, device.dummyPos[2] - 0.0155])
@@ -456,11 +461,6 @@ class Controller:
             self.result.v_des[:] = np.zeros(12)
             self.result.tau_ff[:] = np.zeros(12)
 
-    def updateControls(self, params):
-        # Update reference velocity vector
-        self.v_ref[0:3] = self.remoteControl.v_ref[0:3, 0]  # TODO: remoteControl velocity given in base frame and not
-        self.v_ref[3:6] = self.remoteControl.v_ref[3:6, 0]  # in horizontal frame (case of non flat ground)
-
        
     def run_estimator(self, device,baseHeight,baseVelocity):
         """
@@ -478,21 +478,23 @@ class Controller:
                            baseHeight.copy(),
                            baseVelocity)
 
-        self.estimator.update_reference_state(self.v_ref)
-
-
-        # Actuators measurements
-        self.q = self.estimator.get_q_reference();
-
-        # Velocities are the one estimated by the estimator
-        self.v  = np.transpose(np.array(self.estimator.get_v_estimate())[np.newaxis])
-        self.h_v = self.estimator.get_h_v()
-        self.h_v_windowed = self.estimator.get_h_v_filtered()
+        self.estimator.update_reference_state(self.remoteControl.v_ref)
             
         oRh = self.estimator.get_oRh()
         hRb = self.estimator.get_hRb()
         oTh = self.estimator.get_oTh().reshape((3, 1))
-                
+
+        self.v_ref = self.estimator.get_base_vel_ref()
+        self.h_v = self.estimator.get_h_v()
+        self.h_v_windowed = self.estimator.get_h_v_filtered()
+        self.q = self.estimator.get_q_reference();
+        self.v = self.estimator.get_v_reference()
+
+        self.q_filtered = self.q.copy()
+        self.q_filtered[:6] = self.filter_q.filter(self.q[:6], True)
+        self.h_v_filtered = self.filter_h_v.filter(self.h_v, False)
+        self.vref_filtered = self.filter_vref.filter(self.v_ref, False)
+
         return oRh, hRb, oTh
     
     def solve_MPC(self, reference_state, footsteps):

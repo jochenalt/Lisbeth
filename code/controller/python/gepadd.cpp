@@ -11,6 +11,7 @@ extern void exposeQPWBC();
 extern void exposeStatePlanner();
 extern void exposeMPC();
 extern void exposeWbcWrapper();
+extern void exposeFilter();
 
 
 BOOST_PYTHON_MODULE(libcontroller_core)
@@ -27,4 +28,6 @@ BOOST_PYTHON_MODULE(libcontroller_core)
     exposeParams();
     exposeEstimator();
     exposeWbcWrapper();
+    exposeFilter();
+
 }
