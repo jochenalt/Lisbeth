@@ -18,7 +18,8 @@ struct ParamsPythonVisitor : public bp::def_visitor<ParamsPythonVisitor<Params>>
 
             // Read Params from Python
             .def_readwrite("interface", &Params::interface)
-            .def_readwrite("SIMULATION", &Params::SIMULATION)
+			.def_readwrite("DEMONSTRATION", &Params::DEMONSTRATION)
+			.def_readwrite("SIMULATION", &Params::SIMULATION)
             .def_readwrite("dt_wbc", &Params::dt_wbc)
             .def_readwrite("N_gait", &Params::N_gait)
             .def_readwrite("envID", &Params::envID)

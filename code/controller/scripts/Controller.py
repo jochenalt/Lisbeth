@@ -187,6 +187,8 @@ class Controller:
         self.q_init = np.hstack((np.zeros(6), q_init.copy()))
         self.q_init[2] = params.h_ref
 
+        self.DEMONSTRATION = params.DEMONSTRATION
+        self.SIMULATION = params.SIMULATION
         self.k_mpc = int(params.dt_mpc / params.dt_wbc)
         self.k = 0
         self.enable_pyb_GUI = params.enable_pyb_GUI
@@ -333,34 +335,34 @@ class Controller:
 
         # Run state planner (outputs the reference trajectory of the base)
 
-        self.statePlanner.computeReferenceStates(self.q.transpose(), self.h_v,
-                                                 self.v_ref.transpose(), 0.0)
+        self.statePlanner.computeReferenceStates(self.q_filtered[:6], self.h_v_filtered,
+                                                 self.vref_filtered, 0.0)
 
         # Result can be retrieved with self.statePlanner.getReferenceStates()
-        xref = self.statePlanner.getReferenceStates()
+        reference_state = self.statePlanner.getReferenceStates()
         fsteps = self.footstepPlanner.getFootsteps()
         cgait = self.gait.getCurrentGait()
 
         t_planner = time.time()
 
         # Solve MPC problem once every k_mpc iterations of the main loop
-        self.solve_MPC(xref, fsteps)        
+        self.solve_MPC(reference_state, fsteps)        
 
         t_mpc = time.time()
 
         # Target state for the whole body control
         self.x_f_wbc = (self.x_f_mpc[:, 0]).copy()
         if not self.gait.getIsStatic():
-            self.x_f_wbc[0] = params.dt_wbc * xref[6, 1]
-            self.x_f_wbc[1] = params.dt_wbc * xref[7, 1]
+            self.x_f_wbc[0] = params.dt_wbc * reference_state[6, 1]
+            self.x_f_wbc[1] = params.dt_wbc * reference_state[7, 1]
             self.x_f_wbc[2] = params.h_ref
             self.x_f_wbc[3] = 0.0
             self.x_f_wbc[4] = 0.0
-            self.x_f_wbc[5] = params.dt_wbc * xref[11, 1]
+            self.x_f_wbc[5] = params.dt_wbc * reference_state[11, 1]
         else:  # Sort of position control to avoid slow drift
             self.x_f_wbc[0:3] = np.zeros((3)) # define base xyz=(0,0,0),   should come from footstepplanner
             self.x_f_wbc[3:6] = np.zeros((3)) # define base RPY = (0,0,0), should come from footstepplanner
-        self.x_f_wbc[6:12] = xref[6:, 1]
+        self.x_f_wbc[6:12] = reference_state[6:, 1]
 
         # Whole Body Control
         # If nothing wrong happened yet in the WBC controller
@@ -369,27 +371,17 @@ class Controller:
             self.q_wbc = np.zeros(18)
             self.dq_wbc = np.zeros(18)
 
+            self.get_base_targets(reference_state, hRb)
+            self.get_feet_targets(reference_state, oRh, oTh, hRb)
+            
             self.q_wbc[2] = self.h_ref  # at position (0.0, 0.0, h_ref)
+            self.q_wbc[3:5] = self.q_filtered[3:5]
             self.q_wbc[6:] = self.wbcWrapper.qdes  # with reference angular positions of previous loop
 
             # Get velocity in base frame for Pinocchio (not current base frame but desired base frame)
             self.dq_wbc[:6] = self.estimator.get_v_estimate()[:6]
             self.dq_wbc[6:] = self.wbcWrapper.vdes
             
-            # Feet command acceleration in base frame
-            v_ref_tmp =np.array([self.v_ref[3:6]]).transpose()
-            self.feet_a_cmd = oRh.transpose() @ self.footTrajectoryGenerator.get_foot_acceleration() \
-                - np.cross(np.tile(v_ref_tmp, (1, 4)), np.cross(np.tile(v_ref_tmp, (1, 4)), self.feet_p_cmd, axis=0), axis=0) \
-                - 2 * np.cross(np.tile(v_ref_tmp, (1, 4)), self.feet_v_cmd, axis=0)
-
-            # Feet command velocity in base frame
-            self.feet_v_cmd = oRh.transpose() @ self.footTrajectoryGenerator.get_foot_velocity()
-            self.feet_v_cmd = self.feet_v_cmd - np.array([self.v_ref[0:3]]).transpose() - np.cross(np.tile(v_ref_tmp, (1, 4)), self.feet_p_cmd, axis=0)
-
-            # Feet command position in base frame
-            self.feet_p_cmd = oRh.transpose() @ (self.footTrajectoryGenerator.get_foot_position()
-                                                 - np.array([[0.0], [0.0], [self.h_ref]]) - oTh)
-
             # Run InvKin + WBC QP
             self.wbcWrapper.compute(np.array([self.q_wbc]).transpose(), np.array([self.dq_wbc]).transpose(),
                                     self.x_f_wbc[12:], np.array([cgait[0, :]]),
@@ -521,3 +513,42 @@ class Controller:
         self.x_f_mpc = self.mpc_wrapper.get_latest_result()
 
 
+    def get_base_targets(self, reference_state, hRb):
+        """
+        Retrieve the base position and velocity targets
+
+        @params reference_state reference centroideal state trajectory
+        @params hRb rotation between the horizontal and base frame
+        """
+        if self.DEMONSTRATION and self.gait.is_static():
+            hRb = np.eye(3)
+
+        self.base_targets[:6] = np.zeros(6)
+        if self.DEMONSTRATION and self.joystick.get_l1() and self.gait.is_static():
+            p_ref = self.joystick.get_p_ref()
+            self.base_targets[[3, 4]] = p_ref[[3, 4]]
+            self.h_ref = p_ref[2]
+            hRb = pin.rpy.rpyToMatrix(0.0, 0.0, self.p_ref[5])
+        else:
+            self.base_targets[[3, 4]] = reference_state[[3, 4], 1]
+            self.h_ref = self.q_init[2]
+        self.base_targets[6:] = self.vref_filtered
+
+        return hRb
+
+    def get_feet_targets(self, reference_state, oRh, oTh, hRb):
+        """
+        Retrieve the feet positions, velocities and accelerations to send to the WBC
+        (in base frame)
+
+        @params reference_state reference centroideal state trajectory
+        @params footsteps footsteps positions over horizon
+        @params oRh rotation between the world and horizontal frame
+        @params oTh translation between the world and horizontal frame
+        """
+        T = -oTh - np.array([0.0, 0.0, self.h_ref]).reshape((3, 1))
+        R = hRb @ oRh.transpose()
+
+        self.feet_a_cmd = R @ self.footTrajectoryGenerator.get_foot_acceleration()
+        self.feet_v_cmd = R @ self.footTrajectoryGenerator.get_foot_velocity()
+        self.feet_p_cmd = R @ (self.footTrajectoryGenerator.get_foot_position() + T)
