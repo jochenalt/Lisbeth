@@ -237,7 +237,7 @@ class Controller:
 
         self.base_targets = np.zeros(12)
 
-        self.v_ref = np.zeros(12)
+        self.v_ref = np.zeros(6)
         self.h_v = np.zeros(6)
         self.h_v_windowed = np.zeros(6)
         self.yaw_estim = 0.0
@@ -319,17 +319,17 @@ class Controller:
 
         o_targetFootstep = self.footstepPlanner.updateFootsteps(self.k % self.k_mpc == 0 and self.k != 0,
                                                                 int(self.k_mpc - self.k % self.k_mpc),
-                                                                np.array([self.q]).transpose(),
+                                                                self.q.transpose(),
                                                                 self.h_v_windowed,
-                                                                self.v_ref[0:6].transpose().copy())
+                                                                self.v_ref.transpose())
 
         # Update pos, vel and acc references for feet
         self.footTrajectoryGenerator.update(self.k, o_targetFootstep)
 
         # Run state planner (outputs the reference trajectory of the base)
 
-        self.statePlanner.computeReferenceStates(np.array([self.q]).transpose(), self.h_v,
-                                                 self.v_ref[0:6].transpose(), 0.0)
+        self.statePlanner.computeReferenceStates(self.q.transpose(), self.h_v,
+                                                 self.v_ref.transpose(), 0.0)
 
         # Result can be retrieved with self.statePlanner.getReferenceStates()
         xref = self.statePlanner.getReferenceStates()
@@ -460,7 +460,6 @@ class Controller:
         # Update reference velocity vector
         self.v_ref[0:3] = self.remoteControl.v_ref[0:3, 0]  # TODO: remoteControl velocity given in base frame and not
         self.v_ref[3:6] = self.remoteControl.v_ref[3:6, 0]  # in horizontal frame (case of non flat ground)
-        self.v_ref[6] = 0.0
 
        
     def run_estimator(self, device,baseHeight,baseVelocity):
