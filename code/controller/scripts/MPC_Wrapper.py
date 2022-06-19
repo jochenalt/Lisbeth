@@ -131,7 +131,7 @@ class MPC_Wrapper:
         # Result is stored in mpc.f_applied, mpc.q_next, mpc.v_next
 
         # OSQP MPC
-        self.mpc.run(np.int(k), xref.copy(), fsteps.copy())
+        self.mpc.run(xref.copy(), fsteps.copy())
 
         # Output of the MPC
         self.f_applied = self.mpc.get_latest_result()
@@ -191,7 +191,7 @@ class MPC_Wrapper:
 
                 # Run the asynchronous MPC with the data that as been retrieved
                 fsteps[np.isnan(fsteps)] = 0.0
-                loop_mpc.run(np.int(k), xref, fsteps)
+                loop_mpc.run(xref, fsteps)
 
                 # Store the result (predicted state + desired forces) in the shared memory
                 # print(len(self.dataOut))

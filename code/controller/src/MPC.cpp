@@ -30,6 +30,10 @@ MPC::MPC(Params& params) {
   g(8, 0) = -9.81f * dt;
 
   osqp_set_default_settings(settings);
+
+  create_matrices();
+
+  init_solver();
 }
 
 MPC::MPC() { }
@@ -489,47 +493,48 @@ float MPC::retrieve_cost() {
   return (float)cost;
 }
 
-/*
-Create an initial guess and call the solver to solve the QP problem
-*/
-int MPC::call_solver(int k) {
+void MPC::init_solver() {
   // Initial guess for forces (mass evenly supported by all legs in contact)
   warmxf.block(0, 0, 12 * (n_steps - 1), 1) = x.block(12, 0, 12 * (n_steps - 1), 1);
   warmxf.block(12 * n_steps, 0, 12 * (n_steps - 1), 1) = x.block(12 * (n_steps + 1), 0, 12 * (n_steps - 1), 1);
   warmxf.block(12 * (2 * n_steps - 1), 0, 12, 1) = x.block(12 * n_steps, 0, 12, 1);
   VectorN::Map(&v_warmxf[0], warmxf.size()) = warmxf;
 
-  // Setup the solver (first iteration) then just update it
-  if (k == 0)  // Setup the solver with the matrices
-  {
-    data = (OSQPData *)c_malloc(sizeof(OSQPData));
-    data->n = 12 * n_steps * 2;                 // number of variables
-    data->m = 12 * n_steps * 2 + 20 * n_steps;  // number of constraints
-    data->P = P;             // the upper triangular part of the quadratic cost matrix P in csc format (size n x n)
-    data->A = ML;            // linear constraints matrix A in csc format (size m x n)
-    data->q = &Q[0];         // dense array for linear part of cost function (size n)
-    data->l = &v_NK_low[0];  // dense array for lower bound (size m)
-    data->u = &v_NK_up[0];   // dense array for upper bound (size m)
-    settings->sigma = (c_float)1e-6;
-    settings->eps_abs = (c_float)1e-4;
-    settings->eps_rel = (c_float)1e-4;
-    settings->eps_prim_inf = (c_float)1e-5;
-    settings->eps_dual_inf = (c_float)1e-4;
-    settings->alpha = (c_float)1.6;
-    settings->adaptive_rho = (c_int)1;
-    settings->adaptive_rho_interval = (c_int)200;
-    settings->adaptive_rho_tolerance = (c_float)5.0;
-    osqp_setup(&workspce, data, settings);
-  } else  // Code to update the QP problem without creating it again
-  {
-    osqp_update_A(workspce, &ML->x[0], OSQP_NULL, 0);
-    osqp_update_bounds(workspce, &v_NK_low[0], &v_NK_up[0]);
-  }
+  data = (OSQPData *)c_malloc(sizeof(OSQPData));
+  data->n = 12 * n_steps * 2;                 // number of variables
+  data->m = 12 * n_steps * 2 + 20 * n_steps;  // number of constraints
+  data->P = P;             // the upper triangular part of the quadratic cost matrix P in csc format (size n x n)
+  data->A = ML;            // linear constraints matrix A in csc format (size m x n)
+  data->q = &Q[0];         // dense array for linear part of cost function (size n)
+  data->l = &v_NK_low[0];  // dense array for lower bound (size m)
+  data->u = &v_NK_up[0];   // dense array for upper bound (size m)
+  settings->sigma = (c_float)1e-6;
+  settings->eps_abs = (c_float)1e-4;
+  settings->eps_rel = (c_float)1e-4;
+  settings->eps_prim_inf = (c_float)1e-5;
+  settings->eps_dual_inf = (c_float)1e-4;
+  settings->alpha = (c_float)1.6;
+  settings->adaptive_rho = (c_int)1;
+  settings->adaptive_rho_interval = (c_int)200;
+  settings->adaptive_rho_tolerance = (c_float)5.0;
+  osqp_setup(&workspce, data, settings);
+}
+
+/*
+Create an initial guess and call the solver to solve the QP problem
+*/
+void MPC::call_solver() {
+  // Initial guess for forces (mass evenly supported by all legs in contact)
+  warmxf.block(0, 0, 12 * (n_steps - 1), 1) = x.block(12, 0, 12 * (n_steps - 1), 1);
+  warmxf.block(12 * n_steps, 0, 12 * (n_steps - 1), 1) = x.block(12 * (n_steps + 1), 0, 12 * (n_steps - 1), 1);
+  warmxf.block(12 * (2 * n_steps - 1), 0, 12, 1) = x.block(12 * n_steps, 0, 12, 1);
+  VectorN::Map(&v_warmxf[0], warmxf.size()) = warmxf;
+
+  osqp_update_A(workspce, &ML->x[0], OSQP_NULL, 0);
+  osqp_update_bounds(workspce, &v_NK_low[0], &v_NK_up[0]);
 
   // Run the solver to solve the QP problem
   osqp_solve(workspce);
-
-  return 0;
 }
 
 /*
@@ -563,7 +568,7 @@ double *MPC::get_x_next() { return x_next; }
 Run one iteration of the whole MPC by calling all the necessary functions (data retrieval,
 update of constraint matrices, update of the solver, running the solver, retrieving result)
 */
-int MPC::run(int num_iter, const MatrixN &xref_in, const MatrixN &fsteps_in) {
+void MPC::run(const MatrixN &xref_in, const MatrixN &fsteps_in) {
   // Recontruct the gait based on the computed footsteps
   construct_gait(fsteps_in);
 
@@ -573,19 +578,13 @@ int MPC::run(int num_iter, const MatrixN &xref_in, const MatrixN &fsteps_in) {
 
   // Create the constraint and weight matrices used by the QP solver
   // Minimize x^T.P.x + x^T.Q with constraints M.X == N and L.X <= K
-  if (num_iter == 0) {
-    create_matrices();
-  } else {
-    update_matrices(fsteps_in);
-  }
+  update_matrices(fsteps_in);
 
   // Create an initial guess and call the solver to solve the QP problem
-  call_solver(num_iter);
+  call_solver();
 
   // Extract relevant information from the output of the QP solver
   retrieve_result();
-
-  return 0;
 }
 
 

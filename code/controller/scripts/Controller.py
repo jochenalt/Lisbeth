@@ -497,18 +497,17 @@ class Controller:
         @param oTh translation between the world and horizontal frame
         """
         if (self.k % self.k_mpc) == 0:
-            try:
-                    self.mpc_wrapper.solve(
+            # try:
+            self.mpc_wrapper.solve(
                         self.k,
                         reference_state,
                         footsteps,
                         self.gait.getCurrentGait(),
-                        np.zeros((3, 4)),
-                    )
+                        np.zeros((3, 4)))
                     
-                    self.mpcController.solve(self.k, reference_state,  footsteps,self.gait.getCurrentGait())
-            except ValueError:
-                print("MPC Problem")
+            self.mpcController.solve(reference_state,  footsteps,self.gait.getCurrentGait())
+            #except ValueError:
+            #    print("MPC Problem")
         self.x_f_mpc = self.mpc_wrapper.get_latest_result()
         x_f_mpc_new = self.mpcController.get_latest_result()
 

@@ -50,7 +50,7 @@ class MPC {
  /// \param[in] fsteps_in Footsteps location over the prediction horizon stored in a Nx12 matrix
  ///
  ////////////////////////////////////////////////////////////////////////////////////////////////
- int run(int num_iter, const MatrixN &xref_in, const MatrixN &fsteps_in);
+ void run(const MatrixN &xref_in, const MatrixN &fsteps_in);
 
  ////////////////////////////////////////////////////////////////////////////////////////////////
  ///
@@ -73,7 +73,8 @@ class MPC {
   int update_matrices(Eigen::MatrixXd fsteps);
   int update_ML(Eigen::MatrixXd fsteps);
   int update_NK();
-  int call_solver(int);
+  void init_solver();
+  void call_solver();
   int retrieve_result();
 
   Eigen::Matrix<double, 3, 3> getSkew(Eigen::Matrix<double, 3, 1> v);

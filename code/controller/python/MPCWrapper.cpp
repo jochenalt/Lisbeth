@@ -16,7 +16,7 @@ struct MPCPythonVisitor : public bp::def_visitor<MPCPythonVisitor<MPC>>
                                                "Constructor with parameters."))
 
             // Run MPC from Python
-            .def("run", &MPC::run, bp::args("num_iter", "xref_in", "fsteps_in"), "Run MPC from Python.\n")
+            .def("run", &MPC::run, bp::args("xref_in", "fsteps_in"), "Run MPC from Python.\n")
             .def("get_latest_result", &MPC::get_latest_result,
                  "Get latest result (predicted trajectory  forces to apply).\n")
             .def("get_gait", &MPC::get_gait, "Get gait matrix.\n")
@@ -36,7 +36,7 @@ void exposeMPC() { MPCPythonVisitor<MPC>::expose(); }
 #include "MpcController.hpp"
 
 template <typename MpcController>
-struct MpcWrapperPythonVisitor : public bp::def_visitor<MpcWrapperPythonVisitor<MpcController>>
+struct MpcControllerPythonVisitor : public bp::def_visitor<MpcControllerPythonVisitor<MpcController>>
 {
     template <class PyClassGait>
     void visit(PyClassGait& cl) const
@@ -46,15 +46,15 @@ struct MpcWrapperPythonVisitor : public bp::def_visitor<MpcWrapperPythonVisitor<
             .def("initialize", &MpcController::initialize, bp::args("params"),
                  "Initialize MPC from Python.\n")
             .def("get_latest_result", &MpcController::get_latest_result)
-        	.def("solve", &MpcController::solve);
+        	.def("solve", &MpcController::solve, bp::args("fsteps","gait", "fsteps_in"));
     }
 
     static void expose()
     {
-        bp::class_<MpcController>("MpcController", bp::no_init).def(MpcWrapperPythonVisitor<MpcController>());
+        bp::class_<MpcController>("MpcController", bp::no_init).def(MpcControllerPythonVisitor<MpcController>());
 
         ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
         ENABLE_SPECIFIC_MATRIX_TYPE(Matrix242);
     }
 };
-void exposeMpcController() { MpcWrapperPythonVisitor<MpcController>::expose(); }
+void exposeMpcController() { MpcControllerPythonVisitor<MpcController>::expose(); }

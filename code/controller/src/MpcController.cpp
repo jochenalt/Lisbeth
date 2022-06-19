@@ -8,7 +8,6 @@
 bool thread_is_running = true;
 bool new_mpc_input = false;        // Flag to indicate new data has been written by main loop for MPC
 bool new_mpc_output = false;       // Flag to indicate new data has been written by MPC for main loop
-int shared_k;                     // Numero of the current loop
 MatrixN shared_xref;              // Desired state vector for the whole prediction horizon
 MatrixN shared_fsteps;            // The [x, y, z]^T desired position of each foot for each time step of the horizon
 MatrixN shared_result;            // Predicted state and desired contact forces resulting of the MPC
@@ -18,18 +17,16 @@ std::mutex mutexIn;    // From main loop to MPC
 std::mutex mutexOut;   // From MPC to main loop
 
 
-void write_in(int& k, MatrixN& xref, MatrixN& fsteps) {
+void write_in(MatrixN& xref, MatrixN& fsteps) {
   const std::lock_guard<std::mutex> lockIn(mutexIn);
-  shared_k = k;
   shared_xref = xref;
   shared_fsteps = fsteps;
   new_mpc_input = true;  // New data is available
 }
 
-bool read_in(int& k, MatrixN& xref, MatrixN& fsteps) {
+bool read_in(MatrixN& xref, MatrixN& fsteps) {
   const std::lock_guard<std::mutex> lockIn(mutexIn);
   if (new_mpc_input) {
-    k = shared_k;
     xref = shared_xref;
     fsteps = shared_fsteps;
     new_mpc_input = false;
@@ -59,14 +56,13 @@ MatrixN read_out() {
 }
 
 void MpcController::parallel_loop() {
-  int k;
   MatrixN xref;
   MatrixN fsteps;
   MatrixN result;
   while (thread_is_running) {
 
     // Checking if new data is available to trigger the asynchronous MPC
-    if (read_in(k, xref, fsteps)) {
+    if (read_in(xref, fsteps)) {
       std::cout << "NEW DATA AVAILABLE, LAUNCHING MPC" << std::endl;
 
       /*std::cout << "Parallel k" << std::endl << k << std::endl;
@@ -74,7 +70,7 @@ void MpcController::parallel_loop() {
       std::cout << "Parallel fsteps" << std::endl << fsteps << std::endl;*/
 
       // Run the asynchronous MPC with the data that as been retrieved
-      mpc_->run(k, xref, fsteps);
+      mpc_->run(xref, fsteps);
 
       // Store the result (predicted state + desired forces) in the shared memory
       // MPC::get_latest_result() returns a matrix of size 24 x N and we want to
@@ -112,7 +108,6 @@ void MpcController::initialize(Params& params) {
   last_available_result.col(0).tail(12) = (Vector3(0.0, 0.0, 8.0)).replicate<4, 1>();
 
   // Initialize the shared memory
-  shared_k = 42;
   shared_xref = MatrixN::Zero(12, params.gait.rows() + 1);
   shared_fsteps = MatrixN::Zero(params.gait.rows(), 12);
 
@@ -120,8 +115,8 @@ void MpcController::initialize(Params& params) {
   mpc_thread = new std::thread(&MpcController::parallel_loop, this);  // spawn new thread that runs MPC in parallel
 }
 
-void MpcController::solve(int k, MatrixN xref, MatrixN fsteps, MatrixN gait) {
-  write_in(k, xref, fsteps);
+void MpcController::solve(MatrixN xref, MatrixN fsteps, MatrixN gait) {
+  write_in(xref, fsteps);
 
   // Adaptation if gait has changed
   if (!gait_past.isApprox(gait.row(0)))  // If gait status has changed
