@@ -67,6 +67,11 @@ class MpcController {
   ///
   ////////////////////////////////////////////////////////////////////////////////////////////////
   void parallel_loop();
+  void write_in(MatrixN& xref, MatrixN& fsteps);
+  bool read_in(MatrixN& xref, MatrixN& fsteps);
+  void write_out(MatrixN& result);
+  bool check_new_result();
+  MatrixN read_out();
 
   std::thread* mpc_thread = NULL;
 

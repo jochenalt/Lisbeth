@@ -5,7 +5,6 @@ import Utils
 import time
 import math
 
-import MPC_Wrapper
 import pybullet as pyb
 import pinocchio as pin
 import libcontroller_core as core
@@ -235,9 +234,6 @@ class Controller:
 
         # Wrapper that makes the link with the solver that you want to use for the MPC
         # First argument to True to have PA's MPC, to False to have Thomas's MPC
-        self.enable_multiprocessing = True
-        self.mpc_wrapper = MPC_Wrapper.MPC_Wrapper(params, q_init)
-
         self.k = 0
         self.velID = params.velID
 
@@ -348,18 +344,9 @@ class Controller:
         t_mpc = time.time()
 
         # Target state for the whole body control
-        self.x_f_wbc = (self.x_f_mpc[:, 0]).copy()
-        if not self.gait.getIsStatic():
-            self.x_f_wbc[0] = params.dt_wbc * reference_state[6, 1]
-            self.x_f_wbc[1] = params.dt_wbc * reference_state[7, 1]
-            self.x_f_wbc[2] = params.h_ref
-            self.x_f_wbc[3] = 0.0
-            self.x_f_wbc[4] = 0.0
-            self.x_f_wbc[5] = params.dt_wbc * reference_state[11, 1]
-        else:  # Sort of position control to avoid slow drift
-            self.x_f_wbc[0:3] = np.zeros((3)) # define base xyz=(0,0,0),   should come from footstepplanner
-            self.x_f_wbc[3:6] = np.zeros((3)) # define base RPY = (0,0,0), should come from footstepplanner
-        self.x_f_wbc[6:12] = reference_state[6:, 1]
+
+        self.wbc_f_cmd = np.zeros(24)
+        self.wbc_f_cmd[12:] = (self.mpc_f_cmd[12:, 0]).copy()
 
         # Whole Body Control
         # If nothing wrong happened yet in the WBC controller
@@ -381,7 +368,7 @@ class Controller:
             
             # Run InvKin + WBC QP
             self.wbcWrapper.compute(self.q_wbc, self.dq_wbc,
-                                    self.x_f_wbc[12:], np.array([cgait[0, :]]),
+                                    self.wbc_f_cmd[12:], np.array([cgait[0, :]]),
                                     self.feet_p_cmd,
                                     self.feet_v_cmd,
                                     self.feet_a_cmd,
@@ -497,19 +484,9 @@ class Controller:
         @param oTh translation between the world and horizontal frame
         """
         if (self.k % self.k_mpc) == 0:
-            # try:
-            self.mpc_wrapper.solve(
-                        self.k,
-                        reference_state,
-                        footsteps,
-                        self.gait.getCurrentGait(),
-                        np.zeros((3, 4)))
-                    
             self.mpcController.solve(reference_state,  footsteps,self.gait.getCurrentGait())
-            #except ValueError:
-            #    print("MPC Problem")
-        self.x_f_mpc = self.mpc_wrapper.get_latest_result()
-        x_f_mpc_new = self.mpcController.get_latest_result()
+        self.mpc_f_cmd = self.mpcController.get_latest_result()
+        
 
 
     def get_base_targets(self, reference_state, hRb):

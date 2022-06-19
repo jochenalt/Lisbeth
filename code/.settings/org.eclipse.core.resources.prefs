@@ -1,6 +1,5 @@
 eclipse.preferences.version=1
 encoding//controller/scripts/ForceMonitor.py=utf8
-encoding//controller/scripts/MPC_Wrapper.py=utf8
 encoding//controller/scripts/RemoteControl.py=utf8
 encoding//controller/scripts/main.py=utf8
 encoding//controller/scripts/main_calibrate.py=utf8

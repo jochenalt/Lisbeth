@@ -27,6 +27,9 @@ MPC::MPC(Params& params) {
 			   0.0, 0.0, 0.0, 0.0;
   gI << 3.09249e-2, -8.00101e-7, 1.865287e-5, -8.00101e-7, 5.106100e-2, 1.245813e-4, 1.865287e-5, 1.245813e-4,
       6.939757e-2;
+
+  //gI << Eigen::Map<VectorN, Eigen::Unaligned>(params_->I_mat.data(), params_->I_mat.size());
+
   g(8, 0) = -9.81f * dt;
 
   osqp_set_default_settings(settings);
@@ -159,12 +162,6 @@ int MPC::create_ML() {
   // int m = 12 * n_steps * 2 + 20 * n_steps;   // number of rows
   int n = 12 * n_steps * 2;  // number of columns
 
-  /*int i_min = i4vec_min(nst, r_ML);
-  int i_max = i4vec_max(nst, r_ML);
-  int j_min = i4vec_min(nst, c_ML);
-  int j_max = i4vec_max(nst, c_ML);
-  st_header_print(i_min, i_max, j_min, j_max, m, n, nst);*/
-
   // Get the CC indices.
   icc = (int *)malloc(ncc * sizeof(int));
   ccc = (int *)malloc((n + 1) * sizeof(int));
@@ -187,12 +184,6 @@ int MPC::create_ML() {
   delete[] r_ML;
   delete[] c_ML;
   delete[] v_ML;
-
-  // Print CC matrix
-  // char rt_char[2] = {'R', 'T'};
-  // char cc_char[2] = {'C', 'C'};
-  // st_print(m, n, 25, r_ML, c_ML, v_ML, rt_char);
-  // cc_print ( m, n, 25, icc, ccc, acc, cc_char);
 
   // Create indices list that will be used to update ML
   int i_x_tmp[12] = {6, 9, 10, 11, 7, 9, 10, 11, 8, 9, 10, 11};
@@ -632,73 +623,6 @@ int MPC::construct_gait(MatrixN fsteps_in) {
     }
   }
   return 0;
-}
-
-/*
-Set all the parameters of the OSQP solver
-*/
-int set_settings() { return 0; }
-
-void MPC::my_print_csc_matrix(csc *M, const char *name) {
-  c_int j, i, row_start, row_stop;
-  c_int k = 0;
-
-  // Print name
-  printf("%s :\n", name);
-
-  for (j = 0; j < M->n; j++) {
-    row_start = M->p[j];
-    row_stop = M->p[j + 1];
-
-    if (row_start == row_stop)
-      continue;
-    else {
-      for (i = row_start; i < row_stop; i++) {
-        int a = (int)M->i[i];
-        int b = (int)j;
-        double c = M->x[k++];
-        printf("\t%3u [%3u,%3u] = %.3g\n", k - 1, a, b, c);
-      }
-    }
-  }
-}
-
-void MPC::save_csc_matrix(csc *M, std::string filename) {
-  c_int j, i, row_start, row_stop;
-  c_int k = 0;
-
-  // Open file
-  std::ofstream myfile;
-  myfile.open(filename + ".csv");
-
-  for (j = 0; j < M->n; j++) {
-    row_start = M->p[j];
-    row_stop = M->p[j + 1];
-
-    if (row_start == row_stop)
-      continue;
-    else {
-      for (i = row_start; i < row_stop; i++) {
-        int a = (int)M->i[i];
-        int b = (int)j;
-        double c = M->x[k++];
-        myfile << a << "," << b << "," << c << "\n";
-      }
-    }
-  }
-  myfile.close();
-}
-
-void MPC::save_dns_matrix(double *M, int size, std::string filename) {
-  // Open file
-  std::ofstream myfile;
-  myfile.open(filename + ".csv");
-
-  for (int j = 0; j < size; j++) {
-    myfile << j << "," << 0 << "," << M[j] << "\n";
-  }
-
-  myfile.close();
 }
 
 MatrixNi MPC::get_gait() { return gait; }

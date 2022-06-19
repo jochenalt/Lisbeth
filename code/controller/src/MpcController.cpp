@@ -8,41 +8,43 @@
 bool thread_is_running = true;
 bool new_mpc_input = false;        // Flag to indicate new data has been written by main loop for MPC
 bool new_mpc_output = false;       // Flag to indicate new data has been written by MPC for main loop
-MatrixN shared_xref;              // Desired state vector for the whole prediction horizon
-MatrixN shared_fsteps;            // The [x, y, z]^T desired position of each foot for each time step of the horizon
-MatrixN shared_result;            // Predicted state and desired contact forces resulting of the MPC
+
+// establish a buffer for communication between main thread and MPC thread
+struct {
+	MatrixN xref;              // Desired state vector for the whole prediction horizon
+	MatrixN fsteps;            // The [x, y, z]^T desired position of each foot for each time step of the horizon
+	MatrixN result;            // Predicted state and desired contact forces resulting of the MPC
+} thread_buffer;
 
 // Mutexes to protect the global variables
 std::mutex mutexIn;    // From main loop to MPC
 std::mutex mutexOut;   // From MPC to main loop
 
 
-void write_in(MatrixN& xref, MatrixN& fsteps) {
-  const std::lock_guard<std::mutex> lockIn(mutexIn);
-  shared_xref = xref;
-  shared_fsteps = fsteps;
-  new_mpc_input = true;  // New data is available
+void MpcController::write_in(MatrixN& xref, MatrixN& fsteps) {
+  // const std::lock_guard<std::mutex> lockIn(mutexIn);
+  thread_buffer.xref = xref;
+  thread_buffer.fsteps = fsteps;
+
+  new_mpc_input = true;  // New data is available, set this flag last
 }
 
-bool read_in(MatrixN& xref, MatrixN& fsteps) {
-  const std::lock_guard<std::mutex> lockIn(mutexIn);
+bool MpcController::read_in(MatrixN& xref, MatrixN& fsteps) {
   if (new_mpc_input) {
-    xref = shared_xref;
-    fsteps = shared_fsteps;
-    new_mpc_input = false;
+    xref = thread_buffer.xref;
+    fsteps = thread_buffer.fsteps;
+    new_mpc_input = false;	// reset this flag last
     return true;
   }
   return false;
 }
 
-void write_out(MatrixN& result) {
-  const std::lock_guard<std::mutex> lockOut(mutexOut);
-  shared_result = result;
+void MpcController::write_out(MatrixN& result) {
+	thread_buffer.result = result;
   new_mpc_output = true;  // New data is available
 }
 
-bool check_new_result() {
-  const std::lock_guard<std::mutex> lockOut(mutexOut);
+bool MpcController::check_new_result() {
   if (new_mpc_output) {
     new_mpc_output = false;
     return true;
@@ -50,9 +52,9 @@ bool check_new_result() {
   return false;
 }
 
-MatrixN read_out() {
+MatrixN MpcController::read_out() {
   const std::lock_guard<std::mutex> lockOut(mutexOut);
-  return shared_result;
+  return thread_buffer.result;
 }
 
 void MpcController::parallel_loop() {
@@ -63,20 +65,17 @@ void MpcController::parallel_loop() {
 
     // Checking if new data is available to trigger the asynchronous MPC
     if (read_in(xref, fsteps)) {
-      std::cout << "NEW DATA AVAILABLE, LAUNCHING MPC" << std::endl;
-
-      /*std::cout << "Parallel k" << std::endl << k << std::endl;
-      std::cout << "Parallel xref" << std::endl << xref << std::endl;
-      std::cout << "Parallel fsteps" << std::endl << fsteps << std::endl;*/
+      // std::cout << "NEW DATA AVAILABLE, LAUNCHING MPC" << std::endl;
 
       // Run the asynchronous MPC with the data that as been retrieved
       mpc_->run(xref, fsteps);
 
-      // Store the result (predicted state + desired forces) in the shared memory
+      // Store the result (predicted state + desired forces)
       // MPC::get_latest_result() returns a matrix of size 24 x N and we want to
       // retrieve only the 2 first columns i.e. dataOut.block(0, 0, 24, 2)
-      // std::cout << "NEW RESULT AVAILABLE, WRITING OUT" << std::endl;
       result = mpc_->get_latest_result();
+
+      // publish results
       write_out(result);
     } else {
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -108,8 +107,8 @@ void MpcController::initialize(Params& params) {
   last_available_result.col(0).tail(12) = (Vector3(0.0, 0.0, 8.0)).replicate<4, 1>();
 
   // Initialize the shared memory
-  shared_xref = MatrixN::Zero(12, params.gait.rows() + 1);
-  shared_fsteps = MatrixN::Zero(params.gait.rows(), 12);
+  thread_buffer.xref = MatrixN::Zero(12, params.gait.rows() + 1);
+  thread_buffer.fsteps = MatrixN::Zero(params.gait.rows(), 12);
 
   // start thread
   mpc_thread = new std::thread(&MpcController::parallel_loop, this);  // spawn new thread that runs MPC in parallel
