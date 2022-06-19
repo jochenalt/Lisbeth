@@ -216,7 +216,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     # Stop MPC running in a parallel process
     if controller.enable_multiprocessing:
         print("Stopping parallel process")
-        controller.mpc_wrapper.stop_parallel_loop()
+        controller.mpcController.stop_parallel_loop()
     # controller.view.stop()  # Stop viewer
 
     # DAMPING TO GET ON THE GROUND PROGRESSIVELY *********************

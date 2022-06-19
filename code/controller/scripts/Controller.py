@@ -213,18 +213,6 @@ class Controller:
         self.gait.updateGait(True,  Types.GaitType.NoMovement.value)
 
         self.shoulders = np.zeros((3, 4))
-        #self.shoulders = params.shoulders
-        # x,y coordinates of shoulders
-        #print("shoulders1", self.shoulders)
-        #self.shoulders[0, :] = [0.1946, 0.1946, -0.1946, -0.1946]       
-        #self.shoulders[1, :] = [0.14695, -0.14695, 0.14695, -0.14695]
-        #self.shoulders[2, :] = [0, 0, 0, 0]
-        #print("shoulders2", self.shoulders)
-        
-        #for i in range(4):
-        #    for j in range(3):
-        #        params.shoulders[i*3+j] = self.shoulders[j,i]
-                
         self.footstepPlanner = core.FootstepPlanner()
         self.footstepPlanner.initialize(params, self.gait)
 
@@ -275,8 +263,6 @@ class Controller:
         self.compute(params, dDevice)
 
         
-
-
     def compute(self, params, device):
         """Run one iteration of the main control loop
 

@@ -10,7 +10,7 @@ set(${PY_NAME}_SOURCES
   MPCStub.cpp
   StatePlannerStub.cpp
   FilterStub.cpp
-
+  ControllerStub.cpp
   )
 
 add_library(${PY_NAME} SHARED ${${PY_NAME}_SOURCES})

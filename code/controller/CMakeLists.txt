@@ -79,7 +79,7 @@ set(${PROJECT_NAME}_SOURCES
   src/Filter.cpp
   src/WbcController.cpp
   src/MpcController.cpp
-
+  src/Controller.cpp
   )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
