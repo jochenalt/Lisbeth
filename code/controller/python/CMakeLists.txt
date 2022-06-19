@@ -1,15 +1,15 @@
 set(${PY_NAME}_SOURCES
-  gepadd.cpp
-  EstimatorWrapper.cpp
-  ParamsWrapper.cpp
-  FootstepPlannerWrapper.cpp
-  FootTrajectoryGeneratorWrapper.cpp
-  GaitWrapper.cpp
-  QPWBCWrapper.cpp
-  InvKinWrapper.cpp
-  MPCWrapper.cpp
-  StatePlannerWrapper.cpp
-  FilterWrapper.cpp
+  Stubs.cpp
+  EstimatorStub.cpp
+  ParamsStub.cpp
+  FootstepPlannerStub.cpp
+  FootTrajectoryGeneratorStub.cpp
+  GaitStub.cpp
+  WBCStub.cpp
+  InvKinStub.cpp
+  MPCStub.cpp
+  StatePlannerStub.cpp
+  FilterStub.cpp
 
   )
 

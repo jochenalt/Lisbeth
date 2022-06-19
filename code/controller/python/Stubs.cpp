@@ -21,6 +21,7 @@ BOOST_PYTHON_MODULE(libcontroller_core)
     eigenpy::enableEigenPy();
 
     exposeMPC();
+    exposeMpcController();
     exposeStatePlanner();
     exposeGait();
     exposeFootstepPlanner();
@@ -30,5 +31,4 @@ BOOST_PYTHON_MODULE(libcontroller_core)
     exposeEstimator();
     exposeWbcWrapper();
     exposeFilter();
-    exposeMpcController();
 }

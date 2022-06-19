@@ -637,9 +637,6 @@ int MPC::construct_gait(MatrixN fsteps_in) {
 /*
 Set all the parameters of the OSQP solver
 */
-/*
-Set all the parameters of the OSQP solver
-*/
 int set_settings() { return 0; }
 
 void MPC::my_print_csc_matrix(csc *M, const char *name) {
