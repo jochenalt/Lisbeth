@@ -32,9 +32,6 @@ class QPWBC {
   int cpt_ML = 0;
   int cpt_P = 0;
 
-  // Set to True after the creation of the QP problem during the first call of the solver
-  bool initialized = false;
-
   // Weight matrices of initial QP
   Eigen::Matrix<double, 6, 6> Q1 = Eigen::Matrix<double, 6, 6>::Identity();
   Eigen::Matrix<double, 12, 12> Q2 = Eigen::Matrix<double, 12, 12>::Identity();
@@ -95,6 +92,7 @@ class QPWBC {
   int create_weight_matrices();
   void compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA);
   void update_PQ();
+  void init_solver();
   int call_solver();
   int retrieve_result(const Eigen::MatrixXd &f_cmd);
   int run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA, const Eigen::MatrixXd &k_contact);
