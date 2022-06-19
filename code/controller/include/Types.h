@@ -32,6 +32,8 @@ using VectorNi = Eigen::Matrix<int, Eigen::Dynamic, 1>;
 
 using RowVector4 = Eigen::Matrix<double, 1, 4>;
 
+using Matrix242 = Eigen::Matrix<double, 24, 2>;
+
 using Matrix3 = Eigen::Matrix<double, 3, 3>;
 using Matrix4 = Eigen::Matrix<double, 4, 4>;
 using Matrix6 = Eigen::Matrix<double, 6, 6>;

@@ -54,6 +54,7 @@ struct MpcWrapperPythonVisitor : public bp::def_visitor<MpcWrapperPythonVisitor<
         bp::class_<MpcController>("MpcController", bp::no_init).def(MpcWrapperPythonVisitor<MpcController>());
 
         ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
+        ENABLE_SPECIFIC_MATRIX_TYPE(Matrix242);
     }
 };
 void exposeMpcController() { MpcWrapperPythonVisitor<MpcController>::expose(); }

@@ -317,18 +317,11 @@ class Controller:
 
         # at a new gait cycle we need create the next gait round and start MPC
         startNewGaitCycle = (self.k % self.k_mpc) == 0
-        
         self.gait.updateGait(startNewGaitCycle, self.remoteControl.gaitCode)
 
         self.remoteControl.gaitCode = 0
 
         # Compute target footstep based on current and reference velocities
-        #o_targetFootstep = self.footstepPlanner.updateFootsteps(self.k % self.k_mpc == 0 and self.k != 0,
-        #                                                        int(self.k_mpc - self.k % self.k_mpc),
-        #                                                        self.q[0:7, 0:1],
-        #                                                        self.h_v[0:6, 0:1].copy(),
-        #                                                        self.v_ref[0:6, 0])
-
         o_targetFootstep = self.footstepPlanner.updateFootsteps(self.k % self.k_mpc == 0 and self.k != 0,
                                                                 int(self.k_mpc - self.k % self.k_mpc),
                                                                 self.q,
@@ -339,7 +332,6 @@ class Controller:
         self.footTrajectoryGenerator.update(self.k, o_targetFootstep)
 
         # Run state planner (outputs the reference trajectory of the base)
-
         self.statePlanner.computeReferenceStates(self.q_filtered[:6], self.h_v_filtered,
                                                  self.vref_filtered, 0.0)
 
@@ -513,9 +505,12 @@ class Controller:
                         self.gait.getCurrentGait(),
                         np.zeros((3, 4)),
                     )
+                    
+                    self.mpcController.solve(self.k, reference_state,  footsteps,self.gait.getCurrentGait())
             except ValueError:
                 print("MPC Problem")
         self.x_f_mpc = self.mpc_wrapper.get_latest_result()
+        x_f_mpc_new = self.mpcController.get_latest_result()
 
 
     def get_base_targets(self, reference_state, hRb):
