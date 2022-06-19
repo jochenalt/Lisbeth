@@ -1,4 +1,4 @@
-#include "WbcWrapper.hpp"
+#include "../include/WbcController.hpp"
 
 #include "pinocchio/algorithm/crba.hpp"
 #include "pinocchio/math/rpy.hpp"
@@ -6,7 +6,7 @@
 #include "pinocchio/algorithm/compute-all-terms.hpp"
 #include "pinocchio/algorithm/rnea.hpp"
 
-WbcWrapper::WbcWrapper()
+WbcController::WbcController()
     : M_(Eigen::Matrix<double, 18, 18>::Zero())
     , Jc_(Eigen::Matrix<double, 12, 6>::Zero())
     , k_since_contact_(Eigen::Matrix<double, 1, 4>::Zero())
@@ -26,7 +26,7 @@ WbcWrapper::WbcWrapper()
 	, enable_comp_forces_(false)
 {}
 
-void WbcWrapper::initialize(Params& params)
+void WbcController::initialize(Params& params)
 {
   // Params store parameters
   params_ = &params;
@@ -77,7 +77,7 @@ Args:
     contacts (1x4): Contact status of feet
     pgoals, vgoals, agoals Objects that contains the pos, vel and acc references for feet
 */
-void WbcWrapper::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_cmd, MatrixN const& contacts,
+void WbcController::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_cmd, MatrixN const& contacts,
                          MatrixN const& pgoals, MatrixN const& vgoals, MatrixN const& agoals, VectorN const &xgoals)
 {
    if (f_cmd.rows() != 12) {

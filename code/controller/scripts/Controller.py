@@ -180,8 +180,8 @@ class Controller:
         self.estimator = core.Estimator()
         self.estimator.initialize(params)
 
-        self.wbcWrapper = core.WbcWrapper()
-        self.wbcWrapper.initialize(params)
+        self.wbcController = core.WbcController()
+        self.wbcController.initialize(params)
 
         self.mpcController = core.MpcController()
         self.mpcController.initialize(params)
@@ -360,14 +360,14 @@ class Controller:
             
             self.q_wbc[2] = self.h_ref  # at position (0.0, 0.0, h_ref)
             self.q_wbc[3:5] = self.q_filtered[3:5]
-            self.q_wbc[6:] = self.wbcWrapper.qdes  # with reference angular positions of previous loop
+            self.q_wbc[6:] = self.wbcController.qdes  # with reference angular positions of previous loop
 
             # Get velocity in base frame for Pinocchio (not current base frame but desired base frame)
             self.dq_wbc[:6] = self.estimator.get_v_estimate()[:6]
-            self.dq_wbc[6:] = self.wbcWrapper.vdes
+            self.dq_wbc[6:] = self.wbcController.vdes
             
             # Run InvKin + WBC QP
-            self.wbcWrapper.compute(self.q_wbc, self.dq_wbc,
+            self.wbcController.compute(self.q_wbc, self.dq_wbc,
                                     self.wbc_f_cmd[12:], np.array([cgait[0, :]]),
                                     self.feet_p_cmd,
                                     self.feet_v_cmd,
@@ -377,9 +377,9 @@ class Controller:
             # Quantities sent to the control board
             self.result.P = 3.0 * np.ones(12)
             self.result.D = 0.2 * np.ones(12)
-            self.result.q_des[:] = self.wbcWrapper.qdes[:]
-            self.result.v_des[:] = self.wbcWrapper.vdes[:]
-            self.result.tau_ff[:] = 0.8 * self.wbcWrapper.tau_ff
+            self.result.q_des[:] = self.wbcController.qdes[:]
+            self.result.v_des[:] = self.wbcController.vdes[:]
+            self.result.tau_ff[:] = 0.8 * self.wbcController.tau_ff
             
         t_wbc = time.time()
 
@@ -420,12 +420,12 @@ class Controller:
                 self.error_value = self.estimator.get_v_vecurity()
                 
             # @JA security level was 8 formerly
-            if np.any(np.abs(self.wbcWrapper.tau_ff) > 8):
-                print ("tau_ff", self.wbcWrapper.tau_ff)
-            if np.any(np.abs(self.wbcWrapper.tau_ff) > 22):
+            if np.any(np.abs(self.wbcController.tau_ff) > 8):
+                print ("tau_ff", self.wbcController.tau_ff)
+            if np.any(np.abs(self.wbcController.tau_ff) > 22):
                 self.error = True
                 self.error_flag = 3
-                self.error_value = self.wbcWrapper.tau_ff
+                self.error_value = self.wbcController.tau_ff
 
         # If something wrong happened in TSID controller we stick to a security controller
         if self.error or self.remoteControl.stop:

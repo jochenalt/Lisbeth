@@ -9,8 +9,7 @@ extern void exposeFootTrajectoryGenerator();
 extern void exposeGait();
 extern void exposeQPWBC();
 extern void exposeStatePlanner();
-extern void exposeMPC();
-extern void exposeWbcWrapper();
+extern void exposeWbcController();
 extern void exposeFilter();
 extern void exposeMpcController();
 
@@ -20,7 +19,6 @@ BOOST_PYTHON_MODULE(libcontroller_core)
 
     eigenpy::enableEigenPy();
 
-    exposeMPC();
     exposeMpcController();
     exposeStatePlanner();
     exposeGait();
@@ -29,6 +27,6 @@ BOOST_PYTHON_MODULE(libcontroller_core)
     exposeInvKin();
     exposeParams();
     exposeEstimator();
-    exposeWbcWrapper();
+    exposeWbcController();
     exposeFilter();
 }

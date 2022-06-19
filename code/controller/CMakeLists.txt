@@ -77,7 +77,7 @@ set(${PROJECT_NAME}_SOURCES
   src/Params.cpp
   src/ComplementaryFilter.cpp
   src/Filter.cpp
-  src/WbcWrapper.cpp
+  src/WbcController.cpp
   src/MpcController.cpp
 
   )
