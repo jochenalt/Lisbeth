@@ -12,6 +12,7 @@
 
 #include "pinocchio/math/rpy.hpp"
 #include "Types.h"
+#include "Params.hpp"
 
 
 class StatePlanner
@@ -36,7 +37,7 @@ public:
     /// \brief Initializer
     ///
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    void initialize(double dt_in, double T_mpc_in, double h_ref_in);
+    void initialize(Params& params);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     ///
@@ -58,6 +59,7 @@ public:
     int getNSteps() { return n_steps_; }
 
 private:
+    Params* params_;
     double dt_;         // Time step of the contact sequence (time step of the MPC)
     double h_ref_;       // Reference height for the trunk
     int n_steps_;        // Number of time steps in the prediction horizon

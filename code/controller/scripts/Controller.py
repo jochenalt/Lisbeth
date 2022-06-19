@@ -206,7 +206,7 @@ class Controller:
         self.o_v_filt = np.zeros((18, 1))
 
         self.statePlanner = core.StatePlanner()
-        self.statePlanner.initialize(params.dt_mpc, params.T_mpc, self.h_ref)
+        self.statePlanner.initialize(params)
 
         self.gait = core.Gait()
         self.gait.initialize(params)

@@ -19,7 +19,7 @@ struct StatePlannerPythonVisitor : public bp::def_visitor<StatePlannerPythonVisi
             .def("getReferenceStates", &StatePlanner::getReferenceStates, "Get xref matrix.\n")
             .def("getNSteps", &StatePlanner::getNSteps, "Get number of steps in prediction horizon.\n")
 
-            .def("initialize", &StatePlanner::initialize, bp::args("dt_in", "T_mpc_in", "h_ref_in"),
+            .def("initialize", &StatePlanner::initialize, bp::args("params"),
                  "Initialize StatePlanner from Python.\n")
 
             // Run StatePlanner from Python

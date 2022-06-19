@@ -15,7 +15,8 @@ struct ControllerPythonVisitor : public bp::def_visitor<ControllerPythonVisitor<
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
 
             .def("initialize", &Controller::initialize, bp::args("params"))
-            .def("compute", &Controller::compute);
+            .def("compute", &Controller::compute)
+        	.def("command_go", &Controller::command_go, bp::args("ok"));
     }
 
     static void expose()
