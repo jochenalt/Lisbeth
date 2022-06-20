@@ -12,6 +12,7 @@ from cmath import nan
 import RemoteControl
 import Types
 import ModelLoader
+import Utils
 
 class Result:
     """Object to store the result of the control loop
@@ -434,7 +435,7 @@ class Controller:
         @param v_baseVel_perfect 3D perfect linear velocity of the base in base frame
         """
         self.estimator.run(self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.get_foot_position().copy(),
-                           device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy(), # data from IMU
+                           device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), Utils.quaternionToRPY(device.baseOrientation.copy()), # data from IMU
                            np.array(device.q_mes), device.v_mes, # data from joints
                            baseHeight.copy(),
                            baseVelocity)

@@ -123,7 +123,7 @@ bool Estimator::isSteady() {
     goals (3x4 array): Target locations of feet on the ground
 */
 void Estimator::run(MatrixN gait, MatrixN feetTargets,
-				 	Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector4 baseOrientation,
+				 	Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector3 baseOrientation,
 					Vector12 const& q, Vector12 const &v,
 					VectorN const& perfectPosition,Vector3 const& b_perfectVelocity) {
 
@@ -198,7 +198,7 @@ void Estimator::updatFeetStatus(MatrixN const& gait, MatrixN const& feetTargets)
 
 
 /** pass data from IMU */
-void Estimator::updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector4 base_orientation, VectorN const& perfectPosition) {
+void Estimator::updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector3 base_orientation, VectorN const& perfectPosition) {
 
 	//  Linear acceleration of the trunk (base frame)
     this->IMULinearAcceleration = base_linear_acc;
@@ -207,8 +207,7 @@ void Estimator::updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velo
     this->IMUAngularVelocity = base_angular_velocity;
 
     // Angular position of the trunk (local frame)
-    Eigen::Quaterniond base_orientation_q ({base_orientation[3], base_orientation[0], base_orientation[1], base_orientation[2]});
-    IMURpy = quaternionToRPY(base_orientation_q);
+    IMURpy = base_orientation;
 
     // use the very first call to calculate the offset in z
     static bool initialized = false;

@@ -22,7 +22,7 @@ public:
 	Estimator ();
 	~Estimator() {};
 
-	void initialize(Params& params /*Vector12 q_init, double dt_mpc, double dt_wbc, int gaitRows, int N_periods, int N_simulation, double h_init, bool perfectEstimator = false*/);
+	void initialize(Params& params );
 
 	void updateForwardKinematics();
 	/*
@@ -38,7 +38,7 @@ public:
 	 * b_perfectVelocity Velocity of the robot in base frame
 	 */
 	void run( MatrixN gait, MatrixN feetTargets,
-				 	Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector4 baseOrientation,
+				 	Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector3 baseOrientation,
 					Vector12 const& q, Vector12 const &v,
 					VectorN const& perfectPosition,Vector3 const& b_perfectVelocity);
 
@@ -86,8 +86,8 @@ private:
 	// store and update IMU data
 	// baseLinearAcceleration 	Linear acceleration of the IMU (gravity compensated)
 	// baseAngularVelocity 		Angular velocity of the IMU
-	// base_orientation 		Quaternion [w, x,y,z] coming from IMU
-	void updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector4 base_orientation,VectorN const& perfectPosition);
+	// base_orientation 		RPY from IMU
+	void updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector3 base_orientation,VectorN const& perfectPosition);
 
 	// Update the feet relative data
 	// update feetStatus_, feetTargets_, feetStancePhaseDuration_ and phaseRemainingDuration_
