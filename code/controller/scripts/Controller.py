@@ -513,4 +513,16 @@ class Controller:
 
         self.feet_a_cmd = R @ self.footTrajectoryGenerator.get_foot_acceleration()
         self.feet_v_cmd = R @ self.footTrajectoryGenerator.get_foot_velocity()
-        self.feet_p_cmd = R @ (self.footTrajectoryGenerator.get_foot_position() + T)
+        self.feet_p_cmd = (hRb @ oRh.transpose()) @ (self.footTrajectoryGenerator.get_foot_position() + T)
+        self.feet_p_cmd = oRh.transpose()         @ (self.footTrajectoryGenerator.get_foot_position() + T)
+        
+        # Feet command acceleration in base frame
+        v_ref_tmp =np.array([self.v_ref[3:6]]).transpose()
+        self.feet_a_cmd = self.feet_a_cmd \
+                - np.cross(np.tile(v_ref_tmp, (1, 4)), np.cross(np.tile(v_ref_tmp, (1, 4)), self.feet_p_cmd, axis=0), axis=0) \
+                - 2 * np.cross(np.tile(v_ref_tmp, (1, 4)), self.feet_v_cmd, axis=0)
+
+
+        # Feet command velocity in base frame
+        self.feet_v_cmd = self.feet_v_cmd - np.array([self.v_ref[0:3]]).transpose() - np.cross(np.tile(v_ref_tmp, (1, 4)), self.feet_p_cmd, axis=0)
+
