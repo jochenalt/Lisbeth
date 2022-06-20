@@ -56,15 +56,15 @@ public:
     void rollGait();
 
     MatrixN getCurrentGait() { return currentGait_; }
-    double getCurrentGaitCoeff(int i, int j) { return currentGait_(i, j); }
+    double getCurrentGait(int i, int j) { return currentGait_(i, j); }
     bool getIsStatic() { return is_static_; }
     bool isNewPhase() { return newPhase_; }
     int getCurrentGaitType() { return currentGaitType_; }
     int getPrevGaitType() { return prevGaitType_; }
 
     double getElapsedTime(int i, int j);
-    double getRemainingTimeCoeff(int i, int j);
-    double getPhaseDurationCoeff(int i, int j);
+    double getRemainingTime(int i, int j);
+    double getPhaseDuration(int i, int j);
 
 private:
     void createWalk();
@@ -81,7 +81,9 @@ private:
     void create_gait_f();
 
     MatrixN pastGait_;     // Past gait
+public:
     MatrixN currentGait_;  // Current and future gait
+private:
     MatrixN desiredGait_;  // Future desired gait
 
     double dt_;      // Time step of the contact sequence (time step of the MPC)

@@ -264,9 +264,9 @@ double Gait::getElapsedTime(int i, int j) {
   return nPhase * dt_;
 }
 
-double Gait::getPhaseDurationCoeff(int i, int j) { return getElapsedTime(i, j) + getRemainingTimeCoeff(i, j); }
+double Gait::getPhaseDuration(int i, int j) { return getElapsedTime(i, j) + getRemainingTime(i, j); }
 
-double Gait::getRemainingTimeCoeff(int i, int j) {
+double Gait::getRemainingTime(int i, int j) {
   double state = currentGait_(i, j);
   double nPhase = 1;
   int row = i;

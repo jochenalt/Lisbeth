@@ -91,7 +91,7 @@ void FootstepPlanner::initialize(Params& params,
      Rz.topLeftCorner<2, 2>() << c, s, -s, c;
      Vector2 dpos = dt_wbc * b_vref.head(2);  // Displacement along X and Y for the last time step
      for (int j = 0; j < 4; j++) {
-       if (gait_->getCurrentGaitCoeff(0, j) == 1.0) {
+       if (gait_->getCurrentGait(0, j) == 1.0) {
          currentFootstep_.block(0, j, 2, 1) = Rz * (currentFootstep_.block(0, j, 2, 1) - dpos);
        }
      }
@@ -168,7 +168,7 @@ void FootstepPlanner::initialize(Params& params,
 
    void FootstepPlanner::computeNextFootstep(int i, int j, Vector6 const& b_v, Vector6 const& b_vref) {
      nextFootstep_ = Matrix34::Zero();
-     double t_stance = gait_->getPhaseDurationCoeff(i, j);
+     double t_stance = gait_->getPhaseDuration(i, j);
 
      // Disable heuristic terms if gait is going to switch to static so that feet land at vertical of shoulders
      if (!gait_->getIsStatic()) {
@@ -248,7 +248,7 @@ void FootstepPlanner::initialize(Params& params,
 
      // Refresh position with estimated position if foot is in stance phase
      for (int i = 0; i < 4; i++) {
-       if (gait_->getCurrentGaitCoeff(0, i) == 1.0) {
+       if (gait_->getCurrentGait(0, i) == 1.0) {
          currentFootstep_.block(0, i, 2, 1) = pos_feet_.block(0, i, 2, 1);  // Get only x and y to let z = 0 for contacts
        }
      }

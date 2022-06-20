@@ -321,7 +321,7 @@ class Controller:
         # Result can be retrieved with self.statePlanner.getReferenceStates()
         reference_state = self.statePlanner.getReferenceStates()
         fsteps = self.footstepPlanner.getFootsteps()
-        cgait = self.gait.getCurrentGait()
+        cgait = self.gait.matrix
 
         t_planner = time.time()
 
@@ -434,7 +434,7 @@ class Controller:
         @param q_perfect 6D perfect position of the base in world frame
         @param v_baseVel_perfect 3D perfect linear velocity of the base in base frame
         """
-        self.estimator.run(self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.get_foot_position().copy(),
+        self.estimator.run(self.gait.matrix,self.footTrajectoryGenerator.get_foot_position().copy(),
                            device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), Utils.quaternionToRPY(device.baseOrientation.copy()), # data from IMU
                            np.array(device.q_mes), device.v_mes, # data from joints
                            baseHeight.copy(),
@@ -470,7 +470,7 @@ class Controller:
         @param oTh translation between the world and horizontal frame
         """
         if (self.k % self.k_mpc) == 0:
-            self.mpcController.solve(reference_state,  footsteps,self.gait.getCurrentGait())
+            self.mpcController.solve(reference_state,  footsteps,self.gait.matrix)
         self.mpc_f_cmd = self.mpcController.get_latest_result()
         
 
