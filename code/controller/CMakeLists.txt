@@ -67,7 +67,6 @@ set(${PROJECT_NAME}_SOURCES
   src/MPC.cpp
   src/Gait.cpp
   src/Utils.cpp
-  src/Kinematics.cpp
   src/Estimator.cpp
   src/FootTrajectoryGenerator.cpp
   src/FootstepPlanner.cpp
