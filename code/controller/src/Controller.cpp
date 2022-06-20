@@ -206,12 +206,11 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 			  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,
 					jointsPositions,jointsVelocities,
 					Vector3::Zero(), Vector3::Zero());
-/*
 	  // Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames
 	  estimator.updateReferenceState(cmd_v_ref);
 
 	  // Update gait
-	  gait.update(k_mpc, joystick.getJoystickCode());
+	  gait.update(k_mpc, cmd_gait);
 
 	  // Quantities go through a 1st order low pass filter with fc = 15 Hz (avoid >25Hz foldback)
 	  q_filt_mpc.head(6) = filter_mpc_q.filter(estimator.getQReference().head(6), true);
@@ -237,7 +236,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	  // Whole Body Control
 	  // If nothing wrong happened yet in the WBC controller
-	  if (!error && !joystick.getStop()) {
+	  if (!error && cmd_go) {
 	    // In static mode, do not rotate footsteps by roll and pitch
 	    if (params_->DEMONSTRATION && gait.getIsStatic()) {
 	      hRb.setIdentity();
@@ -247,15 +246,13 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	    // In static mode with L1 pressed, perform orientation control of the base with joystick
 	    xgoals.head(6).setZero();
-	    if (params_->DEMONSTRATION && joystick.getL1() && gait.getIsStatic()) {
-	      p_ref_ = joystick.getPRef();
-	      h_ref_ = p_ref_(2, 0);
-	      xgoals(3, 0) = p_ref_(3, 0);
-	      xgoals(4, 0) = p_ref_(4, 0);
-	      hRb = pinocchio::rpy::rpyToMatrix(0.0, 0.0, p_ref_(5, 0));
-	    } else {
-	      h_ref_ = params_->h_ref;
-	    }
+        h_ref_ = 0.25 + cmd_p_ref[2];
+	    xgoals(3, 0) = cmd_p_ref[0];
+	    xgoals(4, 0) = cmd_p_ref[1];
+
+	    hRb = pinocchio::rpy::rpyToMatrix(cmd_rpy[0], cmd_rpy[1], cmd_rpy[2]);
+
+
 
 	    // If the four feet are in contact then we do not listen to MPC (default contact forces instead)
 	    if (params_->DEMONSTRATION && gait.getIsStatic()) {
@@ -297,5 +294,4 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	  // Increment loop counter
 	  k++;
-	  */
 }

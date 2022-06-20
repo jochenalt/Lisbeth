@@ -317,7 +317,7 @@ class Controller:
 
         # Run state planner (outputs the reference trajectory of the base)
         self.statePlanner.computeReferenceStates(self.q_filtered[:6], self.h_v_filtered,
-                                                 self.vref_filtered, 0.0)
+                                                 self.vref_filtered)
 
         # Result can be retrieved with self.statePlanner.getReferenceStates()
         reference_state = self.statePlanner.getReferenceStates()

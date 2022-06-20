@@ -34,9 +34,11 @@ class Controller {
 
 		// command from remote: stop/go
 	  	void command_go(bool ok) { cmd_go = ok; }
-	  	
 	  	// command from remote: set speed
-	  	void command_speed(Vector3 &v_ref) { cmd_v_ref = v_ref;}
+	  	void command_speed(Vector3 &v_ref, Vector3 &pos, Vector3& rpy) { cmd_v_ref = v_ref;cmd_p_ref = pos;cmd_rpy = rpy;}
+	  	// command from remote: new gait
+	  	void command_gait(GaitType newGait) { cmd_gait = newGait;}
+
 	private:
 		void init_robot(Params& params);
  
@@ -85,7 +87,10 @@ class Controller {
 
 		// commands from remote
 		bool cmd_go = true;			// stop or go
-		Vector3 cmd_v_ref = Vector3({0,0,0});	// speed as defined by remote in xyz
+		Vector3 cmd_v_ref = {0,0,0};	// speed as defined by remote in xyz
+		GaitType cmd_gait = GaitType::NoMovement;
+		Vector3 cmd_rpy = {0,0,0};
+		Vector3 cmd_p_ref = {0,0,0};
 };		
 
 
