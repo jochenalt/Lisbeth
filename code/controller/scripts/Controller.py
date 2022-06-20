@@ -258,7 +258,8 @@ class Controller:
         dDevice.v_mes = np.zeros(12)
         dDevice.baseLinearAcceleration = np.zeros(3)
         dDevice.baseAngularVelocity = np.zeros(3)
-        dDevice.baseOrientation = np.array([0.0, 0.0, 0.0, 1.0])
+        dDevice.baseOrientation = np.array([0.0, 0.0, 0.0])
+
         dDevice.dummyPos = np.array([0.0, 0.0, q_init[2]])
         dDevice.b_baseVel = np.zeros(3)
         self.compute(params, dDevice)
@@ -435,7 +436,7 @@ class Controller:
         @param v_baseVel_perfect 3D perfect linear velocity of the base in base frame
         """
         self.estimator.run(self.gait.matrix,self.footTrajectoryGenerator.get_foot_position().copy(),
-                           device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), Utils.quaternionToRPY(device.baseOrientation.copy()), # data from IMU
+                           device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy(), # data from IMU
                            np.array(device.q_mes), device.v_mes, # data from joints
                            baseHeight.copy(),
                            baseVelocity)

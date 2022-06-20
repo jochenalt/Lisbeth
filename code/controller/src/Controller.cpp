@@ -201,13 +201,12 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 			 Vector12 const& jointsPositions,
 			 Vector12 const& jointsVelocities)
 {
-	/*
 	  // Process state estimator
 	  estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(),
 			  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,
 					jointsPositions,jointsVelocities,
 					Vector3::Zero(), Vector3::Zero());
-
+/*
 	  // Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames
 	  estimator.updateReferenceState(cmd_v_ref);
 
