@@ -25,9 +25,9 @@ class Controller {
   		~Controller() {};
 
 	  	void initialize(Params& params);
-	  	void compute(Vector12 const& imuLinearAcceleration, 
-	  				 Vector12 const& imuGyroscopse,
-	  				 Vector12 const& imuAttitudeEuler,
+	  	void compute(Vector3 const& imuLinearAcceleration,
+	  				 Vector3 const& imuGyroscopse,
+	  				 Vector3 const& imuAttitudeEuler,
 	  				 Vector12 const& jointsPositions,
 			 		 Vector12 const& jointsVelocities);
 	  	void security_check();

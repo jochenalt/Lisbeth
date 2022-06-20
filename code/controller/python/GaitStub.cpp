@@ -23,7 +23,7 @@ struct GaitPythonVisitor : public bp::def_visitor<GaitPythonVisitor<Gait>>
                  "Initialize Gait from Python.\n")
 
             // Update current gait matrix from Python
-            .def("updateGait", &Gait::updateGait, bp::args("rollGait","targetGaitType"),
+            .def("update", &Gait::update, bp::args("rollGait","targetGaitType"),
                  "Update current gait matrix from Python.\n");
     }
 

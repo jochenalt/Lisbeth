@@ -195,23 +195,24 @@ void Controller::security_check() {
 }
 
 
-void Controller::compute(Vector12 const& imuLinearAcceleration,
-			 Vector12 const& imuGyroscopse,
-			 Vector12 const& imuAttitudeEuler,
+void Controller::compute(Vector3 const& imuLinearAcceleration,
+			 Vector3 const& imuGyroscopse,
+			 Vector3 const& imuAttitudeEuler,
 			 Vector12 const& jointsPositions,
 			 Vector12 const& jointsVelocities)
 {
 	/*
 	  // Process state estimator
-	  estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(), robot->imu->GetLinearAcceleration(),
-	                robot->imu->GetGyroscope(), robot->imu->GetAttitudeEuler(), robot->joints->GetPositions(),
-	                robot->joints->GetVelocities(), Vector3::Zero(), Vector3::Zero());
+	  estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(),
+			  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,
+					jointsPositions,jointsVelocities,
+					Vector3::Zero(), Vector3::Zero());
 
 	  // Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames
 	  estimator.updateReferenceState(cmd_v_ref);
 
 	  // Update gait
-	  gait.update(k, k_mpc, joystick.getJoystickCode());
+	  gait.update(k_mpc, joystick.getJoystickCode());
 
 	  // Quantities go through a 1st order low pass filter with fc = 15 Hz (avoid >25Hz foldback)
 	  q_filt_mpc.head(6) = filter_mpc_q.filter(estimator.getQReference().head(6), true);

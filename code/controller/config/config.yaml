@@ -22,7 +22,7 @@ robot:
     enable_multiprocessing: true  # Enable/disable running the MPC in another process in parallel of the main loop
     perfect_estimator: false  # Enable/disable perfect estimator by using data directly from PyBullet
     
-    use_flat_plane: false  # If True the ground is flat, otherwise it has bumps
+    use_flat_plane: true  # If True the ground is flat, otherwise it has bumps
     predefined_vel: False # If we are using a predefined reference velocity (True) or a joystick/keyboard (False)
     enable_pyb_GUI: True  # Enable/disable PyBullet GUI
            

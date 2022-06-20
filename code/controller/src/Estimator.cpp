@@ -122,7 +122,7 @@ bool Estimator::isSteady() {
     device (object): Interface with the masterboard or the simulation
     goals (3x4 array): Target locations of feet on the ground
 */
-void Estimator::run(int k, MatrixN gait, MatrixN goalsN,
+void Estimator::run(MatrixN gait, MatrixN feetTargets,
 				 	Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector4 baseOrientation,
 					Vector12 const& q, Vector12 const &v,
 					VectorN const& perfectPosition,Vector3 const& b_perfectVelocity) {

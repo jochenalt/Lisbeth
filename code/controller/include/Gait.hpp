@@ -50,7 +50,7 @@ public:
      * Transfer current gait phase into past gait matrix
      * Insert future desired gait phase at the end of the gait matrix
      */
-    bool updateGait(bool const rollGait, int targetGaitType);
+    bool update(bool const rollGait, int targetGaitType);
 
 
     void rollGait();

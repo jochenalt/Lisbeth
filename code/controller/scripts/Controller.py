@@ -210,7 +210,7 @@ class Controller:
 
         self.gait = core.Gait()
         self.gait.initialize(params)
-        self.gait.updateGait(True,  Types.GaitType.NoMovement.value)
+        self.gait.update(True,  Types.GaitType.NoMovement.value)
 
         self.shoulders = np.zeros((3, 4))
         self.footstepPlanner = core.FootstepPlanner()
@@ -299,7 +299,7 @@ class Controller:
 
         # at a new gait cycle we need create the next gait round and start MPC
         startNewGaitCycle = (self.k % self.k_mpc) == 0
-        self.gait.updateGait(startNewGaitCycle, self.remoteControl.gaitCode)
+        self.gait.update(startNewGaitCycle, self.remoteControl.gaitCode)
 
         self.remoteControl.gaitCode = 0
 
@@ -433,8 +433,7 @@ class Controller:
         @param q_perfect 6D perfect position of the base in world frame
         @param v_baseVel_perfect 3D perfect linear velocity of the base in base frame
         """
-
-        self.estimator.run(self.k, self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.get_foot_position().copy(),
+        self.estimator.run(self.gait.getCurrentGait().copy(),self.footTrajectoryGenerator.get_foot_position().copy(),
                            device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy(), # data from IMU
                            np.array(device.q_mes), device.v_mes, # data from joints
                            baseHeight.copy(),

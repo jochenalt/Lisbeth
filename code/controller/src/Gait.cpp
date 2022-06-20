@@ -288,7 +288,7 @@ double Gait::getRemainingTimeCoeff(int i, int j) {
 }
 
 
-bool Gait::updateGait(bool initiateNewGait,
+bool Gait::update(bool initiateNewGait,
 					  int targetGaitType)
 {
 	if ((targetGaitType != GaitType::NoGait) && (currentGaitType_ != targetGaitType)) {

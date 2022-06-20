@@ -37,7 +37,7 @@ public:
 	 * perfectPosition Position of the robot in world frame
 	 * b_perfectVelocity Velocity of the robot in base frame
 	 */
-	void run(int k, MatrixN gait, MatrixN feetTargets,
+	void run( MatrixN gait, MatrixN feetTargets,
 				 	Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector4 baseOrientation,
 					Vector12 const& q, Vector12 const &v,
 					VectorN const& perfectPosition,Vector3 const& b_perfectVelocity);
