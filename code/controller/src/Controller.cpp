@@ -195,7 +195,12 @@ void Controller::security_check() {
 }
 
 
-void Controller::compute() {
+void Controller::compute(Vector12 const& imuLinearAcceleration,
+			 Vector12 const& imuGyroscopse,
+			 Vector12 const& imuAttitudeEuler,
+			 Vector12 const& jointsPositions,
+			 Vector12 const& jointsVelocities)
+{
 	/*
 	  // Process state estimator
 	  estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(), robot->imu->GetLinearAcceleration(),

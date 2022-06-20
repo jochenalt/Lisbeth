@@ -25,7 +25,11 @@ class Controller {
   		~Controller() {};
 
 	  	void initialize(Params& params);
-	  	void compute();
+	  	void compute(Vector12 const& imuLinearAcceleration, 
+	  				 Vector12 const& imuGyroscopse,
+	  				 Vector12 const& imuAttitudeEuler,
+	  				 Vector12 const& jointsPositions,
+			 		 Vector12 const& jointsVelocities);
 	  	void security_check();
 
 		// command from remote: stop/go

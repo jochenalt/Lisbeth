@@ -46,7 +46,6 @@ set(${PROJECT_NAME}_HEADERS
   include/MPC.hpp
   include/Gait.hpp
   include/Utils.hpp
-  include/Kinematics.hpp
   include/Estimator.hpp
   include/FootTrajectoryGenerator.hpp
   include/FootstepPlanner.hpp
@@ -58,8 +57,9 @@ set(${PROJECT_NAME}_HEADERS
   include/st_to_cc.hpp
   include/ComplementaryFilter.hpp
   include/Filter.hpp
-#  include/WbcWrapper.hpp
-
+  include/WbcController.hpp
+  include/MpcController.hpp
+  include/Controller.hpp
   )
 
 set(${PROJECT_NAME}_SOURCES
