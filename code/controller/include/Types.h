@@ -70,7 +70,7 @@ enum GaitType { NoGait = 0,
 				CustomGallop= 6,/* Dog */
 				NoMovement  = 7, /* No Movement */
 };
-#define GaitNo 5
+#define GaitNo 7
 
 const std::string urdfFilePath= "/home/jochen/lisbeth/description/solo12.urdf";
 

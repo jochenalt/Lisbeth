@@ -32,7 +32,7 @@ Controller::Controller()
 void Controller::init_robot(Params& params) {
 	 // Path to the robot URDF
 	  const std::string filename =
-	      std::string("/home/jochen/description/solo12.urdf");
+	      std::string("/home/jochen/lisbeth/description/solo12.urdf");
 
 	  // Robot model
 	  pinocchio::Model model_;
@@ -251,7 +251,6 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    xgoals(4, 0) = cmd_p_ref[1];
 
 	    hRb = pinocchio::rpy::rpyToMatrix(cmd_rpy[0], cmd_rpy[1], cmd_rpy[2]);
-
 
 
 	    // If the four feet are in contact then we do not listen to MPC (default contact forces instead)

@@ -9,6 +9,8 @@ from Controller import Controller
 import numpy as np
 import argparse
 import libcontroller_core as core
+import RemoteControl
+
 
 params = core.Params()  # Object that holds all controller parameters
 
@@ -128,9 +130,14 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
 
     # Run a scenario and retrieve data thanks to the logger
     controller = Controller(params, q_init)
+    controller.remoteControl = RemoteControl.RemoteControl(params.dt_wbc, False)
+    controllerCpp = core.Controller()
+    controllerCpp.initialize(params)
 
     if params.SIMULATION and (des_vel_analysis is not None):
         controller.remoteControl.update_for_analysis(des_vel_analysis, N_analysis, N_steady)
+
+
 
     ####
 
@@ -167,7 +174,8 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
 
         # Wait for Enter input before starting the control loop
         put_on_the_floor(device, q_init)
-        
+
+
     print("Start the motion.")
     # CONTROL LOOP ***************************************************
     t = 0.0
@@ -178,8 +186,12 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         # Update sensor data (IMU, encoders, Motion capture)
         device.UpdateMeasurment()
 
+        # get command from remote control
+        controller.remoteControl.update_v_ref(controller.k, controller.velID)
+
         # Desired torques
         controller.compute(params, device)
+        #controllerCpp.compute()
 
         # Check that the initial position of actuators is not too far from the
         # desired position of actuators to avoid breaking the robot

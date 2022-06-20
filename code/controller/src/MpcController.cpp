@@ -1,24 +1,8 @@
-#include "../include/MpcController.hpp"
+#include "MpcController.hpp"
 
 #include <chrono>
 #include <thread>
 #include <mutex>
-
-// Shared global variables
-bool thread_is_running = true;
-bool new_mpc_input = false;        // Flag to indicate new data has been written by main loop for MPC
-bool new_mpc_output = false;       // Flag to indicate new data has been written by MPC for main loop
-
-// establish a buffer for communication between main thread and MPC thread
-struct {
-	MatrixN xref;              // Desired state vector for the whole prediction horizon
-	MatrixN fsteps;            // The [x, y, z]^T desired position of each foot for each time step of the horizon
-	MatrixN result;            // Predicted state and desired contact forces resulting of the MPC
-} thread_buffer;
-
-// Mutexes to protect the global variables
-std::mutex mutexIn;    // From main loop to MPC
-std::mutex mutexOut;   // From MPC to main loop
 
 
 void MpcController::write_in(MatrixN& xref, MatrixN& fsteps) {
@@ -53,7 +37,7 @@ bool MpcController::check_new_result() {
 }
 
 MatrixN MpcController::read_out() {
-  const std::lock_guard<std::mutex> lockOut(mutexOut);
+  //const std::lock_guard<std::mutex> lockOut(mutexOut);
   return thread_buffer.result;
 }
 

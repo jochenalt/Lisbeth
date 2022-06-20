@@ -175,7 +175,6 @@ class Controller:
 
         # Load robot model and data
         self.robot = self.init_robot(q_init, params)
-        self.remoteControl= RemoteControl.RemoteControl(params.dt_wbc, False)
 
         # initialize Cpp state estimator
         self.estimator = core.Estimator()
@@ -186,7 +185,6 @@ class Controller:
 
         self.mpcController = core.MpcController()
         self.mpcController.initialize(params)
-
 
         self.h_ref = params.h_ref
         self.q_init = np.hstack((np.zeros(6), q_init.copy()))
@@ -262,7 +260,7 @@ class Controller:
 
         dDevice.dummyPos = np.array([0.0, 0.0, q_init[2]])
         dDevice.b_baseVel = np.zeros(3)
-        self.compute(params, dDevice)
+        #self.compute(params, dDevice)
 
         
     def compute(self, params, device):
@@ -275,7 +273,6 @@ class Controller:
         t_start = time.time()
 
         # Update the reference velocity coming from the gamepad
-        self.remoteControl.update_v_ref(self.k, self.velID)
         start = time.clock()
         
         baseHeight = np.array([0.0, 0.0, 0.0, device.dummyPos[2] - 0.0155])
