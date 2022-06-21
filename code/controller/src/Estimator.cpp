@@ -179,6 +179,7 @@ void Estimator::updateReferenceState(VectorN const& newvRef) {
   h_v.tail(3) = hRb * vEstimate.segment(3, 3);
   h_vFiltered.head(3) = hRb * vFiltered.head(3);
   h_vFiltered.tail(3) = hRb * vFiltered.tail(3);
+
 }
 
 

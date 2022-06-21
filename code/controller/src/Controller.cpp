@@ -31,6 +31,7 @@ Controller::Controller()
       f_mpc(Vector12::Zero()) {}
 
 void Controller::init_robot(Params& params) {
+
 	 // Path to the robot URDF
 	  const std::string filename = std::string(URDF_MODEL);
 
@@ -217,11 +218,12 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 			 Vector12 const& jointsVelocities)
 {
 	  // Process state estimator
+	  std::cout << "--- C++ ---" << std::endl;
 
-	  std::cout << "C++ ait.getCurrentGait()" << gait.getCurrentGait() << std::endl
-			  	 << "footTrajectoryGenerator.getFootPosition()" << footTrajectoryGenerator.getFootPosition() << std::endl;
+	  // std::cout << "C++ ait.getCurrentGait()" << gait.getCurrentGait() << std::endl
+		//	  	 << "footTrajectoryGenerator.getFootPosition()" << footTrajectoryGenerator.getFootPosition() << std::endl;
 
-	estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(),
+	  estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(),
 			  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,
 					jointsPositions,jointsVelocities,
 					Vector3::Zero(), Vector3::Zero());
@@ -266,13 +268,14 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    }
 
 	    // In static mode with L1 pressed, perform orientation control of the base with joystick
+	    /*
 	    xgoals.head(6).setZero();
         h_ref_ = 0.25 + cmd_p_ref[2];
 	    xgoals(3, 0) = cmd_p_ref[0];
 	    xgoals(4, 0) = cmd_p_ref[1];
 
 	    hRb = pinocchio::rpy::rpyToMatrix(cmd_rpy[0], cmd_rpy[1], cmd_rpy[2]);
-
+*/
 
 	    // If the four feet are in contact then we do not listen to MPC (default contact forces instead)
 	    if (params_->DEMONSTRATION && gait.getIsStatic()) {

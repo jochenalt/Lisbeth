@@ -35,7 +35,17 @@ class Controller {
 		// command from remote: stop/go
 	  	void command_go(bool ok) { cmd_go = ok; }
 	  	// command from remote: set speed
-	  	void command_speed(Vector3 &v_ref, Vector3 &pos, Vector3& rpy) { cmd_v_ref = v_ref;cmd_p_ref = pos;cmd_rpy = rpy;}
+	  	// v_ref = (speed in x, speed in y, angular speed in z)
+	  	// p_ref = (body position x, y, z)
+	  	//
+	  	void command_speed(double vX, double vY, double heightZ, double rotX, double rotY, double angSpeedZ) {
+	  		cmd_v_ref(0,0) = vX;
+	  		cmd_v_ref(1,0) = vY;
+	  		cmd_v_ref(2,0) = heightZ;
+	  		cmd_v_ref(3,0) = rotX;
+	  		cmd_v_ref(4,0) = rotY;
+	  		cmd_v_ref(5,0) = angSpeedZ;
+	  	}
 	  	// command from remote: new gait
 	  	void command_gait(GaitType newGait) { cmd_gait = newGait;}
 
@@ -87,10 +97,8 @@ class Controller {
 
 		// commands from remote
 		bool cmd_go = true;			// stop or go
-		Vector3 cmd_v_ref = {0,0,0};	// speed as defined by remote in xyz
+		Vector6 cmd_v_ref = Vector6::Zero();
 		GaitType cmd_gait = GaitType::NoMovement;
-		Vector3 cmd_rpy = {0,0,0};
-		Vector3 cmd_p_ref = {0,0,0};
 };		
 
 

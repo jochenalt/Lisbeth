@@ -266,6 +266,7 @@ class Controller:
             device (object): Interface with the masterboard or the simulation
         """
 
+        print("---- PY---")
         t_start = time.time()
 
         # Update the reference velocity coming from the gamepad

@@ -17,7 +17,8 @@ struct ControllerPythonVisitor : public bp::def_visitor<ControllerPythonVisitor<
             .def("initialize", &Controller::initialize, bp::args("params"))
             .def("compute", &Controller::compute, bp::args("imuLinearAcceleration", "imuGyroscopse", "imuAttitudeEuler",
             											  "jointPositions", "jointVelocities"))
-        	.def("command_go", &Controller::command_go, bp::args("ok"));
+            .def("command_speed", &Controller::command_speed, bp::args("vX", "vY","heightZ", "angSpeedZ", "rotX", "rotY"))
+			.def("command_go", &Controller::command_go, bp::args("ok"));
     }
 
     static void expose()
