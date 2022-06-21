@@ -232,8 +232,26 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	  // Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames
 	  estimator.updateReferenceState(cmd_v_ref);
 
-	  // Update gait
-	  gait.update(k_mpc, cmd_gait);
+	  // automatically turn on a gait with previously gait when we start moving
+	  if ((gait.getCurrentGaitType() == GaitType::NoMovement)  and cmd_go) {
+	 	  		std::cout << "command received, start moving" << std::endl;
+	 	  		cmd_gait = gait.getPrevGaitType();
+	 			if (cmd_gait == GaitType::NoGait)
+	  				cmd_gait = GaitType::Trot;
+	  }
+
+	  //  automatically go to static mode if no movement is detected
+	  bool is_steady = estimator.isSteady();
+	  bool startNewGaitCycle = false;
+	  if (gait.isNewPhase() && gait.getCurrentGaitType() != GaitType::NoMovement && is_steady && !cmd_go) {
+	  	  		std::cout << "no movement, calm down" << std::endl;
+	  			cmd_gait = GaitType::NoMovement;
+	  }
+
+	  // at a new gait cycle we need create the next gait round and start MPC
+	  startNewGaitCycle = (k % k_mpc) == 0;
+	  gait.update(startNewGaitCycle, cmd_gait);
+      cmd_gait = GaitType::NoGait;
 
 	  // Quantities go through a 1st order low pass filter with fc = 15 Hz (avoid >25Hz foldback)
 	  q_filt_mpc.head(6) = filter_mpc_q.filter(estimator.getQReference().head(6), true);

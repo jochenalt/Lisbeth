@@ -280,15 +280,15 @@ class Controller:
         t_filter = time.time()
         
         # automatically turn on a gait if we start moving
-        if (self.gait.getCurrentGaitType() == Types.GaitType.NoMovement.value)  and self.remoteControl.isMoving:
+        if (self.gait.getCurrentGaitTypeInt() == Types.GaitType.NoMovement.value)  and self.remoteControl.isMoving:
             print ("command received, start moving")
-            self.remoteControl.gaitCode = self.gait.getPrevGaitType()
+            self.remoteControl.gaitCode = self.gait.getPrevGaitTypeInt()
             if self.remoteControl.gaitCode == 0:
                self.remoteControl.gaitCode = Types.GaitType.Trot.value
 
         # automatically go to static mode if no movement is detected
         is_steady = self.estimator.isSteady()
-        if self.gait.isNewPhase and self.gait.getCurrentGaitType() != Types.GaitType.NoMovement.value and is_steady and  not self.remoteControl.isMoving:
+        if self.gait.isNewPhase and self.gait.getCurrentGaitTypeInt() != Types.GaitType.NoMovement.value and is_steady and  not self.remoteControl.isMoving:
             print ("no movement, calm down")
             self.remoteControl.gaitCode = Types.GaitType.NoMovement.value
             
@@ -388,7 +388,7 @@ class Controller:
     def security_check(self):
         cpp_q_filt = np.transpose(np.array(self.estimator.get_q_estimate())[np.newaxis])
         
-        if (self.error_flag == 0) and (not self.error) and (not self.remoteControl.stop) and self.gait.getCurrentGaitType() != 6:
+        if (self.error_flag == 0) and (not self.error) and (not self.remoteControl.stop) and self.gait.getCurrentGaitTypeInt() != 6:
             if np.any(np.abs(cpp_q_filt[7:, 0]) > self.q_security):
                 self.error = True
                 self.error_flag = 1

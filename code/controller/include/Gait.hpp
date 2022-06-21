@@ -59,8 +59,11 @@ public:
     double getCurrentGait(int i, int j) { return currentGait_(i, j); }
     bool getIsStatic() { return is_static_; }
     bool isNewPhase() { return newPhase_; }
-    int getCurrentGaitType() { return currentGaitType_; }
-    int getPrevGaitType() { return prevGaitType_; }
+    GaitType getCurrentGaitType() { return currentGaitType_; }
+    int getCurrentGaitTypeInt() { return currentGaitType_; }
+
+    GaitType getPrevGaitType() { return prevGaitType_; }
+    int getPrevGaitTypeInt() { return prevGaitType_; }
 
     double getElapsedTime(int i, int j);
     double getRemainingTime(int i, int j);
