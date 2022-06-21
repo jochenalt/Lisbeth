@@ -5,6 +5,7 @@
 #include "pinocchio/algorithm/frames.hpp"
 #include "pinocchio/math/rpy.hpp"
 #include "pinocchio/parsers/urdf.hpp"
+#include "pinocchio/algorithm/joint-configuration.hpp"
 
 Controller::Controller()
     : P(Vector12::Zero()),
@@ -43,22 +44,26 @@ void Controller::init_robot(Params& params) {
 	  pinocchio::Data data_ = pinocchio::Data(model_);
 
 	  // Update all the quantities of the model
-	  VectorN q_tmp = VectorN::Zero(model_.nq);
-	  q_tmp(6, 0) = 1.0;  // Quaternion (0, 0, 0, 1)
-	  q_tmp.tail(12) = Vector12(params.q_init.data());
+	  VectorN q = VectorN::Zero(model_.nq);
+	  q(0,0) = 1.0;            //  x transition as defined in SRDF file
+	  q(2,0) = 0.235;          // basic height as defined in SRDF file
+	  q(6, 0) = 1.0;  		   // Quaternion (0, 0, 0, 1)
+	  q.block<12,1>(7,0) = Vector12(params.q_init.data());
 
 	  // Initialisation of model quantities
-	  pinocchio::computeAllTerms(model_, data_, q_tmp, VectorN::Zero(model_.nv));
-	  pinocchio::centerOfMass(model_, data_, q_tmp, VectorN::Zero(model_.nv));
+	  pinocchio::computeAllTerms(model_, data_, q, VectorN::Zero(model_.nv));
+	  pinocchio::centerOfMass(model_, data_, q, VectorN::Zero(model_.nv));
 	  pinocchio::updateFramePlacements(model_, data_);
-	  pinocchio::crba(model_, data_, q_tmp);
+	  pinocchio::crba(model_, data_, q);
 
 	  // Initialisation of the position of footsteps
 	  Matrix34 fsteps_init = Matrix34::Zero();
 	  int indexes[4] = {static_cast<int>(model_.getFrameId("FL_FOOT")), static_cast<int>(model_.getFrameId("FR_FOOT")),
 	                    static_cast<int>(model_.getFrameId("HL_FOOT")), static_cast<int>(model_.getFrameId("HR_FOOT"))};
+
 	  for (int i = 0; i < 4; i++) {
-	    fsteps_init.col(i) = data_.oMf[indexes[i]].translation();
+		fsteps_init.col(i) = data_.oMf[indexes[i]].translation();
+        fsteps_init(0,i) -= 1.0;
 	  }
 
 	  // Get default height
@@ -79,6 +84,7 @@ void Controller::init_robot(Params& params) {
 	  int indexes_sh[4] = {4, 12, 20, 28};  //  Shoulder indexes
 	  for (int i = 0; i < 4; i++) {
 	    shoulders_init.col(i) = data_.oMf[indexes_sh[i]].translation();
+	    shoulders_init(0,i) -= 1.0;
 	  }
 
 	  // Saving data
@@ -88,6 +94,7 @@ void Controller::init_robot(Params& params) {
 	  // Inertia matrix
 	  Vector6 Idata = data_.Ycrb[1].inertia().data();
 	  Matrix3 inertia;
+	  // Composite rigid body inertia in q_init position
 	  inertia << Idata(0, 0), Idata(1, 0), Idata(3, 0), Idata(1, 0), Idata(2, 0), Idata(4, 0), Idata(3, 0), Idata(4, 0),
 	      Idata(5, 0);
 	  for (int i = 0; i < 3; i++) {
@@ -97,10 +104,14 @@ void Controller::init_robot(Params& params) {
 	  }
 
 	  // Offset between center of base and CoM
-	  Vector3 CoM = data_.com[0].head(3) - q_tmp.head(3);
+	  Vector3 CoM = data_.com[0].head(3) - q.head(3);
+      CoM(1,0) = 0; // assume we are symmetric
+
 	  params_->CoM_offset[0] = CoM(0, 0);
 	  params_->CoM_offset[1] = CoM(1, 0);
 	  params_->CoM_offset[2] = CoM(2, 0);
+
+
 
 	  for (int i = 0; i < 4; i++) {
 	    for (int j = 0; j < 3; j++) {
@@ -122,6 +133,8 @@ void Controller::initialize(Params& params) {
 	  // Initialization of the control blocks
 	  statePlanner.initialize(params);
 	  gait.initialize(params);
+      gait.update(true,  GaitType::NoMovement);
+
 	  footstepPlanner.initialize(params, gait);
 	  mpcController.initialize(params);
 	  footTrajectoryGenerator.initialize(params, gait);
@@ -138,6 +151,9 @@ void Controller::initialize(Params& params) {
 	  P = (Vector3(params.Kp_main.data())).replicate<4, 1>();
 	  D = (Vector3(params.Kd_main.data())).replicate<4, 1>();
 	  FF = params.Kff_main * Vector12::Ones();
+
+	  //
+
 }
 
 void Controller::security_check() {
@@ -201,10 +217,16 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 			 Vector12 const& jointsVelocities)
 {
 	  // Process state estimator
-	  estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(),
+
+	  std::cout << "C++ ait.getCurrentGait()" << gait.getCurrentGait() << std::endl
+			  	 << "footTrajectoryGenerator.getFootPosition()" << footTrajectoryGenerator.getFootPosition() << std::endl;
+
+	estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(),
 			  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,
 					jointsPositions,jointsVelocities,
 					Vector3::Zero(), Vector3::Zero());
+
+	  //std::cout << "C++ oRh" << estimator.getoRh() << std::endl;
 	  // Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames
 	  estimator.updateReferenceState(cmd_v_ref);
 

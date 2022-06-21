@@ -87,7 +87,7 @@ void Estimator::initialize(Params& params) {
 	  qRef.tail(12) = Vector12(params.q_init.data());
 
 	  // Initialize Pinocchio
-	  const std::string filename = std::string("/home/jochen/lisbeth/description/solo12.urdf");
+	  const std::string filename = std::string(URDF_MODEL);
 	  pinocchio::urdf::buildModel(filename, pinocchio::JointModelFreeFlyer(), velocityModel, false);
 	  pinocchio::urdf::buildModel(filename, pinocchio::JointModelFreeFlyer(), positionModel, false);
 	  velocityData = pinocchio::Data(velocityModel);

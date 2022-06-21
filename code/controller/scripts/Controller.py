@@ -51,18 +51,21 @@ class dummyDevice:
 
 
 class Controller:
-
         
-    def init_robot(self, q_init, params):
+    def init_robot(self,  params):
         ModelLoader.free_flyer = True
         robot = ModelLoader.ModelLoader().robot  
-        q = robot.q0.reshape((-1, 1))
-        q[7:, 0] = q_init
+        #q = robot.q0.reshape((-1, 1))
+        q = np.zeros((19,1))
+        q[0,0] = 1.0            # x transition as defined in SRDF file
+        q[2,0] = 0.235          # basic height as defined in SRDF file
+        q[6,0] = 1
+        q[7:, 0] = params.q_init
 
         # Initialisation of model quantities
         pin.centerOfMass(robot.model, robot.data, q, np.zeros((18, 1)))
         pin.updateFramePlacements(robot.model, robot.data)
-        pin.crba(robot.model, robot.data, robot.q0)
+        pin.crba(robot.model, robot.data, q)
 
         # Initialisation of the position of footsteps
         self.fsteps_init = np.zeros((3, 4))
@@ -72,9 +75,10 @@ class Controller:
            robot.model.getFrameId("HL_FOOT"),
            robot.model.getFrameId("HR_FOOT"),
         ]
+        print("indexes", indexes)
         for i in range(4):
             self.fsteps_init[:, i] = robot.data.oMf[indexes[i]].translation
-            self.fsteps_init[0,i] = self.fsteps_init[0,i] -1
+            self.fsteps_init[0,i] = self.fsteps_init[0,i] - 1.0
 
         h_init = 0.0
         for i in range(4):
@@ -113,6 +117,9 @@ class Controller:
         
         params.CoM_offset = (robot.data.com[0][:3] - q[0:3, 0]).tolist()
         params.CoM_offset[1] = 0.0
+        
+        print("params.CoM_offset ", params.CoM_offset)
+
 
         for i in range(4):
             for j in range(3):
@@ -162,19 +169,13 @@ class Controller:
         self.t_list_InvKin = [0] * int(params.N_SIMULATION)
         self.t_list_QPWBC = [0] * int(params.N_SIMULATION)
 
-        # Init joint torques to correct shape
-        self.jointTorques = np.zeros((12, 1))
-
-        # List to store the IDs of debug lines
-        self.ID_deb_lines = []
-
         # Enable/Disable perfect estimator
         perfectEstimator = False
         if not params.SIMULATION:
             perfectEstimator = False  # Cannot use perfect estimator if we are running on real robot
 
         # Load robot model and data
-        self.robot = self.init_robot(q_init, params)
+        self.robot = self.init_robot(params)
 
         # initialize Cpp state estimator
         self.estimator = core.Estimator()
@@ -200,10 +201,7 @@ class Controller:
         self.q = np.zeros(18)
         self.q[0:6] = np.array([0.0, 0.0, self.h_ref, 0.0, 0.0, 0.0])
         self.q[6:] = q_init
-   
-        self.v = np.zeros((18, 1))
-        self.o_v_filt = np.zeros((18, 1))
-
+        
         self.statePlanner = core.StatePlanner()
         self.statePlanner.initialize(params)
 
@@ -223,7 +221,6 @@ class Controller:
         # First argument to True to have PA's MPC, to False to have Thomas's MPC
         self.k = 0
         self.velID = params.velID
-
         self.base_targets = np.zeros(12)
 
         self.filter_q = core.Filter()
@@ -236,8 +233,6 @@ class Controller:
         self.v_ref = np.zeros(6)
         self.h_v = np.zeros(6)
         self.h_v_windowed = np.zeros(6)
-        self.yaw_estim = 0.0
-        self.RPY_filt = np.zeros(3)
 
         self.feet_a_cmd = np.zeros((3, 4))
         self.feet_v_cmd = np.zeros((3, 4))
@@ -250,7 +245,6 @@ class Controller:
         # Interface with the PD+ on the control board
         self.result = Result()
 
-        # Run the control loop once with a dummy device for initialization
         dDevice = dummyDevice()
         dDevice.q_mes = q_init         # actuators positions [0..12]
         dDevice.v_mes = np.zeros(12)
@@ -260,6 +254,8 @@ class Controller:
 
         dDevice.dummyPos = np.array([0.0, 0.0, q_init[2]])
         dDevice.b_baseVel = np.zeros(3)
+        
+        # Run the control loop once with a dummy device for initialization
         #self.compute(params, dDevice)
 
         
@@ -432,6 +428,9 @@ class Controller:
         @param q_perfect 6D perfect position of the base in world frame
         @param v_baseVel_perfect 3D perfect linear velocity of the base in base frame
         """
+        #print ("PY self.gait.matrix,", self.gait.matrix)
+        #print ("PY self.footTrajectoryGenerator.get_foot_position().", self.footTrajectoryGenerator.get_foot_position())
+
         self.estimator.run(self.gait.matrix,self.footTrajectoryGenerator.get_foot_position().copy(),
                            device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy(), # data from IMU
                            device.q_mes, device.v_mes, # data from joints
@@ -454,7 +453,6 @@ class Controller:
         self.q_filtered[:6] = self.filter_q.filter(self.q[:6], True)
         self.h_v_filtered = self.filter_h_v.filter(self.h_v, False)
         self.vref_filtered = self.filter_vref.filter(self.v_ref, False)
-
         return oRh, hRb, oTh
     
     def solve_MPC(self, reference_state, footsteps):

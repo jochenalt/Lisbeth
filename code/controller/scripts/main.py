@@ -129,8 +129,10 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         params.N_SIMULATION = N_analysis + N_steady
 
     # Run a scenario and retrieve data thanks to the logger
+    print("START CONTROLLER")
     controller = Controller(params, q_init)
     controller.remoteControl = RemoteControl.RemoteControl(params.dt_wbc, False)
+    
     controllerCpp = core.Controller()
     controllerCpp.initialize(params)
 
@@ -191,9 +193,9 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
 
         # Desired torques
         controller.compute(params, device)
-        controllerCpp.compute(device.baseLinearAcceleration, device.baseAngularVelocity, device.baseOrientation, # IMU data    
-                                device.q_mes, device.v_mes # joint positions and joint velocities coming from encoders
-                             )
+        #controllerCpp.compute(device.baseLinearAcceleration, device.baseAngularVelocity, device.baseOrientation, # IMU data    
+        #                        device.q_mes, device.v_mes # joint positions and joint velocities coming from encoders
+        #                     )
         # Check that the initial position of actuators is not too far from the
         # desired position of actuators to avoid breaking the robot
         if (t <= 10 * params.dt_wbc):
