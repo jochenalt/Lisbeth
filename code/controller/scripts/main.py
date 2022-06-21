@@ -191,8 +191,9 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
 
         # Desired torques
         controller.compute(params, device)
-        #controllerCpp.compute()
-
+        controllerCpp.compute(device.baseLinearAcceleration, device.baseAngularVelocity, device.baseOrientation, # IMU data    
+                                device.q_mes, device.v_mes # joint positions and joint velocities coming from encoders
+                             )
         # Check that the initial position of actuators is not too far from the
         # desired position of actuators to avoid breaking the robot
         if (t <= 10 * params.dt_wbc):

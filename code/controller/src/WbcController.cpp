@@ -35,7 +35,7 @@ void WbcController::initialize(Params& params)
   enable_comp_forces_ = params.enable_comp_forces;
 
   // Path to the robot URDF (TODO: Automatic path)
-  const std::string filename = std::string("/home/jochen/lisbeth/description/solo12.urdf");
+  const std::string filename = std::string(URDF_MODEL);
 
   // Build model from urdf (base is not free flyer)
   pinocchio::urdf::buildModel(filename, pinocchio::JointModelFreeFlyer(), model_, false);

@@ -434,15 +434,15 @@ class Controller:
         """
         self.estimator.run(self.gait.matrix,self.footTrajectoryGenerator.get_foot_position().copy(),
                            device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy(), # data from IMU
-                           np.array(device.q_mes), device.v_mes, # data from joints
+                           device.q_mes, device.v_mes, # data from joints
                            baseHeight.copy(),
                            baseVelocity)
 
         self.estimator.update_reference_state(self.remoteControl.v_ref)
-            
-        oRh = self.estimator.get_oRh()
-        hRb = self.estimator.get_hRb()
-        oTh = self.estimator.get_oTh().reshape((3, 1))
+                
+        oRh = self.estimator.get_oRh()                 # rotation between the world and horizontal frame
+        hRb = self.estimator.get_hRb()                 # rotation between the horizontal and base frame
+        oTh = self.estimator.get_oTh().reshape((3, 1)) # translation between the world and horizontal frame
 
         self.v_ref = self.estimator.get_base_vel_ref()
         self.h_v = self.estimator.get_h_v()

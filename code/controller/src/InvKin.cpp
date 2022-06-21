@@ -35,7 +35,7 @@ void InvKin::initialize(Params& params) {
 		  0.0191028, 0.0191028, 0.0191028, 0.0191028;   // z coord
 
     // Path to the robot URDF
-	const std::string filename = std::string("/home/jochen/lisbeth/description/solo12.urdf");
+	const std::string filename = std::string(URDF_MODEL);
 
     // Build model from urdf (base is not free flyer)
     pinocchio::urdf::buildModel(filename, model_, false);

@@ -31,8 +31,7 @@ Controller::Controller()
 
 void Controller::init_robot(Params& params) {
 	 // Path to the robot URDF
-	  const std::string filename =
-	      std::string("/home/jochen/lisbeth/description/solo12.urdf");
+	  const std::string filename = std::string(URDF_MODEL);
 
 	  // Robot model
 	  pinocchio::Model model_;

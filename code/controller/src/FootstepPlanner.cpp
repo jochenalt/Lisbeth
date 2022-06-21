@@ -54,7 +54,7 @@ void FootstepPlanner::initialize(Params& params,
 	  Rz(2, 2) = 1.0;
 
     // Path to the robot URDF
-    const std::string filename = std::string("/home/jochen/lisbeth/description/solo12.urdf");
+    const std::string filename = std::string(URDF_MODEL);
     // Build model from urdf (base is not free flyer)
      pinocchio::urdf::buildModel(filename, pinocchio::JointModelFreeFlyer(), model_, false);
 
