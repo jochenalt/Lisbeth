@@ -75,7 +75,6 @@ class Controller:
            robot.model.getFrameId("HL_FOOT"),
            robot.model.getFrameId("HR_FOOT"),
         ]
-        print("indexes", indexes)
         for i in range(4):
             self.fsteps_init[:, i] = robot.data.oMf[indexes[i]].translation
             self.fsteps_init[0,i] = self.fsteps_init[0,i] - 1.0
@@ -201,7 +200,7 @@ class Controller:
         self.q = np.zeros(18)
         self.q[0:6] = np.array([0.0, 0.0, self.h_ref, 0.0, 0.0, 0.0])
         self.q[6:] = q_init
-        
+        self.mpc_f_cmd = np.zeros((12,1))
         self.statePlanner = core.StatePlanner()
         self.statePlanner.initialize(params)
 
@@ -296,7 +295,6 @@ class Controller:
         # at a new gait cycle we need create the next gait round and start MPC
         startNewGaitCycle = (self.k % self.k_mpc) == 0
         self.gait.update(startNewGaitCycle, self.remoteControl.gaitCode)
-
         self.remoteControl.gaitCode = 0
 
         # Compute target footstep based on current and reference velocities
@@ -315,20 +313,24 @@ class Controller:
 
         # Result can be retrieved with self.statePlanner.getReferenceStates()
         reference_state = self.statePlanner.getReferenceStates()
-        fsteps = self.footstepPlanner.getFootsteps()
-        cgait = self.gait.matrix
 
         t_planner = time.time()
 
         # Solve MPC problem once every k_mpc iterations of the main loop
-        self.solve_MPC(reference_state, fsteps)        
+
+        if (self.k % self.k_mpc) == 0:
+            self.mpcController.solve(reference_state,  self.footstepPlanner.getFootsteps(),self.gait.matrix)
+        if (self.k % self.k_mpc) == 9:
+            self.mpc_f_cmd = self.mpcController.get_latest_result()[12:,0]
+            
+        #print ("f_cmd", self.mpc_f_cmd)
 
         t_mpc = time.time()
 
         # Target state for the whole body control
 
-        self.wbc_f_cmd = np.zeros(24)
-        self.wbc_f_cmd[12:] = (self.mpc_f_cmd[12:, 0]).copy()
+        self.wbc_f_cmd = np.zeros(12)
+        self.wbc_f_cmd = (self.mpc_f_cmd).copy()
 
         # Whole Body Control
         # If nothing wrong happened yet in the WBC controller
@@ -337,8 +339,13 @@ class Controller:
             self.q_wbc = np.zeros(18)
             self.dq_wbc = np.zeros(18)
 
+            #print("get_foot_position", self.footTrajectoryGenerator.get_foot_position())
+            #print("getFootVelocity", self.footTrajectoryGenerator.get_foot_velocity())
+            #print("getFootAcceleration", self.footTrajectoryGenerator.get_foot_acceleration())
+
             self.get_base_targets(reference_state, hRb)
             self.get_feet_targets(reference_state, oRh, oTh, hRb)
+            
             
             self.q_wbc[2] = self.h_ref  # at position (0.0, 0.0, h_ref)
             self.q_wbc[3:5] = self.q_filtered[3:5]
@@ -349,8 +356,12 @@ class Controller:
             self.dq_wbc[6:] = self.wbcController.vdes
             
             # Run InvKin + WBC QP
+            #print ("q_wbc", self.q_wbc)
+            #print ("dq_wbc", self.dq_wbc)
+            #print ("wbc_f_cmd", self.wbc_f_cmd)
+
             self.wbcController.compute(self.q_wbc, self.dq_wbc,
-                                    self.wbc_f_cmd[12:], np.array([cgait[0, :]]),
+                                    self.wbc_f_cmd, np.array([self.gait.matrix[0, :]]),
                                     self.feet_p_cmd,
                                     self.feet_v_cmd,
                                     self.feet_a_cmd,
@@ -450,27 +461,14 @@ class Controller:
         self.q = self.estimator.get_q_reference();
         self.v = self.estimator.get_v_reference()
 
+    
         self.q_filtered = self.q.copy()
         self.q_filtered[:6] = self.filter_q.filter(self.q[:6], True)
+
         self.h_v_filtered = self.filter_h_v.filter(self.h_v, False)
         self.vref_filtered = self.filter_vref.filter(self.v_ref, False)
         return oRh, hRb, oTh
     
-    def solve_MPC(self, reference_state, footsteps):
-        """
-        Call the MPC and store result in self.mpc_result. Update target footsteps if
-        necessary
-
-        @param reference_state reference centroideal state trajectory
-        @param footsteps footsteps positions over horizon
-        @param oRh rotation between the world and horizontal frame
-        @param oTh translation between the world and horizontal frame
-        """
-        if (self.k % self.k_mpc) == 0:
-            self.mpcController.solve(reference_state,  footsteps,self.gait.matrix)
-        self.mpc_f_cmd = self.mpcController.get_latest_result()
-        
-
 
     def get_base_targets(self, reference_state, hRb):
         """
@@ -483,15 +481,9 @@ class Controller:
             hRb = np.eye(3)
 
         self.base_targets[:6] = np.zeros(6)
-        if self.DEMONSTRATION and self.joystick.get_l1() and self.gait.is_static():
-            p_ref = self.joystick.get_p_ref()
-            self.base_targets[[3, 4]] = p_ref[[3, 4]]
-            self.h_ref = p_ref[2]
-            hRb = pin.rpy.rpyToMatrix(0.0, 0.0, self.p_ref[5])
-        else:
-            self.base_targets[[3, 4]] = reference_state[[3, 4], 1]
-            self.h_ref = self.q_init[2]
+        self.base_targets[[3, 4]] = reference_state[[3, 4], 1]
         self.base_targets[6:] = self.vref_filtered
+        
 
         return hRb
 
@@ -507,19 +499,31 @@ class Controller:
         """
         T = -oTh - np.array([0.0, 0.0, self.h_ref]).reshape((3, 1))
         R = hRb @ oRh.transpose()
-
+        
         self.feet_a_cmd = R @ self.footTrajectoryGenerator.get_foot_acceleration()
         self.feet_v_cmd = R @ self.footTrajectoryGenerator.get_foot_velocity()
-        self.feet_p_cmd = (hRb @ oRh.transpose()) @ (self.footTrajectoryGenerator.get_foot_position() + T)
-        self.feet_p_cmd = oRh.transpose()         @ (self.footTrajectoryGenerator.get_foot_position() + T)
+        self.feet_p_cmd = R @ (self.footTrajectoryGenerator.get_foot_position() + T)
+        
+        # Feet command velocity in base frame
+        v_ref_tmp =np.array([self.v_ref[3:6]]).transpose()
+        v_ref_tiled = np.tile(v_ref_tmp, (1, 4))
         
         # Feet command acceleration in base frame
-        v_ref_tmp =np.array([self.v_ref[3:6]]).transpose()
         self.feet_a_cmd = self.feet_a_cmd \
-                - np.cross(np.tile(v_ref_tmp, (1, 4)), np.cross(np.tile(v_ref_tmp, (1, 4)), self.feet_p_cmd, axis=0), axis=0) \
-                - 2 * np.cross(np.tile(v_ref_tmp, (1, 4)), self.feet_v_cmd, axis=0)
+                -     np.cross(v_ref_tiled, np.cross(v_ref_tiled, self.feet_p_cmd, axis=0), axis=0) \
+                -  2* np.cross(v_ref_tiled, self.feet_v_cmd, axis=0)
+        self.feet_v_cmd = self.feet_v_cmd - np.array([self.v_ref[0:3]]).transpose() - np.cross(v_ref_tiled, self.feet_p_cmd, axis=0)
+        
+        #print("v_ref_tmp", v_ref_tmp)
+        #print("feet_v_cmd", self.feet_v_cmd)
+        #print ("np.cross(v_ref_tiled, self.feet_v_cmd, axis=0)",np.cross(v_ref_tiled, self.feet_v_cmd, axis=0))
 
 
-        # Feet command velocity in base frame
-        self.feet_v_cmd = self.feet_v_cmd - np.array([self.v_ref[0:3]]).transpose() - np.cross(np.tile(v_ref_tmp, (1, 4)), self.feet_p_cmd, axis=0)
+        #print("feet_p_cmd", self.feet_p_cmd)
+        #print("feet_v_cmd", self.feet_v_cmd)
+        #print("feet_a_cmd", self.feet_a_cmd)
 
+        #print("np.cross(v_ref_tiled, self.feet_p_cmd, axis=0)", np.cross(v_ref_tiled, self.feet_p_cmd, axis=0))
+        #print("v_ref_tiled", v_ref_tiled)
+
+        

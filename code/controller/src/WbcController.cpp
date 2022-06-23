@@ -162,9 +162,6 @@ void WbcController::compute(VectorN const& q, VectorN const& dq, MatrixN const& 
     f_compensation = pseudoInverse(Jc_.transpose()) * (data_.tau.head(6) - RNEA_without_joints + RNEA_NLE);
   }
 
-  // Compute the inverse dynamics, aka the joint torques according to the current state of the system,
-  // the desired joint accelerations and the external forces, using the Recursive Newton Euler Algorithm.
-  // Result is stored in data_.tau
   pinocchio::rnea(model_, data_, q_wbc_, dq_wbc_, ddq_cmd_);
 
   // Solve the QP problem

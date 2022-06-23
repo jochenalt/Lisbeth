@@ -55,4 +55,5 @@ void StatePlanner::computeReferenceStates(VectorN const& q, Vector6 const& v, Ve
 
     referenceStates_(11, 1 + i) = vref(5);
   }
+
 }
