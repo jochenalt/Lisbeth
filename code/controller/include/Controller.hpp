@@ -90,7 +90,7 @@ class Controller {
   		Matrix34 o_targetFootstep;  // Target location of footsteps in ideal world
   		Vector18 q_wbc;             // Position vector for whole body control
   		Vector18 dq_wbc;            // Velocity vector for whole body control
-  		Vector12 xgoals;            // Base position, orientation and velocity references for whole body control
+  		Vector12 base_targets;      // Base position, orientation and velocity references for whole body control
   		Matrix3 hRb;                // Rotation matrix between horizontal and base frame
   		Vector6 p_ref_;             // Position, orientation reference vector from the joystick
   		Vector12 f_mpc;             // Contact forces desired by the MPC
