@@ -12,8 +12,8 @@
 #define WBC_WRAPPER_H_INCLUDED
 
 #include "InvKin.hpp"
-#include "QPWBC.hpp"
 #include "Params.hpp"
+#include "QPWBC.hpp"
 
 class WbcController {
  public:

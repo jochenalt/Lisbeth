@@ -36,4 +36,7 @@ class LowpassFilter  {
 	    VectorN alpha;
 		VectorN filtered_x;	// low pass filtered x
 };
+
+
+uint64_t get_micros();
 #endif

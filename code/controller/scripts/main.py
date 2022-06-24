@@ -184,7 +184,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     t_max = (params.N_SIMULATION-2) * params.dt_wbc
             
     while ((not device.hardware.IsTimeout()) and (t < t_max) and (not controller.error)):
-        for j in range(2):
+        for j in range(200):
             if (j == 1):
                 controller.remoteControl.gp.speedX.value = 0.1
                 controller.remoteControl.gp.speedY.value = 0.05

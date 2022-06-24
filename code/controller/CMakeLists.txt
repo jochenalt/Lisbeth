@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
 set (CMAKE_CXX_STANDARD 11)
-
 # Project properties
 set(PROJECT_NAME controller-core)
 set(PROJECT_DESCRIPTION "control for lisbeth")
@@ -48,6 +47,7 @@ set(${PROJECT_NAME}_HEADERS
   include/Utils.hpp
   include/Estimator.hpp
   include/FootTrajectoryGenerator.hpp
+  include/FootTrajectoryGeneratorBezier.hpp
   include/FootstepPlanner.hpp
   include/StatePlanner.hpp
   include/Types.h
@@ -124,7 +124,7 @@ endif()
 # target_compile_options(${PROJECT_NAME} PUBLIC PRINTING)
 # target_compile_definitions(${PROJECT_NAME} PUBLIC PRINTING)
 
-target_compile_options(${PROJECT_NAME} PUBLIC -DNDEBUG -O3)
+target_compile_options(${PROJECT_NAME} PUBLIC -DNDEBUG -O3 -ffast-math)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC CONFIG_SOLO12_YAML="${PROJECT_SOURCE_DIR}/config/config_solo12.yaml")
 target_compile_definitions(${PROJECT_NAME} PUBLIC WALK_PARAMETERS_YAML="${PROJECT_SOURCE_DIR}/config/config.yaml")

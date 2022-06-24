@@ -98,7 +98,7 @@ void FootstepPlanner::initialize(Params& params,
      }
 
      // Compute location of footsteps
-     MatrixN result = computeTargetFootstep(k, q.head(6), b_v, b_vref);
+     Matrix34 result = computeTargetFootstep(k, q.head(6), b_v, b_vref);
 
      // std::cout << "FootstepPlanner::updateFootsteps q\n" << q  << "b_v\n" << b_v << "bvref\n" << b_vref << "\ntargetfootsteps\n" << result << std::endl;
      // std::cout << "result:" << getFootsteps() << std::endl;

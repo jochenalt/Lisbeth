@@ -9,6 +9,8 @@
 #include <iostream>
 #include <string>
 #include <array>
+#include <chrono>
+#include <cstdint>
 
 using namespace std;
 bool file_exists (const std::string& name) {
@@ -122,6 +124,10 @@ VectorN LowpassFilter::compute(const VectorN& par_x, const VectorN& par_dx) {
 
 void LowpassFilter::patchLowPassed(int idx, double x) {
 	filtered_x[idx] = x;
+}
+
+uint64_t get_micros() {
+	return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
 

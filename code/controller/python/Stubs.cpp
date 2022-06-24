@@ -7,7 +7,6 @@ extern void exposeEstimator();
 extern void exposeFootstepPlanner();
 extern void exposeFootTrajectoryGenerator();
 extern void exposeGait();
-extern void exposeQPWBC();
 extern void exposeStatePlanner();
 extern void exposeWbcController();
 extern void exposeFilter();

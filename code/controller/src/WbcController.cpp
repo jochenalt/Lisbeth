@@ -1,4 +1,4 @@
-#include "../include/WbcController.hpp"
+#include "WbcController.hpp"
 
 #include "pinocchio/algorithm/crba.hpp"
 #include "pinocchio/math/rpy.hpp"
