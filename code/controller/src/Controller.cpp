@@ -283,13 +283,14 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	if (k % k_mpc == 0) {
 		mpcController.solve(statePlanner.getReferenceStates(), footstepPlanner.getFootsteps(), gait.getCurrentGait());
+		f_mpc = mpcController.get_latest_result().block(12, 0, 12, 1);
 	}
 	// Target state for the whole body control
 
-//if (k % k_mpc == 9) {
+	if (k % k_mpc == 8) {
 		f_mpc = mpcController.get_latest_result().block(12, 0, 12, 1);
-//std::cout << "f_mpc " << f_mpc << std::endl;
-//}
+		// std::cout << "f_mpc " << f_mpc << std::endl;
+	}
 
 
 	// Whole Body Control
@@ -306,6 +307,8 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	    Vector3 T = -estimator.getoTh() - Vector3(0.0, 0.0, h_ref_);
 	    Matrix3 R = estimator.gethRb() * estimator.getoRh();
+	    // std::cout << "R" << R << std::endl;
+	    // std::cout << "T" << T.replicate(1,4) << std::endl;
 
 	    Matrix3N feet_a_cmd = R * footTrajectoryGenerator.getFootAcceleration();
 	    Matrix3N feet_v_cmd = R * footTrajectoryGenerator.getFootVelocity();
@@ -317,7 +320,9 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    feet_v_cmd += - estimator.getBaseVelRef().block<3,1>(0,0).replicate(1,4)
 	    		      - cross33 (estimator.getBaseVelRef().block<3,1>(3,0), feet_p_cmd);
 
-	    // std::cout << "feet_p_cmd " << footTrajectoryGenerator.getFootPosition() << std::endl;
+	    // std::cout << "feet_p_cmd " << footTrajectoryGenerator.getFootPosition() + T.replicate(1,4)<< std::endl;
+	    // std::cout << "R*feet_p_cmd " << R*(footTrajectoryGenerator.getFootPosition() + T.replicate(1,4)) << std::endl;
+
 	    // std::cout << "feet_v_cmd " << footTrajectoryGenerator.getFootVelocity() << std::endl;
 	    // std::cout << "feet_a_cmd " << footTrajectoryGenerator.getFootAcceleration() << std::endl;
 
@@ -340,7 +345,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    // std::cout << "f_mpc " << f_mpc << std::endl;
 
 	    wbcController.compute(q_wbc, dq_wbc, f_mpc, gait.getCurrentGait().row(0),
-	    					  feet_a_cmd,feet_v_cmd,feet_p_cmd,
+	    					  feet_p_cmd,feet_v_cmd,feet_a_cmd,
 	    					  base_targets);
 
 	    // Quantities sent to the control board

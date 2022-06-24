@@ -184,25 +184,21 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     t_max = (params.N_SIMULATION-2) * params.dt_wbc
             
     while ((not device.hardware.IsTimeout()) and (t < t_max) and (not controller.error)):
-        #for j in range(20):
-           # if (j == 1):
-           #    controller.remoteControl.gp.speedX.value = 0.1
-           #     controller.remoteControl.gp.speedY.value = 0.05
-           #     controller.remoteControl.gp.speedZ.value = 0.12
-           #    controller.remoteControl.gp.bodyX.value = 0.1
-           #     controller.remoteControl.gp.bodyY.value = 0.2
-           #     controller.remoteControl.gp.bodyZ.value = 0.3
-           #     print ("-------- START MOVING -------------")
+        for j in range(2):
+            if (j == 1):
+                controller.remoteControl.gp.speedX.value = 0.1
+                controller.remoteControl.gp.speedY.value = 0.05
+                controller.remoteControl.gp.speedZ.value = 0.12
+                controller.remoteControl.gp.bodyX.value = 0.1
+                controller.remoteControl.gp.bodyY.value = 0.2
+                controller.remoteControl.gp.bodyZ.value = 0.3
+                print ("-------- START MOVING -------------")
 
             # Update sensor data (IMU, encoders, Motion capture)
             device.UpdateMeasurment()
 
-            #controller.remoteControl.vY = 0.15
-            #controller.remoteControl.vYaw = 0.05
 
             # get command from remote control
-            #self.vX, self.vY, - self.gp.bodyZ.value* 0.25, -self.gp.bodyY.value * 5, self.gp.bodyX.value * 2, self.vYaw
-
             controller.remoteControl.update_v_ref(controller.k, controller.velID)
     
             # Desired torques
@@ -211,9 +207,9 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             controllerCpp.command_speed(controller.remoteControl.v_ref[0,0], controller.remoteControl.v_ref[1,0], 
                                         controller.remoteControl.v_ref[2,0], controller.remoteControl.v_ref[3,0], 
                                         controller.remoteControl.v_ref[4,0], controller.remoteControl.v_ref[5,0]);
-            #controllerCpp.compute(device.baseLinearAcceleration, device.baseAngularVelocity, device.baseOrientation, # IMU data    
-            #                        device.q_mes, device.v_mes # joint positions and joint velocities coming from encoders
-            #                     )
+            controllerCpp.compute(device.baseLinearAcceleration, device.baseAngularVelocity, device.baseOrientation, # IMU data    
+                                    device.q_mes, device.v_mes # joint positions and joint velocities coming from encoders
+                                 )
             # Check that the initial position of actuators is not too far from the
             # desired position of actuators to avoid breaking the robot
             if (t <= 10 * params.dt_wbc):
@@ -235,7 +231,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     
             t += params.dt_wbc  # Increment loop time
             
-        #quit()
+        quit()
 
     # ****************************************************************
 

@@ -320,8 +320,10 @@ class Controller:
 
         if (self.k % self.k_mpc) == 0:
             self.mpcController.solve(reference_state,  self.footstepPlanner.getFootsteps(),self.gait.matrix)
-        #if (self.k % self.k_mpc) == 9:
-        self.mpc_f_cmd = self.mpcController.get_latest_result()[12:,0]
+            self.mpc_f_cmd = self.mpcController.get_latest_result()[12:,0] # default ff, solution not yet available
+
+        if (self.k % self.k_mpc) == 8:
+            self.mpc_f_cmd = self.mpcController.get_latest_result()[12:,0] # solution should be there by now
         #print ("f_cmd", self.mpc_f_cmd)
 
         t_mpc = time.time()
@@ -342,10 +344,9 @@ class Controller:
             self.get_base_targets(reference_state, hRb)
             #print ("base_targets", self.base_targets)
             self.get_feet_targets(reference_state, oRh, oTh, hRb)
-            # print ("self.q_filtered", self.q_filtered)
-            # print ("self.wbcController.qdes", self.wbcController.qdes)
+            #print ("self.q_filtered", self.q_filtered)
+            #print ("self.wbcController.qdes", self.wbcController.qdes)
 
-            #print("feet_p_cmd", self.footTrajectoryGenerator.get_foot_position())
             #// print("feet_v_cmd", self.footTrajectoryGenerator.get_foot_velocity())
             #// print("feet_a_cmd", self.footTrajectoryGenerator.get_foot_acceleration())
             
@@ -502,11 +503,15 @@ class Controller:
         """
         T = -oTh - np.array([0.0, 0.0, self.h_ref]).reshape((3, 1))
         R = hRb @ oRh.transpose()
+        #// print ("R",R)
+        #// print ("T",T)
         
+
         self.feet_a_cmd = R @ self.footTrajectoryGenerator.get_foot_acceleration()
         self.feet_v_cmd = R @ self.footTrajectoryGenerator.get_foot_velocity()
         self.feet_p_cmd = R @ (self.footTrajectoryGenerator.get_foot_position() + T)
-        
+        #print("feet_p_cmd", self.footTrajectoryGenerator.get_foot_position() + T)
+
         # Feet command velocity in base frame
         v_ref_tmp =np.array([self.v_ref[3:6]]).transpose()
         v_ref_tiled = np.tile(v_ref_tmp, (1, 4))

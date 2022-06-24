@@ -83,10 +83,11 @@ void WbcController::compute(VectorN const& q, VectorN const& dq, MatrixN const& 
    if (f_cmd.rows() != 12) {
  	throw std::runtime_error("f_cmd should be a vector of size 12");
    }
-    // std::cout << "wbc: \nq\n" << q << "\ndq\n" << dq
+    // std::cout  << "wbc: \nq\n" << q << "\ndq\n" << dq
     // 	   	   	   << " \nf_cmd\n" << f_cmd << " \ncontacts\n" << contacts
-   // 		   	  << "\npgoals\n" << pgoals << "\nvgoals\n" << vgoals << " \nagoals\n" << agoals << " \nxgoals\n" << xgoals << std::endl;
-	// 			   	<< std::endl;
+    // 		   	  << "\npgoals\n" << pgoals << std::endl;
+	//			  << "\nvgoals\n" << vgoals << " \nagoals\n" << agoals << " \nxgoals\n" << xgoals << std::endl;
+	 //			   	<< std::endl;
    //  Update nb of iterations since contact
    k_since_contact_ += contacts;  // Increment feet in stance phase
    k_since_contact_ = k_since_contact_.cwiseProduct(contacts);  // Reset feet in swing phase

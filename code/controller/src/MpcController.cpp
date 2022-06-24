@@ -99,6 +99,8 @@ void MpcController::initialize(Params& params) {
 }
 
 void MpcController::solve(MatrixN xref, MatrixN fsteps, MatrixN gait) {
+  // std::cout << "MPC.xref: " << xref << ", fsteps" << fsteps << std::endl;
+
   write_in(xref, fsteps);
 
   // Adaptation if gait has changed
@@ -125,7 +127,9 @@ Eigen::Matrix<double, 24, 2> MpcController::get_latest_result() {
   // Retrieve data from parallel process if a new result is available
   if (check_new_result()) {
     last_available_result = read_out().block(0, 0, 24, 2);
+	// std::cout << "MPC.get_latest_result (new): " << std::endl << last_available_result.block<12,1>(12,0).transpose() << std::endl;
+  } else {
+	// std::cout << "MPC.get_latest_result (old): " << std::endl << last_available_result.block<12,1>(12,0).transpose() << std::endl;
   }
-  // std::cout << "get_latest_result: " << std::endl << last_available_result.transpose() << std::endl;
   return last_available_result;
 }
