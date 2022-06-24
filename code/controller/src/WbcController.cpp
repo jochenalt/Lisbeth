@@ -189,4 +189,14 @@ void WbcController::compute(VectorN const& q, VectorN const& dq, MatrixN const& 
 
   // Increment log counter
   k_log_++;
+
+  // std::cout  << "wbc: \nqdes_\n" << qdes_ << std::endl;
+  // std::cout  << "wbc: \nvdes \n" << vdes_ << std::endl;
+  // std::cout  << "wbc: \nvtau_ff_\n" << tau_ff_ << std::endl;
+
+  // 	   	   	   << " \nf_cmd\n" << f_cmd << " \ncontacts\n" << contacts
+  // 		   	  << "\npgoals\n" << pgoals << std::endl;
+	//			  << "\nvgoals\n" << vgoals << " \nagoals\n" << agoals << " \nxgoals\n" << xgoals << std::endl;
+	 //			   	<< std::endl;
+
 }

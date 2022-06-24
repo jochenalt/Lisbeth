@@ -24,7 +24,9 @@ bool MpcController::read_in(MatrixN& xref, MatrixN& fsteps) {
 }
 
 void MpcController::write_out(MatrixN& result) {
-	thread_buffer.result = result;
+   if (new_mpc_output == true)
+	   	std::cout << "ERROR:previous MPC result hasnt been fetched yet" << std::endl;
+  thread_buffer.result = result;
   new_mpc_output = true;  // New data is available
 }
 
