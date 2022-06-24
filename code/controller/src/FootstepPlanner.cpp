@@ -79,6 +79,7 @@ void FootstepPlanner::initialize(Params& params,
        throw std::runtime_error("q should be a vector of size 18 (pos+RPY+mot)");
      }
 
+
      // Update location of feet in stance phase (for those which just entered stance phase)
      if (refresh && gait_->isNewPhase()) {
        updateNewContact(q);
@@ -97,7 +98,11 @@ void FootstepPlanner::initialize(Params& params,
      }
 
      // Compute location of footsteps
-     return computeTargetFootstep(k, q.head(6), b_v, b_vref);
+     MatrixN result = computeTargetFootstep(k, q.head(6), b_v, b_vref);
+
+     // std::cout << "FootstepPlanner::updateFootsteps q\n" << q  << "b_v\n" << b_v << "bvref\n" << b_vref << "\ntargetfootsteps\n" << result << std::endl;
+     // std::cout << "result:" << getFootsteps() << std::endl;
+     return result;
    }
 
    void FootstepPlanner::computeFootsteps(int k, Vector6 const& b_v, Vector6 const& b_vref) {

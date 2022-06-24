@@ -127,7 +127,7 @@ void Estimator::run(MatrixN gait, MatrixN feetTargets,
 					Vector12 const& q, Vector12 const &v,
 					VectorN const& perfectPosition,Vector3 const& b_perfectVelocity) {
 
-	// store parameter coming from IMU
+			// store parameter coming from IMU
 	updateIMUData (baseLinearAcceleration, baseAngularVelocity, baseOrientation,perfectPosition);
 
 	// update feet target positions according to gait
@@ -148,6 +148,16 @@ void Estimator::run(MatrixN gait, MatrixN feetTargets,
 
     // Output filtered actuators velocity for security checks
     vSecurity = (1 - alphaSecurity) * vActuators + alphaSecurity * vSecurity;
+
+//     std::cout << "feetTargets" << feetTargets<< std::endl
+//			<< "gait" << gait << std::endl
+//     		<< "baseLinAcc" << baseLinearAcceleration << std::endl
+//			<< "baseAngularVelocity" << baseAngularVelocity<< std::endl
+//			<< "baseOrientation" << baseOrientation<< std::endl
+//			<< "getQReference" << getQReference()
+//			<< std::endl;
+
+
 }
 
 void Estimator::updateReferenceState(VectorN const& newvRef) {

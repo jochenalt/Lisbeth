@@ -180,6 +180,7 @@ void FootTrajectoryGenerator::updateFootPosition(int const j, Vector3 const &tar
                 5 * 6 * 4 * Az(0, j) * std::pow(evz, 3);
   position_(2, j) = Az(3, j) * std::pow(evz, 3) + Az(2, j) * std::pow(evz, 4) + Az(1, j) * std::pow(evz, 5) +
                     Az(0, j) * std::pow(evz, 6);
+
 }
 
 void FootTrajectoryGenerator::update(int k, MatrixN const &targetFootstep) {
@@ -216,5 +217,8 @@ void FootTrajectoryGenerator::update(int k, MatrixN const &targetFootstep) {
       updateFootPosition(i, targetFootstep.col(i));
     }
   }
+
+  // std::cout << "FootTrajectoryGenerator::update targetfootsteps" <<  targetFootstep << " k=" << k << "\nfootpositions\n" << getFootPosition() << std::endl;
+
   return;
 }

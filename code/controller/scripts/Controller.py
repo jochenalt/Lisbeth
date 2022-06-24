@@ -282,7 +282,7 @@ class Controller:
         if (self.gait.getCurrentGaitTypeInt() == Types.GaitType.NoMovement.value)  and self.remoteControl.isMoving:
             print ("command received, start moving")
             self.remoteControl.gaitCode = self.gait.getPrevGaitTypeInt()
-            if self.remoteControl.gaitCode == 0:
+            if self.remoteControl.gaitCode == Types.GaitType.NoGait.value:
                self.remoteControl.gaitCode = Types.GaitType.Trot.value
 
         # automatically go to static mode if no movement is detected
@@ -320,9 +320,8 @@ class Controller:
 
         if (self.k % self.k_mpc) == 0:
             self.mpcController.solve(reference_state,  self.footstepPlanner.getFootsteps(),self.gait.matrix)
-        if (self.k % self.k_mpc) == 9:
-            self.mpc_f_cmd = self.mpcController.get_latest_result()[12:,0]
-            
+        #if (self.k % self.k_mpc) == 9:
+        self.mpc_f_cmd = self.mpcController.get_latest_result()[12:,0]
         #print ("f_cmd", self.mpc_f_cmd)
 
         t_mpc = time.time()
@@ -339,12 +338,16 @@ class Controller:
             self.q_wbc = np.zeros(18)
             self.dq_wbc = np.zeros(18)
 
-            #print("get_foot_position", self.footTrajectoryGenerator.get_foot_position())
-            #print("getFootVelocity", self.footTrajectoryGenerator.get_foot_velocity())
-            #print("getFootAcceleration", self.footTrajectoryGenerator.get_foot_acceleration())
 
             self.get_base_targets(reference_state, hRb)
+            #print ("base_targets", self.base_targets)
             self.get_feet_targets(reference_state, oRh, oTh, hRb)
+            # print ("self.q_filtered", self.q_filtered)
+            # print ("self.wbcController.qdes", self.wbcController.qdes)
+
+            #print("feet_p_cmd", self.footTrajectoryGenerator.get_foot_position())
+            #// print("feet_v_cmd", self.footTrajectoryGenerator.get_foot_velocity())
+            #// print("feet_a_cmd", self.footTrajectoryGenerator.get_foot_acceleration())
             
             
             self.q_wbc[2] = self.h_ref  # at position (0.0, 0.0, h_ref)

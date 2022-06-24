@@ -45,6 +45,7 @@ class Controller {
 	  		cmd_v_ref(3,0) = rotX;
 	  		cmd_v_ref(4,0) = rotY;
 	  		cmd_v_ref(5,0) = angSpeedZ;
+	        cmd_is_moving = (abs(vX) > 0.001) || (abs(vY) > 0.001) || (abs(rotX) > 0.001) || (abs(rotY) > 0.001) || (abs(angSpeedZ) > 0.001);
 	  	}
 	  	// command from remote: new gait
 	  	void command_gait(GaitType newGait) { cmd_gait = newGait;}
@@ -98,7 +99,8 @@ class Controller {
 		// commands from remote
 		bool cmd_go = true;			// stop or go
 		Vector6 cmd_v_ref = Vector6::Zero();
-		GaitType cmd_gait = GaitType::NoMovement;
+		GaitType cmd_gait = GaitType::NoGait;
+		bool cmd_is_moving = false; // true if any movement comes from the remote
 };		
 
 

@@ -228,9 +228,6 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 {
 	std::cout << "--- C++ ---" << std::endl;
 
-// std::cout << "C++ ait.getCurrentGait()" << gait.getCurrentGait() << std::endl
-	//	  	 << "footTrajectoryGenerator.getFootPosition()" << footTrajectoryGenerator.getFootPosition() << std::endl;
-
 	estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(),
 		  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,
 				jointsPositions,jointsVelocities,
@@ -242,14 +239,13 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	// Quantities go through a 1st order low pass filter with fc = 15 Hz (avoid >25Hz foldback)
 	q_filt_mpc = estimator.getQReference();
-	// std::cout << "q_filt_mpc" << q_filt_mpc << std::endl;
 	q_filt_mpc.head(6) = filter_mpc_q.filter(estimator.getQReference().head(6), true);
 
 	h_v_filt_mpc = filter_mpc_v.filter(estimator.getHV().head(6), false);
 	vref_filt_mpc = filter_mpc_vref.filter(estimator.getBaseVelRef().head(6), false);
 
 	// automatically turn on a gait with previously gait when we start moving
-	if ((gait.getCurrentGaitType() == GaitType::NoMovement)  and cmd_go) {
+	if ((gait.getCurrentGaitType() == GaitType::NoMovement)  and cmd_go and cmd_is_moving) {
 		std::cout << "command received, start moving" << std::endl;
 		cmd_gait = gait.getPrevGaitType();
 		if (cmd_gait == GaitType::NoGait)
@@ -259,7 +255,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	//  automatically go to static mode if no movement is detected
 	bool is_steady = estimator.isSteady();
 	bool startNewGaitCycle = false;
-	if (gait.isNewPhase() && gait.getCurrentGaitType() != GaitType::NoMovement && is_steady && !cmd_go) {
+	if (gait.isNewPhase() && gait.getCurrentGaitType() != GaitType::NoMovement && is_steady && !cmd_go && !cmd_is_moving) {
 		std::cout << "no movement, calm down" << std::endl;
 	 	cmd_gait = GaitType::NoMovement;
 	}
@@ -274,6 +270,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 										(k % k_mpc == 0) && (k != 0), static_cast<int>(k_mpc - (k % k_mpc)), estimator.getQReference(),
 										estimator.getHVFiltered(), estimator.getBaseVelRef());
 
+	// Update pos, vel and acc references for feet
 	footTrajectoryGenerator.update(k, o_targetFootstep);
     //std::cout << "footTrajectoryGenerator.getFootPosition(); " << footTrajectoryGenerator.getFootPosition() << std::endl;
     //std::cout << "footTrajectoryGenerator.getFootVelocity(); " << footTrajectoryGenerator.getFootVelocity() << std::endl;
@@ -288,12 +285,11 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 		mpcController.solve(statePlanner.getReferenceStates(), footstepPlanner.getFootsteps(), gait.getCurrentGait());
 	}
 	// Target state for the whole body control
-	f_mpc = mpcController.get_latest_result().block(12, 0, 12, 1);
 
-    // std::cout << "f_mpc " << f_mpc << std::endl;
-
-	// Update pos, vel and acc references for feet
-	footTrajectoryGenerator.update(k, o_targetFootstep);
+//if (k % k_mpc == 9) {
+		f_mpc = mpcController.get_latest_result().block(12, 0, 12, 1);
+//std::cout << "f_mpc " << f_mpc << std::endl;
+//}
 
 
 	// Whole Body Control
@@ -303,7 +299,10 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    base_targets.head(6).setZero();
 	    base_targets.block<2,1>(3,0) = statePlanner.getReferenceStates().block<2,1>(3,1);
 	    base_targets.block<6,1>(6,0) = vref_filt_mpc;// Velocities (in horizontal frame!)
+	    // std::cout << "base_targets" << base_targets << std::endl;
 
+	    // std::cout << "q_filt_mpc" << q_filt_mpc << std::endl;
+	    // std::cout << "wbcController.get_qdes()" << wbcController.get_qdes()<< std::endl;
 
 	    Vector3 T = -estimator.getoTh() - Vector3(0.0, 0.0, h_ref_);
 	    Matrix3 R = estimator.gethRb() * estimator.getoRh();
@@ -312,14 +311,21 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    Matrix3N feet_v_cmd = R * footTrajectoryGenerator.getFootVelocity();
 	    Matrix3N feet_p_cmd = R * (footTrajectoryGenerator.getFootPosition()  + T.replicate(1,4));
 
-
 	    Vector3 v_ref_tmp = estimator.getBaseVelRef().block<3,1>(3,0);
         feet_a_cmd += - cross33(v_ref_tmp,cross33( v_ref_tmp, feet_p_cmd))
         		      - 2* cross33(v_ref_tmp, feet_v_cmd);
 	    feet_v_cmd += - estimator.getBaseVelRef().block<3,1>(0,0).replicate(1,4)
 	    		      - cross33 (estimator.getBaseVelRef().block<3,1>(3,0), feet_p_cmd);
 
+	    // std::cout << "feet_p_cmd " << footTrajectoryGenerator.getFootPosition() << std::endl;
+	    // std::cout << "feet_v_cmd " << footTrajectoryGenerator.getFootVelocity() << std::endl;
+	    // std::cout << "feet_a_cmd " << footTrajectoryGenerator.getFootAcceleration() << std::endl;
+
+	    // std::cout << "dq_wbc " << dq_wbc << std::endl;
+	    // std::cout << "f_mpc " << f_mpc << std::endl;
+
 	    // Update configuration vector for wbc
+        q_wbc.block<3,1>(0,0) = Vector3(0,0,h_ref_);
 	    q_wbc(3, 0) = q_filt_mpc(3, 0);          // Roll
 	    q_wbc(4, 0) = q_filt_mpc(4, 0);          // Pitch
 	    q_wbc.tail(12) = wbcController.get_qdes();  // with reference angular positions of previous loop

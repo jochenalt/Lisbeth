@@ -104,7 +104,7 @@ class RemoteControl:
         # Check joystick buttons to trigger a change of gait type
 
         # Switch gaits
-        self.gaitCode = 0
+        self.gaitCode = Types.GaitType.NoGait.value
         if self.gp.gaitCode.value != 0:
             self.gaitCode = self.gp.gaitCode.value
             self.gp.gaitCode.value = 0
