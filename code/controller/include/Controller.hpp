@@ -50,15 +50,17 @@ class Controller {
 	  	// command from remote: new gait
 	  	void command_gait(GaitType newGait) { cmd_gait = newGait;}
 
-	private:
-		void init_robot(Params& params);
- 
 	  	Vector12 P;       // Proportional gains
 	  	Vector12 D;       // Derivative gains
 	  	Vector12 q_des;   // Desired joint positions
 	  	Vector12 v_des;   // Desired joint velocities
 	  	Vector12 tau_ff;  // Desired joint torques
 	  	Vector12 FF;      // Torque gains (0 < FF < 1)
+
+
+	private:
+		void init_robot(Params& params);
+
 
 	  	// Control info
 	  	Params* params_;       // Object that stores parameters

@@ -228,7 +228,6 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 {
 	std::cout << "--- C++ ---" << std::endl;
 
-	uint64_t start = get_micros();
 	estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(),
 		  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,
 				jointsPositions,jointsVelocities,
@@ -353,6 +352,8 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    q_des = wbcController.get_qdes();
 	    v_des = wbcController.get_vdes();
 	    tau_ff = wbcController.get_tau_ff();
+	    P = 3.0 * Vector12::Ones();  // position
+	    D = 0.1 * Vector12::Ones();  // Damping
 	  }
 
 	  // Security check
@@ -360,10 +361,4 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	  // Increment loop counter
 	  k++;
-
-	  uint64_t time = get_micros()-start;
-	  static uint64_t avr_time = 0;
-	  avr_time = (avr_time + time)/2;
-	  if (k % 10 == 0)
-		  std::cout << "t=" << avr_time << "us" << std::endl;
 }
