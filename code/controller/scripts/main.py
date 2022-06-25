@@ -5,6 +5,7 @@ import sys
 import time
 import pybullet as pyb
 
+
 import threading
 from Controller import Controller
 import numpy as np
@@ -182,70 +183,71 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     print("Start the motion.")
     # CONTROL LOOP ***************************************************
     t = 0.0
+    k = 0
     t_max = (params.N_SIMULATION-2) * params.dt_wbc
-    k = 0        
+            
     while ((not device.hardware.IsTimeout()) and (t < t_max) and (not controller.error)):
-        for j in range(12000):
+        for j in range(30000):
             #if (j == 1):
             #    remoteControl.gp.speedX.value = 0.0
             #    remoteControl.gp.speedY.value = 0.0
             #    remoteControl.gp.speedZ.value = 0.12
             #    remoteControl.gp.bodyX.value = 0.0
             #    remoteControl.gp.bodyY.value = 0.0
-            #    remoteControl.gp
+            #    remoteControl.gp.bodyZ.value = 0.0
             #    print ("-------- START MOVING -------------")
 
-            # Update sensor data (IMU,
+            # Update sensor data (IMU, encoders, Motion capture)
             device.UpdateMeasurment()
 
 
             # get command from remote control
             remoteControl.update_v_ref(k, controller.velID)
+    
             # Desired torques
-            
             controller.compute(params, device, remoteControl)
+            
             controllerCpp.command_speed(remoteControl.v_ref[0,0], remoteControl.v_ref[1,0], 
                                         remoteControl.v_ref[2,0], remoteControl.v_ref[3,0], 
                                         remoteControl.v_ref[4,0], remoteControl.v_ref[5,0]);
-            controllerCpp.command_gait(remoteControl.gaitCode)
             controllerCpp.compute(device.baseLinearAcceleration, device.baseAngularVelocity, device.baseOrientation, # IMU data    
                                     device.q_mes, device.v_mes # joint positions and joint velocities coming from encoders
                                  )
-            remoteControl.gaitCode= 0
             # Check that the initial position of actuators is not too far from the
             # desired position of actuators to avoid breaking the robot
-            #if (t <= 10 * params.dt_wbc):
-            #    if np.max(np.abs(controller.result.q_des - device.q_mes)) > 0.2:
-            #        print("DIFFERENCE: ", controller.result.q_des - device.q_mes)
-            #        print("q_des: ", controller.result.q_des)
-            #        print("q_mes: ", device.q_mes)
-            #        break
+            if (t <= 10 * params.dt_wbc):
+                if np.max(np.abs(controller.result.q_des - device.q_mes)) > 0.2:
+                    print("DIFFERENCE: ", controller.result.q_des - device.q_mes)
+                    print("q_des: ", controller.result.q_des)
+                    print("q_mes: ", device.q_mes)
+                    break
     
             # Set desired quantities for the actuators
             #print ("OLD", controller.result.q_des);
             #print ("NEW", controllerCpp.qdes);
             
-            device.SetDesiredJointPDgains(controller.result.P, controller.result.D)
-            device.SetDesiredJointPosition(controller.result.q_des)
-            device.SetDesiredJointVelocity(controller.result.v_des)
-            device.SetDesiredJointTorque(controller.result.tau_ff.ravel())
-    
             #device.SetDesiredJointPDgains(controllerCpp.P, controllerCpp.D)
             #device.SetDesiredJointPosition(controllerCpp.qdes)
             #device.SetDesiredJointVelocity(controllerCpp.vdes)
             #device.SetDesiredJointTorque(controllerCpp.tau_ff.ravel())
 
-            
+            device.SetDesiredJointPDgains(controller.result.P, controller.result.D)
+            device.SetDesiredJointPosition(controller.result.q_des)
+            device.SetDesiredJointVelocity(controller.result.v_des)
+            device.SetDesiredJointTorque(controller.result.tau_ff.ravel())
+    
             # Send command to the robot
             for i in range(1):
                 device.SendCommand(WaitEndOfCycle=True)
     
             t += params.dt_wbc  # Increment loop time
-            k += 1
-
+            
+            
+            # Update position of PyBullet camera on the robot position to do as if it was attached to the robot
             if k > 10 and params.enable_pyb_GUI:
                 pyb.resetDebugVisualizerCamera(cameraDistance=0.6, cameraYaw=45, cameraPitch=-39.9,
-                                               cameraTargetPosition=[device.dummyHeight[0], device.dummyHeight[1], 0.0])
+                                           cameraTargetPosition=[device.dummyHeight[0], device.dummyHeight[1], 0.0])
+            k += 1
             
         quit()
 

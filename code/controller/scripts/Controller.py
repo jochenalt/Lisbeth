@@ -193,6 +193,7 @@ class Controller:
         self.SIMULATION = params.SIMULATION
         self.k_mpc = int(params.dt_mpc / params.dt_wbc)
         self.k = 0
+        self.enable_pyb_GUI = params.enable_pyb_GUI
 
         self.h_ref = params.h_ref
         self.q = np.zeros(18)
@@ -263,7 +264,7 @@ class Controller:
             device (object): Interface with the masterboard or the simulation
         """
 
-        # print("---- PY---")
+        print("---- PY---")
         t_start = time.time()
 
         # Update the reference velocity coming from the gamepad
@@ -272,7 +273,7 @@ class Controller:
         baseHeight = np.array([0.0, 0.0, 0.0, device.dummyPos[2] - 0.0155])
         baseVelocity = device.b_baseVel
 
-        oRh, hRb, oTh=  self.run_estimator(device, remoteControl, baseHeight,baseVelocity)
+        oRh, hRb, oTh=  self.run_estimator(remoteControl, device, baseHeight,baseVelocity)
 
         t_filter = time.time()
         
@@ -280,20 +281,20 @@ class Controller:
         if (self.gait.getCurrentGaitTypeInt() == Types.GaitType.NoMovement.value)  and remoteControl.isMoving:
             print ("command received, start moving")
             remoteControl.gaitCode = self.gait.getPrevGaitTypeInt()
-            #if remoteControl.gaitCode == Types.GaitType.NoGait.value:
-            #   remoteControl.gaitCode = Types.GaitType.Trot.value
+            if remoteControl.gaitCode == Types.GaitType.NoGait.value:
+               remoteControl.gaitCode = Types.GaitType.Trot.value
 
         # automatically go to static mode if no movement is detected
         is_steady = self.estimator.isSteady()
         if self.gait.isNewPhase and self.gait.getCurrentGaitTypeInt() != Types.GaitType.NoMovement.value and is_steady and  not remoteControl.isMoving:
             print ("no movement, calm down")
-            #remoteControl.gaitCode = Types.GaitType.NoMovement.value
+            remoteControl.gaitCode = Types.GaitType.NoMovement.value
             
 
         # at a new gait cycle we need create the next gait round and start MPC
         startNewGaitCycle = (self.k % self.k_mpc) == 0
         self.gait.update(startNewGaitCycle, remoteControl.gaitCode)
-        #remoteControl.gaitCode = 0
+        remoteControl.gaitCode = 0
 
         # Compute target footstep based on current and reference velocities
         o_targetFootstep = self.footstepPlanner.updateFootsteps(self.k % self.k_mpc == 0 and self.k != 0,
@@ -422,7 +423,7 @@ class Controller:
             self.result.tau_ff[:] = np.zeros(12)
 
        
-    def run_estimator(self, device,remoteControl, baseHeight,baseVelocity):
+    def run_estimator(self, remoteControl, device,baseHeight,baseVelocity):
         """
         Call the estimator and retrieve the reference and estimated quantities.
         Run a filter on q, h_v and v_ref.
