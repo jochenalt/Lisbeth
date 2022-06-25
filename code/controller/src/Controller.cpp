@@ -366,7 +366,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    v_des = wbcController.get_vdes();
 	    tau_ff = 0.8 * wbcController.get_tau_ff();
 	    P = 3.0 * Vector12::Ones();  // position
-	    D = 0.1 * Vector12::Ones();  // Damping
+	    D = 0.2 * Vector12::Ones();  // Damping
 	  }
 
 	  // Security check
