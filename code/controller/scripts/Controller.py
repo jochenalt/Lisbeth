@@ -256,14 +256,14 @@ class Controller:
         #self.compute(params, dDevice)
 
         
-    def compute(self, params, device):
+    def compute(self, params, device, remoteControl):
         """Run one iteration of the main control loop
 
         Args:
             device (object): Interface with the masterboard or the simulation
         """
 
-        print("---- PY---")
+        # print("---- PY---")
         t_start = time.time()
 
         # Update the reference velocity coming from the gamepad
@@ -272,28 +272,28 @@ class Controller:
         baseHeight = np.array([0.0, 0.0, 0.0, device.dummyPos[2] - 0.0155])
         baseVelocity = device.b_baseVel
 
-        oRh, hRb, oTh=  self.run_estimator(device, baseHeight,baseVelocity)
+        oRh, hRb, oTh=  self.run_estimator(device, remoteControl, baseHeight,baseVelocity)
 
         t_filter = time.time()
         
         # automatically turn on a gait if we start moving
-        if (self.gait.getCurrentGaitTypeInt() == Types.GaitType.NoMovement.value)  and self.remoteControl.isMoving:
+        if (self.gait.getCurrentGaitTypeInt() == Types.GaitType.NoMovement.value)  and remoteControl.isMoving:
             print ("command received, start moving")
-            self.remoteControl.gaitCode = self.gait.getPrevGaitTypeInt()
-            if self.remoteControl.gaitCode == Types.GaitType.NoGait.value:
-               self.remoteControl.gaitCode = Types.GaitType.Trot.value
+            remoteControl.gaitCode = self.gait.getPrevGaitTypeInt()
+            #if remoteControl.gaitCode == Types.GaitType.NoGait.value:
+            #   remoteControl.gaitCode = Types.GaitType.Trot.value
 
         # automatically go to static mode if no movement is detected
         is_steady = self.estimator.isSteady()
-        if self.gait.isNewPhase and self.gait.getCurrentGaitTypeInt() != Types.GaitType.NoMovement.value and is_steady and  not self.remoteControl.isMoving:
+        if self.gait.isNewPhase and self.gait.getCurrentGaitTypeInt() != Types.GaitType.NoMovement.value and is_steady and  not remoteControl.isMoving:
             print ("no movement, calm down")
-            self.remoteControl.gaitCode = Types.GaitType.NoMovement.value
+            #remoteControl.gaitCode = Types.GaitType.NoMovement.value
             
 
         # at a new gait cycle we need create the next gait round and start MPC
         startNewGaitCycle = (self.k % self.k_mpc) == 0
-        self.gait.update(startNewGaitCycle, self.remoteControl.gaitCode)
-        self.remoteControl.gaitCode = 0
+        self.gait.update(startNewGaitCycle, remoteControl.gaitCode)
+        #remoteControl.gaitCode = 0
 
         # Compute target footstep based on current and reference velocities
         o_targetFootstep = self.footstepPlanner.updateFootsteps(self.k % self.k_mpc == 0 and self.k != 0,
@@ -333,7 +333,7 @@ class Controller:
 
         # Whole Body Control
         # If nothing wrong happened yet in the WBC controller
-        if (not self.error) and (not self.remoteControl.stop):
+        if (not self.error) and (not remoteControl.stop):
 
             self.q_wbc = np.zeros(18)
             self.dq_wbc = np.zeros(18)
@@ -379,17 +379,18 @@ class Controller:
         t_wbc = time.time()
 
         # Security check
-        self.security_check()
+        self.security_check(remoteControl)
 
         # Increment loop counter
         self.k += 1
 
         return 0.0
 
-    def security_check(self):
+
+    def security_check(self, remoteControl):
         cpp_q_filt = np.transpose(np.array(self.estimator.get_q_estimate())[np.newaxis])
         
-        if (self.error_flag == 0) and (not self.error) and (not self.remoteControl.stop) and self.gait.getCurrentGaitTypeInt() != 6:
+        if (self.error_flag == 0) and (not self.error) and (not remoteControl.stop) and self.gait.getCurrentGaitTypeInt() != 6:
             if np.any(np.abs(cpp_q_filt[7:, 0]) > self.q_security):
                 self.error = True
                 self.error_flag = 1
@@ -411,7 +412,7 @@ class Controller:
                 self.error_value = self.wbcController.tau_ff
 
         # If something wrong happened in TSID controller we stick to a security controller
-        if self.error or self.remoteControl.stop:
+        if self.error or remoteControl.stop:
 
             # Quantities sent to the control board
             self.result.P = np.zeros(12)
@@ -421,7 +422,7 @@ class Controller:
             self.result.tau_ff[:] = np.zeros(12)
 
        
-    def run_estimator(self, device,baseHeight,baseVelocity):
+    def run_estimator(self, device,remoteControl, baseHeight,baseVelocity):
         """
         Call the estimator and retrieve the reference and estimated quantities.
         Run a filter on q, h_v and v_ref.
@@ -439,7 +440,7 @@ class Controller:
                            baseHeight.copy(),
                            baseVelocity)
 
-        self.estimator.update_reference_state(self.remoteControl.v_ref)
+        self.estimator.update_reference_state(remoteControl.v_ref)
                 
         oRh = self.estimator.get_oRh()                 # rotation between the world and horizontal frame
         hRb = self.estimator.get_hRb()                 # rotation between the horizontal and base frame

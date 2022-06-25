@@ -227,7 +227,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 			 Vector12 const& jointsPositions,
 			 Vector12 const& jointsVelocities)
 {
-	std::cout << "--- C++ ---" << std::endl;
+	// std::cout << "--- C++ ---" << std::endl;
 
 	estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(),
 		  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,

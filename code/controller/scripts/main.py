@@ -132,13 +132,13 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     # Run a scenario and retrieve data thanks to the logger
     print("START CONTROLLER")
     controller = Controller(params, q_init)
-    controller.remoteControl = RemoteControl.RemoteControl(params.dt_wbc, False)
+    remoteControl = RemoteControl.RemoteControl(params.dt_wbc, False)
     
     controllerCpp = core.Controller()
     controllerCpp.initialize(params)
 
     if params.SIMULATION and (des_vel_analysis is not None):
-        controller.remoteControl.update_for_analysis(des_vel_analysis, N_analysis, N_steady)
+        remoteControl.update_for_analysis(des_vel_analysis, N_analysis, N_steady)
 
 
 
@@ -183,35 +183,35 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     # CONTROL LOOP ***************************************************
     t = 0.0
     t_max = (params.N_SIMULATION-2) * params.dt_wbc
-            
+    k = 0        
     while ((not device.hardware.IsTimeout()) and (t < t_max) and (not controller.error)):
         for j in range(12000):
-            if (j == 1):
-                controller.remoteControl.gp.speedX.value = 0.0
-                controller.remoteControl.gp.speedY.value = 0.0
-                controller.remoteControl.gp.speedZ.value = 0.12
-                controller.remoteControl.gp.bodyX.value = 0.0
-                controller.remoteControl.gp.bodyY.value = 0.0
-                controller.remoteControl.gp
-                print ("-------- START MOVING -------------")
+            #if (j == 1):
+            #    remoteControl.gp.speedX.value = 0.0
+            #    remoteControl.gp.speedY.value = 0.0
+            #    remoteControl.gp.speedZ.value = 0.12
+            #    remoteControl.gp.bodyX.value = 0.0
+            #    remoteControl.gp.bodyY.value = 0.0
+            #    remoteControl.gp
+            #    print ("-------- START MOVING -------------")
 
             # Update sensor data (IMU,
             device.UpdateMeasurment()
 
 
             # get command from remote control
-            controller.remoteControl.update_v_ref(controller.k, controller.velID)
+            remoteControl.update_v_ref(k, controller.velID)
             # Desired torques
             
-            controller.compute(params, device)
-            controllerCpp.command_speed(controller.remoteControl.v_ref[0,0], controller.remoteControl.v_ref[1,0], 
-                                        controller.remoteControl.v_ref[2,0], controller.remoteControl.v_ref[3,0], 
-                                        controller.remoteControl.v_ref[4,0], controller.remoteControl.v_ref[5,0]);
+            controller.compute(params, device, remoteControl)
+            controllerCpp.command_speed(remoteControl.v_ref[0,0], remoteControl.v_ref[1,0], 
+                                        remoteControl.v_ref[2,0], remoteControl.v_ref[3,0], 
+                                        remoteControl.v_ref[4,0], remoteControl.v_ref[5,0]);
+            controllerCpp.command_gait(remoteControl.gaitCode)
             controllerCpp.compute(device.baseLinearAcceleration, device.baseAngularVelocity, device.baseOrientation, # IMU data    
                                     device.q_mes, device.v_mes # joint positions and joint velocities coming from encoders
                                  )
-            controller.remoteControl.gaitCode = 0
-            
+            remoteControl.gaitCode= 0
             # Check that the initial position of actuators is not too far from the
             # desired position of actuators to avoid breaking the robot
             #if (t <= 10 * params.dt_wbc):
@@ -225,25 +225,27 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             #print ("OLD", controller.result.q_des);
             #print ("NEW", controllerCpp.qdes);
             
-            #device.SetDesiredJointPDgains(controllerCpp.P, controllerCpp.D)
-            #device.SetDesiredJointPosition(controllerCpp.qdes)
-            #device.SetDesiredJointVelocity(controllerCpp.vdes)
-            #device.SetDesiredJointTorque(controllerCpp.tau_ff.ravel())
-
             device.SetDesiredJointPDgains(controller.result.P, controller.result.D)
             device.SetDesiredJointPosition(controller.result.q_des)
             device.SetDesiredJointVelocity(controller.result.v_des)
             device.SetDesiredJointTorque(controller.result.tau_ff.ravel())
     
+            #device.SetDesiredJointPDgains(controllerCpp.P, controllerCpp.D)
+            #device.SetDesiredJointPosition(controllerCpp.qdes)
+            #device.SetDesiredJointVelocity(controllerCpp.vdes)
+            #device.SetDesiredJointTorque(controllerCpp.tau_ff.ravel())
+
+            
             # Send command to the robot
             for i in range(1):
                 device.SendCommand(WaitEndOfCycle=True)
     
             t += params.dt_wbc  # Increment loop time
+            k += 1
 
-        if self.k > 10 and params.enable_pyb_GUI:
-            pyb.resetDebugVisualizerCamera(cameraDistance=0.6, cameraYaw=45, cameraPitch=-39.9,
-                                           cameraTargetPosition=[device.dummyHeight[0], device.dummyHeight[1], 0.0])
+            if k > 10 and params.enable_pyb_GUI:
+                pyb.resetDebugVisualizerCamera(cameraDistance=0.6, cameraYaw=45, cameraPitch=-39.9,
+                                               cameraTargetPosition=[device.dummyHeight[0], device.dummyHeight[1], 0.0])
             
         quit()
 

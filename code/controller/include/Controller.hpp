@@ -48,7 +48,7 @@ class Controller {
 	        cmd_is_moving = (abs(vX) > 0.001) || (abs(vY) > 0.001) || (abs(rotX) > 0.001) || (abs(rotY) > 0.001) || (abs(angSpeedZ) > 0.001);
 	  	}
 	  	// command from remote: new gait
-	  	void command_gait(GaitType newGait) { cmd_gait = newGait;}
+	  	void command_gait(int newGait) { cmd_gait = (GaitType)newGait;}
 
 	  	Vector12 P;       // Proportional gains
 	  	Vector12 D;       // Derivative gains
