@@ -5,7 +5,6 @@ import Utils
 import time
 import math
 
-import pybullet as pyb
 import pinocchio as pin
 import libcontroller_core as core
 from cmath import nan
@@ -194,7 +193,6 @@ class Controller:
         self.SIMULATION = params.SIMULATION
         self.k_mpc = int(params.dt_mpc / params.dt_wbc)
         self.k = 0
-        self.enable_pyb_GUI = params.enable_pyb_GUI
 
         self.h_ref = params.h_ref
         self.q = np.zeros(18)
@@ -383,22 +381,10 @@ class Controller:
         # Security check
         self.security_check()
 
-        # Update PyBullet camera
-        self.pyb_camera(device, 0.0)  # to have yaw update in simu: Utils.quaternionToRPY(self.estimator.q_filt[3:7, 0])[2, 0]
-
         # Increment loop counter
         self.k += 1
 
         return 0.0
-
-    def pyb_camera(self, device, yaw):
-
-        # Update position of PyBullet camera on the robot position to do as if it was attached to the robot
-        if self.k > 10 and self.enable_pyb_GUI:
-            # pyb.resetDebugVisualizerCamera(cameraDistance=0.8, cameraYaw=45, cameraPitch=-30,
-            #                                cameraTargetPosition=[1.0, 0.3, 0.25])
-            pyb.resetDebugVisualizerCamera(cameraDistance=0.6, cameraYaw=45, cameraPitch=-39.9,
-                                           cameraTargetPosition=[device.dummyHeight[0], device.dummyHeight[1], 0.0])
 
     def security_check(self):
         cpp_q_filt = np.transpose(np.array(self.estimator.get_q_estimate())[np.newaxis])

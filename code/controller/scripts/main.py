@@ -3,6 +3,7 @@
 import os
 import sys
 import time
+import pybullet as pyb
 
 import threading
 from Controller import Controller
@@ -184,23 +185,22 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     t_max = (params.N_SIMULATION-2) * params.dt_wbc
             
     while ((not device.hardware.IsTimeout()) and (t < t_max) and (not controller.error)):
-        for j in range(500):
+        for j in range(12000):
             if (j == 1):
                 controller.remoteControl.gp.speedX.value = 0.0
                 controller.remoteControl.gp.speedY.value = 0.0
                 controller.remoteControl.gp.speedZ.value = 0.12
                 controller.remoteControl.gp.bodyX.value = 0.0
                 controller.remoteControl.gp.bodyY.value = 0.0
-                controller.remoteControl.gp.bodyZ.value = 0.0
+                controller.remoteControl.gp
                 print ("-------- START MOVING -------------")
 
-            # Update sensor data (IMU, encoders, Motion capture)
+            # Update sensor data (IMU,
             device.UpdateMeasurment()
 
 
             # get command from remote control
             controller.remoteControl.update_v_ref(controller.k, controller.velID)
-    
             # Desired torques
             
             controller.compute(params, device)
@@ -210,14 +210,16 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             controllerCpp.compute(device.baseLinearAcceleration, device.baseAngularVelocity, device.baseOrientation, # IMU data    
                                     device.q_mes, device.v_mes # joint positions and joint velocities coming from encoders
                                  )
+            controller.remoteControl.gaitCode = 0
+            
             # Check that the initial position of actuators is not too far from the
             # desired position of actuators to avoid breaking the robot
-            if (t <= 10 * params.dt_wbc):
-                if np.max(np.abs(controller.result.q_des - device.q_mes)) > 0.2:
-                    print("DIFFERENCE: ", controller.result.q_des - device.q_mes)
-                    print("q_des: ", controller.result.q_des)
-                    print("q_mes: ", device.q_mes)
-                    break
+            #if (t <= 10 * params.dt_wbc):
+            #    if np.max(np.abs(controller.result.q_des - device.q_mes)) > 0.2:
+            #        print("DIFFERENCE: ", controller.result.q_des - device.q_mes)
+            #        print("q_des: ", controller.result.q_des)
+            #        print("q_mes: ", device.q_mes)
+            #        break
     
             # Set desired quantities for the actuators
             #print ("OLD", controller.result.q_des);
@@ -238,6 +240,10 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
                 device.SendCommand(WaitEndOfCycle=True)
     
             t += params.dt_wbc  # Increment loop time
+
+        if self.k > 10 and params.enable_pyb_GUI:
+            pyb.resetDebugVisualizerCamera(cameraDistance=0.6, cameraYaw=45, cameraPitch=-39.9,
+                                           cameraTargetPosition=[device.dummyHeight[0], device.dummyHeight[1], 0.0])
             
         quit()
 
