@@ -207,6 +207,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             # Desired torques
             controller.compute(params, device, remoteControl)
             
+            controllerCpp.command_gait(remoteControl.gaitCode)
             controllerCpp.command_speed(remoteControl.v_ref[0,0], remoteControl.v_ref[1,0], 
                                         remoteControl.v_ref[2,0], remoteControl.v_ref[3,0], 
                                         remoteControl.v_ref[4,0], remoteControl.v_ref[5,0]);

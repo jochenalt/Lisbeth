@@ -278,23 +278,26 @@ class Controller:
         t_filter = time.time()
         
         # automatically turn on a gait if we start moving
+        gaitCode = remoteControl.gaitCode
         if (self.gait.getCurrentGaitTypeInt() == Types.GaitType.NoMovement.value)  and remoteControl.isMoving:
             print ("command received, start moving")
-            remoteControl.gaitCode = self.gait.getPrevGaitTypeInt()
-            if remoteControl.gaitCode == Types.GaitType.NoGait.value:
-               remoteControl.gaitCode = Types.GaitType.Trot.value
-
+            prevGaitCode = self.gait.getPrevGaitTypeInt()
+            if gaitCode == Types.GaitType.NoGait.value:
+               gaitCode = Types.GaitType.Trot.value # default gait
+            else:
+                gaitCode = prevGaitCode
+                
         # automatically go to static mode if no movement is detected
         is_steady = self.estimator.isSteady()
         if self.gait.isNewPhase and self.gait.getCurrentGaitTypeInt() != Types.GaitType.NoMovement.value and is_steady and  not remoteControl.isMoving:
             print ("no movement, calm down")
-            remoteControl.gaitCode = Types.GaitType.NoMovement.value
+            gaitCode = Types.GaitType.NoMovement.value
             
 
         # at a new gait cycle we need create the next gait round and start MPC
         startNewGaitCycle = (self.k % self.k_mpc) == 0
-        self.gait.update(startNewGaitCycle, remoteControl.gaitCode)
-        remoteControl.gaitCode = 0
+        self.gait.update(startNewGaitCycle, gaitCode)
+        #remoteControl.gaitCode = 0
 
         # Compute target footstep based on current and reference velocities
         o_targetFootstep = self.footstepPlanner.updateFootsteps(self.k % self.k_mpc == 0 and self.k != 0,
