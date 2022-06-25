@@ -62,8 +62,9 @@ void InvKin::initialize(Params& params) {
 	Kd_base_position = Vector3(params_->Kd_base_position.data());
 	Kp_base_orientation = Vector3(params_->Kp_base_orientation.data());
 	Kd_base_orientation = Vector3(params_->Kd_base_orientation.data());
-	w_tasks = Vector8(params_->w_tasks.data());
 
+	Kp_flyingfeet = params_->Kp_flyingfeet;
+	Kd_flyingfeet = params_->Kd_flyingfeet;
 
 }
 Eigen::MatrixXd InvKin::refreshAndCompute(const Eigen::MatrixXd &contacts,

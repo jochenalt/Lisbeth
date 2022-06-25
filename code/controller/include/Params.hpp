@@ -95,7 +95,6 @@ class Params {
   double dt_wbc;                // Time step of the whole body control
   double dt_mpc;                // Time step of the model predictive control
   int N_periods;                // Number of gait periods in the MPC prediction horizon
-  int type_MPC;                 // Which MPC solver you want to use: 0 for OSQP MPC, 1, 2, 3 for Crocoddyl MPCs
   bool kf_enabled;              // Use complementary filter (False) or kalman filter (True) for the estimator
   std::vector<double> Kp_main;  // Proportional gains for the PD+
   std::vector<double> Kd_main;  // Derivative gains for the PD+
@@ -151,11 +150,8 @@ class Params {
   std::string environment_heightmap;  // Path to the heightmap
   double heightmap_fit_length;        // Size of the heightmap around the robot
   int heightmap_fit_size;             // Number of points used in the heightmap QP
-  int number_steps;                   // Number of steps to optimize with the MIP
   std::vector<double> max_velocity;   // Maximum velocity of the base
   bool use_bezier;                    // Use Bezier to plan trajectories, otherwise use simple 6d polynomial curve.
-  bool use_sl1m;                      // Use SL1M to select the surfaces.
-  bool use_heuristic;                 // Use heuristic as SL1M cost.
 
   float bezier_x_margin_max;  //  margin inside convex surfaces [m].
   float bezier_t_margin;      //  100*t_margin_% of the curve around critical point. range: [0, 1]

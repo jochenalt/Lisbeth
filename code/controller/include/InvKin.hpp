@@ -89,15 +89,13 @@ private:
     Vector3 Kd_base_position;     // Derivative gains for base position task
     Vector3 Kp_base_orientation;  // Proportional gains for base orientation task
     Vector3 Kd_base_orientation;  // Derivative gains for base orientation task
-    Vector8 w_tasks;              // Weight vector for tasks weighting
 
     Vector19 q_wbc_;           // Configuration vector for the whole body control
     Vector18 dq_wbc_;          // Velocity vector for the whole body control
 
-
     // Gains
-    double Kp_flyingfeet = 100.0; // 1000
-    double Kd_flyingfeet = 2.0 * std::sqrt(Kp_flyingfeet); // 5.0 *
+    double Kp_flyingfeet = 100;
+    double Kd_flyingfeet = 20;
 
     pinocchio::Model model_;  // Pinocchio model for frame computations and inverse kinematics
     pinocchio::Data data_;    // Pinocchio datas for frame computations and inverse kinematics

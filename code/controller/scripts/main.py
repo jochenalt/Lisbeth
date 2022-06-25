@@ -226,7 +226,10 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             # Set desired quantities for the actuators
             #print ("OLD", controller.result.q_des);
             #print ("NEW", controllerCpp.qdes);
-            
+            if (not np.allclose(controller.result.q_des, controllerCpp.qdes)):
+                print ("old", controller.result.q_des)            
+                print ("new", controllerCpp.qdes)            
+
             device.SetDesiredJointPDgains(controllerCpp.P, controllerCpp.D)
             device.SetDesiredJointPosition(controllerCpp.qdes)
             device.SetDesiredJointVelocity(controllerCpp.vdes)
