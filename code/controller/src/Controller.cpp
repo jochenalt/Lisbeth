@@ -212,9 +212,10 @@ void Controller::security_check() {
 }
 
 Matrix34 cross33(Vector3 a, Matrix34 b) {
-	  Matrix34 result;
-	  for (int i = 0;i<4;i++) {
-		  result.col(i) = a.cross(b.col(i));
+	Matrix34 result;
+	  for (int i = 0;i<b.cols();i++) {
+		  result.col(i) = b.col(i).cross(a);
+
 	  }
 
 	  return result;
@@ -272,7 +273,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	// Update pos, vel and acc references for feet
 	footTrajectoryGenerator.update(k, o_targetFootstep);
-    //std::cout << "footTrajectoryGenerator.getFootPosition(); " << footTrajectoryGenerator.getFootPosition() << std::endl;
+    // std::cout << "footTrajectoryGenerator.getFootPosition(); " << footTrajectoryGenerator.getFootPosition() << std::endl;
     //std::cout << "footTrajectoryGenerator.getFootVelocity(); " << footTrajectoryGenerator.getFootVelocity() << std::endl;
     //std::cout << "footTrajectoryGenerator.getFootAcceleration(); " << footTrajectoryGenerator.getFootAcceleration() << std::endl;
 
@@ -306,7 +307,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    // std::cout << "wbcController.get_qdes()" << wbcController.get_qdes()<< std::endl;
 
 	    Vector3 T = -estimator.getoTh() - Vector3(0.0, 0.0, h_ref_);
-	    Matrix3 R = estimator.gethRb() * estimator.getoRh();
+	    Matrix3 R = estimator.gethRb() * estimator.getoRh().transpose();
 	    // std::cout << "R" << R << std::endl;
 	    // std::cout << "T" << T.replicate(1,4) << std::endl;
 
@@ -314,16 +315,27 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    Matrix3N feet_v_cmd = R * footTrajectoryGenerator.getFootVelocity();
 	    Matrix3N feet_p_cmd = R * (footTrajectoryGenerator.getFootPosition()  + T.replicate(1,4));
 
-	    Vector3 v_ref_tmp = estimator.getBaseVelRef().block<3,1>(3,0);
-        feet_a_cmd += - cross33(v_ref_tmp,cross33( v_ref_tmp, feet_p_cmd))
-        		      - 2* cross33(v_ref_tmp, feet_v_cmd);
-	    feet_v_cmd += - estimator.getBaseVelRef().block<3,1>(0,0).replicate(1,4)
-	    		      - cross33 (estimator.getBaseVelRef().block<3,1>(3,0), feet_p_cmd);
+	    Vector3 v_ref36 = estimator.getBaseVelRef().block<3,1>(3,0);
+	    Vector3 v_ref03 = estimator.getBaseVelRef().block<3,1>(0,0);
+
+	    feet_a_cmd += - cross33(v_ref36,cross33( v_ref36, feet_p_cmd))
+        		      - 2.0* cross33(v_ref36, feet_v_cmd);
+	    feet_v_cmd += - v_ref03.replicate(1,4)
+	    		      - cross33 (v_ref36, feet_p_cmd);
 
 	    // std::cout << "feet_p_cmd " << footTrajectoryGenerator.getFootPosition() + T.replicate(1,4)<< std::endl;
 	    // std::cout << "R*feet_p_cmd " << R*(footTrajectoryGenerator.getFootPosition() + T.replicate(1,4)) << std::endl;
 
+	    // std::cout << "feet_p_cmd " << feet_p_cmd << std::endl;
+
 	    // std::cout << "feet_v_cmd " << footTrajectoryGenerator.getFootVelocity() << std::endl;
+
+	    // std::cout << "estimator.getBaseVelRef().block<3,1>(0,0) " << estimator.getBaseVelRef().block<3,1>(0,0)<< std::endl;
+	    // std::cout << "v_ref36" << v_ref36<< std::endl;
+	    // std::cout << "cross33 (v_ref36, feet_p_cmd) " <<cross33 (v_ref36, feet_p_cmd)<< std::endl;
+
+	    // std::cout << "feet_v_cmd " << feet_v_cmd << std::endl;
+
 	    // std::cout << "feet_a_cmd " << footTrajectoryGenerator.getFootAcceleration() << std::endl;
 
 	    // std::cout << "dq_wbc " << dq_wbc << std::endl;
