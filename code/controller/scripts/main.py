@@ -187,8 +187,8 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     t_max = (params.N_SIMULATION-2) * params.dt_wbc
             
     while ((not device.hardware.IsTimeout()) and (t < t_max) and (not controller.error)):
-        for j in range(50):
-            if (j == 1):
+        for j in range(10000):
+            if (j == -1):
                 remoteControl.gp.speedX.value = 0.0
                 remoteControl.gp.speedY.value = 0.0
                 remoteControl.gp.speedZ.value = 0.12
@@ -229,10 +229,10 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             if (not np.allclose(controller.result.q_des, controllerCpp.qdes)):
                 print ("alt.q_des", controller.result.q_des)            
                 print ("new.q_des", controllerCpp.qdes)            
-            if (not np.allclose(controller.result.v_des, controllerCpp.vdes)):
-                print ("oldv.des", controller.result.v_des)            
-                print ("newv.des", controllerCpp.vdes)            
-            if (not np.allclose(controller.result.tau_ff, controllerCpp.tau_ff, rtol=0.001)):
+            if (not np.allclose(controller.result.v_des, controllerCpp.vdes, rtol=0.01)):
+                print ("old.v_des", controller.result.v_des)            
+                print ("new.v_des", controllerCpp.vdes)            
+            if (not np.allclose(controller.result.tau_ff, controllerCpp.tau_ff, rtol=0.01)):
                 print ("oldv.tau_ff", controller.result.tau_ff)            
                 print ("newv.tau_ff", controllerCpp.tau_ff)            
 

@@ -214,7 +214,7 @@ void Controller::security_check() {
 Matrix34 cross33(Vector3 a, Matrix34 b) {
 	Matrix34 result;
 	  for (int i = 0;i<b.cols();i++) {
-		  result.col(i) = b.col(i).cross(a);
+		  result.col(i) = a.cross(b.col(i));
 
 	  }
 
