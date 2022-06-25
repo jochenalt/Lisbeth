@@ -187,15 +187,15 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     t_max = (params.N_SIMULATION-2) * params.dt_wbc
             
     while ((not device.hardware.IsTimeout()) and (t < t_max) and (not controller.error)):
-        for j in range(30000):
-            #if (j == 1):
-            #    remoteControl.gp.speedX.value = 0.0
-            #    remoteControl.gp.speedY.value = 0.0
-            #    remoteControl.gp.speedZ.value = 0.12
-            #    remoteControl.gp.bodyX.value = 0.0
-            #    remoteControl.gp.bodyY.value = 0.0
-            #    remoteControl.gp.bodyZ.value = 0.0
-            #    print ("-------- START MOVING -------------")
+        for j in range(50):
+            if (j == 1):
+                remoteControl.gp.speedX.value = 0.0
+                remoteControl.gp.speedY.value = 0.0
+                remoteControl.gp.speedZ.value = 0.12
+                remoteControl.gp.bodyX.value = 0.0
+                remoteControl.gp.bodyY.value = 0.0
+                remoteControl.gp.bodyZ.value = 0.0
+                print ("-------- START MOVING -------------")
 
             # Update sensor data (IMU, encoders, Motion capture)
             device.UpdateMeasurment()
@@ -205,7 +205,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             remoteControl.update_v_ref(k, controller.velID)
     
             # Desired torques
-            #controller.compute(params, device, remoteControl)
+            controller.compute(params, device, remoteControl)
             
             controllerCpp.command_gait(remoteControl.gaitCode)
             controllerCpp.command_speed(remoteControl.v_ref[0,0], remoteControl.v_ref[1,0], 
@@ -227,8 +227,14 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             #print ("OLD", controller.result.q_des);
             #print ("NEW", controllerCpp.qdes);
             if (not np.allclose(controller.result.q_des, controllerCpp.qdes)):
-                print ("old", controller.result.q_des)            
-                print ("new", controllerCpp.qdes)            
+                print ("alt.q_des", controller.result.q_des)            
+                print ("new.q_des", controllerCpp.qdes)            
+            if (not np.allclose(controller.result.v_des, controllerCpp.vdes)):
+                print ("oldv.des", controller.result.v_des)            
+                print ("newv.des", controllerCpp.vdes)            
+            if (not np.allclose(controller.result.tau_ff, controllerCpp.tau_ff, rtol=0.001)):
+                print ("oldv.tau_ff", controller.result.tau_ff)            
+                print ("newv.tau_ff", controllerCpp.tau_ff)            
 
             device.SetDesiredJointPDgains(controllerCpp.P, controllerCpp.D)
             device.SetDesiredJointPosition(controllerCpp.qdes)
@@ -241,8 +247,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             #device.SetDesiredJointTorque(controller.result.tau_ff.ravel())
     
             # Send command to the robot
-            for i in range(1):
-                device.SendCommand(WaitEndOfCycle=True)
+            device.SendCommand(WaitEndOfCycle=True)
     
             t += params.dt_wbc  # Increment loop time
             

@@ -47,7 +47,6 @@ set(${PROJECT_NAME}_HEADERS
   include/Utils.hpp
   include/Estimator.hpp
   include/FootTrajectoryGenerator.hpp
-  include/FootTrajectoryGeneratorBezier.hpp
   include/FootstepPlanner.hpp
   include/StatePlanner.hpp
   include/Types.h
