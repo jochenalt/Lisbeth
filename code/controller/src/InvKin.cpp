@@ -114,16 +114,7 @@ Eigen::MatrixXd InvKin::refreshAndCompute(const Eigen::MatrixXd &contacts,
 void InvKin::run(VectorN const& q, VectorN const& dq, MatrixN const& contacts, MatrixN const& pgoals,
                  MatrixN const& vgoals, MatrixN const& agoals) {
 
-	/*
- std::cout << "invKin " << std::endl
-		 << "q:" << std::endl << q << std::endl
-		 << "dq:" << std::endl <<  dq << std::endl
-		 << "contacts:" << std::endl <<  contacts << std::endl
- << "pgoals:" << std::endl <<  pgoals << std::endl
- << "vgoals:" << std::endl <<  vgoals << std::endl
- << "agoals:" << std::endl <<  agoals << std::endl;
-*/
-		 // Update model and data of the robot
+  // Update model and data of the robot
   pinocchio::computeJointJacobians(model_, data_, q);
   pinocchio::forwardKinematics(model_, data_, q, dq, VectorN::Zero(model_.nv));
   //pinocchio::computeJointJacobiansTimeVariation(model_, data_, q, dq);

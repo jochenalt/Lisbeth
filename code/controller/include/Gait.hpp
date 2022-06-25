@@ -79,9 +79,6 @@ private:
 
     void createStatic();
 
-    // Initialize content of the gait matrix based on the desired gait, the gait period and
-    // the length of the prediciton horizon
-    void create_gait_f();
 
     MatrixN pastGait_;     // Past gait
 public:
@@ -94,7 +91,6 @@ private:
 
     double T_gait_;  // Gait period
     double T_mpc_;   // MPC period (prediction horizon)
-    int n_steps_;        // Number of time steps in the prediction horizon
 
     double remainingTime_;
 
