@@ -248,15 +248,16 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	// automatically turn on a gait with previously gait when we start moving
 	if ((gait.getCurrentGaitType() == GaitType::NoMovement)  and cmd_go and cmd_is_moving) {
 		std::cout << "command received, start moving" << std::endl;
-		cmd_gait = gait.getPrevGaitType();
-		if (cmd_gait == GaitType::NoGait)
+		if (gait.getPrevGaitType() == GaitType::NoGait)
 			cmd_gait = GaitType::Trot;
+		else
+			cmd_gait =  gait.getPrevGaitType();
 	}
 
 	//  automatically go to static mode if no movement is detected
 	bool is_steady = estimator.isSteady();
 	bool startNewGaitCycle = false;
-	if (gait.isNewPhase() && gait.getCurrentGaitType() != GaitType::NoMovement && is_steady && !cmd_go && !cmd_is_moving) {
+	if (gait.isNewPhase() && gait.getCurrentGaitType() != GaitType::NoMovement && is_steady && cmd_go && !cmd_is_moving) {
 		std::cout << "no movement, calm down" << std::endl;
 	 	cmd_gait = GaitType::NoMovement;
 	}
