@@ -21,12 +21,13 @@ MPCSolver::MPCSolver(Params& params) {
   cpt_ML = 0;
   cpt_P = 0;
 
+  // deviation of base from centre of mass
   offset_CoM = Vector3(params.CoM_offset[0], params.CoM_offset[1],params.CoM_offset[2]);
 
-  // Predefined matrices
-  footholds << 0.19, 0.19, -0.19, -0.19,
-		       0.15005, -0.15005, 0.15005, -0.15005,
-			   0.0, 0.0, 0.0, 0.0;
+  // initial contact positions of feet
+  footholds << Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(params.footsteps_under_shoulders.data(),
+	                                                          params.footsteps_under_shoulders.size());
+
   gI << 3.09249e-2, -8.00101e-7, 1.865287e-5, -8.00101e-7, 5.106100e-2, 1.245813e-4, 1.865287e-5, 1.245813e-4,
       6.939757e-2;
 
