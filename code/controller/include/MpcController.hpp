@@ -54,19 +54,20 @@ class MpcController {
   ////////////////////////////////////////////////////////////////////////////////////////////////
   void solve( MatrixN xref, MatrixN fsteps, MatrixN gait);
 
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  ///
-  /// \brief Return the latest available result of the MPC
-  ///
-  ////////////////////////////////////////////////////////////////////////////////////////////////
+  // return the latest result from last MPC run
   Matrix242 get_latest_result();
 
+  // return the average time per MPC run in [us]
+  int get_avr_time_us() { return time_per_run_us; };
+
+  // returns true of the MPC controller has a new result computed and is ready for the next job
+  // the result can be fetched with get_latest_result
+  bool is_ready() {
+	  bool save_flag = new_mpc_output_flag;
+	  new_mpc_output_flag = false;
+  	  return save_flag;
+  }
  private:
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  ///
-  /// \brief Run the MPC in parallel (launched by a thread)
-  ///
-  ////////////////////////////////////////////////////////////////////////////////////////////////
   void parallel_loop();
   void write_in(MatrixN& xref, MatrixN& fsteps);
   bool read_in(MatrixN& xref, MatrixN& fsteps);
@@ -91,6 +92,8 @@ class MpcController {
   bool new_mpc_input = false;        // Flag to indicate new data has been written by main loop for MPC
   bool new_mpc_output = false;       // Flag to indicate new data has been written by MPC for main loop
 
+  bool new_mpc_output_flag = true;        // Flag to indicate new data has been written by main loop for MPC
+
   // establish a buffer for communication between main thread and MPC thread
   struct {
   	MatrixN xref;              // Desired state vector for the whole prediction horizon
@@ -98,6 +101,7 @@ class MpcController {
   	MatrixN result;            // Predicted state and desired contact forces resulting of the MPC
   } thread_buffer;
 
+  int time_per_run_us = 0;
 };
 
 #endif  // MPCWRAPPER_H_INCLUDED

@@ -3,6 +3,7 @@
 #include <chrono>
 #include <thread>
 #include <mutex>
+#include <Utils.hpp>
 
 
 void MpcController::write_in(MatrixN& xref, MatrixN& fsteps) {
@@ -28,6 +29,7 @@ void MpcController::write_out(MatrixN& result) {
 	   	std::cout << "ERROR:previous MPC result hasnt been fetched yet" << std::endl;
   thread_buffer.result = result;
   new_mpc_output = true;  // New data is available
+  new_mpc_output_flag = true;
 }
 
 bool MpcController::check_new_result() {
@@ -51,10 +53,13 @@ void MpcController::parallel_loop() {
 
     // Checking if new data is available to trigger the asynchronous MPC
     if (read_in(xref, fsteps)) {
-      // std::cout << "NEW DATA AVAILABLE, LAUNCHING MPC" << std::endl;
-
       // Run the asynchronous MPC with the data that as been retrieved
+      uint64_t start = get_micros();
       mpc_->run(xref, fsteps);
+
+      uint64_t time = get_micros() - start;
+      time_per_run_us = (time_per_run_us + (int)time)/2;
+
 
       // Store the result (predicted state + desired forces)
       // MPC::get_latest_result() returns a matrix of size 24 x N and we want to
@@ -101,8 +106,6 @@ void MpcController::initialize(Params& params) {
 }
 
 void MpcController::solve(MatrixN xref, MatrixN fsteps, MatrixN gait) {
-  // std::cout << "MPC.xref: " << xref << ", fsteps" << fsteps << std::endl;
-
   write_in(xref, fsteps);
 
   // Adaptation if gait has changed
@@ -111,13 +114,13 @@ void MpcController::solve(MatrixN xref, MatrixN fsteps, MatrixN gait) {
     if (gait_next.isApprox(gait.row(0)))  // If we're still doing what was planned the last time MPC was solved
     {
       last_available_result.col(0).tail(12) = last_available_result.col(1).tail(12);
-    } else  // Otherwise use a default contact force command till we get the actual result of the MPC for this new
-            // sequence
+    } else
     {
-      double F = 9.81 * params_->mass / gait.row(0).sum();
-      for (int i = 0; i < 4; i++) {
-        last_available_result.block(12 + 3 * i, 0, 3, 1) << 0.0, 0.0, F;
-      }
+    	// Otherwise use a default contact force command till we get ( = mass / number of legs )
+    	// the actual result of the MPC for this new sequence
+    	double F = 9.81 * params_->mass / gait.row(0).sum();
+    	for (int i = 0; i < 4; i++)
+    		last_available_result.block(12 + 3 * i, 0, 3, 1) << 0.0, 0.0, F;
     }
     last_available_result.col(1).tail(12).setZero();
     gait_past = gait.row(0);

@@ -500,8 +500,8 @@ void MPC::init_solver() {
   data->l = &v_NK_low[0];  // dense array for lower bound (size m)
   data->u = &v_NK_up[0];   // dense array for upper bound (size m)
   settings->sigma = (c_float)1e-6;
-  settings->eps_abs = (c_float)1e-4;
-  settings->eps_rel = (c_float)1e-4;
+  settings->eps_abs = (c_float)5e-4;
+  settings->eps_rel = (c_float)5e-4;
   settings->eps_prim_inf = (c_float)1e-5;
   settings->eps_dual_inf = (c_float)1e-4;
   settings->alpha = (c_float)1.6;

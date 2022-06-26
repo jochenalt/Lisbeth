@@ -19,7 +19,9 @@ struct MpcControllerPythonVisitor : public bp::def_visitor<MpcControllerPythonVi
             .def("initialize", &MpcController::initialize, bp::args("params"),
                  "Initialize MPC from Python.\n")
             .def("get_latest_result", &MpcController::get_latest_result)
-        	.def("solve", &MpcController::solve, bp::args("fsteps","gait", "fsteps_in"));
+        	.def("solve", &MpcController::solve, bp::args("fsteps","gait", "fsteps_in"))
+    		.def("is_ready", &MpcController::is_ready)
+			.def("get_avr_time_us", &MpcController::get_avr_time_us);
     }
 
     static void expose()
