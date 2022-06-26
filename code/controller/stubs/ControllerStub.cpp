@@ -14,17 +14,17 @@ struct ControllerPythonVisitor : public bp::def_visitor<ControllerPythonVisitor<
     {
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
 
-            .def("initialize", &Controller::initialize, bp::args("params"))
-            .def("compute", &Controller::compute, bp::args("imuLinearAcceleration", "imuGyroscopse", "imuAttitudeEuler",
+        .def("initialize", &Controller::initialize, bp::args("params"))
+        .def("compute", &Controller::compute, bp::args("imuLinearAcceleration", "imuGyroscopse", "imuAttitudeEuler",
             											  "jointPositions", "jointVelocities"))
-            .def("command_speed", &Controller::command_speed, bp::args("vX", "vY","heightZ", "angSpeedZ", "rotX", "rotY"))
-			.def("command_go", &Controller::command_go, bp::args("ok"))
-			.def("command_gait", &Controller::command_gait, bp::args("newGait"))
-			.def_readonly("vdes", &Controller::v_des)
-			.def_readonly("qdes", &Controller::q_des)
-			.def_readonly("tau_ff", &Controller::tau_ff)
-			.def_readonly("P", &Controller::P)
-			.def_readonly("D", &Controller::D);
+        .def("command_speed", &Controller::command_speed, bp::args("vX", "vY","heightZ", "angSpeedZ", "rotX", "rotY"))
+		  .def("command_stop", &Controller::command_stop, bp::args("ok"))
+		  .def("command_gait", &Controller::command_gait, bp::args("newGait"))
+		  .def_readonly("vdes", &Controller::v_des)
+		  .def_readonly("qdes", &Controller::q_des)
+		  .def_readonly("tau_ff", &Controller::tau_ff)
+		  .def_readonly("P", &Controller::P)
+		  .def_readonly("D", &Controller::D);
     }
 
     static void expose()

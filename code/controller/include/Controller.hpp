@@ -33,20 +33,11 @@ class Controller {
 	  	void security_check();
 
 		// command from remote: stop/go
-	  	void command_go(bool ok) { cmd_go = ok; }
+	  	void command_stop(bool ok) { cmd_stop = ok; }
+
 	  	// command from remote: set speed
-	  	// v_ref = (speed in x, speed in y, angular speed in z)
-	  	// p_ref = (body position x, y, z)
-	  	//
-	  	void command_speed(double vX, double vY, double heightZ, double rotX, double rotY, double angSpeedZ) {
-	  		cmd_v_ref(0,0) = vX;
-	  		cmd_v_ref(1,0) = vY;
-	  		cmd_v_ref(2,0) = heightZ;
-	  		cmd_v_ref(3,0) = rotX;
-	  		cmd_v_ref(4,0) = rotY;
-	  		cmd_v_ref(5,0) = angSpeedZ;
-	        cmd_is_moving = (abs(vX) > 0.001) || (abs(vY) > 0.001) || (abs(rotX) > 0.001) || (abs(rotY) > 0.001) || (abs(angSpeedZ) > 0.001);
-	  	}
+	  	void command_speed(double vX, double vY, double heightZ, double rotX, double rotY, double angSpeedZ);
+
 	  	// command from remote: new gait
 	  	void command_gait(int newGait) { cmd_gait = (GaitType)newGait;}
 
@@ -99,7 +90,7 @@ class Controller {
   		Vector12 f_mpc;             // Contact forces desired by the MPC
 
 		// commands from remote
-		bool cmd_go = true;			// stop or go
+		bool cmd_stop = false;			// stop or go
 		Vector6 cmd_v_ref = Vector6::Zero();
 		GaitType cmd_gait = GaitType::NoGait;
 		bool cmd_is_moving = false; // true if any movement comes from the remote

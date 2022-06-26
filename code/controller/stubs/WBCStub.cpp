@@ -35,8 +35,6 @@ struct WbcControllerPythonVisitor : public bp::def_visitor<WbcControllerPythonVi
             .def_readonly("feet_pos_target", &WBCController::get_feet_pos_target)
             .def_readonly("feet_vel_target", &WBCController::get_feet_vel_target)
             .def_readonly("feet_acc_target", &WBCController::get_feet_acc_target)
-
-            // Run WbcWrapper from Python
             .def("compute", &WBCController::compute, bp::args("q", "dq", "f_cmd", "contacts", "pgoals", "vgoals", "agoals", "xgoals"), "Run WbcWrapper from Python.\n");
     }
 

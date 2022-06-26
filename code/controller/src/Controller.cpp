@@ -240,7 +240,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	vref_filt_mpc = filter_mpc_vref.filter(estimator.getBaseVelRef().head(6), false);
 
 	// automatically turn on a gait with previously gait when we start moving
-	if ((gait.getCurrentGaitType() == GaitType::NoMovement)  and cmd_go and cmd_is_moving) {
+	if ((gait.getCurrentGaitType() == GaitType::NoMovement)  and !cmd_stop and cmd_is_moving) {
 		std::cout << "command received, start moving" << std::endl;
 		if (gait.getPrevGaitType() == GaitType::NoGait)
 			cmd_gait = GaitType::Trot;
@@ -250,7 +250,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	//  automatically go to static mode if no movement is detected
 	bool is_steady = estimator.isSteady();
-	if (gait.isNewPhase() && gait.getCurrentGaitType() != GaitType::NoMovement && is_steady && cmd_go && !cmd_is_moving) {
+	if (gait.isNewPhase() && gait.getCurrentGaitType() != GaitType::NoMovement && is_steady && !cmd_stop && !cmd_is_moving) {
 		std::cout << "no movement, calm down" << std::endl;
 	 	cmd_gait = GaitType::NoMovement;
 	}
@@ -284,7 +284,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	// Whole Body Control
 	// If nothing wrong happened yet in the WBC controller
-	if (!error && cmd_go) {
+	if (!error && !cmd_stop) {
 	    // Desired position, orientation and velocities of the base
 	    base_targets.head(6).setZero();
 	    base_targets.block<2,1>(3,0) = statePlanner.getReferenceStates().block<2,1>(3,1);
@@ -343,4 +343,14 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	  // Increment loop counter
 	  k++;
+}
+
+void Controller::command_speed(double vX, double vY, double heightZ, double rotX, double rotY, double angSpeedZ) {
+	cmd_v_ref(0,0) = vX;
+	cmd_v_ref(1,0) = vY;
+	cmd_v_ref(2,0) = heightZ;
+	cmd_v_ref(3,0) = rotX;
+	cmd_v_ref(4,0) = rotY;
+	cmd_v_ref(5,0) = angSpeedZ;
+	cmd_is_moving = (abs(vX) > 0.001) || (abs(vY) > 0.001) || (abs(rotX) > 0.001) || (abs(rotY) > 0.001) || (abs(angSpeedZ) > 0.001);
 }
