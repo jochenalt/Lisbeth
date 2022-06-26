@@ -77,18 +77,16 @@ Args:
     contacts (1x4): Contact status of feet
     pgoals, vgoals, agoals Objects that contains the pos, vel and acc references for feet
 */
-void WbcController::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_cmd, MatrixN const& contacts,
-		MatrixN const& pgoals, MatrixN const& vgoals, MatrixN const& agoals, VectorN const &xgoals)
+void WbcController::compute(Vector18 const& q, Vector18 const& dq,
+							Vector12 const& f_cmd, RowVector4 const& contacts,
+							Matrix34 const& pgoals, Matrix34 const& vgoals, Matrix34 const& agoals,
+							Vector12 const &xgoals)
 {
-   if (f_cmd.rows() != 12) {
- 	throw std::runtime_error("f_cmd should be a vector of size 12");
-   }
-    // std::cout  << "wbc: \nq\n" << q << "\ndq\n" << dq
-    // 	   	   	   << " \nf_cmd\n" << f_cmd << " \ncontacts\n" << contacts
-    // 		   	  << "\npgoals\n" << pgoals << std::endl;
-	//			  << "\nvgoals\n" << vgoals << " \nagoals\n" << agoals << " \nxgoals\n" << xgoals << std::endl;
-	 //			   	<< std::endl;
-   //  Update nb of iterations since contact
+	if (f_cmd.rows() != 12) {
+		throw std::runtime_error("f_cmd should be a vector of size 12");
+	}
+
+	//  Update nb of iterations since contact
    k_since_contact_ += contacts;  // Increment feet in stance phase
    k_since_contact_ = k_since_contact_.cwiseProduct(contacts);  // Reset feet in swing phase
 
@@ -121,15 +119,10 @@ void WbcController::compute(VectorN const& q, VectorN const& dq, MatrixN const& 
    // Result is stored in data_.M
    pinocchio::crba(model_, data_, q_wbc_);
 
-  // std::cout << "ddq_cmd C++" << std::endl << ddq_cmd_ << std::endl;
   // TODO: Adapt logging of feet_pos, feet_err, feet_vel
-
   // TODO: Check if needed because crbaMinimal may allow to directly get the jacobian
   // TODO: Check if possible to use the model of InvKin to avoid computations
   // pinocchio::computeJointJacobians(model_, data_, q);
-
-  // TODO: Check if we can save time by switching MatrixXd to defined sized vector since they are
-  // not called from python anymore
 
   // Retrieve feet jacobian
   Matrix43 posf_tmp_ = invkin_->get_posf();
@@ -189,14 +182,4 @@ void WbcController::compute(VectorN const& q, VectorN const& dq, MatrixN const& 
 
   // Increment log counter
   k_log_++;
-
-  // std::cout  << "wbc: \nqdes_\n" << qdes_ << std::endl;
-  // std::cout  << "wbc: \nvdes \n" << vdes_ << std::endl;
-  // std::cout  << "wbc: \nvtau_ff_\n" << tau_ff_ << std::endl;
-
-  // 	   	   	   << " \nf_cmd\n" << f_cmd << " \ncontacts\n" << contacts
-  // 		   	  << "\npgoals\n" << pgoals << std::endl;
-	//			  << "\nvgoals\n" << vgoals << " \nagoals\n" << agoals << " \nxgoals\n" << xgoals << std::endl;
-	 //			   	<< std::endl;
-
 }

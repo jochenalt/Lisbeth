@@ -52,8 +52,8 @@ class WbcController {
   /// \param[in] xgoals Desired position, orientation and velocities of the base
   ///
   ////////////////////////////////////////////////////////////////////////////////////////////////
-  void compute(VectorN const& q, VectorN const& dq, MatrixN const& f_cmd, MatrixN const& contacts,
-                         MatrixN const& pgoals, MatrixN const& vgoals, MatrixN const& agoals, VectorN const &xgoals);
+  void compute(Vector18 const& q, Vector18 const& dq, Vector12 const& f_cmd, RowVector4 const& contacts,
+		  Matrix34 const& pgoals, Matrix34 const& vgoals, Matrix34 const& agoals, Vector12 const &xgoals);
 
   Vector7 get_bdes() { return bdes_; }
   Vector12 get_qdes() { return qdes_; }

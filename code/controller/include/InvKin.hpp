@@ -4,8 +4,6 @@
 #include "pinocchio/multibody/data.hpp"
 #include "pinocchio/multibody/model.hpp"
 
-#include "pinocchio/math/rpy.hpp"
-#include "pinocchio/spatial/explog.hpp"
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <cmath>

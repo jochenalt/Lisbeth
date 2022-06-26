@@ -43,6 +43,8 @@ struct WbcControllerPythonVisitor : public bp::def_visitor<WbcControllerPythonVi
     {
         bp::class_<WbcController>("WbcController", bp::no_init).def(WbcControllerPythonVisitor<WbcController>());
 
+        ENABLE_SPECIFIC_MATRIX_TYPE(Vector12);
+        ENABLE_SPECIFIC_MATRIX_TYPE(Matrix34);
         ENABLE_SPECIFIC_MATRIX_TYPE(matXd);
     }
 };
