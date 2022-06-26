@@ -52,7 +52,7 @@ class MPCController {
   /// \param[in] gait Current gait matrix
   ///
   ////////////////////////////////////////////////////////////////////////////////////////////////
-  void solve( Matrix12N xref, MatrixN12 fsteps, MatrixN gait);
+  void solve( Matrix12N xref, MatrixN12 fsteps, MatrixN4 gait);
 
   // return the latest result from last MPC run
   Vector12 get_latest_result();
@@ -71,7 +71,7 @@ class MPCController {
   void parallel_loop();
   void write_in(Matrix12N& xref, MatrixN12& fsteps);
   bool read_in(Matrix12N& xref, MatrixN12& fsteps);
-  void write_out(MatrixN& result);
+  void write_out(MatrixN4& result);
   bool check_new_result();
   MatrixN read_out();
 
@@ -84,10 +84,6 @@ class MPCController {
   RowVector4 gait_past;                                  // Gait status of the previous MPC time step
   RowVector4 gait_next;                                  // Gait status of the next MPC time step
 
-  // Mutexes to protect the global variables
-  //std::mutex mutexIn;    // From main loop to MPC
-  //std::mutex mutexOut;   // From MPC to main loop
-
   bool thread_is_running = true;
   bool new_mpc_input = false;        // Flag to indicate new data has been written by main loop for MPC
   bool new_mpc_output = false;       // Flag to indicate new data has been written by MPC for main loop
@@ -98,7 +94,7 @@ class MPCController {
   struct {
 	  Matrix12N xref;              // Desired state vector for the whole prediction horizon
 	  MatrixN12 fsteps;            // The [x, y, z]^T desired position of each foot for each time step of the horizon
-  	Matrix242 result;            // Predicted state and desired contact forces resulting of the MPC
+	  MatrixN4 result;            // Predicted state and desired contact forces resulting of the MPC
   } thread_buffer;
 
   int time_per_run_us = 0;

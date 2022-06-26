@@ -23,7 +23,7 @@ bool MPCController::read_in(Matrix12N& xref, MatrixN12& fsteps) {
   return false;
 }
 
-void MPCController::write_out(MatrixN& result) {
+void MPCController::write_out(MatrixN4& result) {
    if (new_mpc_output == true)
 	   	std::cout << "ERROR:previous MPC result hasnt been fetched yet" << std::endl;
   thread_buffer.result = result;
@@ -47,8 +47,8 @@ MatrixN MPCController::read_out() {
 void MPCController::parallel_loop() {
 	Matrix12N xref;
 	MatrixN12 fsteps;
-  MatrixN result;
-  while (thread_is_running) {
+	MatrixN4 result;
+	while (thread_is_running) {
 
     // Checking if new data is available to trigger the asynchronous MPC
     if (read_in(xref, fsteps)) {
@@ -104,7 +104,7 @@ void MPCController::initialize(Params& params) {
   mpc_thread = new std::thread(&MPCController::parallel_loop, this);  // spawn new thread that runs MPC in parallel
 }
 
-void MPCController::solve(Matrix12N xref, MatrixN12 fsteps, MatrixN gait) {
+void MPCController::solve(Matrix12N xref, MatrixN12 fsteps, MatrixN4 gait) {
   write_in(xref, fsteps);
 
   // Adaptation if gait has changed

@@ -55,7 +55,7 @@ public:
 
     void rollGait();
 
-    MatrixN getCurrentGait() { return currentGait_; }
+    MatrixN4 getCurrentGait() { return currentGait_; }
     double getCurrentGait(int i, int j) { return currentGait_(i, j); }
     bool getIsStatic() { return is_static_; }
     bool isNewPhase() { return newPhase_; }
@@ -80,11 +80,11 @@ private:
     void createStatic();
 
 
-    MatrixN pastGait_;     // Past gait
+    MatrixN4 pastGait_;     // Past gait
 public:
-    MatrixN currentGait_;  // Current and future gait
+    MatrixN4 currentGait_;  // Current and future gait. needs to be public to be used from python
 private:
-    MatrixN desiredGait_;  // Future desired gait
+    MatrixN4 desiredGait_;  // Future desired gait
 
     double dt_;      // Time step of the contact sequence (time step of the MPC)
     int nRows_;  // number of rows in the gait matrix
