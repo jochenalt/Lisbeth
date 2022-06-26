@@ -1,3 +1,4 @@
+#include <vector>
 #include "Controller.hpp"
 
 #include "pinocchio/algorithm/compute-all-terms.hpp"
@@ -6,6 +7,13 @@
 #include "pinocchio/math/rpy.hpp"
 #include "pinocchio/parsers/urdf.hpp"
 #include "pinocchio/algorithm/joint-configuration.hpp"
+#include "pinocchio/multibody/model.hpp"
+#include "pinocchio/parsers/urdf.hpp"
+#include "pinocchio/parsers/srdf.hpp"
+
+ using namespace pinocchio;
+ using namespace std;
+
 
 Controller::Controller()
     : P(Vector12::Zero()),
@@ -56,6 +64,14 @@ void Controller::init_robot(Params& params) {
 	  pinocchio::centerOfMass(model_, data_, q, VectorN::Zero(model_.nv));
 	  pinocchio::updateFramePlacements(model_, data_);
 	  pinocchio::crba(model_, data_, q);
+
+	  // Initialise collision model, consider the disabled collisions from SRDF file
+	  pinocchio::GeometryModel geom_model;
+	  std::vector<std::string> paths;
+	  paths.push_back(DESCRIPTION_PATH);
+	  pinocchio::urdf::buildGeom(model_,URDF_MODEL,COLLISION,geom_model, paths);
+	  geom_model.addAllCollisionPairs();
+	  pinocchio::srdf::removeCollisionPairs(model_, geom_model, SRDF_MODEL);
 
 	  // Initialisation of the position of footsteps
 	  Matrix34 fsteps_init = Matrix34::Zero();

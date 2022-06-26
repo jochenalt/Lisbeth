@@ -35,7 +35,7 @@ class ModelLoader(object):
         self.robot = builder(self.df_path, None ,
                              pin.JointModelFreeFlyer() if self.free_flyer else None)
 
-        if False: #Types.SRDFFilePath:
+        if Types.SRDFFilePath:
             print("Types.SRDFFilePath")
             self.srdf_path = Types.SRDFFilePath
             self.robot.q0 = readParamsFromSrdf(self.robot.model, self.srdf_path, self.verbose,
