@@ -10,7 +10,6 @@
 #ifndef STATEPLANNER_H_INCLUDED
 #define STATEPLANNER_H_INCLUDED
 
-#include "pinocchio/math/rpy.hpp"
 #include "Types.h"
 #include "Params.hpp"
 
@@ -53,9 +52,9 @@ public:
     /// \param[in] z_average average height of feet currently in stance phase
     ///
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    void computeReferenceStates(VectorN const& q, Vector6 const& v, Vector6 const& vref);
+    void computeReferenceStates(Vector6 const& q, Vector6 const& v, Vector6 const& vref);
 
-    MatrixN getReferenceStates() { return referenceStates_; }
+    Matrix12N getReferenceStates() { return referenceStates_; }
     int getNSteps() { return n_steps_; }
 
 private:
@@ -68,7 +67,7 @@ private:
 
     // Reference trajectory matrix of size 12 by (1 + N)  with the current state of
     // the robot in column 0 and the N steps of the prediction horizon in the others
-    MatrixN referenceStates_;
+    Matrix12N referenceStates_;
 
     VectorN dt_vector_;  // Vector containing all time steps in the prediction horizon
 

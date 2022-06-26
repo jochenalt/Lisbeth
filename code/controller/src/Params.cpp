@@ -232,9 +232,6 @@ void Params::initialize(const std::string& file_path)
   assert_yaml_parsing(robot_node, "robot", "enable_comp_forces");
   enable_comp_forces = robot_node["enable_comp_forces"].as<bool>();
 
-  assert_yaml_parsing(robot_node, "robot", "solo3D");
-  solo3D = robot_node["solo3D"].as<bool>();
-
   assert_yaml_parsing(robot_node, "robot", "enable_multiprocessing_mip");
   enable_multiprocessing_mip = robot_node["enable_multiprocessing_mip"].as<bool>();
 

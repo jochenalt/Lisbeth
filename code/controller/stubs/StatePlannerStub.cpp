@@ -32,6 +32,8 @@ struct StatePlannerPythonVisitor : public bp::def_visitor<StatePlannerPythonVisi
         bp::class_<StatePlanner>("StatePlanner", bp::no_init).def(StatePlannerPythonVisitor<StatePlanner>());
 
         ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
+        ENABLE_SPECIFIC_MATRIX_TYPE(Matrix12N);
+
     }
 };
 void exposeStatePlanner() { StatePlannerPythonVisitor<StatePlanner>::expose(); }

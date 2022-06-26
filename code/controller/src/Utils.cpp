@@ -89,43 +89,6 @@ bool array_equal(Vector4 a, Vector4 b) {
 
 
 
-
-LowpassFilter::LowpassFilter(){
-    alpha = VectorN::Zero(3);
-    filtered_x = VectorN::Zero(3);
-
-}
-
-void LowpassFilter::initialize(double par_dT, const VectorN& par_fc, const VectorN& init){
-	// compute alpha per entry
-	for (int i = 0;i<par_fc.rows();i++) {
-		alpha[i] = 1-(par_dT / ( par_dT + 1/par_fc[i]));
-		filtered_x[i] = init[i];
-	}
-}
-
-
-void LowpassFilter::initialize(double par_dT, double par_fc, const VectorN& init){
-	initialize(par_dT, Vector3({par_fc, par_fc, par_fc}), init);
-}
-
-VectorN LowpassFilter::compute(const VectorN& par_x) {
-	return compute(par_x, VectorN::Constant(par_x.rows(), 1, 0.0) );
-}
-
-VectorN LowpassFilter::compute(const VectorN& par_x, const VectorN& par_dx) {
-
-	// do low pass filter
-	VectorN negAlpha = VectorN::Constant(par_x.rows(), 1, 1.0) - alpha;
-	filtered_x = alpha.cwiseProduct(filtered_x) + negAlpha.cwiseProduct(par_x);
-
-	return filtered_x;
-}
-
-void LowpassFilter::patchLowPassed(int idx, double x) {
-	filtered_x[idx] = x;
-}
-
 uint64_t get_micros() {
 	return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }

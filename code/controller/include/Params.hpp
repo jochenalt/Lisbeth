@@ -144,7 +144,6 @@ class Params {
   bool enable_comp_forces;  // Enable the use of compensation forces in the QP problem
 
   // Parameters of MIP
-  bool solo3D;                        // Enable the 3D environment with corresponding planner blocks
   bool enable_multiprocessing_mip;    // Enable/disable running the MIP in another process in parallel of the main loop
   std::string environment_URDF;       // URDF path for the 3D environment
   std::string environment_heightmap;  // Path to the heightmap
