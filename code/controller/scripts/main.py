@@ -131,10 +131,11 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         params.N_SIMULATION = N_analysis + N_steady
 
     # Run a scenario and retrieve data thanks to the logger
-    print("START CONTROLLER")
+    print("START PY CONTROLLER")
     controller = Controller(params, q_init)
     remoteControl = RemoteControl.RemoteControl(params.dt_wbc, False)
-    
+    print("START C++ CONTROLLER")
+
     controllerCpp = core.Controller()
     controllerCpp.initialize(params)
 

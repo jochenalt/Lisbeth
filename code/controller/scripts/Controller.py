@@ -116,7 +116,6 @@ class Controller:
         params.CoM_offset = (robot.data.com[0][:3] - q[0:3, 0]).tolist()
         params.CoM_offset[1] = 0.0
 
-
         for i in range(4):
             for j in range(3):
                 params.shoulders[3 * i + j] = shoulders_init[j, i]

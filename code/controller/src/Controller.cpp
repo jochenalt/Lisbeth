@@ -108,8 +108,9 @@ void Controller::init_robot(Params& params) {
 	  Vector3 CoM = data_.com[0].head(3) - q.head(3);
      CoM(1,0) = 0; // assume we are symmetric
 
-     for (int i = 0;i<3;i++)
+     for (int i = 0;i<3;i++) {
    	  params_->CoM_offset[i] = CoM(i, 0);
+     }
 
 
 	  for (int i = 0; i < 4; i++) {
