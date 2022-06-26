@@ -10,6 +10,7 @@
 #include <string>
 #include <array>
 #include <chrono>
+#include <thread>
 #include <cstdint>
 
 using namespace std;
@@ -93,4 +94,6 @@ uint64_t get_micros() {
 	return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
-
+void delay_us(int us) {
+	std::this_thread::sleep_for(std::chrono::microseconds(us));
+}

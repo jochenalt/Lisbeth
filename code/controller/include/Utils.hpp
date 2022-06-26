@@ -11,7 +11,8 @@ Vector3 quaternionToRPY(Eigen::Quaterniond quat);
 Vector3 cross3(Vector3 left, Vector3 right);
 bool array_equal(Vector4 a, Vector4 b);
 
-
-
 uint64_t get_micros();
+
+void delay_us(int us);
+
 #endif
