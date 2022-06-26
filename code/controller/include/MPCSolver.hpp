@@ -10,7 +10,6 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include "osqp.h"
-#include "st_to_cc.hpp"
 #include "Types.h"
 #include "Params.hpp"
 
@@ -81,22 +80,6 @@ class MPCSolver {
   int construct_S();
   int construct_gait(Eigen::MatrixXd fsteps_in);
 
-
-  // Utils
-  void my_print_csc_matrix(csc *M, const char *name);
-  void save_csc_matrix(csc *M, std::string filename);
-  void save_dns_matrix(double *M, int size, std::string filename);
-
-  // Bindings
-  void run_python(const matXd &xref_py, const matXd &fsteps_py);
-
-  // Eigen::Matrix<double, 12, 12> getA() { return A; }
-  // Eigen::MatrixXf getML() { return ML; }
-  /*void setDate(int year, int month, int day);
-  int getYear();
-  int getMonth();
-  int getDay();*/
-
   Params* params_;
 
   double dt, mass, mu, T_gait;
@@ -120,10 +103,7 @@ class MPCSolver {
 
   // Matrix ML
   const static int size_nz_ML = 5000;
-  // int r_ML [size_nz_ML] = {}; // row indexes of non-zero values in matrix ML
-  // int c_ML [size_nz_ML] = {}; // col indexes of non-zero values in matrix ML
-  // double v_ML [size_nz_ML] = {};  // non-zero values in matrix ML
-  // csc* ML_triplet; // Compressed Sparse Column matrix (triplet format)
+
   csc *ML;  // Compressed Sparse Column matrix
   inline void add_to_ML(int i, int j, double v, int *r_ML, int *c_ML,
                         double *v_ML);                                            // function to fill the triplet r/c/v
@@ -133,7 +113,6 @@ class MPCSolver {
   int i_x_B[12 * 4] = {};
   int i_y_B[12 * 4] = {};
   int i_update_B[12 * 4] = {};
-  // TODO FOR S ????
 
   // Matrix NK
   const static int size_nz_NK = 5000;
@@ -143,9 +122,6 @@ class MPCSolver {
 
   // Matrix P
   const static int size_nz_P = 5000;
-  // c_int r_P [size_nz_P] = {}; // row indexes of non-zero values in matrix ML
-  // c_int c_P [size_nz_P] = {}; // col indexes of non-zero values in matrix ML
-  // c_float v_P [size_nz_P] = {};  // non-zero values in matrix ML
   csc *P;  // Compressed Sparse Column matrix
 
   // Matrix Q
@@ -166,8 +142,6 @@ class MPCSolver {
   Eigen::Matrix<double, Eigen::Dynamic, 1> NK_low;
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> D;
   Eigen::Matrix<int, Eigen::Dynamic, 1> i_off;
-
-
 };
 
 #endif  // MPC_H_INCLUDED

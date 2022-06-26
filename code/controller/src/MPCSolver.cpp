@@ -1,4 +1,5 @@
 #include <MPCSolver.hpp>
+#include "st_to_cc.hpp"
 
 MPCSolver::MPCSolver(Params& params) {
   params_ = &params;
@@ -28,7 +29,7 @@ MPCSolver::MPCSolver(Params& params) {
   gI << 3.09249e-2, -8.00101e-7, 1.865287e-5, -8.00101e-7, 5.106100e-2, 1.245813e-4, 1.865287e-5, 1.245813e-4,
       6.939757e-2;
 
-  //gI << Eigen::Map<VectorN, Eigen::Unaligned>(params_->I_mat.data(), params_->I_mat.size());
+  // gI << Eigen::Map<VectorN, Eigen::Unaligned>(params_->I_mat.data(), params_->I_mat.size());
 
   g(8, 0) = -9.81f * dt;
 
