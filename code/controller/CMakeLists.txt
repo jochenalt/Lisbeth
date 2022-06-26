@@ -42,7 +42,7 @@ SEARCH_FOR_BOOST()
 
 # Main Library
 set(${PROJECT_NAME}_HEADERS
-  include/MPC.hpp
+  include/MPCSolver.hpp
   include/Gait.hpp
   include/Utils.hpp
   include/Estimator.hpp
@@ -51,25 +51,25 @@ set(${PROJECT_NAME}_HEADERS
   include/StatePlanner.hpp
   include/Types.h
   include/InvKin.hpp
-  include/QPWBC.hpp
+  include/WBCSolver.hpp
   include/Params.hpp
   include/st_to_cc.hpp
   include/ComplementaryFilter.hpp
   include/Filter.hpp
-  include/WbcController.hpp
-  include/MpcController.hpp
+  include/WBCController.hpp
+  include/MPCController.hpp
   include/Controller.hpp
   )
 
 set(${PROJECT_NAME}_SOURCES
-  src/WbcController.cpp
+  src/WBCController.cpp
   src/InvKin.cpp
   src/Controller.cpp
   src/Estimator.cpp
   src/FootstepPlanner.cpp
-  src/MpcController.cpp
-  src/QPWBC.cpp
-  src/MPC.cpp
+  src/MPCController.cpp
+  src/WBCSolver.cpp
+  src/MPCSolver.cpp
   src/st_to_cc.cpp
   src/Gait.cpp
   src/Utils.cpp

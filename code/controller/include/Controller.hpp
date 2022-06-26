@@ -15,9 +15,9 @@
 #include "FootstepPlanner.hpp"
 #include "StatePlanner.hpp"
 #include "FootTrajectoryGenerator.hpp"
-#include "WbcController.hpp"
-#include "MpcController.hpp"
+#include "WBCController.hpp"
 #include "Filter.hpp"
+#include "MPCController.hpp"
 
 class Controller {
 	public:
@@ -77,9 +77,9 @@ class Controller {
   		Gait gait;                                        // Gait control block
   		FootstepPlanner footstepPlanner;                  // Footstep planner control block
   		StatePlanner statePlanner;                        // State planner control block
-  		MpcController mpcController;                            // MPC Wrapper control block
+  		MPCController mpcController;                            // MPC Wrapper control block
   		FootTrajectoryGenerator footTrajectoryGenerator;  // Foot Trajectory Generator control block
-  		WbcController wbcController;                            // Whole body control Wrapper control block
+  		WBCController wbcController;                            // Whole body control Wrapper control block
 
   		// Filters
   		Filter filter_mpc_q = Filter();     // Filter object for base position

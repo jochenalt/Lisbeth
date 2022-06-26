@@ -14,7 +14,7 @@
 #include "osqp.h"
 
 
-class QPWBC {
+class WBCSolver {
  private:
 
   Params* params_;  // Object that stores parameters
@@ -71,7 +71,7 @@ class QPWBC {
 
  public:
 
-  QPWBC(); // Constructor
+  WBCSolver(); // Constructor
   void initialize(Params& params);
 
   // Functions

@@ -11,20 +11,20 @@
 
 #include "pinocchio/math/rpy.hpp"
 #include "Types.h"
-#include "MPC.hpp"
 #include <thread>
 #include <mutex>
+#include "MPCSolver.hpp"
 
 
 
-class MpcController {
+class MPCController {
  public:
   ////////////////////////////////////////////////////////////////////////////////////////////////
   ///
   /// \brief Constructor
   ///
   ////////////////////////////////////////////////////////////////////////////////////////////////
-  MpcController();
+  MPCController();
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   ///
@@ -40,7 +40,7 @@ class MpcController {
   /// \brief Destructor
   ///
   ////////////////////////////////////////////////////////////////////////////////////////////////
-  ~MpcController();  // Empty destructor
+  ~MPCController();  // Empty destructor
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   ///
@@ -78,7 +78,7 @@ class MpcController {
   std::thread* mpc_thread = NULL;
 
   Params* params_;  // Object that stores parameters
-  MPC* mpc_;         // MPC object used for synchronous solving (not in parallel loop)
+  MPCSolver* mpc_;         // MPC object used for synchronous solving (not in parallel loop)
 
   Eigen::Matrix<double, 24, 2> last_available_result;  // Latest available result of the MPC
   RowVector4 gait_past;                                  // Gait status of the previous MPC time step

@@ -1,12 +1,11 @@
-#include "MpcController.hpp"
-
 #include <chrono>
 #include <thread>
 #include <mutex>
 #include <Utils.hpp>
+#include "MPCController.hpp"
 
 
-void MpcController::write_in(MatrixN& xref, MatrixN& fsteps) {
+void MPCController::write_in(MatrixN& xref, MatrixN& fsteps) {
   // const std::lock_guard<std::mutex> lockIn(mutexIn);
   thread_buffer.xref = xref;
   thread_buffer.fsteps = fsteps;
@@ -14,7 +13,7 @@ void MpcController::write_in(MatrixN& xref, MatrixN& fsteps) {
   new_mpc_input = true;  // New data is available, set this flag last
 }
 
-bool MpcController::read_in(MatrixN& xref, MatrixN& fsteps) {
+bool MPCController::read_in(MatrixN& xref, MatrixN& fsteps) {
   if (new_mpc_input) {
     xref = thread_buffer.xref;
     fsteps = thread_buffer.fsteps;
@@ -24,7 +23,7 @@ bool MpcController::read_in(MatrixN& xref, MatrixN& fsteps) {
   return false;
 }
 
-void MpcController::write_out(MatrixN& result) {
+void MPCController::write_out(MatrixN& result) {
    if (new_mpc_output == true)
 	   	std::cout << "ERROR:previous MPC result hasnt been fetched yet" << std::endl;
   thread_buffer.result = result;
@@ -32,7 +31,7 @@ void MpcController::write_out(MatrixN& result) {
   new_mpc_output_flag = true;
 }
 
-bool MpcController::check_new_result() {
+bool MPCController::check_new_result() {
   if (new_mpc_output) {
     new_mpc_output = false;
     return true;
@@ -40,12 +39,12 @@ bool MpcController::check_new_result() {
   return false;
 }
 
-MatrixN MpcController::read_out() {
+MatrixN MPCController::read_out() {
   //const std::lock_guard<std::mutex> lockOut(mutexOut);
   return thread_buffer.result;
 }
 
-void MpcController::parallel_loop() {
+void MPCController::parallel_loop() {
   MatrixN xref;
   MatrixN fsteps;
   MatrixN result;
@@ -74,7 +73,7 @@ void MpcController::parallel_loop() {
   }
 }
 
-MpcController::MpcController()
+MPCController::MPCController()
     : mpc_thread(NULL),
 	  last_available_result(Eigen::Matrix<double, 24, 2>::Zero()),
       gait_past(RowVector4::Zero()),
@@ -82,16 +81,16 @@ MpcController::MpcController()
 {
 }
 
-MpcController::~MpcController() {
+MPCController::~MPCController() {
 	thread_is_running = false;
 	if (mpc_thread != NULL)
 		mpc_thread ->join();
 }
 
-void MpcController::initialize(Params& params) {
+void MPCController::initialize(Params& params) {
 
   params_ = &params;
-  mpc_ = new MPC(params);
+  mpc_ = new MPCSolver(params);
 
   // Default result for first step
   last_available_result(2, 0) = params.h_ref;
@@ -102,10 +101,10 @@ void MpcController::initialize(Params& params) {
   thread_buffer.fsteps = MatrixN::Zero(params.gait.rows(), 12);
 
   // start thread
-  mpc_thread = new std::thread(&MpcController::parallel_loop, this);  // spawn new thread that runs MPC in parallel
+  mpc_thread = new std::thread(&MPCController::parallel_loop, this);  // spawn new thread that runs MPC in parallel
 }
 
-void MpcController::solve(MatrixN xref, MatrixN fsteps, MatrixN gait) {
+void MPCController::solve(MatrixN xref, MatrixN fsteps, MatrixN gait) {
   write_in(xref, fsteps);
 
   // Adaptation if gait has changed
@@ -128,7 +127,7 @@ void MpcController::solve(MatrixN xref, MatrixN fsteps, MatrixN gait) {
   gait_next = gait.row(1);
 }
 
-Eigen::Matrix<double, 24, 2> MpcController::get_latest_result() {
+Eigen::Matrix<double, 24, 2> MPCController::get_latest_result() {
   // Retrieve data from parallel process if a new result is available
   if (check_new_result()) {
     last_available_result = read_out().block(0, 0, 24, 2);

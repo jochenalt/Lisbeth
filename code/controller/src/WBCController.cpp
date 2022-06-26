@@ -1,4 +1,4 @@
-#include "WbcController.hpp"
+#include "WBCController.hpp"
 
 #include "pinocchio/algorithm/crba.hpp"
 #include "pinocchio/math/rpy.hpp"
@@ -6,7 +6,7 @@
 #include "pinocchio/algorithm/compute-all-terms.hpp"
 #include "pinocchio/algorithm/rnea.hpp"
 
-WbcController::WbcController()
+WBCController::WBCController()
     : M_(Matrix18::Zero())
     , Jc_(Eigen::Matrix<double, 12, 6>::Zero())
     , k_since_contact_(RowVector4::Zero())
@@ -26,7 +26,7 @@ WbcController::WbcController()
 	, enable_comp_forces_(false)
 {}
 
-void WbcController::initialize(Params& params)
+void WBCController::initialize(Params& params)
 {
   // Params store parameters
   params_ = &params;
@@ -49,7 +49,7 @@ void WbcController::initialize(Params& params)
   // Initialize inverse kinematic and box QP solvers
   invkin_ = new InvKin();
   invkin_->initialize(params);
-  box_qp_ = new QPWBC();
+  box_qp_ = new WBCSolver();
   box_qp_->initialize(params);
 
   // Initialize quaternion
@@ -77,7 +77,7 @@ Args:
     contacts (1x4): Contact status of feet
     pgoals, vgoals, agoals Objects that contains the pos, vel and acc references for feet
 */
-void WbcController::compute(Vector18 const& q, Vector18 const& dq,
+void WBCController::compute(Vector18 const& q, Vector18 const& dq,
 							Vector12 const& f_cmd, RowVector4 const& contacts,
 							Matrix34 const& pgoals, Matrix34 const& vgoals, Matrix34 const& agoals,
 							Vector12 const &xgoals)

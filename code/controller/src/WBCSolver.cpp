@@ -1,8 +1,8 @@
-#include "QPWBC.hpp"
+#include <WBCSolver.hpp>
 #include "st_to_cc.hpp"
 
 
-QPWBC::QPWBC() {
+WBCSolver::WBCSolver() {
   /*
   Constructor of the QP solver. Initialization of matrices
   */
@@ -26,7 +26,7 @@ QPWBC::QPWBC() {
 
 }
 
-void QPWBC::initialize(Params& params) {
+void WBCSolver::initialize(Params& params) {
   params_ = &params;
   Q1 = params.Q1 * Eigen::Matrix<double, 6, 6>::Identity();
   Q2 = params.Q2 * Eigen::Matrix<double, 12, 12>::Identity();
@@ -40,7 +40,7 @@ void QPWBC::initialize(Params& params) {
   init_solver();
 }
 
-int QPWBC::create_matrices() {
+int WBCSolver::create_matrices() {
   /*
   Create the constraint matrices (M.X = N and L.X <= K)
   Create the weight matrices P and Q (cost 1/2 x^T * P * X + X^T * Q)
@@ -55,7 +55,7 @@ int QPWBC::create_matrices() {
   return 0;
 }
 
-inline void QPWBC::add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, double *v_ML) {
+inline void WBCSolver::add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, double *v_ML) {
   /*
   Add a new non-zero coefficient to the ML matrix by filling the triplet r_ML / c_ML / v_ML
 
@@ -74,7 +74,7 @@ inline void QPWBC::add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, doubl
   cpt_ML++;          // increment the counter
 }
 
-inline void QPWBC::add_to_P(int i, int j, double v, int *r_P, int *c_P, double *v_P) {
+inline void WBCSolver::add_to_P(int i, int j, double v, int *r_P, int *c_P, double *v_P) {
   /*
   Add a new non-zero coefficient to the P matrix by filling the triplet r_P / c_P / v_P
 
@@ -93,7 +93,7 @@ inline void QPWBC::add_to_P(int i, int j, double v, int *r_P, int *c_P, double *
   cpt_P++;         // increment the counter
 }
 
-int QPWBC::create_ML() {
+int WBCSolver::create_ML() {
   /*
   Create the M and L matrices involved in the constraint equations
   the solution has to respect: M.X = N and L.X <= K
@@ -149,7 +149,7 @@ int QPWBC::create_ML() {
 }
 
 
-int QPWBC::create_weight_matrices() {
+int WBCSolver::create_weight_matrices() {
   /*
   Create the weight matrices P and Q in the cost function 
   1/2 x^T.P.x + x^T.q of the QP problem
@@ -209,7 +209,7 @@ int QPWBC::create_weight_matrices() {
 }
 
 
-void QPWBC::init_solver() {
+void WBCSolver::init_solver() {
   /*
   Initialize the solver (first iteration) or update it (next iterations)
   then call the OSQP solver to solve the QP problem
@@ -235,7 +235,7 @@ void QPWBC::init_solver() {
   osqp_setup(&workspce, data, settings);
 }
 
-int QPWBC::call_solver() {
+int WBCSolver::call_solver() {
   /*
   Initialize the solver (first iteration) or update it (next iterations)
   then call the OSQP solver to solve the QP problem
@@ -258,7 +258,7 @@ int QPWBC::call_solver() {
   return 0;
 }
 
-int QPWBC::retrieve_result(const Eigen::MatrixXd &f_cmd) {
+int WBCSolver::retrieve_result(const Eigen::MatrixXd &f_cmd) {
   /*
   Extract relevant information from the output of the QP solver
 
@@ -283,15 +283,15 @@ int QPWBC::retrieve_result(const Eigen::MatrixXd &f_cmd) {
 /*
 Getters
 */
-Eigen::MatrixXd QPWBC::get_f_res() { return f_res; }
-Eigen::MatrixXd QPWBC::get_ddq_res() { return ddq_res; }
-Eigen::MatrixXd QPWBC::get_H() { 
+Eigen::MatrixXd WBCSolver::get_f_res() { return f_res; }
+Eigen::MatrixXd WBCSolver::get_ddq_res() { return ddq_res; }
+Eigen::MatrixXd WBCSolver::get_H() {
   Eigen::MatrixXd Hxd = Eigen::MatrixXd::Zero(12, 12); 
   Hxd = H;
   return Hxd; 
 }
 
-int QPWBC::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA,
+int WBCSolver::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA,
                const Eigen::MatrixXd &k_contact) {
   /*
   Run one iteration of the whole WBC QP problem by calling all the necessary functions (data retrieval,
@@ -330,7 +330,7 @@ int QPWBC::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen:
   return 0;
 }
 
-void QPWBC::my_print_csc_matrix(csc *M, const char *name) {
+void WBCSolver::my_print_csc_matrix(csc *M, const char *name) {
   /*
   Print positions and value of coefficients in a csc matrix
 
@@ -363,7 +363,7 @@ void QPWBC::my_print_csc_matrix(csc *M, const char *name) {
   }
 }
 
-void QPWBC::save_csc_matrix(csc *M, std::string filename) {
+void WBCSolver::save_csc_matrix(csc *M, std::string filename) {
   /*
   Save positions and value of coefficients of a csc matrix in a csc file
 
@@ -397,7 +397,7 @@ void QPWBC::save_csc_matrix(csc *M, std::string filename) {
   myfile.close();
 }
 
-void QPWBC::save_dns_matrix(double *M, int size, std::string filename) {
+void WBCSolver::save_dns_matrix(double *M, int size, std::string filename) {
   /*
   Save positions and value of coefficients of a dense matrix in a csc file
 
@@ -419,7 +419,7 @@ void QPWBC::save_dns_matrix(double *M, int size, std::string filename) {
 }
 
 
-void QPWBC::compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA) {
+void WBCSolver::compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA) {
   /*
   Compute all matrices of the Box QP problem
 
@@ -439,7 +439,7 @@ void QPWBC::compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc
   g = A.transpose() * Q1 * gamma;
 }
 
-void QPWBC::update_PQ() {
+void WBCSolver::update_PQ() {
   /*
   Update P and Q matrices in the cost function xT P x + 2 xT Q
   */

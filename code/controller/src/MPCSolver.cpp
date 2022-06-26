@@ -1,6 +1,6 @@
-#include "MPC.hpp"
+#include <MPCSolver.hpp>
 
-MPC::MPC(Params& params) {
+MPCSolver::MPCSolver(Params& params) {
   params_ = &params;
 
   dt = params_->dt_mpc;
@@ -39,13 +39,13 @@ MPC::MPC(Params& params) {
   init_solver();
 }
 
-MPC::MPC() { }
+MPCSolver::MPCSolver() { }
 
 /*
 Create the constraint matrices of the MPC (M.X = N and L.X <= K)
 Create the weight matrices P and Q of the MPC solver (cost 1/2 x^T * P * X + X^T * Q)
 */
-int MPC::create_matrices() {
+int MPCSolver::create_matrices() {
   // Create the constraint matrices
   create_ML();
   create_NK();
@@ -59,7 +59,7 @@ int MPC::create_matrices() {
 /*
 Add a new non-zero coefficient to the ML matrix by filling the triplet r_ML / c_ML / v_ML
 */
-inline void MPC::add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, double *v_ML) {
+inline void MPCSolver::add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, double *v_ML) {
   r_ML[cpt_ML] = i;  // row index
   c_ML[cpt_ML] = j;  // column index
   v_ML[cpt_ML] = v;  // value of coefficient
@@ -69,7 +69,7 @@ inline void MPC::add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, double 
 /*
 Add a new non-zero coefficient to the P matrix by filling the triplet r_P / c_P / v_P
 */
-inline void MPC::add_to_P(int i, int j, double v, int *r_P, int *c_P, double *v_P) {
+inline void MPCSolver::add_to_P(int i, int j, double v, int *r_P, int *c_P, double *v_P) {
   r_P[cpt_P] = i;  // row index
   c_P[cpt_P] = j;  // column index
   v_P[cpt_P] = v;  // value of coefficient
@@ -79,7 +79,7 @@ inline void MPC::add_to_P(int i, int j, double v, int *r_P, int *c_P, double *v_
 /*
 Create the M and L matrices involved in the MPC constraint equations M.X = N and L.X <= K
 */
-int MPC::create_ML() {
+int MPCSolver::create_ML() {
   int *r_ML = new int[size_nz_ML];        // row indexes of non-zero values in matrix ML
   int *c_ML = new int[size_nz_ML];        // col indexes of non-zero values in matrix ML
   double *v_ML = new double[size_nz_ML];  // non-zero values in matrix ML
@@ -253,7 +253,7 @@ int MPC::create_ML() {
 /*
 Create the N and K matrices involved in the MPC constraint equations M.X = N and L.X <= K
 */
-int MPC::create_NK() {
+int MPCSolver::create_NK() {
   // Create NK matrix (upper and lower bounds)
   NK_up = VectorN::Zero(12 * n_steps * 2 + 20 * n_steps, 1);
   NK_low = VectorN::Zero(12 * n_steps * 2 + 20 * n_steps, 1);
@@ -302,7 +302,7 @@ int MPC::create_NK() {
 /*
 Create the weight matrices P and q in the cost function x^T.P.x + x^T.q of the QP problem
 */
-int MPC::create_weight_matrices() {
+int MPCSolver::create_weight_matrices() {
   int *r_P = new int[size_nz_P];        // row indexes of non-zero values in matrix P
   int *c_P = new int[size_nz_P];        // col indexes of non-zero values in matrix P
   double *v_P = new double[size_nz_P];  // non-zero values in matrix P
@@ -375,7 +375,7 @@ int MPC::create_weight_matrices() {
 /*
 Update the M, N, L and K constraint matrices depending on what happened
 */
-int MPC::update_matrices(MatrixN fsteps) {
+int MPCSolver::update_matrices(MatrixN fsteps) {
   /* M need to be updated between each iteration:
    - lever_arms changes since the robot moves
    - I_inv changes if the reference velocity vector is modified
@@ -397,7 +397,7 @@ int MPC::update_matrices(MatrixN fsteps) {
 Update the M and L constaint matrices depending on the current state of the gait
 
 */
-int MPC::update_ML(MatrixN fsteps) {
+int MPCSolver::update_ML(MatrixN fsteps) {
   int k_cum = 0;
   // Iterate over all phases of the gait
   for (int j = 0; j < gait.rows(); j++) {
@@ -444,7 +444,7 @@ int MPC::update_ML(MatrixN fsteps) {
 /*
 Update the N and K matrices involved in the MPC constraint equations M.X = N and L.X <= K
 */
-int MPC::update_NK() {
+int MPCSolver::update_NK() {
   // Matrix g is already created and not changed
 
   // Reset NK
@@ -474,7 +474,7 @@ int MPC::update_NK() {
 }
 
 
-float MPC::retrieve_cost() {
+float MPCSolver::retrieve_cost() {
   // Cost function is x^T P x + q^T x
   // Here P is a diagonal matrix and q = 0
   double cost = 0.0;
@@ -484,7 +484,7 @@ float MPC::retrieve_cost() {
   return (float)cost;
 }
 
-void MPC::init_solver() {
+void MPCSolver::init_solver() {
   // Initial guess for forces (mass evenly supported by all legs in contact)
   warmxf.block(0, 0, 12 * (n_steps - 1), 1) = x.block(12, 0, 12 * (n_steps - 1), 1);
   warmxf.block(12 * n_steps, 0, 12 * (n_steps - 1), 1) = x.block(12 * (n_steps + 1), 0, 12 * (n_steps - 1), 1);
@@ -514,7 +514,7 @@ void MPC::init_solver() {
 /*
 Create an initial guess and call the solver to solve the QP problem
 */
-void MPC::call_solver() {
+void MPCSolver::call_solver() {
   // Initial guess for forces (mass evenly supported by all legs in contact)
   warmxf.block(0, 0, 12 * (n_steps - 1), 1) = x.block(12, 0, 12 * (n_steps - 1), 1);
   warmxf.block(12 * n_steps, 0, 12 * (n_steps - 1), 1) = x.block(12 * (n_steps + 1), 0, 12 * (n_steps - 1), 1);
@@ -531,7 +531,7 @@ void MPC::call_solver() {
 /*
 Extract relevant information from the output of the QP solver
 */
-int MPC::retrieve_result() {
+int MPCSolver::retrieve_result() {
   // Retrieve the "contact forces" part of the solution of the QP problem
   for (int i = 0; i < (n_steps); i++) {
     for (int k = 0; k < 12; k++) {
@@ -549,17 +549,17 @@ int MPC::retrieve_result() {
 /*
 Return the latest desired contact forces that have been computed
 */
-MatrixN MPC::get_latest_result() { return x_f_applied; }
+MatrixN MPCSolver::get_latest_result() { return x_f_applied; }
 
 /*
 Return the next predicted state of the base
 */
-double *MPC::get_x_next() { return x_next; }
+double *MPCSolver::get_x_next() { return x_next; }
 /*
 Run one iteration of the whole MPC by calling all the necessary functions (data retrieval,
 update of constraint matrices, update of the solver, running the solver, retrieving result)
 */
-void MPC::run(const MatrixN &xref_in, const MatrixN &fsteps_in) {
+void MPCSolver::run(const MatrixN &xref_in, const MatrixN &fsteps_in) {
   // Recontruct the gait based on the computed footsteps
   construct_gait(fsteps_in);
 
@@ -582,7 +582,7 @@ void MPC::run(const MatrixN &xref_in, const MatrixN &fsteps_in) {
 /*
 Returns the skew matrix of a 3 by 1 column vector
 */
-Matrix3 MPC::getSkew(Vector3 v) {
+Matrix3 MPCSolver::getSkew(Vector3 v) {
   Matrix3 result;
   result << 0.0, -v(2, 0), v(1, 0), v(2, 0), 0.0, -v(0, 0), -v(1, 0), v(0, 0), 0.0;
   return result;
@@ -593,7 +593,7 @@ Construct an array of size 12*N that contains information about the contact stat
 This matrix is used to enable/disable contact forces in the QP problem.
 N is the number of time step in the prediction horizon.
 */
-int MPC::construct_S() {
+int MPCSolver::construct_S() {
   inv_gait = MatrixN4i::Ones(gait.rows(), 4) - gait;
   for (int i = 0; i < gait.rows(); i++) {
     // S_gait.block(k*12, 0, gait[i, 0]*12, 1) = (1 - (gait.block(i, 1, 1, 4)).transpose()).replicate<gait[i, 0], 1>()
@@ -612,7 +612,7 @@ int MPC::construct_S() {
 Reconstruct the gait matrix based on the fsteps matrix since only the last one is received by the MPC
 */
 
-int MPC::construct_gait(MatrixN fsteps_in) {
+int MPCSolver::construct_gait(MatrixN fsteps_in) {
   for (int k = 0; k < gait.rows(); k++) {
     for (int i = 0; i < 4; i++) {
       if (fsteps_in(k, i * 3) == 0.0) {
@@ -625,6 +625,6 @@ int MPC::construct_gait(MatrixN fsteps_in) {
   return 0;
 }
 
-MatrixNi MPC::get_gait() { return gait; }
-VectorNi MPC::get_Sgait() { return S_gait; }
+MatrixNi MPCSolver::get_gait() { return gait; }
+VectorNi MPCSolver::get_Sgait() { return S_gait; }
 
