@@ -55,19 +55,19 @@ class WbcController {
   void compute(VectorN const& q, VectorN const& dq, MatrixN const& f_cmd, MatrixN const& contacts,
                          MatrixN const& pgoals, MatrixN const& vgoals, MatrixN const& agoals, VectorN const &xgoals);
 
-  VectorN get_bdes() { return bdes_; }
-  VectorN get_qdes() { return qdes_; }
-  VectorN get_vdes() { return vdes_; }
-  VectorN get_tau_ff() { return tau_ff_; }
-  VectorN get_ddq_cmd() { return ddq_cmd_; }
-  VectorN get_f_with_delta() { return f_with_delta_; }
-  VectorN get_ddq_with_delta() { return ddq_with_delta_; }
-  MatrixN get_feet_pos() { return invkin_->get_posf().transpose(); }
-  MatrixN get_feet_err() { return log_feet_pos_target - invkin_->get_posf().transpose(); }
-  MatrixN get_feet_vel() { return invkin_->get_vf().transpose(); }
-  MatrixN get_feet_pos_target() { return log_feet_pos_target; }
-  MatrixN get_feet_vel_target() { return log_feet_vel_target; }
-  MatrixN get_feet_acc_target() { return log_feet_acc_target; }
+  Vector7 get_bdes() { return bdes_; }
+  Vector12 get_qdes() { return qdes_; }
+  Vector12 get_vdes() { return vdes_; }
+  Vector12 get_tau_ff() { return tau_ff_; }
+  Vector18 get_ddq_cmd() { return ddq_cmd_; }
+  Vector12 get_f_with_delta() { return f_with_delta_; }
+  Vector18 get_ddq_with_delta() { return ddq_with_delta_; }
+  Matrix34 get_feet_pos() { return invkin_->get_posf().transpose(); }
+  Matrix34 get_feet_err() { return log_feet_pos_target - invkin_->get_posf().transpose(); }
+  Matrix34 get_feet_vel() { return invkin_->get_vf().transpose(); }
+  Matrix34 get_feet_pos_target() { return log_feet_pos_target; }
+  Matrix34 get_feet_vel_target() { return log_feet_vel_target; }
+  Matrix34 get_feet_acc_target() { return log_feet_acc_target; }
 
 
  private:
@@ -78,7 +78,7 @@ class WbcController {
   pinocchio::Model model_;  // Pinocchio model for frame computations
   pinocchio::Data data_;    // Pinocchio datas for frame computations
 
-  Eigen::Matrix<double, 18, 18> M_;  // Mass matrix
+  Matrix18 M_;  // Mass matrix
   Eigen::Matrix<double, 12, 6> Jc_;  // Jacobian matrix
   RowVector4 k_since_contact_;       // Number of time step during which feet have been in the current stance phase
   Vector7 bdes_;                     // Desired base positions

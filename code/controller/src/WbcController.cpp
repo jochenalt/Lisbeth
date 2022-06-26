@@ -7,9 +7,9 @@
 #include "pinocchio/algorithm/rnea.hpp"
 
 WbcController::WbcController()
-    : M_(Eigen::Matrix<double, 18, 18>::Zero())
+    : M_(Matrix18::Zero())
     , Jc_(Eigen::Matrix<double, 12, 6>::Zero())
-    , k_since_contact_(Eigen::Matrix<double, 1, 4>::Zero())
+    , k_since_contact_(RowVector4::Zero())
 	, bdes_(Vector7::Zero())
     , qdes_(Vector12::Zero())
     , vdes_(Vector12::Zero())
@@ -78,7 +78,7 @@ Args:
     pgoals, vgoals, agoals Objects that contains the pos, vel and acc references for feet
 */
 void WbcController::compute(VectorN const& q, VectorN const& dq, MatrixN const& f_cmd, MatrixN const& contacts,
-                         MatrixN const& pgoals, MatrixN const& vgoals, MatrixN const& agoals, VectorN const &xgoals)
+		MatrixN const& pgoals, MatrixN const& vgoals, MatrixN const& agoals, VectorN const &xgoals)
 {
    if (f_cmd.rows() != 12) {
  	throw std::runtime_error("f_cmd should be a vector of size 12");
