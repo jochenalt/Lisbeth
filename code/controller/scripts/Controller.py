@@ -264,7 +264,7 @@ class Controller:
             device (object): Interface with the masterboard or the simulation
         """
 
-        print("---- PY---")
+        print("---- PY---", self.k, self.k % self.k_mpc, self.k_mpc - self.k % self.k_mpc)
         t_start = time.time()
 
         # Update the reference velocity coming from the gamepad
@@ -296,12 +296,15 @@ class Controller:
 
         # at a new gait cycle we need create the next gait round and start MPC
         startNewGaitCycle = (self.k % self.k_mpc) == 0
+        
+        # number of cycles left 1..10
+        k_left_in_gait = self.k_mpc - self.k % self.k_mpc
+        
         self.gait.update(startNewGaitCycle, gaitCode)
-        #remoteControl.gaitCode = 0
-
+        
         # Compute target footstep based on current and reference velocities
-        o_targetFootstep = self.footstepPlanner.updateFootsteps(self.k % self.k_mpc == 0 and self.k != 0,
-                                                                int(self.k_mpc - self.k % self.k_mpc),
+        o_targetFootstep = self.footstepPlanner.updateFootsteps(startNewGaitCycle and self.k != 0,
+                                                                k_left_in_gait,
                                                                 self.q,
                                                                 self.h_v_windowed,
                                                                 self.v_ref)
@@ -323,7 +326,7 @@ class Controller:
             self.mpcController.solve(reference_state,  self.footstepPlanner.getFootsteps(),self.gait.matrix)
             self.mpc_f_cmd = self.mpcController.get_latest_result()[12:,0] # solution should be there by now
 
-        if (self.k % self.k_mpc) == 2:
+        if (self.k % self.k_mpc) >= 2:
             self.mpc_f_cmd = self.mpcController.get_latest_result()[12:,0] # solution should be there by now
 
         t_mpc = time.time()

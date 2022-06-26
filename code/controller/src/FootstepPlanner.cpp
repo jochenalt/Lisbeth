@@ -105,7 +105,7 @@ void FootstepPlanner::initialize(Params& params,
      return result;
    }
 
-   void FootstepPlanner::computeFootsteps(int k, Vector6 const& b_v, Vector6 const& b_vref) {
+   void FootstepPlanner::computeFootsteps(int steps_left_in_gait, Vector6 const& b_v, Vector6 const& b_vref) {
      for (uint i = 0; i < footsteps_.size(); i++) {
        footsteps_[i] = Matrix34::Zero();
      }
@@ -120,7 +120,7 @@ void FootstepPlanner::initialize(Params& params,
 
      // Cumulative time by adding the terms in the first column (remaining number of timesteps)
      // Get future yaw yaws compared to current position
-     dt_cum(0) = dt_wbc * k;
+     dt_cum(0) = dt_wbc * steps_left_in_gait;
      yaws(0) = b_vref(5) * dt_cum(0);
      for (uint j = 1; j < footsteps_.size(); j++) {
        dt_cum(j) = gait.row(j).isZero() ? dt_cum(j - 1) : dt_cum(j - 1) + dt;
@@ -213,9 +213,9 @@ void FootstepPlanner::initialize(Params& params,
      }
    }
 
-   MatrixN FootstepPlanner::computeTargetFootstep(int k, Vector6 const& q, Vector6 const& b_v, Vector6 const& b_vref) {
+   MatrixN FootstepPlanner::computeTargetFootstep(int steps_left_in_gait, Vector6 const& q, Vector6 const& b_v, Vector6 const& b_vref) {
      // Compute the desired location of footsteps over the prediction horizon
-     computeFootsteps(k, b_v, b_vref);
+     computeFootsteps(steps_left_in_gait, b_v, b_vref);
 
      // Update desired location of footsteps on the ground
      updateTargetFootsteps();

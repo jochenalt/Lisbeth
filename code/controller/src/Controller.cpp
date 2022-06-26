@@ -152,9 +152,6 @@ void Controller::initialize(Params& params) {
 	  P = (Vector3(params.Kp_main.data())).replicate<4, 1>();
 	  D = (Vector3(params.Kd_main.data())).replicate<4, 1>();
 	  FF = params.Kff_main * Vector12::Ones();
-
-	  //
-
 }
 
 void Controller::security_check() {
@@ -227,7 +224,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 			 Vector12 const& jointsPositions,
 			 Vector12 const& jointsVelocities)
 {
-	// std::cout << "--- C++ ---" << std::endl;
+	std::cout << "--- C++ ---" << k << " " << k % k_mpc << " " << k_mpc - (k % k_mpc)<< std::endl;
 
 	estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(),
 		  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,
@@ -254,20 +251,22 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	//  automatically go to static mode if no movement is detected
 	bool is_steady = estimator.isSteady();
-	bool startNewGaitCycle = false;
 	if (gait.isNewPhase() && gait.getCurrentGaitType() != GaitType::NoMovement && is_steady && cmd_go && !cmd_is_moving) {
 		std::cout << "no movement, calm down" << std::endl;
 	 	cmd_gait = GaitType::NoMovement;
 	}
 
 	// at a new gait cycle we need create the next gait round and start MPC
-	startNewGaitCycle = (k % k_mpc) == 0;
+	bool startNewGaitCycle = (k % k_mpc) == 0;
+
+	// number of cycles left 1..10
+	int k_left_in_gait = k_mpc - (k % k_mpc);
 	gait.update(startNewGaitCycle, cmd_gait);
 	cmd_gait = GaitType::NoGait;
 
 	// Compute target footstep based on current and reference velocities
 	o_targetFootstep = footstepPlanner.updateFootsteps(
-										(k % k_mpc == 0) && (k != 0), static_cast<int>(k_mpc - (k % k_mpc)), estimator.getQReference(),
+										startNewGaitCycle && (k != 0), k_left_in_gait, estimator.getQReference(),
 										estimator.getHVFiltered(), estimator.getBaseVelRef());
 
 	// Update pos, vel and acc references for feet
@@ -278,15 +277,12 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	// Solve MPC problem once every k_mpc iterations of the main loop
 
-	f_mpc = mpcController.get_latest_result().block(12, 0, 12, 1);
-
 	if (startNewGaitCycle) {
 		mpcController.solve(statePlanner.getReferenceStates(), footstepPlanner.getFootsteps(), gait.getCurrentGait());
-		f_mpc = mpcController.get_latest_result().block(12, 0, 12, 1);
+		f_mpc = mpcController.get_latest_result().block(12, 0, 12, 1);;
 	}
-	if ((k % k_mpc) == 2)
-		f_mpc = mpcController.get_latest_result().block(12, 0, 12, 1);
-
+	if ((k % k_mpc) >= 2)
+		f_mpc = mpcController.get_latest_result().block(12, 0, 12, 1);;
 
 	// Whole Body Control
 	// If nothing wrong happened yet in the WBC controller
