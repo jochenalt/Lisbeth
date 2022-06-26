@@ -64,10 +64,10 @@ class FootstepPlanner {
   ///  stacked)
   ///
   ////////////////////////////////////////////////////////////////////////////////////////////////
-  MatrixN updateFootsteps(bool refresh, int k, VectorN const& q, Vector6 const& b_v, Vector6 const& b_vref);
+  Matrix34 updateFootsteps(bool refresh, int k, VectorN const& q, Vector6 const& b_v, Vector6 const& b_vref);
 
-  MatrixN getFootsteps();
-  MatrixN getTargetFootsteps();
+  MatrixN12 getFootsteps();
+  Matrix34 getTargetFootsteps();
 
  private:
   ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -84,7 +84,7 @@ class FootstepPlanner {
   ///  angular stacked)
   ///
   ////////////////////////////////////////////////////////////////////////////////////////////////
-  MatrixN computeTargetFootstep(int k, Vector6 const& q, Vector6 const& b_v, Vector6 const& b_vref);
+  Matrix34 computeTargetFootstep(int k, Vector6 const& q, Vector6 const& b_v, Vector6 const& b_vref);
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   ///
@@ -137,7 +137,7 @@ class FootstepPlanner {
   /// \param[in] array The std::vector of N 3x4 matrices to transform
   ///
   ////////////////////////////////////////////////////////////////////////////////////////////////
-  MatrixN vectorToMatrix(std::vector<Matrix34> const& array);
+  MatrixN12 vectorToMatrix(std::vector<Matrix34> const& array);
 
   Params* params_;  // Params object to store parameters
   Gait* gait_;      // Gait object to hold the gait informations

@@ -29,6 +29,10 @@ struct FootstepPlannerPythonVisitor : public bp::def_visitor<FootstepPlannerPyth
         bp::class_<FootstepPlanner>("FootstepPlanner", bp::no_init).def(FootstepPlannerPythonVisitor<FootstepPlanner>());
 
         ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
+        ENABLE_SPECIFIC_MATRIX_TYPE(Vector12);
+        ENABLE_SPECIFIC_MATRIX_TYPE(Matrix34);
+        ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN12);
+
     }
 };
 void exposeFootstepPlanner() { FootstepPlannerPythonVisitor<FootstepPlanner>::expose(); }

@@ -73,7 +73,7 @@ void FootstepPlanner::initialize(Params& params,
      foot_ids_[3] = static_cast<int>(model_.getFrameId("HR_FOOT"));
    }
 
-   MatrixN FootstepPlanner::updateFootsteps(bool refresh, int k, VectorN const& q, Vector6 const& b_v,
+Matrix34 FootstepPlanner::updateFootsteps(bool refresh, int k, VectorN const& q, Vector6 const& b_v,
                                             Vector6 const& b_vref) {
      if (q.rows() != 18) {
        throw std::runtime_error("q should be a vector of size 18 (pos+RPY+mot)");
@@ -213,7 +213,7 @@ void FootstepPlanner::initialize(Params& params,
      }
    }
 
-   MatrixN FootstepPlanner::computeTargetFootstep(int steps_left_in_gait, Vector6 const& q, Vector6 const& b_v, Vector6 const& b_vref) {
+   Matrix34 FootstepPlanner::computeTargetFootstep(int steps_left_in_gait, Vector6 const& q, Vector6 const& b_v, Vector6 const& b_vref) {
      // Compute the desired location of footsteps over the prediction horizon
      computeFootsteps(steps_left_in_gait, b_v, b_vref);
 
@@ -259,11 +259,11 @@ void FootstepPlanner::initialize(Params& params,
      }
    }
 
-   MatrixN FootstepPlanner::getFootsteps() { return vectorToMatrix(footsteps_); }
-   MatrixN FootstepPlanner::getTargetFootsteps() { return targetFootstep_; }
+   MatrixN12 FootstepPlanner::getFootsteps() { return vectorToMatrix(footsteps_); }
+   Matrix34 FootstepPlanner::getTargetFootsteps() { return targetFootstep_; }
 
-   MatrixN FootstepPlanner::vectorToMatrix(std::vector<Matrix34> const& array) {
-     MatrixN M = MatrixN::Zero(array.size(), 12);
+   MatrixN12 FootstepPlanner::vectorToMatrix(std::vector<Matrix34> const& array) {
+   	MatrixN12 M = MatrixN12::Zero(array.size(), 12);
      for (uint i = 0; i < array.size(); i++) {
        for (int j = 0; j < 4; j++) {
          M.row(i).segment<3>(3 * j) = array[i].col(j);

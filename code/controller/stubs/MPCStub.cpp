@@ -26,6 +26,9 @@ struct MpcControllerPythonVisitor : public bp::def_visitor<MpcControllerPythonVi
 
         ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
         ENABLE_SPECIFIC_MATRIX_TYPE(Matrix242);
+        ENABLE_SPECIFIC_MATRIX_TYPE(Matrix12N);
+
+
     }
 };
 void exposeMpcController() { MpcControllerPythonVisitor<MPCController>::expose(); }

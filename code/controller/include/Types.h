@@ -53,6 +53,8 @@ using Matrix4N = Eigen::Matrix<double, 4, Eigen::Dynamic>;
 using MatrixN4i = Eigen::Matrix<int, Eigen::Dynamic, 4>;
 using Matrix6N = Eigen::Matrix<double, 6, Eigen::Dynamic>;
 using Matrix12N = Eigen::Matrix<double, 12, Eigen::Dynamic>;
+using MatrixN12 = Eigen::Matrix<double, Eigen::Dynamic, 12>;
+
 using MatrixN = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
 using MatrixN4 = Eigen::Matrix<double, Eigen::Dynamic, 4>;
 using MatrixNi = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>;
