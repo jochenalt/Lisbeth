@@ -276,7 +276,6 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	statePlanner.computeReferenceStates(q_filt_mpc.head(6), h_v_filt_mpc, vref_filt_mpc);
 
 	// Solve MPC problem once every k_mpc iterations of the main loop
-
 	if (startNewGaitCycle) {
 		mpcController.solve(statePlanner.getReferenceStates(), footstepPlanner.getFootsteps(), gait.getCurrentGait());
 		f_mpc = mpcController.get_latest_result();

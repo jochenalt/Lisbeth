@@ -5,7 +5,7 @@
 #include "MPCController.hpp"
 
 
-void MPCController::write_in(Matrix12N& xref, MatrixN& fsteps) {
+void MPCController::write_in(Matrix12N& xref, MatrixN12& fsteps) {
   // const std::lock_guard<std::mutex> lockIn(mutexIn);
   thread_buffer.xref = xref;
   thread_buffer.fsteps = fsteps;
@@ -13,7 +13,7 @@ void MPCController::write_in(Matrix12N& xref, MatrixN& fsteps) {
   new_mpc_input = true;  // New data is available, set this flag last
 }
 
-bool MPCController::read_in(Matrix12N& xref, MatrixN& fsteps) {
+bool MPCController::read_in(Matrix12N& xref, MatrixN12& fsteps) {
   if (new_mpc_input) {
     xref = thread_buffer.xref;
     fsteps = thread_buffer.fsteps;
@@ -46,7 +46,7 @@ MatrixN MPCController::read_out() {
 
 void MPCController::parallel_loop() {
 	Matrix12N xref;
-  MatrixN fsteps;
+	MatrixN12 fsteps;
   MatrixN result;
   while (thread_is_running) {
 
@@ -104,7 +104,7 @@ void MPCController::initialize(Params& params) {
   mpc_thread = new std::thread(&MPCController::parallel_loop, this);  // spawn new thread that runs MPC in parallel
 }
 
-void MPCController::solve(Matrix12N xref, MatrixN fsteps, MatrixN gait) {
+void MPCController::solve(Matrix12N xref, MatrixN12 fsteps, MatrixN gait) {
   write_in(xref, fsteps);
 
   // Adaptation if gait has changed
