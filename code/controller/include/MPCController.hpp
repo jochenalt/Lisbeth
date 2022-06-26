@@ -71,11 +71,11 @@ class MPCController {
   void parallel_loop();
   void write_in(Matrix12N& xref, MatrixN12& fsteps);
   bool read_in(Matrix12N& xref, MatrixN12& fsteps);
-  void write_out(MatrixN4& result);
+  void write_out(Matrix242& result);
   bool check_new_result();
   MatrixN read_out();
 
-  std::thread* mpc_thread = NULL;
+  std::thread* solver_thread = NULL;
 
   Params* params_;  // Object that stores parameters
   MPCSolver* mpc_;         // MPC object used for synchronous solving (not in parallel loop)
@@ -94,7 +94,7 @@ class MPCController {
   struct {
 	  Matrix12N xref;              // Desired state vector for the whole prediction horizon
 	  MatrixN12 fsteps;            // The [x, y, z]^T desired position of each foot for each time step of the horizon
-	  MatrixN4 result;            // Predicted state and desired contact forces resulting of the MPC
+	  Matrix242 result;            // Predicted state and desired contact forces resulting of the MPC
   } thread_buffer;
 
   int time_per_run_us = 0;
