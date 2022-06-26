@@ -20,7 +20,8 @@ MPCSolver::MPCSolver(Params& params) {
   mu = 0.9f;
   cpt_ML = 0;
   cpt_P = 0;
-  offset_CoM(2, 0) = - 0.03;  // Approximation of the vertical offset between center of base and CoM
+
+  offset_CoM = Vector3(params.CoM_offset[0], params.CoM_offset[1],params.CoM_offset[2]);
 
   // Predefined matrices
   footholds << 0.19, 0.19, -0.19, -0.19,

@@ -115,8 +115,6 @@ class Controller:
         
         params.CoM_offset = (robot.data.com[0][:3] - q[0:3, 0]).tolist()
         params.CoM_offset[1] = 0.0
-        
-        print("params.CoM_offset ", params.CoM_offset)
 
 
         for i in range(4):

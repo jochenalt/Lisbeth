@@ -106,12 +106,10 @@ void Controller::init_robot(Params& params) {
 
 	  // Offset between center of base and CoM
 	  Vector3 CoM = data_.com[0].head(3) - q.head(3);
-      CoM(1,0) = 0; // assume we are symmetric
+     CoM(1,0) = 0; // assume we are symmetric
 
-	  params_->CoM_offset[0] = CoM(0, 0);
-	  params_->CoM_offset[1] = CoM(1, 0);
-	  params_->CoM_offset[2] = CoM(2, 0);
-
+     for (int i = 0;i<3;i++)
+   	  params_->CoM_offset[i] = CoM(i, 0);
 
 
 	  for (int i = 0; i < 4; i++) {
