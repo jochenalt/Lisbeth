@@ -28,10 +28,8 @@ MPCSolver::MPCSolver(Params& params) {
   footholds << Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(params.footsteps_under_shoulders.data(),
 	                                                          params.footsteps_under_shoulders.size());
 
-  gI << 3.09249e-2, -8.00101e-7, 1.865287e-5, -8.00101e-7, 5.106100e-2, 1.245813e-4, 1.865287e-5, 1.245813e-4,
-      6.939757e-2;
-
-  // gI << Eigen::Map<VectorN, Eigen::Unaligned>(params_->I_mat.data(), params_->I_mat.size());
+  //  Composite rigid body inertia in init position
+  gI << Eigen::Map<VectorN, Eigen::Unaligned>(params_->I_mat.data(), params_->I_mat.size());
 
   g(8, 0) = -9.81f * dt;
 
