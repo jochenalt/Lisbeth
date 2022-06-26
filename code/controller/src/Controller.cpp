@@ -282,8 +282,10 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	if (startNewGaitCycle) {
 		mpcController.solve(statePlanner.getReferenceStates(), footstepPlanner.getFootsteps(), gait.getCurrentGait());
+		f_mpc = mpcController.get_latest_result().block(12, 0, 12, 1);
 	}
-	f_mpc = mpcController.get_latest_result().block(12, 0, 12, 1);
+	if ((k % k_mpc) == 2)
+		f_mpc = mpcController.get_latest_result().block(12, 0, 12, 1);
 
 
 	// Whole Body Control

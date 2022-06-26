@@ -321,8 +321,10 @@ class Controller:
         # Solve MPC problem once every k_mpc iterations of the main loop
         if startNewGaitCycle:
             self.mpcController.solve(reference_state,  self.footstepPlanner.getFootsteps(),self.gait.matrix)
+            self.mpc_f_cmd = self.mpcController.get_latest_result()[12:,0] # solution should be there by now
 
-        self.mpc_f_cmd = self.mpcController.get_latest_result()[12:,0] # solution should be there by now
+        if (self.k % self.k_mpc) == 2:
+            self.mpc_f_cmd = self.mpcController.get_latest_result()[12:,0] # solution should be there by now
 
         t_mpc = time.time()
 

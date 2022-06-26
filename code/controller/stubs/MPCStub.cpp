@@ -13,12 +13,11 @@ struct MpcControllerPythonVisitor : public bp::def_visitor<MpcControllerPythonVi
     {
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
 
-            .def("initialize", &MPCController::initialize, bp::args("params"),
-                 "Initialize MPC from Python.\n")
-            .def("get_latest_result", &MPCController::get_latest_result)
-        	.def("solve", &MPCController::solve, bp::args("fsteps","gait", "fsteps_in"))
-    		.def("is_ready", &MPCController::is_ready)
-			.def("get_avr_time_us", &MPCController::get_avr_time_us);
+        .def("initialize", &MPCController::initialize, bp::args("params"))
+        .def("get_latest_result", &MPCController::get_latest_result)
+        .def("solve", &MPCController::solve, bp::args("fsteps","gait", "fsteps_in"))
+    	  .def("is_ready", &MPCController::is_ready)
+		  .def("get_avr_time_us", &MPCController::get_avr_time_us);
     }
 
     static void expose()
