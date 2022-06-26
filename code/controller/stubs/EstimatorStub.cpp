@@ -49,7 +49,7 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
 			// run one loop of estimator
 			.def("run",&Estimator::run, bp::args("gait", "targets",
 												 "baseLinearAcceleration", "baseAngularVelocity", "baseOrientation",
-												 "q", "v", "perfectPosition","perfectVelocity"),
+												 "q", "v"),
 				 "run");
     }
 

@@ -54,6 +54,7 @@ using MatrixN4i = Eigen::Matrix<int, Eigen::Dynamic, 4>;
 using Matrix6N = Eigen::Matrix<double, 6, Eigen::Dynamic>;
 using Matrix12N = Eigen::Matrix<double, 12, Eigen::Dynamic>;
 using MatrixN = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>;
+using MatrixN4 = Eigen::Matrix<double, Eigen::Dynamic, 4>;
 using MatrixNi = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>;
 
 typedef Eigen::MatrixXd matXd;
@@ -61,7 +62,7 @@ typedef Eigen::MatrixXd matXd;
 // the legs or ordered in that sequence
 enum Legs { FL=0, FR = 1, HL = 2, HR = 3 };
 typedef int LegNoType;
-#define LegNo 4
+#define LEGS 4
 
 // Different Gait Types:
 enum GaitType { NoGait = 0,

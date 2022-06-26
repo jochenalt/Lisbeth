@@ -122,13 +122,12 @@ bool Estimator::isSteady() {
     device (object): Interface with the masterboard or the simulation
     goals (3x4 array): Target locations of feet on the ground
 */
-void Estimator::run(MatrixN gait, MatrixN feetTargets,
+void Estimator::run(MatrixN4 gait, Matrix34 feetTargets,
 				 	Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector3 baseOrientation,
-					Vector12 const& q, Vector12 const &v,
-					VectorN const& perfectPosition,Vector3 const& b_perfectVelocity) {
+					Vector12 const& q, Vector12 const &v) {
 
 			// store parameter coming from IMU
-	updateIMUData (baseLinearAcceleration, baseAngularVelocity, baseOrientation,perfectPosition);
+	updateIMUData (baseLinearAcceleration, baseAngularVelocity, baseOrientation);
 
 	// update feet target positions according to gait
 	updatFeetStatus(gait, feetTargets);
@@ -142,7 +141,7 @@ void Estimator::run(MatrixN gait, MatrixN feetTargets,
     // Update forward geometry data
     computeFeetPositionBarycenter();
 
-    estimatePositionAndVelocity ( b_perfectVelocity, perfectPosition.head(3));
+    estimatePositionAndVelocity ();
 
     filterVelocity();
 
@@ -209,7 +208,7 @@ void Estimator::updatFeetStatus(MatrixN const& gait, MatrixN const& feetTargets)
 
 
 /** pass data from IMU */
-void Estimator::updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector3 base_orientation, VectorN const& perfectPosition) {
+void Estimator::updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector3 base_orientation) {
 
 	//  Linear acceleration of the trunk (base frame)
     this->IMULinearAcceleration = base_linear_acc;
@@ -227,10 +226,6 @@ void Estimator::updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velo
     	initialized = true;
     }
     IMURpy(2) -= IMUYawOffset; //  substract initial offset of IMU
-
-    bool solo3D = false;
-    if (solo3D)
-    	IMURpy.tail(1) = perfectPosition.tail(1);
 
     IMUQuat = pinocchio::SE3::Quaternion(pinocchio::rpy::rpyToMatrix(IMURpy(0), IMURpy(1), IMURpy(2)));
 }
@@ -323,27 +318,25 @@ double Estimator::computeAlphaVelocity() {
 }
 
 
-void Estimator::estimatePositionAndVelocity(Vector3 const& perfectPosition, Vector3 const& b_perfectVelocity) {
+void Estimator::estimatePositionAndVelocity() {
   Vector3 alpha = Vector3::Ones() * computeAlphaVelocity();
   Matrix3 oRb = IMUQuat.toRotationMatrix();
   Vector3 bTi = (b_M_IMU.translation()).cross(IMUAngularVelocity);
 
   // At IMU location in world frame
-  bool solo3D = false;
-  Vector3 oi_baseVelocityFK = solo3D ? oRb * (b_perfectVelocity + bTi) : oRb * (baseVelocityFK + bTi);
+  Vector3 oi_baseVelocityFK = oRb * (baseVelocityFK + bTi);
   Vector3 oi_baseVelocity = velocityFilter.compute(oi_baseVelocityFK, oRb * IMULinearAcceleration, alpha);
 
   // At base location in base frame
   b_baseVelocity = oRb.transpose() * oi_baseVelocity - bTi;
 
-  vEstimate.head(3) = perfectEstimator ? b_perfectVelocity : b_baseVelocity;
+  vEstimate.head(3) = b_baseVelocity;
   vEstimate.segment(3, 3) = IMUAngularVelocity;
   vEstimate.tail(12) = vActuators;
 
-  Vector3 basePosition = solo3D ? perfectPosition : (basePositionFK + feetPositionBarycenter);
+  Vector3 basePosition = basePositionFK + feetPositionBarycenter;
   qEstimate.head(3) = positionFilter.compute(basePosition, oRb * b_baseVelocity, alphaPos);
 
-  if (perfectEstimator || solo3D) qEstimate(2) = perfectPosition(2);
   qEstimate.segment(3, 4) = IMUQuat.coeffs();
   qEstimate.tail(12) = qActuators;
 }

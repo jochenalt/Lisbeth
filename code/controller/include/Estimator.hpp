@@ -37,10 +37,9 @@ public:
 	 * perfectPosition Position of the robot in world frame
 	 * b_perfectVelocity Velocity of the robot in base frame
 	 */
-	void run( MatrixN gait, MatrixN feetTargets,
-				 	Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector3 baseOrientation,
-					Vector12 const& q, Vector12 const &v,
-					VectorN const& perfectPosition,Vector3 const& b_perfectVelocity);
+	void run( MatrixN4 gait, Matrix34 feetTargets,
+			  Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector3 baseOrientation,
+			  Vector12 const& q, Vector12 const &v);
 
 	// Update state vectors of the robot (q and v)
 	// Update transformation matrices between world and horizontal frames
@@ -51,11 +50,11 @@ public:
 	bool isSteady();
 	Vector3 getImuRPY() { return IMURpy; }
 
-	VectorN getQEstimate() { return qEstimate; }
-	VectorN getVEstimate() { return vEstimate; }
-	VectorN getVSecurity() { return vSecurity; }
-	VectorN getFeetStatus() { return feetStatus; }
-	MatrixN getFeetTargets() { return feetTargets; }
+	Vector19 getQEstimate() { return qEstimate; }
+	Vector18 getVEstimate() { return vEstimate; }
+	Vector12 getVSecurity() { return vSecurity; }
+	Vector4 getFeetStatus() { return feetStatus; }
+	Matrix34 getFeetTargets() { return feetTargets; }
 	Vector3 getBaseVelocityFK() { return baseVelocityFK; }
 	Vector3 getBasePositionFK() { return basePositionFK; }
 	Vector3 getFeetPositionBarycenter() { return feetPositionBarycenter; }
@@ -70,13 +69,13 @@ public:
 	Vector3 getFilterPosAlpha() { return positionFilter.getAlpha(); }
 	Vector3 getFilterPosFiltX() { return positionFilter.getFilteredX(); }
 
-	VectorN getQReference() { return qRef; }
-	VectorN getVReference() { return vRef; }
-	VectorN getBaseVelRef() { return baseVelRef; }
-	VectorN getBaseAccRef() { return baseAccRef; }
-	VectorN getHV() { return h_v; }
-	VectorN getVFiltered() { return vFiltered; }
-	VectorN getHVFiltered() { return h_vFiltered; }
+	Vector18 getQReference() { return qRef; }
+	Vector18 getVReference() { return vRef; }
+	Vector6 getBaseVelRef() { return baseVelRef; }
+	Vector6 getBaseAccRef() { return baseAccRef; }
+	Vector6 getHV() { return h_v; }
+	Vector6 getVFiltered() { return vFiltered; }
+	Vector6 getHVFiltered() { return h_vFiltered; }
 	Matrix3 getoRh() { return oRh; }
 	Matrix3 gethRb() { return hRb; }
 	Vector3 getoTh() { return oTh; }
@@ -87,7 +86,7 @@ private:
 	// baseLinearAcceleration 	Linear acceleration of the IMU (gravity compensated)
 	// baseAngularVelocity 		Angular velocity of the IMU
 	// base_orientation 		RPY from IMU
-	void updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector3 base_orientation,VectorN const& perfectPosition);
+	void updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector3 base_orientation);
 
 	// Update the feet relative data
 	// update feetStatus_, feetTargets_, feetStancePhaseDuration_ and phaseRemainingDuration_
@@ -115,9 +114,7 @@ private:
 	// The complementary filter combines data from the FK and the IMU acceleration data
 	// The complementary filter combines data from the FK and the estimated velocity
 	//
-	// b_perfectVelocity Perfect velocity of the base in the base frame
-	// perfectPosition Perfect position of the base in the world frame
-	void estimatePositionAndVelocity(Vector3 const& perfectPosition, Vector3 const& b_perfectVelocity);
+	void estimatePositionAndVelocity();
 
 
  	// Estimate the velocity of the base with forward kinematics using a contact point that

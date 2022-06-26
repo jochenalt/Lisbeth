@@ -273,7 +273,7 @@ class Controller:
         baseHeight = np.array([0.0, 0.0, 0.0, device.dummyPos[2] - 0.0155])
         baseVelocity = device.b_baseVel
 
-        oRh, hRb, oTh=  self.run_estimator(remoteControl, device, baseHeight,baseVelocity)
+        oRh, hRb, oTh=  self.run_estimator(remoteControl, device)
 
         t_filter = time.time()
         
@@ -411,7 +411,7 @@ class Controller:
             self.result.tau_ff[:] = np.zeros(12)
 
        
-    def run_estimator(self, remoteControl, device,baseHeight,baseVelocity):
+    def run_estimator(self, remoteControl, device):
         """
         Call the estimator and retrieve the reference and estimated quantities.
         Run a filter on q, h_v and v_ref.
@@ -425,9 +425,7 @@ class Controller:
 
         self.estimator.run(self.gait.matrix,self.footTrajectoryGenerator.get_foot_position().copy(),
                            device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy(), # data from IMU
-                           device.q_mes, device.v_mes, # data from joints
-                           baseHeight.copy(),
-                           baseVelocity)
+                           device.q_mes, device.v_mes) # data from joints
 
         self.estimator.update_reference_state(remoteControl.v_ref)
                 
