@@ -1,16 +1,16 @@
 set(${PY_NAME}_SOURCES
-  Stubs.cpp
+  ControllerStub.cpp
   EstimatorStub.cpp
-  ParamsStub.cpp
+  InvKinStub.cpp
   FootstepPlannerStub.cpp
   FootTrajectoryGeneratorStub.cpp
   GaitStub.cpp
   WBCStub.cpp
-  InvKinStub.cpp
   MPCStub.cpp
   StatePlannerStub.cpp
+  ParamsStub.cpp
   FilterStub.cpp
-  ControllerStub.cpp
+  Stubs.cpp
   )
 
 add_library(${PY_NAME} SHARED ${${PY_NAME}_SOURCES})

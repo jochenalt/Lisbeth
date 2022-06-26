@@ -62,22 +62,22 @@ set(${PROJECT_NAME}_HEADERS
   )
 
 set(${PROJECT_NAME}_SOURCES
-  src/st_to_cc.cpp
+  src/WbcController.cpp
+  src/InvKin.cpp
+  src/Controller.cpp
+  src/Estimator.cpp
+  src/FootstepPlanner.cpp
+  src/MpcController.cpp
+  src/QPWBC.cpp
   src/MPC.cpp
+  src/st_to_cc.cpp
   src/Gait.cpp
   src/Utils.cpp
-  src/Estimator.cpp
   src/FootTrajectoryGenerator.cpp
-  src/FootstepPlanner.cpp
   src/StatePlanner.cpp
-  src/InvKin.cpp
-  src/QPWBC.cpp
   src/Params.cpp
   src/ComplementaryFilter.cpp
   src/Filter.cpp
-  src/WbcController.cpp
-  src/MpcController.cpp
-  src/Controller.cpp
   )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
@@ -136,7 +136,7 @@ target_link_libraries(${PROJECT_NAMESPACE}-${PROJECT_NAME} ${PROJECT_NAME})
 
 # Python Bindings
 if(BUILD_PYTHON_INTERFACE)
-  add_subdirectory(python)
+  add_subdirectory(stubs)
 endif()
 
 
