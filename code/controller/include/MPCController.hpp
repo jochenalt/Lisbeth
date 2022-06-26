@@ -55,7 +55,7 @@ class MPCController {
   void solve( MatrixN xref, MatrixN fsteps, MatrixN gait);
 
   // return the latest result from last MPC run
-  Matrix242 get_latest_result();
+  Vector12 get_latest_result();
 
   // return the average time per MPC run in [us]
   int get_avr_time_us() { return time_per_run_us; };

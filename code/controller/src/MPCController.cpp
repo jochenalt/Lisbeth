@@ -127,7 +127,7 @@ void MPCController::solve(MatrixN xref, MatrixN fsteps, MatrixN gait) {
   gait_next = gait.row(1);
 }
 
-Eigen::Matrix<double, 24, 2> MPCController::get_latest_result() {
+Vector12 MPCController::get_latest_result() {
   // Retrieve data from parallel process if a new result is available
   if (check_new_result()) {
     last_available_result = read_out().block(0, 0, 24, 2);
@@ -135,5 +135,5 @@ Eigen::Matrix<double, 24, 2> MPCController::get_latest_result() {
   } else {
 	// std::cout << "MPC.get_latest_result (old): " << std::endl << last_available_result.block<12,1>(12,0).transpose() << std::endl;
   }
-  return last_available_result;
+  return last_available_result.block(12, 0, 12, 1);;
 }
