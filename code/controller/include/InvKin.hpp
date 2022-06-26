@@ -22,17 +22,15 @@ public:
     void initialize(Params& params);
 
 
-    Eigen::Matrix<double, 1, 3> cross3(Eigen::Matrix<double, 1, 3> left, Eigen::Matrix<double, 1, 3> right);
+    Eigen::MatrixXd refreshAndCompute(const Vector4& contacts,
+                                      const Matrix34& pgoals, const Matrix34& vgoals, const Matrix34& agoals);
+    void run(Vector12 const& q, Vector12 const& dq, Vector4 const& contacts, Matrix34 const& pgoals,
+    		Matrix34 const& vgoals, Matrix34 const& agoals);
 
-    Eigen::MatrixXd refreshAndCompute(const Eigen::MatrixXd& contacts,
-                                      const Eigen::MatrixXd& pgoals, const Eigen::MatrixXd& vgoals, const Eigen::MatrixXd& agoals);
-    void run(VectorN const& q, VectorN const& dq, MatrixN const& contacts, MatrixN const& pgoals,
-                            MatrixN const& vgoals, MatrixN const& agoals);
-
-    VectorN get_q_step() { return q_step_; }
-    VectorN get_q_cmd() { return q_cmd_; }
-    VectorN get_dq_cmd() { return dq_cmd_; }
-    VectorN get_ddq_cmd() { return ddq_cmd_; }
+    Vector12 get_q_step() { return q_step_; }
+    Vector12 get_q_cmd() { return q_cmd_; }
+    Vector12 get_dq_cmd() { return dq_cmd_; }
+    Vector12 get_ddq_cmd() { return ddq_cmd_; }
     int get_foot_id(int i) { return foot_ids_[i];}
 
     Matrix12 get_Jf() { return Jf_; }
@@ -61,27 +59,27 @@ private:
     int base_id_ = 0;                          // Base ID
 
     // Matrices initialisation
-    Eigen::Matrix<double, 4, 3> feet_position_ref = Eigen::Matrix<double, 4, 3>::Zero();
-    Eigen::Matrix<double, 4, 3> feet_velocity_ref = Eigen::Matrix<double, 4, 3>::Zero();
-    Eigen::Matrix<double, 4, 3> feet_acceleration_ref = Eigen::Matrix<double, 4, 3>::Zero();
-    Eigen::Matrix<double, 1, 4> flag_in_contact = Eigen::Matrix<double, 1, 4>::Zero();
+    Matrix43 feet_position_ref = Eigen::Matrix<double, 4, 3>::Zero();
+    Matrix43 feet_velocity_ref = Eigen::Matrix<double, 4, 3>::Zero();
+    Matrix43 feet_acceleration_ref = Eigen::Matrix<double, 4, 3>::Zero();
+    RowVector4 flag_in_contact = Eigen::Matrix<double, 1, 4>::Zero();
 
-    Eigen::Matrix<double, 12, 12> invJ = Eigen::Matrix<double, 12, 12>::Zero();
-    Eigen::Matrix<double, 1, 12> acc = Eigen::Matrix<double, 1, 12>::Zero();
-    Eigen::Matrix<double, 1, 12> x_err = Eigen::Matrix<double, 1, 12>::Zero();
-    Eigen::Matrix<double, 1, 12> dx_r = Eigen::Matrix<double, 1, 12>::Zero();
+    Matrix12 invJ = Eigen::Matrix<double, 12, 12>::Zero();
+    RowVector12 acc = Eigen::Matrix<double, 1, 12>::Zero();
+    RowVector12  x_err = Eigen::Matrix<double, 1, 12>::Zero();
+    RowVector12  dx_r = Eigen::Matrix<double, 1, 12>::Zero();
 
-    Eigen::Matrix<double, 4, 3> pfeet_err = Eigen::Matrix<double, 4, 3>::Zero();
-    Eigen::Matrix<double, 4, 3> vfeet_ref = Eigen::Matrix<double, 4, 3>::Zero();
-    Eigen::Matrix<double, 4, 3> afeet = Eigen::Matrix<double, 4, 3>::Zero();
-    Eigen::Matrix<double, 1, 3> e_basispos = Eigen::Matrix<double, 1, 3>::Zero();
-    Eigen::Matrix<double, 1, 3> abasis = Eigen::Matrix<double, 1, 3>::Zero();
-    Eigen::Matrix<double, 1, 3> e_basisrot = Eigen::Matrix<double, 1, 3>::Zero();
-    Eigen::Matrix<double, 1, 3> awbasis = Eigen::Matrix<double, 1, 3>::Zero();
+    Matrix43 pfeet_err = Eigen::Matrix<double, 4, 3>::Zero();
+    Matrix43 vfeet_ref = Eigen::Matrix<double, 4, 3>::Zero();
+    Matrix43 afeet = Eigen::Matrix<double, 4, 3>::Zero();
+    RowVector3  e_basispos = Eigen::Matrix<double, 1, 3>::Zero();
+    RowVector3 abasis = Eigen::Matrix<double, 1, 3>::Zero();
+    RowVector3 e_basisrot = Eigen::Matrix<double, 1, 3>::Zero();
+    RowVector3 awbasis = Eigen::Matrix<double, 1, 3>::Zero();
 
-    Eigen::MatrixXd ddq_cmd_ = Eigen::MatrixXd::Zero(12, 1);
-    Eigen::MatrixXd q_step_ = Eigen::MatrixXd::Zero(12, 1);
-    Eigen::MatrixXd dq_cmd_ = Eigen::MatrixXd::Zero(12, 1);
+    Vector12 ddq_cmd_ = Vector12::Zero(12, 1);
+    Vector12 q_step_ = Vector12::Zero(12, 1);
+    Vector12 dq_cmd_ = Vector12::Zero(12, 1);
     Vector12 q_cmd_;  										  // Actuator command positions
 
 

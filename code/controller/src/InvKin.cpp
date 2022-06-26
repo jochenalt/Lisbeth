@@ -67,8 +67,8 @@ void InvKin::initialize(Params& params) {
 	Kd_flyingfeet = params_->Kd_flyingfeet;
 
 }
-Eigen::MatrixXd InvKin::refreshAndCompute(const Eigen::MatrixXd &contacts,
-                                          const Eigen::MatrixXd &goals, const Eigen::MatrixXd &vgoals, const Eigen::MatrixXd &agoals) {
+Eigen::MatrixXd InvKin::refreshAndCompute(const Vector4 &contacts,
+                                          const Matrix34 &goals, const Matrix34 &vgoals, const Matrix34 &agoals) {
 
     // Update contact status of the feet
     flag_in_contact.block(0, 0, 1, 4) = contacts.block(0, 0, 1, 4);
@@ -111,8 +111,8 @@ Eigen::MatrixXd InvKin::refreshAndCompute(const Eigen::MatrixXd &contacts,
 
 
 
-void InvKin::run(VectorN const& q, VectorN const& dq, MatrixN const& contacts, MatrixN const& pgoals,
-                 MatrixN const& vgoals, MatrixN const& agoals) {
+void InvKin::run(Vector12 const& q, Vector12 const& dq, Vector4 const& contacts, Matrix34 const& pgoals,
+		Matrix34 const& vgoals, Matrix34 const& agoals) {
 
   // Update model and data of the robot
   pinocchio::computeJointJacobians(model_, data_, q);

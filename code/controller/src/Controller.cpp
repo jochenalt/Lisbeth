@@ -235,7 +235,6 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 				Vector3::Zero(), Vector3::Zero());
 
 	// Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames
-
 	estimator.updateReferenceState(cmd_v_ref);
 
 	// Quantities go through a 1st order low pass filter with fc = 15 Hz (avoid >25Hz foldback)
@@ -274,25 +273,18 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	// Update pos, vel and acc references for feet
 	footTrajectoryGenerator.update(k, o_targetFootstep);
-    // std::cout << "footTrajectoryGenerator.getFootPosition(); " << footTrajectoryGenerator.getFootPosition() << std::endl;
-    //std::cout << "footTrajectoryGenerator.getFootVelocity(); " << footTrajectoryGenerator.getFootVelocity() << std::endl;
-    //std::cout << "footTrajectoryGenerator.getFootAcceleration(); " << footTrajectoryGenerator.getFootAcceleration() << std::endl;
 
 	// Run state planner (outputs the reference trajectory of the base)
 	statePlanner.computeReferenceStates(q_filt_mpc.head(6), h_v_filt_mpc, vref_filt_mpc);
 
 	// Solve MPC problem once every k_mpc iterations of the main loop
 
-	if (k % k_mpc == 0) {
-		mpcController.solve(statePlanner.getReferenceStates(), footstepPlanner.getFootsteps(), gait.getCurrentGait());
-		f_mpc = mpcController.get_latest_result().block(12, 0, 12, 1);
-	}
-	// Target state for the whole body control
+	f_mpc = mpcController.get_latest_result().block(12, 0, 12, 1);
 
-	if (k % k_mpc == 8) {
-		f_mpc = mpcController.get_latest_result().block(12, 0, 12, 1);
-		// std::cout << "f_mpc " << f_mpc << std::endl;
+	if (startNewGaitCycle) {
+		mpcController.solve(statePlanner.getReferenceStates(), footstepPlanner.getFootsteps(), gait.getCurrentGait());
 	}
+	f_mpc = mpcController.get_latest_result().block(12, 0, 12, 1);
 
 
 	// Whole Body Control
@@ -323,24 +315,6 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
         		      - 2.0* cross33(v_ref36, feet_v_cmd);
 	    feet_v_cmd += - v_ref03.replicate(1,4)
 	    		      - cross33 (v_ref36, feet_p_cmd);
-
-	    // std::cout << "feet_p_cmd " << footTrajectoryGenerator.getFootPosition() + T.replicate(1,4)<< std::endl;
-	    // std::cout << "R*feet_p_cmd " << R*(footTrajectoryGenerator.getFootPosition() + T.replicate(1,4)) << std::endl;
-
-	    // std::cout << "feet_p_cmd " << feet_p_cmd << std::endl;
-
-	    // std::cout << "feet_v_cmd " << footTrajectoryGenerator.getFootVelocity() << std::endl;
-
-	    // std::cout << "estimator.getBaseVelRef().block<3,1>(0,0) " << estimator.getBaseVelRef().block<3,1>(0,0)<< std::endl;
-	    // std::cout << "v_ref36" << v_ref36<< std::endl;
-	    // std::cout << "cross33 (v_ref36, feet_p_cmd) " <<cross33 (v_ref36, feet_p_cmd)<< std::endl;
-
-	    // std::cout << "feet_v_cmd " << feet_v_cmd << std::endl;
-
-	    // std::cout << "feet_a_cmd " << footTrajectoryGenerator.getFootAcceleration() << std::endl;
-
-	    // std::cout << "dq_wbc " << dq_wbc << std::endl;
-	    // std::cout << "f_mpc " << f_mpc << std::endl;
 
 	    // Update configuration vector for wbc
         q_wbc.block<3,1>(0,0) = Vector3(0,0,h_ref_);

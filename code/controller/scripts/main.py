@@ -187,7 +187,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     t_max = (params.N_SIMULATION-2) * params.dt_wbc
             
     while ((not device.hardware.IsTimeout()) and (t < t_max) and (not controller.error)):
-        for j in range(10000):
+        for j in range(30000):
             if (j == -1):
                 remoteControl.gp.speedX.value = 0.0
                 remoteControl.gp.speedY.value = 0.0
@@ -226,15 +226,15 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             # Set desired quantities for the actuators
             #print ("OLD", controller.result.q_des);
             #print ("NEW", controllerCpp.qdes);
-            if (not np.allclose(controller.result.q_des, controllerCpp.qdes)):
-                print ("alt.q_des", controller.result.q_des)            
-                print ("new.q_des", controllerCpp.qdes)            
-            if (not np.allclose(controller.result.v_des, controllerCpp.vdes, rtol=0.01)):
-                print ("old.v_des", controller.result.v_des)            
-                print ("new.v_des", controllerCpp.vdes)            
-            if (not np.allclose(controller.result.tau_ff, controllerCpp.tau_ff, rtol=0.01)):
-                print ("oldv.tau_ff", controller.result.tau_ff)            
-                print ("newv.tau_ff", controllerCpp.tau_ff)            
+            #if (not np.allclose(controller.result.q_des, controllerCpp.qdes)):
+            #    print ("alt.q_des", controller.result.q_des)            
+            #    print ("new.q_des", controllerCpp.qdes)            
+            #if (not np.allclose(controller.result.v_des, controllerCpp.vdes, rtol=0.01)):
+            #    print ("old.v_des", controller.result.v_des)            
+            #    print ("new.v_des", controllerCpp.vdes)            
+            #if (not np.allclose(controller.result.tau_ff, controllerCpp.tau_ff, rtol=0.01)):
+            #    print ("oldv.tau_ff", controller.result.tau_ff)            
+            #    print ("newv.tau_ff", controllerCpp.tau_ff)            
 
             device.SetDesiredJointPDgains(controllerCpp.P, controllerCpp.D)
             device.SetDesiredJointPosition(controllerCpp.qdes)

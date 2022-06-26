@@ -319,14 +319,10 @@ class Controller:
         t_planner = time.time()
 
         # Solve MPC problem once every k_mpc iterations of the main loop
-
-        if (self.k % self.k_mpc) == 0:
+        if startNewGaitCycle:
             self.mpcController.solve(reference_state,  self.footstepPlanner.getFootsteps(),self.gait.matrix)
-            self.mpc_f_cmd = self.mpcController.get_latest_result()[12:,0] # default ff, solution not yet available
 
-        if (self.k % self.k_mpc) == 8:
-            self.mpc_f_cmd = self.mpcController.get_latest_result()[12:,0] # solution should be there by now
-        #print ("f_cmd", self.mpc_f_cmd)
+        self.mpc_f_cmd = self.mpcController.get_latest_result()[12:,0] # solution should be there by now
 
         t_mpc = time.time()
 
@@ -344,14 +340,7 @@ class Controller:
 
 
             self.get_base_targets(reference_state, hRb)
-            #print ("base_targets", self.base_targets)
             self.get_feet_targets(reference_state, oRh, oTh, hRb)
-            #print ("self.q_filtered", self.q_filtered)
-            #print ("self.wbcController.qdes", self.wbcController.qdes)
-
-            #// print("feet_v_cmd", self.footTrajectoryGenerator.get_foot_velocity())
-            #// print("feet_a_cmd", self.footTrajectoryGenerator.get_foot_acceleration())
-            
             
             self.q_wbc[2] = self.h_ref  # at position (0.0, 0.0, h_ref)
             self.q_wbc[3:5] = self.q_filtered[3:5]
@@ -362,10 +351,6 @@ class Controller:
             self.dq_wbc[6:] = self.wbcController.vdes
             
             # Run InvKin + WBC QP
-            #print ("q_wbc", self.q_wbc)
-            #print ("dq_wbc", self.dq_wbc)
-            #print ("wbc_f_cmd", self.wbc_f_cmd)
-
             self.wbcController.compute(self.q_wbc, self.dq_wbc,
                                     self.wbc_f_cmd, np.array([self.gait.matrix[0, :]]),
                                     self.feet_p_cmd,
