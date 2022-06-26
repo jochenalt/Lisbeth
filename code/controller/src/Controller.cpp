@@ -38,48 +38,48 @@ Controller::Controller()
       p_ref_(Vector6::Zero()),
       f_mpc(Vector12::Zero()) {}
 
-void Controller::init_robot(Params& params) {
+void Controller::init_robot() {
 
 	 // Path to the robot URDF
 	  const std::string filename = std::string(URDF_MODEL);
 
 	  // Robot model
-	  pinocchio::Model model_;
+	  pinocchio::Model model;
 
 	  // Build model from urdf (base is not free flyer)
-	  pinocchio::urdf::buildModel(filename, pinocchio::JointModelFreeFlyer(), model_, false);
+	  pinocchio::urdf::buildModel(filename, pinocchio::JointModelFreeFlyer(), model, false);
 
 	  // Construct data from model
-	  pinocchio::Data data_ = pinocchio::Data(model_);
+	  pinocchio::Data data = pinocchio::Data(model);
 
 	  // Update all the quantities of the model
-	  VectorN q = VectorN::Zero(model_.nq);
+	  VectorN q = VectorN::Zero(model.nq);
 	  q(0,0) = 1.0;            //  x transition as defined in SRDF file
 	  q(2,0) = 0.235;          // basic height as defined in SRDF file
 	  q(6, 0) = 1.0;  		   // Quaternion (0, 0, 0, 1)
-	  q.block<12,1>(7,0) = Vector12(params.q_init.data());
+	  q.block<12,1>(7,0) = Vector12(params->q_init.data());
 
 	  // Initialisation of model quantities
-	  pinocchio::computeAllTerms(model_, data_, q, VectorN::Zero(model_.nv));
-	  pinocchio::centerOfMass(model_, data_, q, VectorN::Zero(model_.nv));
-	  pinocchio::updateFramePlacements(model_, data_);
-	  pinocchio::crba(model_, data_, q);
+	  pinocchio::computeAllTerms(model, data, q, VectorN::Zero(model.nv));
+	  pinocchio::centerOfMass(model, data, q, VectorN::Zero(model.nv));
+	  pinocchio::updateFramePlacements(model, data);
+	  pinocchio::crba(model, data, q);
 
 	  // Initialise collision model, consider the disabled collisions from SRDF file
 	  pinocchio::GeometryModel geom_model;
 	  std::vector<std::string> paths;
 	  paths.push_back(DESCRIPTION_PATH);
-	  pinocchio::urdf::buildGeom(model_,URDF_MODEL,COLLISION,geom_model, paths);
+	  pinocchio::urdf::buildGeom(model,URDF_MODEL,COLLISION,geom_model, paths);
 	  geom_model.addAllCollisionPairs();
-	  pinocchio::srdf::removeCollisionPairs(model_, geom_model, SRDF_MODEL);
+	  pinocchio::srdf::removeCollisionPairs(model, geom_model, SRDF_MODEL);
 
 	  // Initialisation of the position of footsteps
 	  Matrix34 fsteps_init = Matrix34::Zero();
-	  int indexes[4] = {static_cast<int>(model_.getFrameId("FL_FOOT")), static_cast<int>(model_.getFrameId("FR_FOOT")),
-	                    static_cast<int>(model_.getFrameId("HL_FOOT")), static_cast<int>(model_.getFrameId("HR_FOOT"))};
+	  int indexes[4] = {static_cast<int>(model.getFrameId("FL_FOOT")), static_cast<int>(model.getFrameId("FR_FOOT")),
+	                    static_cast<int>(model.getFrameId("HL_FOOT")), static_cast<int>(model.getFrameId("HR_FOOT"))};
 
 	  for (int i = 0; i < 4; i++) {
-		fsteps_init.col(i) = data_.oMf[indexes[i]].translation();
+		fsteps_init.col(i) = data.oMf[indexes[i]].translation();
         fsteps_init(0,i) -= 1.0;
 	  }
 
@@ -87,7 +87,7 @@ void Controller::init_robot(Params& params) {
 	  double h_init = 0.0;
 	  double h_tmp = 0.0;
 	  for (int i = 0; i < 4; i++) {
-	    h_tmp = (data_.oMf[1].translation() - data_.oMf[indexes[i]].translation())(2, 0);
+	    h_tmp = (data.oMf[1].translation() - data.oMf[indexes[i]].translation())(2, 0);
 	    if (h_tmp > h_init) {
 	      h_init = h_tmp;
 	    }
@@ -100,73 +100,72 @@ void Controller::init_robot(Params& params) {
 	  Matrix34 shoulders_init = Matrix34::Zero();
 	  int indexes_sh[4] = {4, 12, 20, 28};  //  Shoulder indexes
 	  for (int i = 0; i < 4; i++) {
-	    shoulders_init.col(i) = data_.oMf[indexes_sh[i]].translation();
+	    shoulders_init.col(i) = data.oMf[indexes_sh[i]].translation();
 	    shoulders_init(0,i) -= 1.0;
 	  }
 
 	  // Saving data
-	  params_->h_ref = h_init;        // Reference height
-	  params_->mass = data_.mass[0];  // Mass
+	  params->h_ref = h_init;        // Reference height
+	  params->mass = data.mass[0];  // Mass
 
 	  // Inertia matrix
-	  Vector6 Idata = data_.Ycrb[1].inertia().data();
+	  Vector6 Idata = data.Ycrb[1].inertia().data();
 	  Matrix3 inertia;
 	  // Composite rigid body inertia in q_init position
 	  inertia << Idata(0, 0), Idata(1, 0), Idata(3, 0), Idata(1, 0), Idata(2, 0), Idata(4, 0), Idata(3, 0), Idata(4, 0),
 	      Idata(5, 0);
 	  for (int i = 0; i < 3; i++) {
 	    for (int j = 0; j < 3; j++) {
-	      params_->I_mat[3 * i + j] = inertia(i, j);
+	      params->I_mat[3 * i + j] = inertia(i, j);
 	    }
 	  }
 
 	  // Offset between center of base and CoM
-	  Vector3 CoM = data_.com[0].head(3) - q.head(3);
+	  Vector3 CoM = data.com[0].head(3) - q.head(3);
      CoM(1,0) = 0; // assume we are symmetric
 
      for (int i = 0;i<3;i++) {
-   	  params_->CoM_offset[i] = CoM(i, 0);
+   	  params->CoM_offset[i] = CoM(i, 0);
      }
-
 
 	  for (int i = 0; i < 4; i++) {
 	    for (int j = 0; j < 3; j++) {
-	      params_->shoulders[3 * i + j] = shoulders_init(j, i);
-	      params_->footsteps_init[3 * i + j] = fsteps_init(j, i);
-	      params_->footsteps_under_shoulders[3 * i + j] = fsteps_init(j, i);  // Use initial feet pos as reference
+	      params->shoulders[3 * i + j] = shoulders_init(j, i);
+	      params->footsteps_init[3 * i + j] = fsteps_init(j, i);
+	      params->footsteps_under_shoulders[3 * i + j] = fsteps_init(j, i);  // Use initial feet pos as reference
 	    }
 	  }
 }
 
 
-void Controller::initialize(Params& params) {
+void Controller::initialize(Params& params_in) {
 	  // Params store parameters
-	  params_ = &params;
+	  params = &params_in;
 
 	  // Init robot parameters
-	  init_robot(params);
+	  init_robot();
 
 	  // Initialization of the control blocks
-	  statePlanner.initialize(params);
-	  gait.initialize(params);
-      gait.update(true,  GaitType::NoMovement);
+	  statePlanner.initialize(params_in);
+	  gait.initialize(params_in);
+     gait.update(true,  GaitType::NoMovement);
 
-	  footstepPlanner.initialize(params, gait);
-	  mpcController.initialize(params);
-	  footTrajectoryGenerator.initialize(params, gait);
-	  estimator.initialize(params);
-	  wbcController.initialize(params);
+	  footstepPlanner.initialize(params_in, gait);
+	  mpcController.initialize(params_in);
+	  footTrajectoryGenerator.initialize(params_in, gait);
+	  estimator.initialize(params_in);
+	  wbcController.initialize(params_in);
 
-	  filter_mpc_q.initialize(params);
-	  filter_mpc_v.initialize(params);
-	  filter_mpc_vref.initialize(params);
+	  filter_mpc_q.initialize(params_in);
+	  filter_mpc_v.initialize(params_in);
+	  filter_mpc_vref.initialize(params_in);
 
 	  // Other variables
-	  k_mpc = static_cast<int>(params.dt_mpc / params.dt_wbc);
-	  h_ref_ = params.h_ref;
-	  P = (Vector3(params.Kp_main.data())).replicate<4, 1>();
-	  D = (Vector3(params.Kd_main.data())).replicate<4, 1>();
-	  FF = params.Kff_main * Vector12::Ones();
+	  k_mpc = static_cast<int>(params_in.dt_mpc / params_in.dt_wbc);
+	  h_ref_ = params_in.h_ref;
+	  P = (Vector3(params_in.Kp_main.data())).replicate<4, 1>();
+	  D = (Vector3(params_in.Kd_main.data())).replicate<4, 1>();
+	  FF = params_in.Kff_main * Vector12::Ones();
 }
 
 void Controller::security_check() {
@@ -204,13 +203,6 @@ void Controller::security_check() {
     }
   }
 
-  // If Stop key of the joystick is pressed, set error flag to stop the controller and switch to damping
-  //if (!cmd_go) {
-  //  error = true;
-   // error_flag = -1;
-  //}
-
-
   // If something wrong happened in the controller we stick to a security controller
   if (error) {
     // Quantities sent to the control board
@@ -223,14 +215,14 @@ void Controller::security_check() {
   }
 }
 
-Matrix34 cross33(Vector3 a, Matrix34 b) {
+Matrix34 cross_replicate(Vector3 a, Matrix34 b) {
 	Matrix34 result;
-	  for (int i = 0;i<b.cols();i++) {
+	for (int i = 0;i<b.cols();i++) {
 		  result.col(i) = a.cross(b.col(i));
 
-	  }
+	}
 
-	  return result;
+	return result;
 }
 
 void Controller::compute(Vector3 const& imuLinearAcceleration,
@@ -305,15 +297,9 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    base_targets.head(6).setZero();
 	    base_targets.block<2,1>(3,0) = statePlanner.getReferenceStates().block<2,1>(3,1);
 	    base_targets.block<6,1>(6,0) = vref_filt_mpc;// Velocities (in horizontal frame!)
-	    // std::cout << "base_targets" << base_targets << std::endl;
-
-	    // std::cout << "q_filt_mpc" << q_filt_mpc << std::endl;
-	    // std::cout << "wbcController.get_qdes()" << wbcController.get_qdes()<< std::endl;
 
 	    Vector3 T = -estimator.getoTh() - Vector3(0.0, 0.0, h_ref_);
 	    Matrix3 R = estimator.gethRb() * estimator.getoRh().transpose();
-	    // std::cout << "R" << R << std::endl;
-	    // std::cout << "T" << T.replicate(1,4) << std::endl;
 
 	    Matrix3N feet_a_cmd = R * footTrajectoryGenerator.getFootAcceleration();
 	    Matrix3N feet_v_cmd = R * footTrajectoryGenerator.getFootVelocity();
@@ -322,10 +308,10 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    Vector3 v_ref36 = estimator.getBaseVelRef().block<3,1>(3,0);
 	    Vector3 v_ref03 = estimator.getBaseVelRef().block<3,1>(0,0);
 
-	    feet_a_cmd += - cross33(v_ref36,cross33( v_ref36, feet_p_cmd))
-        		      - 2.0* cross33(v_ref36, feet_v_cmd);
+	    feet_a_cmd += - cross_replicate(v_ref36,cross_replicate( v_ref36, feet_p_cmd))
+        		      - 2.0* cross_replicate(v_ref36, feet_v_cmd);
 	    feet_v_cmd += - v_ref03.replicate(1,4)
-	    		      - cross33 (v_ref36, feet_p_cmd);
+	    		      - cross_replicate (v_ref36, feet_p_cmd);
 
 	    // Update configuration vector for wbc
         q_wbc.block<3,1>(0,0) = Vector3(0,0,h_ref_);
@@ -338,10 +324,6 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    dq_wbc.tail(12) = wbcController.get_vdes();            // with reference angular velocities of previous loop
 
 	    // Run InvKin + WBC QP
-	    // std::cout << "q_wbc " << q_wbc << std::endl;
-	    // std::cout << "dq_wbc " << dq_wbc << std::endl;
-	    // std::cout << "f_mpc " << f_mpc << std::endl;
-
 	    wbcController.compute(q_wbc, dq_wbc, f_mpc, gait.getCurrentGait().row(0),
 	    					  feet_p_cmd,feet_v_cmd,feet_a_cmd,
 	    					  base_targets);
