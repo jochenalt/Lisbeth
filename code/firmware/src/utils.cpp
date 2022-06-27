@@ -64,4 +64,32 @@ void slowWatchdog() {
 }
 
 
+void threeaxisrot(double r11, double r12, double r21, double r31, double r32, double res[]){
+  res[0] = atan2( r31, r32 );
+  res[1] = asin ( r21 );
+  res[2] = atan2( r11, r12 );
+}
 
+// code stolen from https://stackoverflow.com/questions/11103683/euler-angle-to-quaternion-then-quaternion-to-euler-angle
+void quaternion2RPY(double x, double y, double z, double w , double rpy[])
+{
+      threeaxisrot( -2*(y*z - w*x),
+                    w*w - x*x - y*y + z*z,
+                    2*(x*z + w*y),
+                   -2*(x*y - w*z),
+                    w*w + x*x - y*y - z*z,
+                    rpy);
+}
+
+void RPY2Quaternion(double RPY[], double &x, double &y, double &z, double &w) {
+    double c1 = cos(RPY[0] / 2);
+    double c2 = cos(RPY[1] / 2);
+    double c3 = cos(RPY[2] / 2);
+    double s1 = sin(RPY[0] / 2);
+    double s2 = sin(RPY[1] / 2);
+    double s3 = sin(RPY[2] / 2);
+    x = s1 * c2 * c3 + c1 * s2 * s3;
+    y = c1 * s2 * c3 - s1 * c2 * s3;
+    z = c1 * c2 * s3 + s1 * s2 * c3;
+    w = c1 * c2 * c3 - s1 * s2 * s3;
+};

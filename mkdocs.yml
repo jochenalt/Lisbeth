@@ -1,0 +1,11 @@
+site_name: Lisbeth
+repo_url: https://github.com/jochenalt/Lisbeth
+edit_uri: edit/master/docs
+repo_name: Walter
+repo_authorr: 'Jochen Alt'
+site_description: Lisbeth 
+pages:
+    - 'Home': 'index.md'
+    - 'Controller': 'controller.md' 
+    - 'IMU': 'imu.md'
+

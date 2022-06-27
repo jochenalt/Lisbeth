@@ -1,3 +1,5 @@
 https://github.com/bostoncleek/quadruped_control
 https://github.com/paLeziart/quadruped-reactive-walking
 
+IMU:
+https://github.com/pronenewbits/Arduino_AHRS_System
