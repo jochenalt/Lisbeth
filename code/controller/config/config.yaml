@@ -1,10 +1,9 @@
 robot:
     # legacy
-    N_gait: 20            # Number of rows in the gait matrix. Arbitrary value that should be set high enough
-                          # so that there is always at least one empty line at the end of the gait matrix
     velID: 2              # Identifier of the reference velocity profile to choose which one will be sent to the robot
-    T_gait: 0.32          # Duration of one gait period
-    T_mpc: 0.32           # Duration of the prediction horizon
+    mass: 2.5             # [kg] 
+    
+    T_mpc: 0.32           # [s] Duration of the prediction horizon, devided by dt_mpc gives the number of prediction steps
 
     # General parameters
     config_file: config_solo12.yaml  #  Name of the yaml file containing hardware information
@@ -32,12 +31,10 @@ robot:
            
     dt_wbc: 0.002  # Time step of the whole body control
     dt_mpc: 0.02  # Time step of the model predictive control
-    type_MPC: 3  # Which MPC solver you want to use: 0 for OSQP MPC, 1, 2, 3 for Crocoddyl MPCs
     Kp_main: [3.0, 3.0, 3.0]  # Proportional gains for the PD+
     Kd_main: [0.3, 0.3, 0.3]  # Derivative gains for the PD+
     Kff_main: 1.0  # Feedforward torques multiplier for the PD+
-           
-           
+
     # Parameters of Gait
     N_periods: 1
     gait: [8, 1, 0, 0, 1,
@@ -58,7 +55,7 @@ robot:
     fc_v_esti: 50.0  # Cut frequency for the low pass that filters the estimated base velocity
 
     # Parameters of FootstepPlanner
-    k_feedback: 0.03  # Value of the gain for the feedback heuristic
+    k_feedback: 0.23  # Value of the gain for the feedback heuristic
 
     # Parameters of FootTrajectoryGenerator
     max_height: 0.05  # Apex height of the swinging trajectory [m]
@@ -66,27 +63,24 @@ robot:
     vert_time: 0.03  # Duration during which feet move only along Z when taking off and landing
            
     # Parameters of MPC with OSQP
-    # [0.0, 0.0, 20.0, 0.25, 0.25, 10.0, 0.05, 0.05, 0.2, 0.0, 0.0, 0.3]
-    # [2.0, 2.0, 5.0, 0.25, 0.25, 1.0, 0.2, 0.2, 0.2, 0.0, 0.0, 0.3]
     osqp_w_states: [2.0, 2.0, 10.0, 0.25, 0.25, 10.0, 0.2, 0.2, 0.2, 0.0, 0.0, 0.3]  # Weights for state tracking error
     osqp_w_forces: [0.00005, 0.00005, 0.00005]  # Weights for force regularisation
     osqp_Nz_lim: 35.0  # Maximum vertical force that can be applied at contact points
 
     # Parameters of InvKin
-    Kp_flyingfeet: 10.0  # Proportional gain for feet position tasks
+    Kp_flyingfeet: 10   # Proportional gain for feet position tasks
     Kd_flyingfeet: 6.3  # Derivative gain for feet position tasks
     Kp_base_position: [10.0, 10.0, 10.0]  # Proportional gains for the base position task
     Kd_base_position: [6.3, 6.3, 6.3]  # Derivative gains for the base position task
     Kp_base_orientation: [10.0, 10.0, 10.0]  # Proportional gains for the base orientation task
     Kd_base_orientation: [6.3, 6.3, 6.3]  # Derivative gains for the base orientation task
-    w_tasks: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # Tasks weights: [feet/base, vx, vy, vz, roll+wroll, pitch+wpitch, wyaw, contacts]
 
     # Parameters of WBC QP problem
     Q1: 0.1  # Weights for the "delta articular accelerations" optimization variables
     Q2: 10.0  # Weights for the "delta contact forces" optimization variables
     Fz_max: 35.0  # Maximum vertical contact force [N]
     Fz_min: 0.0  # Minimal vertical contact force [N]
-    enable_comp_forces: false  # Enable the use of compensation forces in the QP problem
+    enable_comp_forces: true  # Enable the use of compensation forces in the QP problem
 
     # Parameters fro solo3D simulation
     solo3D: false  # Activation of the 3D environment, and corresponding planner blocks
@@ -98,8 +92,6 @@ robot:
     number_steps: 3 # Number of steps to ptimize with the MIP
     max_velocity: [0.4, 0.4, 0.1] # Maximum velocity of the base
     use_bezier: false # Use Bezier to plan trajectories, otherwise use simple 6d polynomial curve.
-    use_sl1m: true # Use SL1M to select the surfaces, otherwise use Raibert heuristic projection in 2D.
-    use_heuristic: true # Use heuristic as SL1M cost.
     bezier_x_margin_max: 0.06 # margin inside convex surfaces [m].
     bezier_t_margin: 0.3 # 100*t_margin_% of the curve around critical point. range: [0, 1]
     bezier_z_margin: 0.06 # 100*z_margin_% of the curve after the critical point. range: [0, 1]

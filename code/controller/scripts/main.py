@@ -3,12 +3,16 @@
 import os
 import sys
 import time
+import pybullet as pyb
+
 
 import threading
 from Controller import Controller
 import numpy as np
 import argparse
 import libcontroller_core as core
+import RemoteControl
+
 
 params = core.Params()  # Object that holds all controller parameters
 
@@ -111,7 +115,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     #                   -0.0, 0.7, -1.4, 
     #                   0.0, -0.7, +1.4, 
     #                   -0.0, -0.7, +1.4])
-    q_init = params.q_init
+    q_init = np.array(params.q_init.tolist())  # Default position after calibration
     # position when sleeping
     # q_init = np.array([0.0, 1.57, -3.14, 
     #                   -0.0, 1.57, -3.14, 
@@ -127,14 +131,18 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         params.N_SIMULATION = N_analysis + N_steady
 
     # Run a scenario and retrieve data thanks to the logger
-    controller = Controller(params, q_init, params.envID, params.velID, params.dt_wbc, params.dt_mpc,
-                            int(params.dt_mpc / params.dt_wbc), t, params.T_gait,
-                            params.T_mpc, params.N_SIMULATION, params.use_flat_plane,
-                            params.predefined_vel, enable_pyb_GUI, params.N_gait,
-                            params.SIMULATION, params.N_periods, params.gait)
+    print("START PY CONTROLLER")
+    controller = Controller(params, q_init)
+    remoteControl = RemoteControl.RemoteControl(params.dt_wbc, False)
+    print("START C++ CONTROLLER")
+
+    controllerCpp = core.Controller()
+    controllerCpp.initialize(params)
 
     if params.SIMULATION and (des_vel_analysis is not None):
-        controller.remoteControl.update_for_analysis(des_vel_analysis, N_analysis, N_steady)
+        remoteControl.update_for_analysis(des_vel_analysis, N_analysis, N_steady)
+
+
 
     ####
 
@@ -142,6 +150,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         device = PyBulletSimulator()
     else:
         device = Solo12(name_interface, dt=params.dt_wbc)
+
 
     if name_interface_clone is not None:
         print("PASS")
@@ -170,40 +179,85 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
 
         # Wait for Enter input before starting the control loop
         put_on_the_floor(device, q_init)
-        
+
+
     print("Start the motion.")
     # CONTROL LOOP ***************************************************
     t = 0.0
+    k = 0
     t_max = (params.N_SIMULATION-2) * params.dt_wbc
+            
+    while ((not device.hardware.IsTimeout()) and (t < t_max) and (not controller.error)):
+        for j in range(30000):
+            if (j == -1):
+                remoteControl.gp.speedX.value = 0.0
+                remoteControl.gp.speedY.value = 0.0
+                remoteControl.gp.speedZ.value = 0.12
+                remoteControl.gp.bodyX.value = 0.0
+                remoteControl.gp.bodyY.value = 0.0
+                remoteControl.gp.bodyZ.value = 0.0
+                print ("-------- START MOVING -------------")
 
-    while ((not device.hardware.IsTimeout()) and (t < t_max) and (not controller.myController.error)):
+            # Update sensor data (IMU, encoders, Motion capture)
+            device.UpdateMeasurment()
 
-        # Update sensor data (IMU, encoders, Motion capture)
-        device.UpdateMeasurment()
 
-        # Desired torques
-        controller.compute(device)
+            # get command from remote control
+            remoteControl.update_v_ref(k, controller.velID)
+    
+            # Desired torques
+            controller.compute(params, device, remoteControl)
+            
+            controllerCpp.command_gait(remoteControl.gaitCode)
+            controllerCpp.command_speed(remoteControl.v_ref[0,0], remoteControl.v_ref[1,0], 
+                                        remoteControl.v_ref[2,0], remoteControl.v_ref[3,0], 
+                                        remoteControl.v_ref[4,0], remoteControl.v_ref[5,0]);
+            controllerCpp.compute(device.baseLinearAcceleration, device.baseAngularVelocity, device.baseOrientation, # IMU data    
+                                    device.q_mes, device.v_mes # joint positions and joint velocities coming from encoders
+                                 )
+            # Check that the initial position of actuators is not too far from the
+            # desired position of actuators to avoid breaking the robot
+            #if (t <= 10 * params.dt_wbc):
+            #    if np.max(np.abs(controller.result.q_des - device.q_mes)) > 0.2:
+            #        print("DIFFERENCE: ", controller.result.q_des - device.q_mes)
+            #        print("q_des: ", controller.result.q_des)
+            #        print("q_mes: ", device.q_mes)
+            #        break
+    
+            # Set desired quantities for the actuators
+            if (not np.allclose(controller.result.q_des, controllerCpp.qdes)):
+                print ("alt.q_des", controller.result.q_des)            
+                print ("new.q_des", controllerCpp.qdes)            
+            if (not np.allclose(controller.result.v_des, controllerCpp.vdes, rtol=0.01)):
+                print ("old.v_des", controller.result.v_des)            
+                print ("new.v_des", controllerCpp.vdes)            
+            if (not np.allclose(controller.result.tau_ff, controllerCpp.tau_ff, rtol=0.01)):
+                print ("oldv.tau_ff", controller.result.tau_ff)            
+                print ("newv.tau_ff", controllerCpp.tau_ff)            
 
-        # Check that the initial position of actuators is not too far from the
-        # desired position of actuators to avoid breaking the robot
-        if (t <= 10 * params.dt_wbc):
-            if np.max(np.abs(controller.result.q_des - device.q_mes)) > 0.2:
-                print("DIFFERENCE: ", controller.result.q_des - device.q_mes)
-                print("q_des: ", controller.result.q_des)
-                print("q_mes: ", device.q_mes)
-                break
+            device.SetDesiredJointPDgains(controllerCpp.P, controllerCpp.D)
+            device.SetDesiredJointPosition(controllerCpp.qdes)
+            device.SetDesiredJointVelocity(controllerCpp.vdes)
+            device.SetDesiredJointTorque(controllerCpp.tau_ff.ravel())
 
-        # Set desired quantities for the actuators
-        device.SetDesiredJointPDgains(controller.result.P, controller.result.D)
-        device.SetDesiredJointPosition(controller.result.q_des)
-        device.SetDesiredJointVelocity(controller.result.v_des)
-        device.SetDesiredJointTorque(controller.result.tau_ff.ravel())
-
-        # Send command to the robot
-        for i in range(1):
+            #device.SetDesiredJointPDgains(controller.result.P, controller.result.D)
+            #device.SetDesiredJointPosition(controller.result.q_des)
+            #device.SetDesiredJointVelocity(controller.result.v_des)
+            #device.SetDesiredJointTorque(controller.result.tau_ff.ravel())
+    
+            # Send command to the robot
             device.SendCommand(WaitEndOfCycle=True)
-
-        t += params.dt_wbc  # Increment loop time
+    
+            t += params.dt_wbc  # Increment loop time
+            
+            
+            # Update position of PyBullet camera on the robot position to do as if it was attached to the robot
+            if k > 10 and params.enable_pyb_GUI:
+                pyb.resetDebugVisualizerCamera(cameraDistance=0.6, cameraYaw=45, cameraPitch=-39.9,
+                                           cameraTargetPosition=[device.dummyHeight[0], device.dummyHeight[1], 0.0])
+            k += 1
+            
+        quit()
 
     # ****************************************************************
 
@@ -217,9 +271,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         cloneResult.value = False
 
     # Stop MPC running in a parallel process
-    if controller.enable_multiprocessing:
-        print("Stopping parallel process")
-        controller.mpc_wrapper.stop_parallel_loop()
+    controller.mpcController.stop_parallel_loop()
     # controller.view.stop()  # Stop viewer
 
     # DAMPING TO GET ON THE GROUND PROGRESSIVELY *********************
@@ -257,7 +309,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
         # Disconnect the PyBullet server (also close the GUI)
         device.Stop()
 
-    if controller.myController.error:
+    if controller.error:
         if (controller.error_flag == 1):
             print("-- POSITION LIMIT ERROR --")
         elif (controller.error_flag == 2):

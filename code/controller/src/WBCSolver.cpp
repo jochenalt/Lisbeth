@@ -1,9 +1,10 @@
-#include "QPWBC.hpp"
+#include <WBCSolver.hpp>
+#include "st_to_cc.hpp"
 
 
-QPWBC::QPWBC() {
-  /* 
-  Constructor of the QP solver. Initialization of matrices 
+WBCSolver::WBCSolver() {
+  /*
+  Constructor of the QP solver. Initialization of matrices
   */
 
   // Slipping constraints
@@ -20,16 +21,26 @@ QPWBC::QPWBC() {
     G.block(5*i, 3*i, 5, 3) = SC;
   }
 
-  // Set the lower and upper limits of the box
-  std::fill_n(v_NK_up, size_nz_NK, 25.0);
-  std::fill_n(v_NK_low, size_nz_NK, 0.0);
-
   // Set OSQP settings to default
   osqp_set_default_settings(settings);
 
 }
 
-int QPWBC::create_matrices() {
+void WBCSolver::initialize(Params& params) {
+  params_ = &params;
+  Q1 = params.Q1 * Eigen::Matrix<double, 6, 6>::Identity();
+  Q2 = params.Q2 * Eigen::Matrix<double, 12, 12>::Identity();
+
+  // Set the lower and upper limits of the box
+  std::fill_n(v_NK_up, size_nz_NK, params_->Fz_max);
+  std::fill_n(v_NK_low, size_nz_NK, params_->Fz_min);
+
+  create_matrices();
+
+  init_solver();
+}
+
+int WBCSolver::create_matrices() {
   /*
   Create the constraint matrices (M.X = N and L.X <= K)
   Create the weight matrices P and Q (cost 1/2 x^T * P * X + X^T * Q)
@@ -44,10 +55,10 @@ int QPWBC::create_matrices() {
   return 0;
 }
 
-inline void QPWBC::add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, double *v_ML) {
+inline void WBCSolver::add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, double *v_ML) {
   /*
   Add a new non-zero coefficient to the ML matrix by filling the triplet r_ML / c_ML / v_ML
-  
+
   Args:
     - i (int): row index of the new entry
     - j (int): column index of the new entry
@@ -56,17 +67,17 @@ inline void QPWBC::add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, doubl
     - c_ML (int*): table that contains column indexes
     - v_ML (double*): table that contains values
   */
-  
+
   r_ML[cpt_ML] = i;  // row index
   c_ML[cpt_ML] = j;  // column index
   v_ML[cpt_ML] = v;  // value of coefficient
   cpt_ML++;          // increment the counter
 }
 
-inline void QPWBC::add_to_P(int i, int j, double v, int *r_P, int *c_P, double *v_P) {
+inline void WBCSolver::add_to_P(int i, int j, double v, int *r_P, int *c_P, double *v_P) {
   /*
   Add a new non-zero coefficient to the P matrix by filling the triplet r_P / c_P / v_P
-  
+
   Args:
     - i (int): row index of the new entry
     - j (int): column index of the new entry
@@ -82,7 +93,7 @@ inline void QPWBC::add_to_P(int i, int j, double v, int *r_P, int *c_P, double *
   cpt_P++;         // increment the counter
 }
 
-int QPWBC::create_ML() {
+int WBCSolver::create_ML() {
   /*
   Create the M and L matrices involved in the constraint equations
   the solution has to respect: M.X = N and L.X <= K
@@ -109,15 +120,7 @@ int QPWBC::create_ML() {
   double *acc;                               // coeff values
   int nst = cpt_ML;                          // number of non zero elements
   int ncc = st_to_cc_size(nst, r_ML, c_ML);  // number of CC values
-  // int m = 20;   // number of rows
   int n = 12;   // number of columns
-
-  /*int i_min = i4vec_min(nst, r_ML);
-  int i_max = i4vec_max(nst, r_ML);
-  int j_min = i4vec_min(nst, c_ML);
-  int j_max = i4vec_max(nst, c_ML);
-
-  st_header_print(i_min, i_max, j_min, j_max, m, n, nst);*/
 
   // Get the CC indices.
   icc = (int *)malloc(ncc * sizeof(int));
@@ -146,7 +149,7 @@ int QPWBC::create_ML() {
 }
 
 
-int QPWBC::create_weight_matrices() {
+int WBCSolver::create_weight_matrices() {
   /*
   Create the weight matrices P and Q in the cost function 
   1/2 x^T.P.x + x^T.q of the QP problem
@@ -174,10 +177,7 @@ int QPWBC::create_weight_matrices() {
   double *acc;                             // coeff values
   int nst = cpt_P;                         // number of non zero elements
   int ncc = st_to_cc_size(nst, r_P, c_P);  // number of CC values
-  // int m = 12;                // number of rows
   int n = 12;                // number of columns
-
-  // std::cout << "Number of CC values: " << ncc << std::endl;
 
   // Get the CC indices.
   icc = (int *)malloc(ncc * sizeof(int));
@@ -208,71 +208,57 @@ int QPWBC::create_weight_matrices() {
   return 0;
 }
 
-int QPWBC::call_solver() {
+
+void WBCSolver::init_solver() {
   /*
   Initialize the solver (first iteration) or update it (next iterations)
   then call the OSQP solver to solve the QP problem
   */
 
   // Setup the solver (first iteration) then just update it
-  if (not initialized)  // Setup the solver with the matrices
-  {
-    data = (OSQPData *)c_malloc(sizeof(OSQPData));
-    data->n = 12;            // number of variables
-    data->m = 20;            // number of constraints
-    data->P = P;             // the upper triangular part of the quadratic cost matrix P in csc format (size n x n)
-    data->A = ML;            // linear constraints matrix A in csc format (size m x n)
-    data->q = Q;         // dense array for linear part of cost function (size n)
-    data->l = v_NK_low;  // dense array for lower bound (size m)
-    data->u = v_NK_up;   // dense array for upper bound (size m)
+  data = (OSQPData *)c_malloc(sizeof(OSQPData));
+  data->n = 12;            // number of variables
+  data->m = 20;            // number of constraints
+  data->P = P;             // the upper triangular part of the quadratic cost matrix P in csc format (size n x n)
+  data->A = ML;            // linear constraints matrix A in csc format (size m x n)
+  data->q = Q;         // dense array for linear part of cost function (size n)
+  data->l = v_NK_low;  // dense array for lower bound (size m)
+  data->u = v_NK_up;   // dense array for upper bound (size m)
 
-    /*std::cout << data->l << std::endl;
-    std::cout << data->A << std::endl;
-    std::cout << data->u << std::endl;*/
+  // Tuning parameters of the OSQP solver
+  settings->eps_abs = (float)1e-5;
+  settings->eps_rel = (float)1e-5;
+  settings->adaptive_rho = (c_int)1;
+  settings->adaptive_rho_interval = (c_int)200;
+  settings->adaptive_rho_tolerance = (float)5.0;
+  settings->verbose = true;
+  osqp_setup(&workspce, data, settings);
+}
 
-    // Tuning parameters of the OSQP solver
-    // settings->rho = 0.1f;
-    // settings->sigma = 1e-6f;
-    // settings->max_iter = 4000;
-    settings->eps_abs = (float)1e-5;
-    settings->eps_rel = (float)1e-5;
-    /*settings->eps_prim_inf = 1e-4f;
-    settings->eps_dual_inf = 1e-4f;
-    settings->alpha = 1.6f;
-    settings->delta = 1e-6f;
-    settings->polish = 0;
-    settings->polish_refine_iter = 3;*/
-    settings->adaptive_rho = (c_int)1;
-    settings->adaptive_rho_interval = (c_int)200;
-    settings->adaptive_rho_tolerance = (float)5.0;
-    // settings->adaptive_rho_fraction = (float)0.7;
-    settings->verbose = true;
-    osqp_setup(&workspce, data, settings);
+int WBCSolver::call_solver() {
+  /*
+  Initialize the solver (first iteration) or update it (next iterations)
+  then call the OSQP solver to solve the QP problem
+  */
 
-    initialized = true;
-  } else  // Code to update the QP problem without creating it again
-  {
-    // Update P matrix of the OSQP solver
-    osqp_update_P(workspce, &P->x[0], OSQP_NULL, 0);
+  // Update P matrix of the OSQP solver
+  osqp_update_P(workspce, &P->x[0], OSQP_NULL, 0);
 
-    // Update Q matrix of the OSQP solver
-    osqp_update_lin_cost(workspce, &Q[0]);
+  // Update Q matrix of the OSQP solver
+  osqp_update_lin_cost(workspce, &Q[0]);
 
-    // Update upper bound of the OSQP solver
-    osqp_update_upper_bound(workspce, &v_NK_up[0]);
-    osqp_update_lower_bound(workspce, &v_NK_low[0]);
-
-  }
+  // Update upper bound of the OSQP solver
+  osqp_update_upper_bound(workspce, &v_NK_up[0]);
+  osqp_update_lower_bound(workspce, &v_NK_low[0]);
 
   // Run the solver to solve the QP problem
   osqp_solve(workspce);
 
   // solution in workspce->solution->x
-
   return 0;
 }
 
-int QPWBC::retrieve_result(const Eigen::MatrixXd &f_cmd) {
+int WBCSolver::retrieve_result(const Eigen::MatrixXd &f_cmd) {
   /*
   Extract relevant information from the output of the QP solver
 
@@ -297,20 +283,20 @@ int QPWBC::retrieve_result(const Eigen::MatrixXd &f_cmd) {
 /*
 Getters
 */
-Eigen::MatrixXd QPWBC::get_f_res() { return f_res; }
-Eigen::MatrixXd QPWBC::get_ddq_res() { return ddq_res; }
-Eigen::MatrixXd QPWBC::get_H() { 
+Eigen::MatrixXd WBCSolver::get_f_res() { return f_res; }
+Eigen::MatrixXd WBCSolver::get_ddq_res() { return ddq_res; }
+Eigen::MatrixXd WBCSolver::get_H() {
   Eigen::MatrixXd Hxd = Eigen::MatrixXd::Zero(12, 12); 
   Hxd = H;
   return Hxd; 
 }
 
-int QPWBC::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA,
+int WBCSolver::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA,
                const Eigen::MatrixXd &k_contact) {
   /*
   Run one iteration of the whole WBC QP problem by calling all the necessary functions (data retrieval,
   update of constraint matrices, update of the solver, running the solver, retrieving result)
-  
+
   Args:
     - M (Eigen::MatrixXd): joint space inertia matrix computed with crba
     - Jc (Eigen::MatrixXd): Jacobian of contact points
@@ -321,43 +307,19 @@ int QPWBC::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen:
 
   // Create the constraint and weight matrices used by the QP solver
   // Minimize x^T.P.x + 2 x^T.Q with constraints M.X == N and L.X <= K
-  if (not initialized) {
-    create_matrices();
-    // std::cout << G << std::endl;
-  }
-  
+
   // Compute the different matrices involved in the box QP
   compute_matrices(M, Jc, f_cmd, RNEA);
 
   // Update P and Q matrices of the cost function xT P x + 2 xT g
   update_PQ();
 
-  const double Nz_max = 25.0;
   Eigen::Matrix<double, 20, 1> Gf = G * f_cmd;
-  
+
   for (int i = 0; i < G.rows(); i++) {
-    v_NK_low[i] = - Gf(i, 0);
-    v_NK_up[i] = - Gf(i, 0) + Nz_max;
+    v_NK_low[i] = - Gf(i, 0) + params_->Fz_min;
+    v_NK_up[i] = - Gf(i, 0) + params_->Fz_max;
   }
-
-  // Limit max force when contact is activated
-  /*const double k_max = 15.0;
-  for (int i = 0; i < 4; i++) {
-    if (k_contact(0, i) < k_max) {
-      v_NK_up[5*i+4] -= Nz_max * (1.0 - k_contact(0, i) / k_max);
-    }*/
-    /*else if (k_contact(0, i) == (k_max+10))
-    {
-      //char t_char[1] = {'M'};
-      //cc_print( (data->A)->m, (data->A)->n, (data->A)->nzmax, (data->A)->i, (data->A)->p, (data->A)->x, t_char);
-      std::cout << " ### " << k_contact(0, i) << std::endl;
-
-      for (int i = 0; i < data->m; i++) {
-        std::cout << data->l[i] << " | " << data->u[i] << " | " << f_cmd(i, 0) << std::endl;
-      }
-    }*/
-    
-  //}
 
   // Create an initial guess and call the solver to solve the QP problem
   call_solver();
@@ -365,29 +327,10 @@ int QPWBC::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen:
   // Extract relevant information from the output of the QP solver
   retrieve_result(f_cmd);
 
-  /*Eigen::MatrixXd df = Eigen::MatrixXd::Zero(12, 1);
-  df(0, 0) = 0.01;
-  df(1, 0) = 0.01;
-  df(2, 0) = 0.01;
-  df(9, 0) = 0.01;
-  df(10, 0) = 0.01;
-  df(11, 0) = 0.01;
-  std::cout << 0.5 * f_res.transpose() * H * f_res + f_res.transpose() * g << std::endl;
-  std::cout << 0.5 * (f_res-df).transpose() * H * (f_res-df) + (f_res-df).transpose() * g << std::endl;
-  std::cout << 0.5 * (f_res+df).transpose() * H * (f_res+df) + (f_res+df).transpose() * g << std::endl;
-
-  std::cout << "A:" << std::endl << A << std::endl << "--" << std::endl;
-  std::cout << "Xf:" << std::endl << (X * f_cmd) << std::endl << "--" << std::endl;
-  std::cout << "RNEA:" << std::endl << RNEA << std::endl << "--" << std::endl;
-  std::cout << "B:" << std::endl << gamma << std::endl << "--" << std::endl;
-  std::cout << "AT Q1:" << std::endl << A.transpose() * Q1 << std::endl << "--" << std::endl;
-  std::cout << "g:" << std::endl << g << std::endl << "--" << std::endl;
-  std::cout << "H:" << std::endl << H << std::endl << "--" << std::endl;*/
-
   return 0;
 }
 
-void QPWBC::my_print_csc_matrix(csc *M, const char *name) {
+void WBCSolver::my_print_csc_matrix(csc *M, const char *name) {
   /*
   Print positions and value of coefficients in a csc matrix
 
@@ -414,13 +357,13 @@ void QPWBC::my_print_csc_matrix(csc *M, const char *name) {
         int b = (int)j;
         double c = M->x[k++];
         printf("\t%3u [%3u,%3u] = %.3g\n", k - 1, a, b, c);
-        
+
       }
     }
   }
 }
 
-void QPWBC::save_csc_matrix(csc *M, std::string filename) {
+void WBCSolver::save_csc_matrix(csc *M, std::string filename) {
   /*
   Save positions and value of coefficients of a csc matrix in a csc file
 
@@ -454,7 +397,7 @@ void QPWBC::save_csc_matrix(csc *M, std::string filename) {
   myfile.close();
 }
 
-void QPWBC::save_dns_matrix(double *M, int size, std::string filename) {
+void WBCSolver::save_dns_matrix(double *M, int size, std::string filename) {
   /*
   Save positions and value of coefficients of a dense matrix in a csc file
 
@@ -463,7 +406,7 @@ void QPWBC::save_dns_matrix(double *M, int size, std::string filename) {
     - size (int): size of the dense matrix
     - filename (string): name of the generated csv file
   */
-  
+
   // Open file
   std::ofstream myfile;
   myfile.open(filename + ".csv");
@@ -476,7 +419,7 @@ void QPWBC::save_dns_matrix(double *M, int size, std::string filename) {
 }
 
 
-void QPWBC::compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA) {
+void WBCSolver::compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA) {
   /*
   Compute all matrices of the Box QP problem
 
@@ -494,28 +437,9 @@ void QPWBC::compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc
   gamma = Yinv * ((X * f_cmd) - RNEA);
   H = A.transpose() * Q1 * A + Q2;
   g = A.transpose() * Q1 * gamma;
-
-  /*std::cout << "X" << std::endl;
-  std::cout << X << std::endl;
-  std::cout << "Yinv" << std::endl;
-  std::cout << Yinv << std::endl;
-  std::cout << "A" << std::endl;
-  std::cout << A << std::endl;
-  std::cout << "gamma" << std::endl;
-  std::cout << gamma << std::endl;
-  std::cout << "Q1" << std::endl;
-  std::cout << Q1 << std::endl;
-  std::cout << "A.transpose() * Q1" << std::endl;
-  std::cout << A.transpose() * Q1 << std::endl;*/
-  /*std::cout << "g" << std::endl;
-  std::cout << g << std::endl;
-  std::cout << "H" << std::endl;
-  std::cout << H << std::endl;*/
-
-
 }
 
-void QPWBC::update_PQ() {
+void WBCSolver::update_PQ() {
   /*
   Update P and Q matrices in the cost function xT P x + 2 xT Q
   */
@@ -533,10 +457,5 @@ void QPWBC::update_PQ() {
   for (int i = 0; i < 12; i++) {
     Q[i] = g(i, 0);
   }
-
-  // std::cout << "Eigenvalues" << H.eigenvalues() << std::endl;
-
-  /*char t_char[1] = {'P'};
-  my_print_csc_matrix(P, t_char);*/
-
 }
+

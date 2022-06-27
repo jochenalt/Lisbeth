@@ -42,7 +42,7 @@ public:
      * gaitTypeInput target gait, coming from GaitType, because of Python binding needs to be int
      * q current position vector of the flying base in world frame (linear and angular stacked)
      */
-    bool changeGait(int gaitTypeInput, VectorN const& q);
+    bool changeGait(int gaitTypeInput);
 
     /** Move one step further in the gait cycle
      *
@@ -50,82 +50,52 @@ public:
      * Transfer current gait phase into past gait matrix
      * Insert future desired gait phase at the end of the gait matrix
      */
-    bool updateGait(bool const rollGait, VectorN const& q, int targetGaitType);
+    bool update(bool const rollGait, int targetGaitType);
 
 
     void rollGait();
 
-    MatrixN getPastGait() { return pastGait_; }
-    MatrixN getCurrentGait() { return currentGait_; }
-    double getCurrentGaitCoeff(int i, int j) { return currentGait_(i, j); }
-    MatrixN getDesiredGait() { return desiredGait_; }
-    double getRemainingTime() { return remainingTime_; }
+    MatrixN4 getCurrentGait() { return currentGait_; }
+    double getCurrentGait(int i, int j) { return currentGait_(i, j); }
     bool getIsStatic() { return is_static_; }
-    VectorN getQStatic() { return q_static_; }
     bool isNewPhase() { return newPhase_; }
-    int getCurrentGaitType() { return currentGaitType_; }
-    int getPrevGaitType() { return prevGaitType_; }
+    GaitType getCurrentGaitType() { return currentGaitType_; }
+    int getCurrentGaitTypeInt() { return currentGaitType_; }
+
+    GaitType getPrevGaitType() { return prevGaitType_; }
+    int getPrevGaitTypeInt() { return prevGaitType_; }
+
+    double getElapsedTime(int i, int j);
+    double getRemainingTime(int i, int j);
+    double getPhaseDuration(int i, int j);
 
 private:
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    /// \brief  Create a slow walking gait, raising and moving only one foot at a time
-    ///
-    ////////////////////////////////////////////////////////////////////////////////////////////////
     void createWalk();
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    /// \brief Create a trot gait with diagonaly opposed legs moving at the same time
-    ///
-    ////////////////////////////////////////////////////////////////////////////////////////////////
     void createTrot();
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    /// \brief Create a pacing gait with legs on the same side (left or right) moving at the same time
-    ///
-    ////////////////////////////////////////////////////////////////////////////////////////////////
     void createPacing();
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    /// \brief Create a bounding gait with legs on the same side (front or hind) moving at the same time
-    ///
-    ////////////////////////////////////////////////////////////////////////////////////////////////
     void createBounding();
+    void createWalkingTrot();
+    void createCustomGallop();
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    /// \brief Create a static gait with all legs in stance phase
-    ///
-    ////////////////////////////////////////////////////////////////////////////////////////////////
     void createStatic();
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ///
-    /// \brief Initialize content of the gait matrix based on the desired gait, the gait period and
-    ///        the length of the prediciton horizon
-    ///
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    void create_gait_f();
 
-    MatrixN pastGait_;     // Past gait
-    MatrixN currentGait_;  // Current and future gait
-    MatrixN desiredGait_;  // Future desired gait
+    MatrixN4 pastGait_;     // Past gait
+public:
+    MatrixN4 currentGait_;  // Current and future gait. needs to be public to be used from python
+private:
+    MatrixN4 desiredGait_;  // Future desired gait
 
     double dt_;      // Time step of the contact sequence (time step of the MPC)
     int nRows_;  // number of rows in the gait matrix
 
     double T_gait_;  // Gait period
     double T_mpc_;   // MPC period (prediction horizon)
-    int n_steps_;        // Number of time steps in the prediction horizon
 
     double remainingTime_;
 
     bool newPhase_;
     bool is_static_;
-    VectorN q_static_;
 
     GaitType currentGaitType_;
     GaitType prevGaitType_;

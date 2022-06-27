@@ -2,6 +2,7 @@
 #define QPWBC_H_INCLUDED
 
 #include "InvKin.hpp" // For pseudoinverse
+#include "Params.hpp"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -11,20 +12,19 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include "osqp.h"
-#include "st_to_cc.hpp"
 
-class QPWBC {
+
+class WBCSolver {
  private:
-  
+
+  Params* params_;  // Object that stores parameters
+
   int cpt_ML = 0;
   int cpt_P = 0;
 
-  // Set to True after the creation of the QP problem during the first call of the solver
-  bool initialized = false;
-
   // Weight matrices of initial QP
-  Eigen::Matrix<double, 6, 6> Q1 = 0.1 * Eigen::Matrix<double, 6, 6>::Identity();
-  Eigen::Matrix<double, 12, 12> Q2 = 5.0 * Eigen::Matrix<double, 12, 12>::Identity();
+  Eigen::Matrix<double, 6, 6> Q1 = Eigen::Matrix<double, 6, 6>::Identity();
+  Eigen::Matrix<double, 12, 12> Q2 = Eigen::Matrix<double, 12, 12>::Identity();
 
   // Friction coefficient
   const double mu = 0.9;
@@ -70,8 +70,9 @@ class QPWBC {
   OSQPSettings *settings = (OSQPSettings *)c_malloc(sizeof(OSQPSettings));
 
  public:
-  
-  QPWBC(); // Constructor
+
+  WBCSolver(); // Constructor
+  void initialize(Params& params);
 
   // Functions
   inline void add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, double *v_ML); // function to fill the triplet r/c/v
@@ -81,6 +82,7 @@ class QPWBC {
   int create_weight_matrices();
   void compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA);
   void update_PQ();
+  void init_solver();
   int call_solver();
   int retrieve_result(const Eigen::MatrixXd &f_cmd);
   int run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA, const Eigen::MatrixXd &k_contact);

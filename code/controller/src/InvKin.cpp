@@ -1,32 +1,74 @@
 #include "InvKin.hpp"
 
-InvKin::InvKin(double dt_in) {
+#include "pinocchio/algorithm/compute-all-terms.hpp"
+#include "pinocchio/algorithm/frames.hpp"
+#include "pinocchio/algorithm/jacobian.hpp"
+#include "pinocchio/algorithm/joint-configuration.hpp"
+#include "pinocchio/math/rpy.hpp"
+#include "pinocchio/parsers/urdf.hpp"
+#include "pinocchio/spatial/explog.hpp"
 
-  // Parameters from the main controller
-  dt = dt_in;
+InvKin::InvKin():
+    posf_(Matrix43::Zero()),
+    vf_(Matrix43::Zero()),
+    wf_(Matrix43::Zero()),
+    af_(Matrix43::Zero()),
+	dJdq_(Matrix43::Zero()),
+    Jf_(Eigen::Matrix<double, 12, 12>::Zero()),
+	Jf_tmp_(Eigen::Matrix<double, 6, 12>::Zero()),
+    acc(Matrix112::Zero()),
+    ddq_cmd_(Vector12::Zero()),
+    dq_cmd_(Vector12::Zero()),
+    q_cmd_(Vector12::Zero())
 
-  // Reference position of feet
-  feet_position_ref <<
+{}
+
+void InvKin::initialize(Params& params) {
+    // Params store parameters
+	params_ = &params;
+	dt = params_-> dt_wbc;
+
+	// Reference position of feet
+	feet_position_ref <<
 		  0.1946,    0.1946,   -0.1946,   -0.1946,		// x coord
 		  0.14695,  -0.14695,   0.14695,  -0.14695,		// y coord
 		  0.0191028, 0.0191028, 0.0191028, 0.0191028;   // z coord
+
+    // Path to the robot URDF
+	const std::string filename = std::string(URDF_MODEL);
+
+    // Build model from urdf (base is not free flyer)
+    pinocchio::urdf::buildModel(filename, model_, false);
+	// Create data required by the algorithms
+	// for estimation estimation (forward kinematics)
+
+	// Construct data from model
+	data_ = pinocchio::Data(model_);
+
+	// Update all the quantities of the model
+	pinocchio::computeAllTerms(model_, data_, VectorN::Zero(model_.nq), VectorN::Zero(model_.nv));
+
+	// Get feet frame IDs
+	foot_ids_[0] = static_cast<int>(model_.getFrameId("FL_FOOT"));  // from long uint to int
+	foot_ids_[1] = static_cast<int>(model_.getFrameId("FR_FOOT"));
+	foot_ids_[2] = static_cast<int>(model_.getFrameId("HL_FOOT"));
+	foot_ids_[3] = static_cast<int>(model_.getFrameId("HR_FOOT"));
+
+	// Get base ID
+	base_id_ = static_cast<int>(model_.getFrameId("base_link"));  // from long uint to int
+
+	// Set task gains
+	Kp_base_position = Vector3(params_->Kp_base_position.data());
+	Kd_base_position = Vector3(params_->Kd_base_position.data());
+	Kp_base_orientation = Vector3(params_->Kp_base_orientation.data());
+	Kd_base_orientation = Vector3(params_->Kd_base_orientation.data());
+
+	Kp_flyingfeet = params_->Kp_flyingfeet;
+	Kd_flyingfeet = params_->Kd_flyingfeet;
+
 }
-
-InvKin::InvKin() {}
-
-Eigen::Matrix<double, 1, 3> InvKin::cross3(Eigen::Matrix<double, 1, 3> left, Eigen::Matrix<double, 1, 3> right) {
-    Eigen::Matrix<double, 1, 3> res;
-    res << left(0, 1) * right(0, 2) - left(0, 2) * right(0, 1),
-           left(0, 2) * right(0, 0) - left(0, 0) * right(0, 2),
-           left(0, 0) * right(0, 1) - left(0, 1) * right(0, 0);
-    return res;
-}
-
-
-Eigen::MatrixXd InvKin::refreshAndCompute(const Eigen::MatrixXd &contacts,
-                                          const Eigen::MatrixXd &goals, const Eigen::MatrixXd &vgoals, const Eigen::MatrixXd &agoals,
-                                          const Eigen::MatrixXd &posf, const Eigen::MatrixXd &vf, const Eigen::MatrixXd &wf,
-                                          const Eigen::MatrixXd &af, const Eigen::MatrixXd &Jf) {
+Eigen::MatrixXd InvKin::refreshAndCompute(const Vector4 &contacts,
+                                          const Matrix34 &goals, const Matrix34 &vgoals, const Matrix34 &agoals) {
 
     // Update contact status of the feet
     flag_in_contact.block(0, 0, 1, 4) = contacts.block(0, 0, 1, 4);
@@ -41,14 +83,14 @@ Eigen::MatrixXd InvKin::refreshAndCompute(const Eigen::MatrixXd &contacts,
     // Process feet
     for (int i = 0; i < 4; i++) {
 
-        pfeet_err.row(i) = feet_position_ref.row(i) - posf.row(i);
+        pfeet_err.row(i) = feet_position_ref.row(i) - posf_.row(i);
         vfeet_ref.row(i) = feet_velocity_ref.row(i);
-
-        afeet.row(i) = + Kp_flyingfeet * pfeet_err.row(i) - Kd_flyingfeet * (vf.row(i)-feet_velocity_ref.row(i)) + feet_acceleration_ref.row(i);
+        afeet.row(i) = + Kp_flyingfeet * pfeet_err.row(i) - Kd_flyingfeet * (vf_.row(i)-feet_velocity_ref.row(i)) + feet_acceleration_ref.row(i);
         if (flag_in_contact(0, i)) {
             afeet.row(i) *= 0.0; // Set to 0.0 to disable position/velocity control of feet in contact
         }
-        afeet.row(i) -= af.row(i) + cross3(wf.row(i), vf.row(i)); // Drift
+        afeet.row(i) -= af_.row(i) + (wf_.row(i)).cross(vf_.row(i));
+
     }
 
     // Store data and invert the Jacobian
@@ -56,25 +98,50 @@ Eigen::MatrixXd InvKin::refreshAndCompute(const Eigen::MatrixXd &contacts,
         acc.block(0, 3*i, 1, 3) = afeet.row(i);
         x_err.block(0, 3*i, 1, 3) = pfeet_err.row(i);
         dx_r.block(0, 3*i, 1, 3) = vfeet_ref.row(i);
-        invJ.block(3*i, 3*i, 3, 3) = Jf.block(3*i, 3*i, 3, 3).inverse();
+        invJ.block(3*i, 3*i, 3, 3) = Jf_.block(3*i, 3*i, 3, 3).inverse();
     }
 
     // Once Jacobian has been inverted we can get command accelerations, velocities and positions
-    ddq = invJ * acc.transpose();
-    dq_cmd = invJ * dx_r.transpose();
-    q_step = invJ * x_err.transpose(); // Not a position but a step in position
+    ddq_cmd_ = invJ * acc.transpose();
+    dq_cmd_ = invJ * dx_r.transpose();
+    q_step_ = invJ * x_err.transpose(); // Not a position but a step in position
 
-    /*
-    std::cout << "J" << std::endl << Jf << std::endl;
-    std::cout << "invJ" << std::endl << invJ << std::endl;
-    std::cout << "acc" << std::endl << acc << std::endl;
-    std::cout << "q_step" << std::endl << q_step << std::endl;
-    std::cout << "dq_cmd" << std::endl << dq_cmd << std::endl;
-    */
-
-    return ddq;
+    return ddq_cmd_;
 }
 
-Eigen::MatrixXd InvKin::get_q_step() { return q_step; }
-Eigen::MatrixXd InvKin::get_dq_cmd() { return dq_cmd; }
+
+
+void InvKin::run(Vector12 const& q, Vector12 const& dq, Vector4 const& contacts, Matrix34 const& pgoals,
+		Matrix34 const& vgoals, Matrix34 const& agoals) {
+
+  // Update model and data of the robot
+  pinocchio::computeJointJacobians(model_, data_, q);
+  pinocchio::forwardKinematics(model_, data_, q, dq, VectorN::Zero(model_.nv));
+  //pinocchio::computeJointJacobiansTimeVariation(model_, data_, q, dq);
+  pinocchio::updateFramePlacements(model_, data_);
+
+  for (int i = 0; i < 4; i++) {
+    int idx = foot_ids_[i];
+    posf_.row(i) = data_.oMf[idx].translation();
+
+    pinocchio::Motion nu = pinocchio::getFrameVelocity(model_, data_, idx, pinocchio::LOCAL_WORLD_ALIGNED);
+    vf_.row(i) = nu.linear();
+    wf_.row(i) = nu.angular();
+    af_.row(i) = pinocchio::getFrameAcceleration(model_, data_, idx, pinocchio::LOCAL_WORLD_ALIGNED).linear();
+    Jf_tmp_.setZero();  // Fill with 0s because getFrameJacobian only acts on the coeffs it changes so the
+    // other coeffs keep their previous value instead of being set to 0
+    pinocchio::getFrameJacobian(model_, data_, idx, pinocchio::LOCAL_WORLD_ALIGNED, Jf_tmp_);
+    Jf_.block(3 * i, 0, 3, 12) = Jf_tmp_.block(0, 0, 3, 12);
+
+  }
+
+  // IK output for accelerations of actuators (stored in ddq_cmd_)
+  // IK output for velocities of actuators (stored in dq_cmd_)
+  refreshAndCompute(contacts, pgoals, vgoals, agoals);
+
+  // IK output for positions of actuators
+  q_cmd_ = q + q_step_;
+}
+
+
 

@@ -1,11 +1,16 @@
 set(${PY_NAME}_SOURCES
-  gepadd.cpp
-  EstimatorWrapper.cpp
-  ParamsWrapper.cpp
-  FootstepPlannerWrapper.cpp
-  FootTrajectoryGeneratorWrapper.cpp
-  GaitWrapper.cpp
-
+  ControllerStub.cpp
+  EstimatorStub.cpp
+  InvKinStub.cpp
+  FootstepPlannerStub.cpp
+  FootTrajectoryGeneratorStub.cpp
+  GaitStub.cpp
+  WBCStub.cpp
+  MPCStub.cpp
+  StatePlannerStub.cpp
+  ParamsStub.cpp
+  FilterStub.cpp
+  Stubs.cpp
   )
 
 add_library(${PY_NAME} SHARED ${${PY_NAME}_SOURCES})

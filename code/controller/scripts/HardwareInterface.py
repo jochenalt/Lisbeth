@@ -45,7 +45,8 @@ class RobotHAL():
         self.v_mes = np.zeros(self.nb_motors)
         self.torquesFromCurrentMeasurment = np.zeros(self.nb_motors)
         self.baseAngularVelocity = np.zeros(3)
-        self.baseOrientation = np.array([0., 0., 0., 1.])
+        self.baseOrientation = np.array([0., 0., 0.])
+
         self.baseLinearAcceleration = np.zeros(3)
         self.baseAccelerometer = np.zeros(3)
         self.hardware = mbs.MasterBoardInterface(interfaceName)
@@ -198,8 +199,9 @@ class RobotHAL():
             [self.hardware.imu_data_gyroscope(0), self.hardware.imu_data_gyroscope(1), self.hardware.imu_data_gyroscope(2)])
 
         # Orientation of the base from IMU Estimation Filter  
-        self.baseOrientation[:] = self.rotateImuOrientation(self.EulerToQuaternion(
-            [self.hardware.imu_data_attitude(0), self.hardware.imu_data_attitude(1), self.hardware.imu_data_attitude(2)]))
+        #self.baseOrientation[:] = self.rotateImuOrientation(self.EulerToQuaternion(
+        #    [self.hardware.imu_data_attitude(0), self.hardware.imu_data_attitude(1), self.hardware.imu_data_attitude(2)]))
+        self.baseOrientation = [self.hardware.imu_data_attitude(0), self.hardware.imu_data_attitude(1), self.hardware.imu_data_attitude(2)]
 
         # Linear Acceleration of the base from IMU Estimation Filter, note the rotation !                                                 
         self.baseLinearAcceleration[:] = self.rotateImuVectors(

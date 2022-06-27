@@ -36,6 +36,7 @@ class ModelLoader(object):
                              pin.JointModelFreeFlyer() if self.free_flyer else None)
 
         if Types.SRDFFilePath:
+            print("Types.SRDFFilePath")
             self.srdf_path = Types.SRDFFilePath
             self.robot.q0 = readParamsFromSrdf(self.robot.model, self.srdf_path, self.verbose,
                                                self.ref_posture)
@@ -50,11 +51,13 @@ class ModelLoader(object):
                 # Recreate collision data since the collision pairs changed
                 self.robot.collision_data = self.robot.collision_model.createData()
         else:
-            self.srdf_path = None
-            self.robot.q0 = pin.neutral(self.robot.model)
+            print("No Types.SRDFFilePath")
 
-        if self.free_flyer:
-            self.addFreeFlyerJointLimits()
+            self.srdf_path = None
+            #self.robot.q0 = pin.neutral(self.robot.model)
+
+        #if self.free_flyer:
+        #    self.addFreeFlyerJointLimits()
 
     def addFreeFlyerJointLimits(self):
         ub = self.robot.model.upperPositionLimit

@@ -7,25 +7,22 @@
 
 #include "Types.h"
 #include "Utils.hpp"
-#include "ComplementaryFilter.hpp"
+#include "Params.hpp"
+
 #include <deque>
 
-#include "pinocchio/parsers/urdf.hpp"
-#include "pinocchio/algorithm/joint-configuration.hpp"
-#include "pinocchio/algorithm/kinematics.hpp"
-#include "pinocchio/algorithm/frames.hpp"
-
-#include "pinocchio/math/rpy.hpp"
-#include "pinocchio/spatial/explog.hpp"
-
-using namespace pinocchio;
+#include "pinocchio/multibody/data.hpp"
+#include "pinocchio/multibody/model.hpp"
+#include "pinocchio/spatial/se3.hpp"
+#include "ComplementaryFilter.hpp"
+#include "Params.hpp"
 
 class Estimator {
 public:
 	Estimator ();
 	~Estimator() {};
 
-	void initialize(Vector12 q_init, double dt_mpc, double dt_wbc, int gaitRows, int N_periods, int N_simulation, double h_init, bool perfectEstimator = false);
+	void initialize(Params& params );
 
 	void updateForwardKinematics();
 	/*
@@ -40,51 +37,45 @@ public:
 	 * perfectPosition Position of the robot in world frame
 	 * b_perfectVelocity Velocity of the robot in base frame
 	 */
-	void run(int k, MatrixN gait, MatrixN feetTargets,
-				 	Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector4 baseOrientation,
-					Vector12 const& q, Vector12 const &v,
-					VectorN const& perfectPosition,Vector3 const& b_perfectVelocity);
+	void run( MatrixN4 gait, Matrix34 feetTargets,
+			  Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector3 baseOrientation,
+			  Vector12 const& q, Vector12 const &v);
 
-
+	// Update state vectors of the robot (q and v)
+	// Update transformation matrices between world and horizontal frames
+    /// joystick_v_ref Reference velocity from the joystick
+	void updateReferenceState(VectorN const& vRef);
 
 	// returns true if IMUs measurements of acceleration and velocity says that the system is steady
 	bool isSteady();
+	Vector3 getImuRPY() { return IMURpy; }
 
-	// return stacked state vector
-	// [0..2 ] = filt_lin_pos = filtered coord of base in world frame x,y,z
-	// [3..6 ] = filt_ang_pos = filtered angular velocity as quaternion in x,y,z,w
-	// [7..18] = actuators_pos = positions of feet in the order FL, FR, HL, HR as returned by device measurement
-	VectorN getQEstimate() { return qEstimate; }
-
-	// return stacked vector of
-	// [0..2 ] filt_lin_vel, filtered velocity of base in world frame x',y',z'
-	// [3..5 ] filt_ang_vel, filtered angular velocity around x,y,z
-	// [6..17] actuators_vel, velocities of feet in the order FL, FR, HL, HR, as returned by device measurement
-	VectorN getVEstimate() { return vEstimate; }
-
-	VectorN getVSecurity() { return vSecurity; }
-	VectorN getFeetStatus() { return feetStatus; }
-	MatrixN getFeetTargets() { return feetTargets; }
+	Vector19 getQEstimate() { return qEstimate; }
+	Vector18 getVEstimate() { return vEstimate; }
+	Vector12 getVSecurity() { return vSecurity; }
+	Vector4 getFeetStatus() { return feetStatus; }
+	Matrix34 getFeetTargets() { return feetTargets; }
 	Vector3 getBaseVelocityFK() { return baseVelocityFK; }
 	Vector3 getBasePositionFK() { return basePositionFK; }
 	Vector3 getFeetPositionBarycenter() { return feetPositionBarycenter; }
 	Vector3 getBBaseVelocity() { return b_baseVelocity; }
+
 	Vector3 getFilterVelX() { return velocityFilter.getX(); }
 	Vector3 getFilterVelDX() { return velocityFilter.getDx(); }
 	Vector3 getFilterVelAlpha() { return velocityFilter.getAlpha(); }
-	Vector3 getFilterVelFiltX() { return velocityFilter.getFilteredX(); }
+    Vector3 getFilterVelFiltX() { return velocityFilter.getFilteredX(); }
 	Vector3 getFilterPosX() { return positionFilter.getX(); }
 	Vector3 getFilterPosDX() { return positionFilter.getDx(); }
 	Vector3 getFilterPosAlpha() { return positionFilter.getAlpha(); }
 	Vector3 getFilterPosFiltX() { return positionFilter.getFilteredX(); }
-	Vector3 getImuRPY() { return IMURpy; }
-	VectorN getQReference() { return qRef; }
-	VectorN getVReference() { return vRef; }
-	VectorN getBaseVelRef() { return baseVelRef; }
-	VectorN getBaseAccRef() { return baseAccRef; }
-	VectorN getHV() { return h_v; }
-	VectorN getVFiltered() { return vFiltered; }
-	VectorN getHVFiltered() { return h_vFiltered; }
+
+	Vector18 getQReference() { return qRef; }
+	Vector18 getVReference() { return vRef; }
+	Vector6 getBaseVelRef() { return baseVelRef; }
+	Vector6 getBaseAccRef() { return baseAccRef; }
+	Vector6 getHV() { return h_v; }
+	Vector6 getVFiltered() { return vFiltered; }
+	Vector6 getHVFiltered() { return h_vFiltered; }
 	Matrix3 getoRh() { return oRh; }
 	Matrix3 gethRb() { return hRb; }
 	Vector3 getoTh() { return oTh; }
@@ -94,8 +85,8 @@ private:
 	// store and update IMU data
 	// baseLinearAcceleration 	Linear acceleration of the IMU (gravity compensated)
 	// baseAngularVelocity 		Angular velocity of the IMU
-	// base_orientation 		Quaternion [w, x,y,z] coming from IMU
-	void updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector4 base_orientation,VectorN const& perfectPosition);
+	// base_orientation 		RPY from IMU
+	void updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector3 base_orientation);
 
 	// Update the feet relative data
 	// update feetStatus_, feetTargets_, feetStancePhaseDuration_ and phaseRemainingDuration_
@@ -119,14 +110,11 @@ private:
 	// return alpha
 	double computeAlphaVelocity();
 
-
 	// Estimates the position and velocity vector
 	// The complementary filter combines data from the FK and the IMU acceleration data
 	// The complementary filter combines data from the FK and the estimated velocity
 	//
-	// b_perfectVelocity Perfect velocity of the base in the base frame
-	// perfectPosition Perfect position of the base in the world frame
-	void estimatePositionAndVelocity(Vector3 const& perfectPosition, Vector3 const& b_perfectVelocity);
+	void estimatePositionAndVelocity();
 
 
  	// Estimate the velocity of the base with forward kinematics using a contact point that
@@ -144,10 +132,7 @@ private:
 	// Filter the estimated velocity over a moving window
 	void filterVelocity();
 
-	// Update state vectors of the robot (q and v)
-	// Update transformation matrices between world and horizontal frames
-    /// joystick_v_ref Reference velocity from the joystick
-	void updateReferenceState(VectorN const& vRef);
+
 
 	bool perfectEstimator;	// Enable perfect estimator (directly from the PyBullet simulation)
 	double dt;				// Time step of the estimator
@@ -177,10 +162,6 @@ private:
 	Vector12 vActuators; // velocities of feet in the order FL, FR, HL, HR, as returned by device measurement
 
 
-	ComplementaryFilter velocityFilter;
-	ComplementaryFilter positionFilter;
-	ComplementaryFilter accelerationFilter;
-
 
 	int phaseRemainingDuration;		// Number of iterations left for the current gait phase
 	Vector4 feetStancePhaseDuration;// Number of loops during which each foot has been in contact
@@ -196,8 +177,11 @@ private:
 
 	Vector3 feetPositionBarycenter; // Barycenter of feet in contact
 
-	Model velocityModel, positionModel;// Pinocchio models for frame computations and forward kinematics
-	Data velocityData, positionData;	// Pinocchio datas for frame computations and forward kinematics
+	pinocchio::Model velocityModel, positionModel;// Pinocchio models for frame computations and forward kinematics
+	pinocchio::Data velocityData, positionData;	// Pinocchio datas for frame computations and forward kinematics
+
+	ComplementaryFilter positionFilter;  // Complementary filter for base position
+	ComplementaryFilter velocityFilter;  // Complementary filter for base velocity
 
 	// stacked vector of
 	// [0..2 ] = filt_lin_pos = filtered coord of base in world frame x,y,z

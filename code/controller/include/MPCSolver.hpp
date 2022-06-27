@@ -10,17 +10,82 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include "osqp.h"
-#include "st_to_cc.hpp"
+#include "Types.h"
+#include "Params.hpp"
 
-typedef Eigen::MatrixXd matXd;
 
-class MPC {
+class MPCSolver {
+ public:
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ ///
+ /// \brief Constructor
+ ///
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ MPCSolver();
+
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ ///
+ /// \brief Constructor with parameters
+ ///
+ /// \param[in] params Object that stores parameters
+ ///
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ MPCSolver(Params &params);
+
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ ///
+ /// \brief Destructor
+ ///
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ ~MPCSolver() {}  // Empty destructor
+
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ ///
+ /// \brief Run one iteration of the whole MPC by calling all the necessary functions (data retrieval, update
+ ///        of constraint matrices, update of the solver, running the solver, retrieving result)
+ ///
+ /// \param[in] num_iter Number of the current iteration of the MPC
+ /// \param[in] xref_in Reference state trajectory over the prediction horizon
+ /// \param[in] fsteps_in Footsteps location over the prediction horizon stored in a Nx12 matrix
+ ///
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ void run(const MatrixN &xref_in, const MatrixN &fsteps_in);
+
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ ///
+ /// \brief Retrieve the value of the cost function at the end of the resolution
+ /// \return the cost value
+ ///
+ ////////////////////////////////////////////////////////////////////////////////////////////////
+ float retrieve_cost();
+
+ // Getters
+ MatrixN get_latest_result();  // Return the latest desired contact forces that have been computed
+ MatrixNi get_gait();           // Return the gait matrix
+ VectorNi get_Sgait();          // Return the S_gait matrix
+ double *get_x_next();         // Return the next predicted state of the base
  private:
-  double dt, mass, mu, T_gait, h_ref;
+  int create_matrices();
+  int create_ML();
+  int create_NK();
+  int create_weight_matrices();
+  int update_matrices(Eigen::MatrixXd fsteps);
+  int update_ML(Eigen::MatrixXd fsteps);
+  int update_NK();
+  void init_solver();
+  void call_solver();
+  int retrieve_result();
+
+  Eigen::Matrix<double, 3, 3> getSkew(Eigen::Matrix<double, 3, 1> v);
+  int construct_S();
+  int construct_gait(Eigen::MatrixXd fsteps_in);
+
+  Params* params_;
+
+  double dt, mass, mu, T_gait;
   int n_steps, cpt_ML, cpt_P;
 
   Eigen::Matrix<double, 3, 3> gI;
-  Eigen::Matrix<double, 6, 1> q;
   Eigen::Matrix<double, 6, 1> v = Eigen::Matrix<double, 6, 1>::Zero();
   Eigen::Matrix<double, 3, 4> footholds = Eigen::Matrix<double, 3, 4>::Zero();
   Eigen::Matrix<double, 1, 12> footholds_tmp = Eigen::Matrix<double, 12, 1>::Zero();
@@ -38,10 +103,7 @@ class MPC {
 
   // Matrix ML
   const static int size_nz_ML = 5000;
-  // int r_ML [size_nz_ML] = {}; // row indexes of non-zero values in matrix ML
-  // int c_ML [size_nz_ML] = {}; // col indexes of non-zero values in matrix ML
-  // double v_ML [size_nz_ML] = {};  // non-zero values in matrix ML
-  // csc* ML_triplet; // Compressed Sparse Column matrix (triplet format)
+
   csc *ML;  // Compressed Sparse Column matrix
   inline void add_to_ML(int i, int j, double v, int *r_ML, int *c_ML,
                         double *v_ML);                                            // function to fill the triplet r/c/v
@@ -51,7 +113,6 @@ class MPC {
   int i_x_B[12 * 4] = {};
   int i_y_B[12 * 4] = {};
   int i_update_B[12 * 4] = {};
-  // TODO FOR S ????
 
   // Matrix NK
   const static int size_nz_NK = 5000;
@@ -61,9 +122,6 @@ class MPC {
 
   // Matrix P
   const static int size_nz_P = 5000;
-  // c_int r_P [size_nz_P] = {}; // row indexes of non-zero values in matrix ML
-  // c_int c_P [size_nz_P] = {}; // col indexes of non-zero values in matrix ML
-  // c_float v_P [size_nz_P] = {};  // non-zero values in matrix ML
   csc *P;  // Compressed Sparse Column matrix
 
   // Matrix Q
@@ -84,48 +142,6 @@ class MPC {
   Eigen::Matrix<double, Eigen::Dynamic, 1> NK_low;
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> D;
   Eigen::Matrix<int, Eigen::Dynamic, 1> i_off;
-
- public:
-  MPC();
-  MPC(double dt_in, int n_steps_in, double T_gait_in, int N_gait);
-
-  int create_matrices();
-  int create_ML();
-  int create_NK();
-  int create_weight_matrices();
-  int update_matrices(Eigen::MatrixXd fsteps);
-  int update_ML(Eigen::MatrixXd fsteps);
-  int update_NK();
-  int call_solver(int);
-  int retrieve_result();
-  double *get_x_next();
-  int run(int num_iter, const Eigen::MatrixXd &xref_in, const Eigen::MatrixXd &fsteps_in);
-
-  Eigen::Matrix<double, 3, 3> getSkew(Eigen::Matrix<double, 3, 1> v);
-  int construct_S();
-  int construct_gait(Eigen::MatrixXd fsteps_in);
-
-  // Getters
-  Eigen::MatrixXd get_latest_result();
-  Eigen::MatrixXd get_gait();
-  Eigen::MatrixXd get_Sgait();
-
-
-  // Utils
-  double gethref() { return h_ref; }
-  void my_print_csc_matrix(csc *M, const char *name);
-  void save_csc_matrix(csc *M, std::string filename);
-  void save_dns_matrix(double *M, int size, std::string filename);
-
-  // Bindings
-  void run_python(const matXd &xref_py, const matXd &fsteps_py);
-
-  // Eigen::Matrix<double, 12, 12> getA() { return A; }
-  // Eigen::MatrixXf getML() { return ML; }
-  /*void setDate(int year, int month, int day);
-  int getYear();
-  int getMonth();
-  int getDay();*/
 };
 
 #endif  // MPC_H_INCLUDED

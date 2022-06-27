@@ -5,6 +5,8 @@ import time as time
 import sys
 import pinocchio as pin
 from Utils import quaternionToRPY
+from Utils import EulerToRotation
+
 import Types
 
 
@@ -543,7 +545,8 @@ class PyBulletSimulator():
         self.v_mes = np.zeros(12)
         self.torquesFromCurrentMeasurment = np.zeros(12)
         self.baseAngularVelocity = np.zeros(3)
-        self.baseOrientation = np.zeros(4)
+        self.baseOrientation = np.zeros(3)
+
         self.baseLinearAcceleration = np.zeros(3)
         self.baseAccelerometer = np.zeros(3)
         self.o_baseVel = np.zeros((3, 1))
@@ -611,12 +614,13 @@ class PyBulletSimulator():
         # print("baseVel: ", np.array([self.baseVel[0]]))
 
         # Orientation of the base (quaternion)
-        self.baseOrientation[:] = np.array(self.baseState[1])
-        RPY = quaternionToRPY(self.baseOrientation)
+        self.baseOrientation = quaternionToRPY(np.array(self.baseState[1]))
+        RPY = self.baseOrientation
+
         self.hardware.roll = RPY[0]
         self.hardware.pitch = RPY[1]
         self.hardware.yaw = RPY[2]
-        self.rot_oMb = pin.Quaternion(np.array([self.baseOrientation]).transpose()).toRotationMatrix()
+        self.rot_oMb = EulerToRotation(self.baseOrientation[0],self.baseOrientation[1],self.baseOrientation[2]) #pin.Quaternion(np.array([self.baseOrientation]).transpose()).toRotationMatrix()
         self.oMb = pin.SE3(self.rot_oMb, np.array([self.dummyHeight]).transpose())
 
         # Angular velocities of the base

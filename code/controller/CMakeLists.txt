@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
 set (CMAKE_CXX_STANDARD 11)
-
 # Project properties
 set(PROJECT_NAME controller-core)
 set(PROJECT_DESCRIPTION "control for lisbeth")
@@ -43,35 +42,39 @@ SEARCH_FOR_BOOST()
 
 # Main Library
 set(${PROJECT_NAME}_HEADERS
-  include/MPC.hpp
+  include/MPCSolver.hpp
   include/Gait.hpp
   include/Utils.hpp
-  include/Kinematics.hpp
   include/Estimator.hpp
   include/FootTrajectoryGenerator.hpp
   include/FootstepPlanner.hpp
   include/StatePlanner.hpp
   include/Types.h
   include/InvKin.hpp
-  include/QPWBC.hpp
+  include/WBCSolver.hpp
   include/Params.hpp
   include/st_to_cc.hpp
   include/ComplementaryFilter.hpp
   include/Filter.hpp
+  include/WBCController.hpp
+  include/MPCController.hpp
+  include/Controller.hpp
   )
 
 set(${PROJECT_NAME}_SOURCES
+  src/WBCController.cpp
+  src/InvKin.cpp
+  src/Controller.cpp
+  src/Estimator.cpp
+  src/FootstepPlanner.cpp
+  src/MPCController.cpp
+  src/WBCSolver.cpp
+  src/MPCSolver.cpp
   src/st_to_cc.cpp
-  src/MPC.cpp
   src/Gait.cpp
   src/Utils.cpp
-  src/Kinematics.cpp
-  src/Estimator.cpp
   src/FootTrajectoryGenerator.cpp
-  src/FootstepPlanner.cpp
   src/StatePlanner.cpp
-  src/InvKin.cpp
-  src/QPWBC.cpp
   src/Params.cpp
   src/ComplementaryFilter.cpp
   src/Filter.cpp
@@ -120,10 +123,15 @@ endif()
 # target_compile_options(${PROJECT_NAME} PUBLIC PRINTING)
 # target_compile_definitions(${PROJECT_NAME} PUBLIC PRINTING)
 
-target_compile_options(${PROJECT_NAME} PUBLIC -DNDEBUG -O3)
+target_compile_options(${PROJECT_NAME} PUBLIC -DNDEBUG -O3 -ffast-math)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC CONFIG_SOLO12_YAML="${PROJECT_SOURCE_DIR}/config/config_solo12.yaml")
 target_compile_definitions(${PROJECT_NAME} PUBLIC WALK_PARAMETERS_YAML="${PROJECT_SOURCE_DIR}/config/config.yaml")
+target_compile_definitions(${PROJECT_NAME} PUBLIC URDF_MODEL="${PROJECT_SOURCE_DIR}/../../description/solo12.urdf")
+target_compile_definitions(${PROJECT_NAME} PUBLIC SRDF_MODEL="${PROJECT_SOURCE_DIR}/../../description/solo.srdf")
+
+# path where pinccocio is supposed to look for meshes etc.
+target_compile_definitions(${PROJECT_NAME} PUBLIC DESCRIPTION_PATH="${PROJECT_SOURCE_DIR}/../../description")
 
 
 # Main Executable
@@ -132,7 +140,7 @@ target_link_libraries(${PROJECT_NAMESPACE}-${PROJECT_NAME} ${PROJECT_NAME})
 
 # Python Bindings
 if(BUILD_PYTHON_INTERFACE)
-  add_subdirectory(python)
+  add_subdirectory(stubs)
 endif()
 
 

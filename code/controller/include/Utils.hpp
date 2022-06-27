@@ -11,29 +11,8 @@ Vector3 quaternionToRPY(Eigen::Quaterniond quat);
 Vector3 cross3(Vector3 left, Vector3 right);
 bool array_equal(Vector4 a, Vector4 b);
 
+uint64_t get_micros();
 
-class LowpassFilter  {
+void delay_us(int us);
 
-	public:
-
-		LowpassFilter();
-		~LowpassFilter() {};
-
-		void initialize(double dT, const VectorN& fc, const VectorN& init);
-		void initialize(double dT, double fc, const VectorN& init);
-
-        /** compute complementary filter
-         *  x quantity
-         *  dx derivative of the quantity
-         *  alpha overwrites the cut off frequency and represents the weight of the previous value x */
-		VectorN compute(const VectorN& x);
-		VectorN compute(const VectorN& x, const VectorN& dx);
-
-	    /** patch the low pass value */
-	    void patchLowPassed(int idx, double x);
-
-	private:
-	    VectorN alpha;
-		VectorN filtered_x;	// low pass filtered x
-};
 #endif

@@ -26,7 +26,6 @@ Params::Params()
       dt_wbc(0.0),
       dt_mpc(0.0),
       N_periods(0),
-      type_MPC(0),
       kf_enabled(false),
       Kp_main(3, 0.0),
       Kd_main(3, 0.0),
@@ -55,7 +54,6 @@ Params::Params()
       Kd_base_position(3, 0.0),     // Fill with zeros, will be filled with values later
       Kp_base_orientation(3, 0.0),  // Fill with zeros, will be filled with values later
       Kd_base_orientation(3, 0.0),  // Fill with zeros, will be filled with values later
-      w_tasks(8, 0.0),              // Fill with zeros, will be filled with values later
 
       Q1(0.0),
       Q2(0.0),
@@ -64,7 +62,7 @@ Params::Params()
       enable_comp_forces(false),
 
       T_gait(0.0),         // Period of the gait
-      mass(0.0),           // Mass of the robot
+      mass(1.0),           // Mass of the robot
       I_mat(9, 0.0),       // Fill with zeros, will be filled with values later
       CoM_offset(3, 0.0),  // Fill with zeros, will be filled with values later
       h_ref(0.0),
@@ -86,9 +84,6 @@ void Params::initialize(const std::string& file_path)
    const YAML::Node& robot_node = param["robot"];
 
    // legacy parameters
-   assert_yaml_parsing(robot_node, "robot", "N_gait");
-   N_gait = robot_node["N_gait"].as<int>();
-
    assert_yaml_parsing(robot_node, "robot", "velID");
    velID = robot_node["velID"].as<int>();
 
@@ -96,8 +91,8 @@ void Params::initialize(const std::string& file_path)
    T_mpc = robot_node["T_mpc"].as<double>();
 
    // Retrieve robot parameters
-   assert_yaml_parsing(robot_node, "robot", "T_gait");
-   T_gait = robot_node["T_gait"].as<double>();
+   assert_yaml_parsing(robot_node, "robot", "mass");
+   mass = robot_node["mass"].as<double>();
 
   assert_yaml_parsing(robot_node, "robot", "config_file");
   config_file = robot_node["config_file"].as<std::string>();
@@ -134,9 +129,6 @@ void Params::initialize(const std::string& file_path)
 
   assert_yaml_parsing(robot_node, "robot", "N_SIMULATION");
   N_SIMULATION = robot_node["N_SIMULATION"].as<int>();
-
-  assert_yaml_parsing(robot_node, "robot", "type_MPC");
-  type_MPC = robot_node["type_MPC"].as<int>();
 
   assert_yaml_parsing(robot_node, "robot", "use_flat_plane");
   use_flat_plane = robot_node["use_flat_plane"].as<bool>();
@@ -225,9 +217,6 @@ void Params::initialize(const std::string& file_path)
   assert_yaml_parsing(robot_node, "robot", "Kd_base_orientation");
   Kd_base_orientation = robot_node["Kd_base_orientation"].as<std::vector<double> >();
 
-  assert_yaml_parsing(robot_node, "robot", "w_tasks");
-  w_tasks = robot_node["w_tasks"].as<std::vector<double> >();
-
   assert_yaml_parsing(robot_node, "robot", "Q1");
   Q1 = robot_node["Q1"].as<double>();
 
@@ -242,9 +231,6 @@ void Params::initialize(const std::string& file_path)
 
   assert_yaml_parsing(robot_node, "robot", "enable_comp_forces");
   enable_comp_forces = robot_node["enable_comp_forces"].as<bool>();
-
-  assert_yaml_parsing(robot_node, "robot", "solo3D");
-  solo3D = robot_node["solo3D"].as<bool>();
 
   assert_yaml_parsing(robot_node, "robot", "enable_multiprocessing_mip");
   enable_multiprocessing_mip = robot_node["enable_multiprocessing_mip"].as<bool>();
@@ -261,20 +247,11 @@ void Params::initialize(const std::string& file_path)
   assert_yaml_parsing(robot_node, "robot", "heightmap_fit_size");
   heightmap_fit_size = robot_node["heightmap_fit_size"].as<int>();
 
-  assert_yaml_parsing(robot_node, "robot", "number_steps");
-  number_steps = robot_node["number_steps"].as<int>();
-
   assert_yaml_parsing(robot_node, "robot", "max_velocity");
   max_velocity = robot_node["max_velocity"].as<std::vector<double> >();
 
   assert_yaml_parsing(robot_node, "robot", "use_bezier");
   use_bezier = robot_node["use_bezier"].as<bool>();
-
-  assert_yaml_parsing(robot_node, "robot", "use_sl1m");
-  use_sl1m = robot_node["use_sl1m"].as<bool>();
-
-  assert_yaml_parsing(robot_node, "robot", "use_heuristic");
-  use_sl1m = robot_node["use_heuristic"].as<bool>();
 
   assert_yaml_parsing(robot_node, "robot", "bezier_x_margin_max");
   bezier_x_margin_max = robot_node["bezier_x_margin_max"].as<float>();
