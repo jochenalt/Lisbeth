@@ -6,7 +6,7 @@
 
 #include "PatternBlinker.h"
 #include <ODrive.h>
-#include <imu.h>
+#include <microstrain.h>
 #include <INA226.h>
 #include <IMUManager.h>
 #include <PowerManager.h>
@@ -377,7 +377,7 @@ void loop() {
   static Measurement m;
   m.tick();
   static TimePassedBy printTimer (1000);
-    if (printTimer.isDue()) {
+  if (printTimer.isDue()) {
     if (imu.isNewPackageAvailable()) {
          float f = imu.getMeasuremt().getAvrFreq();
          float d = imu.getMeasuremt().getAvrDeviation()*100.0;;
@@ -390,16 +390,16 @@ void loop() {
 
          Serial.println("\nBUS\tSHUNT\tCURRENT\tPOWER");
     }
-          Serial.print(INA.getShuntVoltage_mV(), 3);
-          Serial.print("mV\t");
+    Serial.print(INA.getShuntVoltage_mV(), 3);
+    Serial.print("mV\t");
 
-          Serial.print(INA.getBusVoltage(), 3);
-          Serial.print("V\t");
-          Serial.print(INA.getCurrent_mA(), 3);
-          Serial.print("mA\t");
-          Serial.print(INA.getPower_mW(), 3);
-          Serial.print("mW\t");
-          Serial.println();
+    Serial.print(INA.getBusVoltage(), 3);
+    Serial.print("V\t");
+    Serial.print(INA.getCurrent_mA(), 3);
+    Serial.print("mA\t");
+    Serial.print(INA.getPower_mW(), 3);
+    Serial.print("mW\t");
+    Serial.println();
   }
 
   

@@ -2,7 +2,12 @@
 #define _IMU_MANAGER_H_
 
 #include <Arduino.h>
-#include <imu.h>
+
+// communication protocol to Microstrain IMU
+#include <microstrain.h>
+
+// Extended Kalman filter
+#include <ekf.h>
 #include <utils.h>
 
 
