@@ -166,6 +166,9 @@ class ODrives {
         // shutdown all motors
         void shutdown();
 
+        // return true if correctly setup()
+        bool isSetup();
+
         // return one individual ODrive
         ODrive& operator[](uint8_t i); 
         void loop();
@@ -183,6 +186,8 @@ class ODrives {
         HardwareSerial* odriveSerial[MAX_ODRIVES];      // their UART interface
         uint32_t baudrates[MAX_ODRIVES];
         Feedback feedback[MAX_ODRIVES*2];               // feedback of all motors  
+
+        bool is_setup = false;
 
 };
 #endif 

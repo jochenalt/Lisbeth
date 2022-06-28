@@ -974,6 +974,9 @@ void ODrives::startup() {
         println("Startup done.");
     }
 
+    if (!error == NO_ERROR)
+        is_setup = true;
+
 }
 
 // shutdown a motor, by putting it into ide mode
@@ -990,4 +993,9 @@ void ODrives::shutdown() {
             }
         }
     }
+    is_setup = false;
+}
+
+bool ODrives::isSetup() {
+    return is_setup;
 }

@@ -163,6 +163,7 @@ void setup() {
    	// reset the board when wdt_reset() is not called every 100ms 
     fastWatchdog();
   } else {
+    /*
     print("setup error. Resetting in ");
     for (int i= 5;i>=1;i--) {
       digitalWrite(LED_BUILTIN,HIGH);
@@ -179,6 +180,7 @@ void setup() {
    	// reset the board when wdt_reset() is not called every 100ms 
     fastWatchdog();
     delay(5000); // let the watchdog fire
+    */
   }
 }
 
@@ -186,34 +188,36 @@ void setup() {
 void printHelp() {
   println("\r\nFirmware Cerebellar V%d", version);
 
-  for (int i = 0;i<NO_OF_ODRIVES;i++) {
-      float voltage = odrives[i].getVBusVoltage();
+  if (odrives.isSetup()) {
+    for (int i = 0;i<NO_OF_ODRIVES;i++) {
+        float voltage = odrives[i].getVBusVoltage();
 
-       uint16_t version_major, version_minor, version_revision;
-       odrives[i].getVersion(version_major, version_minor, version_revision);
-       println("   ODrive[%d] V%d.%d.%d, %.2fV", i, version_major, version_minor, version_revision, voltage);
-      // print dump of ODrive
-      String str = odrives[i].getInfoDump();
-      str.replace("Hardware", "   HW");
-      str.replace("Firmware", "   FW");
-      str.replace("Serial number", "   Serial");
-      println(str.c_str());
+        uint16_t version_major, version_minor, version_revision;
+        odrives[i].getVersion(version_major, version_minor, version_revision);
+        println("   ODrive[%d] V%d.%d.%d, %.2fV", i, version_major, version_minor, version_revision, voltage);
+        // print dump of ODrive
+        String str = odrives[i].getInfoDump();
+        str.replace("Hardware", "   HW");
+        str.replace("Firmware", "   FW");
+        str.replace("Serial number", "   Serial");
+        println(str.c_str());
 
-      for (int motor = 0;motor<2;motor++) {
-        print("      M%d",motor);
-        float pos, vel, ff;
-        odrives[i].getFeedback(motor,pos, vel, ff);
-        println(" (pos,vel,ff) = (%.2f, %.2f, %.2f)", pos, vel, ff);
+        for (int motor = 0;motor<2;motor++) {
+          print("      M%d",motor);
+          float pos, vel, ff;
+          odrives[i].getFeedback(motor,pos, vel, ff);
+          println(" (pos,vel,ff) = (%.2f, %.2f, %.2f)", pos, vel, ff);
+      }
+      float pos0,vel0,ff0, pos1,vel1,ff1;
+      odrives[i].getFeedback(pos0, vel0, ff0, pos1, vel1, ff1);
+      println(" (pos,vel,ff) = (%.2f, %.2f, %.2f) (%.2f, %.2f, %.2f)", pos0, vel0, ff0, pos1, vel1, ff1);
     }
-    float pos0,vel0,ff0, pos1,vel1,ff1;
-    odrives[i].getFeedback(pos0, vel0, ff0, pos1, vel1, ff1);
-    println(" (pos,vel,ff) = (%.2f, %.2f, %.2f) (%.2f, %.2f, %.2f)", pos0, vel0, ff0, pos1, vel1, ff1);
+    println("Measurements");
+    float freq = 1000000.0/odrives.loopAvrTime_us;
+    println("   avr. time for loop : %dus %.2fHz", odrives.loopAvrTime_us,freq);
+    println("   avr. delay time    : %dus ", odrives.avrDelayTime_us);
+    println("   avr. send time q   : %dus ", odrives.loopSendAvrTime_us);
   }
-  println("Measurements");
-  float freq = 1000000.0/odrives.loopAvrTime_us;
-  println("   avr. time for loop : %dus %.2fHz", odrives.loopAvrTime_us,freq);
-  println("   avr. delay time    : %dus ", odrives.avrDelayTime_us);
-  println("   avr. send time q   : %dus ", odrives.loopSendAvrTime_us);
 
   println("\r\nUsage:");
   println("   h       - help");
@@ -369,11 +373,13 @@ void loop() {
 
   // get feedback of all odrives
   // odrives.loop();
+
   imuMgr.loop();
 
   // wait for any pending commands to be executed
-  powerManager.loop();
+  // powerManager.loop();
 
+  /*
   static Measurement m;
   m.tick();
   static TimePassedBy printTimer (1000);
@@ -401,6 +407,7 @@ void loop() {
     Serial.print("mW\t");
     Serial.println();
   }
+  */
 
   
 }
