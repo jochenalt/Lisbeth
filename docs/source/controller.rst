@@ -1,3 +1,6 @@
+Controller
+===========
+
 The controller is based on various papers, most important ones are
 
 [Highly Dynamic Quadruped Locomotion via Whole-Body Impulse Control and Model Predictive Control](https://arxiv.org/abs/1909.065860)
