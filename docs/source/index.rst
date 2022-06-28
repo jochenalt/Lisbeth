@@ -5,6 +5,7 @@ Welcome to Lisbeth's documentation
 
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
 
    introduction
