@@ -14,3 +14,7 @@ The IMU is the source of the entire pipeline, and it is important because it nee
 .. image:: images/Lord Microstrain 3DMCV5-IMU.png
 	:width: 350
 	:alt: Lord Microstrain 3DM-CV5-10
+
+.. image:: /images/Lord Microstrain 3DMCV5-IMU.png
+	:width: 350
+	:alt: Lord Microstrain 3DM-CV5-10
