@@ -9,6 +9,7 @@
 #define FIELD_BUFFER_SIZE 128
 #define MAX_FIELDS 5
 
+dont include me
 struct ImuData
 {
   // raw data
@@ -139,11 +140,11 @@ class CommandData {
 };
 
 
-class IMU {
+class MicrostrainIMU {
     public:
-        IMU(): is_initialised(false) ,
+        MicrostrainIMU(): is_initialised(false) ,
                baud_rate(115200) {}; 
-        virtual ~IMU() { };
+        virtual ~MicrostrainIMU() { };
         bool setup(HardwareSerial* serial);
         bool isInitialised() { return is_initialised; };
         void loop();

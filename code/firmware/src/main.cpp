@@ -6,7 +6,6 @@
 
 #include "PatternBlinker.h"
 #include <ODrive.h>
-#include <microstrain.h>
 #include <INA226.h>
 #include <IMUManager.h>
 #include <PowerManager.h>
@@ -136,14 +135,8 @@ void setup() {
   INA.reset();
   INA.setMaxCurrentShunt(3, 0.1);
 
-  // initialise IMU
-  // imu.setup(&Serial8);
-
-  // IMU's power is controlled by this PIN
-  // We want to restart the IMU if something goes wrong
-  // initially we ensure that IMU does not get POWER
-  pinMode(PIN_IMU_POWER, OUTPUT);
-  digitalWrite(PIN_IMU_POWER, HIGH); // turn off IMU
+  // initialise IMU Manager (IMU is not yet setup)
+  imuMgr.setup();
 
   // the motor MOSFETs are controlled by this PIN
   pinMode(PIN_MOTOR_POWER, OUTPUT);
@@ -228,6 +221,9 @@ void printHelp() {
   println("   r       - reset");
   println("   s       - startup all");
   println("   S       - shutdown all");
+  println("   i       - initialise IMU");
+  println("   l       - log on/off");
+
 };
 
 
@@ -279,6 +275,13 @@ void executeCommand() {
           println("power down of IMU.");
         
           imuMgr.powerDown();
+          break;
+      }
+      case 'l': {
+          // setup IMU
+          println("swap logging");
+        
+          imuMgr.setLogging(!imuMgr.isLogging());
           break;
       }
 

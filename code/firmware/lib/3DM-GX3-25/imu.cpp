@@ -10,7 +10,7 @@ union float_int {
   unsigned long ul;
 };
 
-
+askljdhaksdjh
 /*
 union double_long {
   double f;
@@ -345,7 +345,7 @@ bool expectAckNackResponse(CommandData res) {
   return ok;
 }
 
-bool IMU::sendPing() {
+bool MicrostrainIMU::sendPing() {
   CommandData res("ping");
   uint8_t field[] = { 0x01, 0x00};
   createCommand(0x01, 
@@ -355,7 +355,7 @@ bool IMU::sendPing() {
   return ok;
 }
 
-bool IMU::sendSetToIdle() {
+bool MicrostrainIMU::sendSetToIdle() {
   CommandData res("SetToIdle");
   uint8_t field[] = {  };
   createCommand(0x01, 
@@ -368,7 +368,7 @@ bool IMU::sendSetToIdle() {
 }
 
 
-bool IMU::sendResumeDevice() {
+bool MicrostrainIMU::sendResumeDevice() {
   CommandData res("ResumeDevice");
   uint8_t field[] = { };
   createCommand(0x01, 
@@ -378,7 +378,7 @@ bool IMU::sendResumeDevice() {
   return ok;
 }
 
-bool IMU::sendSetIMUMessageFormat() {
+bool MicrostrainIMU::sendSetIMUMessageFormat() {
   CommandData res("SetIMUMessageFormat");
   const uint16_t target_rate = 500; 
 
@@ -403,7 +403,7 @@ bool IMU::sendSetIMUMessageFormat() {
 // save the raw and the EF format 
 // according to 3dm-gx5-25_dcp_manual_8500-0065_reference_document.pdf
 // Pg 18. "4. Save the IMU and Estimation Filter MIP Message Format" 
-bool IMU::sendSaveFormat() {
+bool MicrostrainIMU::sendSaveFormat() {
   CommandData res("saveFormat");
   uint8_t field[] = { 0x03,0x00}; //  Save Current IMU Message Format
 
@@ -417,7 +417,7 @@ bool IMU::sendSaveFormat() {
 // enable/disable the data stream
 // according to 3dm-gx5-25_dcp_manual_8500-0065_reference_document.pdf
 // Pg 19. "5. Enable the IMU and Estimation Filter Data-streams"
-bool IMU::sendEnableDataStream(bool enable) {
+bool MicrostrainIMU::sendEnableDataStream(bool enable) {
   CommandData res("EnableDataStream");
   uint8_t field[] = { 0x01,0x01, (uint8_t)(enable==true?0x01:0x00)};    // Enable Continuous IMU Message 
 
@@ -428,7 +428,7 @@ bool IMU::sendEnableDataStream(bool enable) {
   return ok;
 }
 
-bool IMU::sendSetHeading() {
+bool MicrostrainIMU::sendSetHeading() {
   CommandData res("SetHeading");
   uint8_t field[] = { 0x00,0x00, 0x00, 0x00};
   createCommand(0x0D, 
@@ -441,7 +441,7 @@ bool IMU::sendSetHeading() {
 // enable/disable the data stream
 // according to 3dm-gx5-25_dcp_manual_8500-0065_reference_document.pdf
 // Pg 43. "4.1.9 Device Reset (0x01, 0x7E)"
-bool IMU::sendResetDevice() {
+bool MicrostrainIMU::sendResetDevice() {
   CommandData res("ResetHDevice");
   uint8_t field1[] = { };
 
@@ -455,7 +455,7 @@ bool IMU::sendResetDevice() {
 // enable/disable the data stream
 // according to 3dm-gx5-25_dcp_manual_8500-0065_reference_document.pdf
 // Pg 34. "4.1.3 Get Device Information (0x01, 0x03)"
-void IMU::sendGetDeviceInformation() {
+void MicrostrainIMU::sendGetDeviceInformation() {
   CommandData res("GetDeviceInformation");
   uint8_t field[] = { };
 
@@ -537,14 +537,14 @@ bool sendChangeBaudRate(uint32_t baud) {
 }
 
 
-void IMU::clearBuffer() {        
+void MicrostrainIMU::clearBuffer() {        
   serial->flush();
   while (serial->available())
     serial->read();
 }
 
 
-bool IMU::setup(HardwareSerial* sn) {
+bool MicrostrainIMU::setup(HardwareSerial* sn) {
   serial = &Serial4;
 
   // check if device is responding
@@ -609,7 +609,7 @@ bool isModified(ImuData &imu_data) {
            imu_data.rpy_modified);
 }
 
-void IMU::loop() {
+void MicrostrainIMU::loop() {
     if (!is_initialised) {
       return;
     }
