@@ -16,18 +16,24 @@ To set it up, it makes sense to try out the `SensorConnect <https://www.microstr
 	:alt: Microstrain SensorConnect
 	:target: https://www.microstrain.com/software/sensorconnect
 
-In order to do so, it needs to be connected to a regular UART->USB converter. I used a `IDC(SWT) cable https://www.adafruit.com/product/1675`_ from Adafruit, cut of one end and connected it to a regular 5-pin JST XH connector:
+In order to do so, it needs to be connected to a regular UART->USB converter. I used a `IDC(SWT) cable <https://www.adafruit.com/product/1675>`_ from Adafruit, cut of one end and connected it to a regular 5-pin JST XH connector:
 
 .. image:: /images/IMU_Cable_Layout.png
-	:width: 450
+	:width: 600
 	:alt: 2x5 pin 1.27mm IDC cable
 	:target: https://www.adafruit.com/product/1675
 
-The pins stated below are coming from the `IMUs User Manual https://www.microstrain.com/sites/default/files/3dm-cv5-10_user_manual_8500-0074_1.pdf`_.
+The pins stated below are coming from the `IMUs User Manual <https://www.microstrain.com/sites/default/files/3dm-cv5-10_user_manual_8500-0074_1.pdf>`_.
 
 .. image:: /images/3DM-CV5-10_Pin_layout.png
 	:width: 500
 	:alt: 3DM-CV5-10 User manual
 	:target: https://www.microstrain.com/sites/default/files/3dm-cv5-10_user_manual_8500-0074_1.pdf
+
+Coming back to the setup. This needs to be done only once, so it is perfectly okay to use flying wires like this
+
+.. image:: /images/IMU_to_USB.png
+	:width: 500
+	:alt: FTDI Adapter to USB
 
 
