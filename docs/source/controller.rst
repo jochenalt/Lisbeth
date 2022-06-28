@@ -1,5 +1,5 @@
 Controller
-===========
+==========
 
 The controller is based on various papers, most important ones are
 

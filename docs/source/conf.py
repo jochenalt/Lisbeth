@@ -3,7 +3,7 @@
 # -- Project information
 
 project = 'Lisbeth'
-copyright = 'jochen'
+copyright = 'Jochen'
 author = 'jochen.alt@gmx.net'
 
 release = '0.1'
