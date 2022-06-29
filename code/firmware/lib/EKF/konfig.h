@@ -17,12 +17,12 @@
 #define SS_X_LEN    (4) // State: Quaternion 
 #define SS_Z_LEN    (3) // Output: Accel
 #define SS_U_LEN    (3) // Input:  Gyro
-#define SS_DT_MILIS (20)                            /* 20 ms */
+#define SS_DT_MILIS (1)                            /* 20 ms */
 #define SS_DT       float_prec(SS_DT_MILIS/1000.)   /* Sampling time */
 
 
 /* Change this size based on the biggest matrix you will use */
-#define MATRIX_MAXIMUM_SIZE     (6)
+#define MATRIX_MAXIMUM_SIZE     (9)
 
 /* Define this to enable matrix bound checking */
 #define MATRIX_USE_BOUNDS_CHECKING
@@ -30,7 +30,7 @@
 /* Set this define to choose math precision of the system */
 #define PRECISION_SINGLE    1
 #define PRECISION_DOUBLE    2
-#define FPU_PRECISION       (PRECISION_SINGLE)
+#define FPU_PRECISION       (PRECISION_DOUBLE)
 
 #if (FPU_PRECISION == PRECISION_SINGLE)
     #define float_prec          float

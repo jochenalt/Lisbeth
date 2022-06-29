@@ -25,7 +25,7 @@ class IMUManager {
 
     IMUManager() {};
 
-    void setup();
+    void setup(uint16_t sampleFreq);
 
     void loop();
     void powerUp() { cmdPowerUp = true;}
@@ -33,8 +33,8 @@ class IMUManager {
 
     // returns true if IMU is power and setup and no error happened  
     bool isUpAndRunning() { return ((imuState == IMU_SETUP) && device.isInitialised()); };
-    void setLogging(bool ok) { log = ok;  }
-    bool isLogging() { return log; }
+    void setLogging(bool ok) { logisOn = ok;  }
+    bool isLogging() { return logisOn; }
 
     float getAvrFrequency();
 
@@ -45,10 +45,16 @@ class IMUManager {
     bool cmdPowerUp = false;
     ImuStateType imuState = IMU_UNPOWERED;
     uint32_t warmingStart_ms = 0;
-    bool log = false;
+    bool logisOn = false;
 
     // interface to Lord Microstrain 33DM-GX3-25
     MicrostrainIMU  device;
+
+    double RPY[3] = {0,0,0};
+    double RPY_deg[3] = {0,0,0};
+    double quaternion[4] = {0,0,0,0};    
+    uint16_t sampleFreq;   
+
 };
 
 #endif

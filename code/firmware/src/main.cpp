@@ -117,16 +117,15 @@ void setup() {
   Serial.begin(LOG_BAUD_RATE);
 
   // everybody loves a blinking LED
-  Serial.println("setup.blinker");
   pinMode(LED_BUILTIN, OUTPUT);
   blinker.setup(LED_BUILTIN, 50);
 
  	// read configuration from EEPROM (or initialize if EEPPROM is a virgin)
-	Serial.println("setup.eeprom");
+	Serial.println("setting up eeprom");
   setupConfiguration();
 
   // setup the current/voltage sensor
-	Serial.println("setup.INA");
+	Serial.println("setting up power management");
   Wire.begin();
   if (!INA.begin() )
   {
@@ -136,16 +135,17 @@ void setup() {
   INA.setMaxCurrentShunt(3, 0.1);
 
   // initialise IMU Manager (IMU is not yet setup)
-  imuMgr.setup();
+	Serial.println("setting up IMU management on 1000Hz");
+  imuMgr.setup(1000);
 
   // the motor MOSFETs are controlled by this PIN
   pinMode(PIN_MOTOR_POWER, OUTPUT);
   digitalWrite(PIN_MOTOR_POWER, LOW);
 
   // setup up all ODrives, motors and encoders
-	Serial.println("setup.ODrives");
-  Serial4.begin(115200);
-  initODrives();
+	// Serial.println("setup.ODrives");
+  // Serial4.begin(115200);
+  // initODrives();
 
   // set default blink pattern
   blinker.set(DefaultBlinkPattern,sizeof(DefaultBlinkPattern));		// assign pattern
@@ -265,8 +265,6 @@ void executeCommand() {
 				break;
       case 'i': {
           // setup IMU
-          println("Setup of IMU.");
-        
           imuMgr.powerUp();
           break;
       }

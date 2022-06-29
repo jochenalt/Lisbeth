@@ -73,23 +73,39 @@ void threeaxisrot(double r11, double r12, double r21, double r31, double r32, do
 // code stolen from https://stackoverflow.com/questions/11103683/euler-angle-to-quaternion-then-quaternion-to-euler-angle
 void quaternion2RPY(double x, double y, double z, double w , double rpy[])
 {
-      threeaxisrot( -2*(y*z - w*x),
-                    w*w - x*x - y*y + z*z,
-                    2*(x*z + w*y),
-                   -2*(x*y - w*z),
-                    w*w + x*x - y*y - z*z,
-                    rpy);
+
+    // roll (x-axis rotation)
+    double sinr_cosp = 2 * (w * x + y * z);
+    double cosr_cosp = 1 - 2 * (x * x + y * y);
+    rpy[0] = atan2(sinr_cosp, cosr_cosp);
+
+    // pitch (y-axis rotation)
+    double sinp = 2 * (w * y - z * x);
+    if (abs(sinp) >= 1)
+        rpy[1] = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+    else
+        rpy[1] = asin(sinp);
+
+    // yaw (z-axis rotation)
+    double siny_cosp = 2 * (w * z + x * y);
+    double cosy_cosp = 1 - 2 * (y * y + z * z);
+    rpy[2] = atan2(siny_cosp, cosy_cosp);
+
 }
 
 void RPY2Quaternion(double RPY[], double &x, double &y, double &z, double &w) {
-    double c1 = cos(RPY[0] / 2);
-    double c2 = cos(RPY[1] / 2);
-    double c3 = cos(RPY[2] / 2);
-    double s1 = sin(RPY[0] / 2);
-    double s2 = sin(RPY[1] / 2);
-    double s3 = sin(RPY[2] / 2);
-    x = s1 * c2 * c3 + c1 * s2 * s3;
-    y = c1 * s2 * c3 - s1 * c2 * s3;
-    z = c1 * c2 * s3 + s1 * s2 * c3;
-    w = c1 * c2 * c3 - s1 * s2 * s3;
+  // Abbreviations for the various angular functions
+    double cy = cos(RPY[2] * 0.5);
+    double sy = sin(RPY[2] * 0.5);
+    double cp = cos(RPY[1] * 0.5);
+    double sp = sin(RPY[1] * 0.5);
+    double cr = cos(RPY[0] * 0.5);
+    double sr = sin(RPY[0] * 0.5);
+
+    w = cr * cp * cy + sr * sp * sy;
+    x = sr * cp * cy - cr * sp * sy;
+    y = cr * sp * cy + sr * cp * sy;
+    z = cr * cp * sy - sr * sp * cy;
 };
+
+

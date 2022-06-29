@@ -382,9 +382,7 @@ bool MicrostrainIMU::sendResumeDevice() {
 // chapter 4.2.3 IMU Message format (0x0C, 0x08)
 bool MicrostrainIMU::sendSetIMUMessageFormat() {
   CommandData res("SetIMUMessageFormat");
-  const uint16_t target_rate = 500; // [Hz] target sample rate
-
-  uint16_t rate_decimation = 1000/target_rate; // according to data sheet
+  uint16_t rate_decimation = 1000/targetFreq; // according to data sheet
   uint8_t field[] = { 0x01,         // function use new settings"
                       0x02,         // 3 fields
                       0x04, uint8_t(rate_decimation >> 8) , (uint8_t)(rate_decimation & 0xFF) ,    // Scaled Acc, chapter 5.1.1 
@@ -546,10 +544,13 @@ void MicrostrainIMU::clearBuffer() {
 }
 
 
-bool MicrostrainIMU::setup(HardwareSerial* sn) {
+bool MicrostrainIMU::setup(HardwareSerial* sn, uint16_t sampleFreq) {
   println("IMU: initialise data protocol");
 
   serial = &Serial4;
+
+  // sample rate of the outgoing data stream
+  targetFreq = sampleFreq;
 
   // check if device is responding
   // println("ping");

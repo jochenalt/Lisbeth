@@ -142,9 +142,9 @@ class CommandData {
 class MicrostrainIMU {
     public:
         MicrostrainIMU(): is_initialised(false) ,
-               baud_rate(115200) {}; 
+                          baud_rate(460800) {}; 
         virtual ~MicrostrainIMU() { };
-        bool setup(HardwareSerial* serial);
+        bool setup(HardwareSerial* serial, uint16_t sampleFreq);
         bool isInitialised() { return is_initialised; };
         void loop();
 
@@ -159,7 +159,6 @@ class MicrostrainIMU {
         Measurement& getMeasuremt();
 
         // direct communication with the IMU
-        void printData();
         void sendGetDeviceInformation();
         bool sendPing();
         bool sendSetToIdle();
@@ -169,12 +168,17 @@ class MicrostrainIMU {
         bool sendSetHeading();
         bool sendResetDevice();
         bool sendEnableDataStream(bool ok);
+
+        // log last measurement
+        void printData();
+
     private:
         void clearBuffer();
         IMUSensorData imu_data;                           // struct of data returned by IMU
         CommandData res;
         bool is_initialised;
         uint32_t baud_rate;
+        uint16_t targetFreq = 100;
 }; 
 
 

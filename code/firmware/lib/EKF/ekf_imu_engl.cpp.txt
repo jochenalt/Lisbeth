@@ -9,7 +9,6 @@
 #include "konfig.h"
 #include "matrix.h"
 #include "ekf.h"
-#include "simple_mpu9250.h"
 
 
 void threeaxisrot(double r11, double r12, double r21, double r31, double r32, double res[]){
@@ -101,59 +100,28 @@ uint64_t u64compuTime;
 char bufferTxSer[100];
 /* The command from the PC */
 char cmd;
-/* A SimpleMPU9250 object with the MPU-9250 sensor on I2C bus 0 with address 0x68 */
-SimpleMPU9250 IMU(Wire, 0x68);
-
-
-
-void setup() {
-    /* Serial initialization -------------------------------------- */
-    Serial.begin(115200);
-    while(!Serial) {}
-    Serial.println("Calibrating IMU bias...");
-
-    /* IMU initialization ----------------------------------------- */
-    int status = IMU.begin();   /* start communication with IMU */
-    if (status < 0) {
-        Serial.println("IMU initialization unsuccessful");
-        Serial.println("Check IMU wiring or try cycling power");
-        Serial.print("Status: ");
-        Serial.println(status);
-        while(1) {}
-    }
-    
-    /* EKF initialization ----------------------------------------- */
-    /* x(k=0) = [1 0 0 0]' */
-    quaternionData.vSetToZero();
-    quaternionData[0][0] = 1.0;
-    EKF_IMU.vReset(quaternionData, EKF_PINIT, EKF_QINIT, EKF_RINIT);
-    
-    snprintf(bufferTxSer, sizeof(bufferTxSer)-1, "EKF in Teensy 4.0 (%s)\r\n",
-                                                 (FPU_PRECISION == PRECISION_SINGLE)?"Float32":"Double64");
-    Serial.print(bufferTxSer);
-}
 
 
 void loop() {
         
         /* ================== Read the sensor data / simulate the system here ================== */
         /* Read the raw data */
-        IMU.readSensor();
-        float Ax = IMU.getAccelX_mss();
-        float Ay = IMU.getAccelY_mss();
-        float Az = IMU.getAccelZ_mss();
-        float p = IMU.getGyroX_rads();
-        float q = IMU.getGyroY_rads();
-        float r = IMU.getGyroZ_rads();
+        // IMU.readSensor();
+        // float Ax = IMU.getAccelX_mss();
+        // float Ay = IMU.getAccelY_mss();
+        // float Az = IMU.getAccelZ_mss();
+        // float p = IMU.getGyroX_rads();
+        // float q = IMU.getGyroY_rads();
+        // float r = IMU.getGyroZ_rads();
         /* Input 1:3 = gyroscope */
-        U[0][0] = p;  U[1][0] = q;  U[2][0] = r;
+        // U[0][0] = p;  U[1][0] = q;  U[2][0] = r;
         /* Output 1:3 = accelerometer */
-        Y[0][0] = Ax; Y[1][0] = Ay; Y[2][0] = Az;
+        // Y[0][0] = Ax; Y[1][0] = Ay; Y[2][0] = Az;
         /* Normalizing the output vector */
-        float_prec _normG = sqrt(Y[0][0] * Y[0][0]) + (Y[1][0] * Y[1][0]) + (Y[2][0] * Y[2][0]);
-        Y[0][0] = Y[0][0] / _normG;
-        Y[1][0] = Y[1][0] / _normG;
-        Y[2][0] = Y[2][0] / _normG;
+        // float_prec _normG = sqrt(Y[0][0] * Y[0][0]) + (Y[1][0] * Y[1][0]) + (Y[2][0] * Y[2][0]);
+        // Y[0][0] = Y[0][0] / _normG;
+        // Y[1][0] = Y[1][0] / _normG;
+        // Y[2][0] = Y[2][0] / _normG;
         /* ------------------ Read the sensor data / simulate the system here ------------------ */
         
         
