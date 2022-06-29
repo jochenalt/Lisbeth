@@ -11,18 +11,10 @@ The IMU is the source of the entire pipeline, therefore it is needs to be very f
 
 To set it up, it makes sense to try out the `SensorConnect <https://www.microstrain.com/software/sensorconnect>`_ first, that allows to set baud rate to 460800 baud and to see the accel and gyro live. 460800 baud is also needed by the firmware to establish a connection to the IMU  
 
-.. raw:: html
-	
-    <iframe width="560" height="315"  allow="fullscreen; autoplay" src="https://www.microstrain.com/sites/default/files/sconn_widgets_demo.mp4?autoplay=1" frameborder="0"></iframe>
-
-.. raw:: html
-
-    <div><video loop="loop" autoplay="autoplay" muted="muted" style="width:100%"><source src="/sites/default/files/sconn_widgets_demo.mp4" type="video/mp4"></video></div>
-
 .. image:: /videos/SensorConnect.gif
 	:width: 500
-	:alt: Lord Microstrain 3DM-CV5-10
-	:target: https://www.microstrain.com/inertial-sensors/3dm-cv5-10
+	:alt: Microstrain SensorConnect Application
+	:target: https://www.microstrain.com/software/sensorconnect
 
 
 In order to do so, it needs to be connected to a regular UART->USB converter. I used a `IDC(SWT) cable <https://www.adafruit.com/product/1675>`_ from Adafruit, cut off one end and connected it to a regular 5-pin JST XH connector:
