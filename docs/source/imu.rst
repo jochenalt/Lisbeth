@@ -13,7 +13,7 @@ To set it up, it makes sense to try out the `SensorConnect <https://www.microstr
 
 .. raw:: html
 	
-    <iframe width="560" height="315"  allow="fullscreen; autoplay" src="https://www.microstrain.com/sites/default/files/sconn_widgets_demo.mp4" frameborder="0"></iframe>
+    <iframe width="560" height="315"  allow="fullscreen; autoplay" src="https://www.microstrain.com/sites/default/files/sconn_widgets_demo.mp4?autoplay=1" frameborder="0"></iframe>
 
 
 In order to do so, it needs to be connected to a regular UART->USB converter. I used a `IDC(SWT) cable <https://www.adafruit.com/product/1675>`_ from Adafruit, cut off one end and connected it to a regular 5-pin JST XH connector:
