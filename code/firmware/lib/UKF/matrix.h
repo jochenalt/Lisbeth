@@ -130,17 +130,30 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
-#include "konfig.h"
+#include <Arduino.h>
 
-#if (SYSTEM_IMPLEMENTATION == SYSTEM_IMPLEMENTATION_PC)
-    #include <iostream>
-    #include <iomanip>      // std::setprecision
+/* ASSERT is evaluated locally (without function call) to lower the computation cost */
+void printErrorAndQuit(char const * str);
+#define ASSERT(truth, str) { if (!(truth)) printErrorAndQuit(str); }
 
-    using namespace std;
-#elif (SYSTEM_IMPLEMENTATION == SYSTEM_IMPLEMENTATION_EMBEDDED_ARDUINO)
-    #include <Wire.h>
-#endif
 
+inline void printErrorAndQuit(char const * str)
+{
+    Serial.println(str);
+    while(1);
+}
+
+#define FPU_PRECISION       (PRECISION_DOUBLE)
+#define float_prec          double
+#define float_prec_ZERO     (1e-13)
+#define float_prec_ZERO_ECO (1e-8)      /* 'Economical' zero, for noisy calculation where 'somewhat zero' is good enough */
+
+
+/* Change this size based on the biggest matrix you will use */
+#define MATRIX_MAXIMUM_SIZE     (9)
+
+/* Define this to enable matrix bound checking */
+#define MATRIX_USE_BOUNDS_CHECKING
 
 class Matrix
 {
@@ -1260,31 +1273,6 @@ inline Matrix Matrix::ForwardSubtitution(const Matrix& A, const Matrix& B) const
 
 
 /* -------------------------------------------- Matrix printing function -------------------------------------------- */
-/* -------------------------------------------- Matrix printing function -------------------------------------------- */
-#if (SYSTEM_IMPLEMENTATION == SYSTEM_IMPLEMENTATION_PC)
-    inline void Matrix::vPrint(void) {
-        for (int16_t _i = 0; _i < this->i16row; _i++) {
-            cout << "[ ";
-            for (int16_t _j = 0; _j < this->i16col; _j++) {
-                cout << std::fixed << std::setprecision(3) << (*this)(_i,_j) << " ";
-            }
-            cout << "]";
-            cout << endl;
-        }
-        cout << endl;
-    }
-    inline void Matrix::vPrintFull(void) {
-        for (int16_t _i = 0; _i < this->i16row; _i++) {
-            cout << "[ ";
-            for (int16_t _j = 0; _j < this->i16col; _j++) {
-                cout << resetiosflags( ios::fixed | ios::showpoint ) << (*this)(_i,_j) << " ";
-            }
-            cout << "]";
-            cout << endl;
-        }
-        cout << endl;
-    }
-#elif (SYSTEM_IMPLEMENTATION == SYSTEM_IMPLEMENTATION_EMBEDDED_ARDUINO)
     inline void Matrix::vPrint(void) {
         char _bufSer[10];
         for (int16_t _i = 0; _i < this->i16row; _i++) {
@@ -1309,11 +1297,6 @@ inline Matrix Matrix::ForwardSubtitution(const Matrix& A, const Matrix& B) const
         }
         Serial.println("");
     }
-#else
-    /* User must define the print function somewhere */
-    /* void vPrint(); */
-    /* void vPrintFull(); */
-#endif
     
     
 #endif // MATRIX_H

@@ -1,8 +1,9 @@
 
 #include <IMUManager.h>
 #include <TimePassedBy.h>
-#include <UKFManager.h>
+#include <UKFFilter.h>
 
+// #include <EKFManager.h>
 
 void IMUManager::setup(uint16_t targetFreq) {
       // IMU's power is controlled by this PIN
@@ -44,9 +45,9 @@ void IMUManager::loop() {
         quaternion[3] = w;
         
         quaternion2RPY(x, y,z,w, RPY);
-        RPY_deg[0] = RPY[0]/(2*3.1415)*360;
-        RPY_deg[1] = RPY[1]/(2*3.1415)*360;
-        RPY_deg[2] = RPY[2]/(2*3.1415)*360;
+        RPY_deg[0] = RPY[0]/(2*3.1415)*360.0;
+        RPY_deg[1] = RPY[1]/(2*3.1415)*360.0;
+        RPY_deg[2] = RPY[2]/(2*3.1415)*360.0;
       }
   }
 
@@ -60,7 +61,7 @@ void IMUManager::loop() {
 
       println("   avr freq : %.2f Hz",freq);
       println("   RPY : %.1f / %.1f / %.1f",RPY_deg[0], RPY_deg[1], RPY_deg[2]);
-      println("   Quat : (%.2f, %.2f, %.2f, %.2f)",quaternion[0],quaternion[1], quaternion[2], quaternion[3]);
+      println("   Quat : (%.3f, %.4f, %.3f, %.3f)",quaternion[0],quaternion[1], quaternion[2], quaternion[3]);
     }
   }
 
