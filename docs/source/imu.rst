@@ -19,6 +19,11 @@ To set it up, it makes sense to try out the `SensorConnect <https://www.microstr
 
     <div><video loop="loop" autoplay="autoplay" muted="muted" style="width:100%"><source src="/sites/default/files/sconn_widgets_demo.mp4" type="video/mp4"></video></div>
 
+.. image:: /videos/SensorConnect.gif
+	:width: 500
+	:alt: Lord Microstrain 3DM-CV5-10
+	:target: https://www.microstrain.com/inertial-sensors/3dm-cv5-10
+
 
 In order to do so, it needs to be connected to a regular UART->USB converter. I used a `IDC(SWT) cable <https://www.adafruit.com/product/1675>`_ from Adafruit, cut off one end and connected it to a regular 5-pin JST XH connector:
 
