@@ -6,9 +6,6 @@
 // communication protocol to Microstrain IMU
 #include <MicrostrainCommProtocol.h>
 
-// Extended Kalman filter
-#include <ekf.h>
-
 // the IMU can be powered by this PIN
 // LOW = power on
 // The IMU takes 500ms to power up

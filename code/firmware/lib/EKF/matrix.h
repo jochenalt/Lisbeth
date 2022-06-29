@@ -291,8 +291,19 @@ inline Matrix operator - (const float_prec _scalar, const Matrix& _mat);
 inline Matrix operator * (const float_prec _scalar, const Matrix& _mat);
 inline Matrix MatIdentity(const int16_t _i16size);
 
+
+
+
+
+
+
+
+
+
+/* ================================================= inline definition below: ================================================= */
 /* ================================================= inline definition below: ================================================= */
 
+/* ------------------------------------------ Basic Matrix Class functions ------------------------------------------ */
 /* ------------------------------------------ Basic Matrix Class functions ------------------------------------------ */
 
 inline Matrix::Matrix(const int16_t _i16row, const int16_t _i16col, const InitZero _init) {
@@ -359,6 +370,7 @@ inline Matrix::~Matrix(void) {
 }
 
 
+/* ---------------------------------------- Matrix entry accessing functions ---------------------------------------- */
 /* ---------------------------------------- Matrix entry accessing functions ---------------------------------------- */
 
 /* The preferred method to access the matrix data (boring code) */
