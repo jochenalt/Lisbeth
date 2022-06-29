@@ -15,7 +15,7 @@ To set it up, it makes sense to try out the `SensorConnect <https://www.microstr
 	
     <iframe width="560" height="315"  allow="fullscreen; autoplay" src="https://www.microstrain.com/sites/default/files/sconn_widgets_demo.mp4?autoplay=1" frameborder="0"></iframe>
 
-.. raw: html
+.. raw:: html
     <div><video loop="loop" autoplay="autoplay" muted="muted" style="width:100%"><source src="/sites/default/files/sconn_widgets_demo.mp4" type="video/mp4"></video></div>
 
 
