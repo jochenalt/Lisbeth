@@ -12,11 +12,11 @@ The IMU is the source of the entire pipeline, therefore it is needs to be very f
 To set it up, it makes sense to try out the `SensorConnect <https://www.microstrain.com/software/sensorconnect>`_ first, that allows to set baud rate to 460800 baud and to see the accel and gyro live. 460800 baud is also needed by the firmware to establish a connection to the IMU  
 
 .. raw:: html
+	
+    <iframe width="560" height="315"> 	<video controls autoplay name="media"><source src=https://www.microstrain.com/sites/default/files/sconn_widgets_demo.mp4 frameborder="0" allowfullscreen allowautoplay></source></video></iframe>
 
-    <iframe width="560" height="315" src="https://www.microstrain.com/sites/default/files/sconn_widgets_demo.mp4" frameborder="0" allowfullscreen></iframe>
 
-
-In order to do so, it needs to be connected to a regular UART->USB converter. I used a `IDC(SWT) cable <https://www.adafruit.com/product/1675>`_ from Adafruit, cut of one end and connected it to a regular 5-pin JST XH connector:
+In order to do so, it needs to be connected to a regular UART->USB converter. I used a `IDC(SWT) cable <https://www.adafruit.com/product/1675>`_ from Adafruit, cut off one end and connected it to a regular 5-pin JST XH connector:
 
 .. image:: /images/IMU_Cable_Layout.png
 	:width: 700
@@ -35,5 +35,8 @@ Coming back to the setup. This needs to be done only once, so it is perfectly ok
 .. image:: /images/IMU_to_USB.png
 	:width: 700
 	:alt: FTDI Adapter to USB
+
+
+After plugging in, Sensorconnect is able to connect to the device with the default baud rate of 115200. I changed it to 460800 to be able to run it at 1000Hz.
 
 
