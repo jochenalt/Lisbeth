@@ -26,13 +26,13 @@
  *      - Add NoInitMatZero for _outp matrix initialization in ForwardSubtitution.
  *      - Fixing bug in HouseholderTransformQR function where _outp & _vectTemp need to be initialized
  *          with zero.
- *      - Change comparison with zero in these functions using float_prec_ZERO_ECO:
+ *      - Change comparison with zero in these functions using EPSILON_ECO:
  *          -> operator ==
  *          -> operator /
  *          -> vRoundingElementToZero
  *          -> RoundingMatrixToZero
  *      - No need to check fabs(_normM) as non-zero in bNormVector().
- *      - Add operator != (checking with float_prec_ZERO_ECO).
+ *      - Add operator != (checking with EPSILON_ECO).
  *      - Add MatIdentity() function.
  * 
  *    v0.9 (2020-04-28), {PNb}:
@@ -44,9 +44,9 @@
  *         -> A[0][3] = access 1st row, 4th column of matrix data.
  *         -> A(2,0)  = access 3rd row, 1st column of matrix data. < this is the way.
  *       - Remove (bug) a remnant of ancient code where we haven't implemented NoInitMatZero:
- *          float_prec floatData[MATRIX_MAXIMUM_SIZE][MATRIX_MAXIMUM_SIZE] = {{0}};
+ *          double floatData[MATRIX_MAXIMUM_SIZE][MATRIX_MAXIMUM_SIZE] = {{0}};
  *         Into:
- *          float_prec floatData[MATRIX_MAXIMUM_SIZE][MATRIX_MAXIMUM_SIZE];
+ *          double floatData[MATRIX_MAXIMUM_SIZE][MATRIX_MAXIMUM_SIZE];
  *         We can get very nice speed up (MPC benchmark @2020-04-27) from 698 us to 414 us!
  *       - Implement copy constructor               (more sweet speed up, 414 us -> 382 us!).
  *       - Implement assignment operator       (more more sweet speed up, 382 us -> 327 us!).
@@ -55,7 +55,7 @@
  *  
  *    v0.8 (2020-03-26), {PNb}:
  *      - Change indexing from int32_t to int16_t.
- *      - Add way to initialize matrix with existing float_prec array.
+ *      - Add way to initialize matrix with existing double array.
  *      - Add enum InitZero.
  *      - Make temporary matrix initialization inside almost all method with 
  *          NoInitMatZero argument.
@@ -105,7 +105,7 @@
  *      - Menambahkan fungsi QR Decomposition (via Householder Transformation).
  *      - Menambahkan fungsi Householder Transformation.
  *      - Menghilangkan warning 'implicit conversion' untuk operasi pembandingan
- *          dengan float_prec_ZERO.
+ *          dengan EPSILON.
  *      - Menambahkan function overloading operasi InsertSubMatrix, untuk
  *          operasi insert dari SubMatrix ke SubMatrix.
  *      - Saat inisialisasi, matrix diisi nol (melalui vIsiHomogen(0.0)).
@@ -143,10 +143,8 @@ inline void printErrorAndQuit(char const * str)
     while(1);
 }
 
-#define FPU_PRECISION       (PRECISION_DOUBLE)
-#define float_prec          double
-#define float_prec_ZERO     (1e-13)
-#define float_prec_ZERO_ECO (1e-8)      /* 'Economical' zero, for noisy calculation where 'somewhat zero' is good enough */
+#define EPSILON     (1e-13)
+#define EPSILON_ECO (1e-8)      /* 'Economical' zero, for noisy calculation where 'somewhat zero' is good enough */
 
 
 /* Change this size based on the biggest matrix you will use */
@@ -163,12 +161,11 @@ public:
         NoInitMatZero
     } InitZero;
     
-    
     /* --------------------------------------------- Basic Matrix Class functions --------------------------------------------- */
     /* Init empty matrix size _i16row x _i16col */
     Matrix(const int16_t _i16row, const int16_t _i16col, const InitZero _init = InitMatWithZero);
     /* Init matrix size _i16row x _i16col with entries initData */
-    Matrix(const int16_t _i16row, const int16_t _i16col, const float_prec* initData, const InitZero _init = InitMatWithZero);
+    Matrix(const int16_t _i16row, const int16_t _i16col, const double* initData, const InitZero _init = InitMatWithZero);
     /* Copy constructor (for this operation --> A(B)) (copy B into A) */
     Matrix(const Matrix& old_obj);
     /* Assignment operator (for this operation --> A = B) (copy B into A) */
@@ -182,20 +179,20 @@ public:
     
     /* ------------------------------------------- Matrix entry accessing functions ------------------------------------------- */
     /* For example: A(1,2) access the 1st row and 2nd column data of matrix A <--- The preferred way to access the matrix */
-    float_prec& operator () (const int16_t _row, const int16_t _col);
-    float_prec operator () (const int16_t _row, const int16_t _col) const;
+    double& operator () (const int16_t _row, const int16_t _col);
+    double operator () (const int16_t _row, const int16_t _col) const;
     
     /* For example: A[1][2] access the 1st row and 2nd column data of matrix A <-- The awesome way */
     class Proxy {
         public:
-            Proxy(float_prec* _inpArr, const int16_t _maxCol) { _array.ptr = _inpArr; this->_maxCol = _maxCol; }
-            Proxy(const float_prec* _inpArr, const int16_t _maxCol) { _array.cptr = _inpArr; this->_maxCol = _maxCol; }
-            float_prec & operator [] (const int16_t _col);
-            float_prec operator [] (const int16_t _col) const;
+            Proxy(double* _inpArr, const int16_t _maxCol) { _array.ptr = _inpArr; this->_maxCol = _maxCol; }
+            Proxy(const double* _inpArr, const int16_t _maxCol) { _array.cptr = _inpArr; this->_maxCol = _maxCol; }
+            double & operator [] (const int16_t _col);
+            double operator [] (const int16_t _col) const;
         private:
             union { /* teehee xp */
-                const float_prec* cptr;
-                float_prec* ptr;
+                const double* cptr;
+                double* ptr;
             } _array;
             int16_t _maxCol;
     };
@@ -204,36 +201,36 @@ public:
     
     
     /* ----------------------------------------- Matrix checking function declaration ----------------------------------------- */
-    bool bMatrixIsValid(void);
-    void vSetMatrixInvalid(void);
+    bool isValid(void);
+    void setMatrixInvalid(void);
     bool bMatrixIsSquare();
     /* --------------------------------------------- Matrix elementary operations --------------------------------------------- */
     bool operator == (const Matrix& _compare) const;
     bool operator != (const Matrix& _compare) const;
     Matrix operator - (void) const;
-    Matrix operator + (const float_prec _scalar) const;
-    Matrix operator - (const float_prec _scalar) const;
-    Matrix operator * (const float_prec _scalar) const;
-    Matrix operator / (const float_prec _scalar) const;
+    Matrix operator + (const double _scalar) const;
+    Matrix operator - (const double _scalar) const;
+    Matrix operator * (const double _scalar) const;
+    Matrix operator / (const double _scalar) const;
     Matrix operator + (const Matrix& _matAdd) const;
     Matrix operator - (const Matrix& _matSub) const;
     Matrix operator * (const Matrix& _matMul) const;
     /* Declared outside class below */
-    /* inline Matrix operator + (const float_prec _scalar, Matrix _mat); */
-    /* inline Matrix operator - (const float_prec _scalar, Matrix _mat); */
-    /* inline Matrix operator * (const float_prec _scalar, Matrix _mat); */
+    /* inline Matrix operator + (const double _scalar, Matrix _mat); */
+    /* inline Matrix operator - (const double _scalar, Matrix _mat); */
+    /* inline Matrix operator * (const double _scalar, Matrix _mat); */
     /* ----------------------------------------------- Simple Matrix operations ----------------------------------------------- */
-    void vRoundingElementToZero(const int16_t _i, const int16_t _j);
-    Matrix RoundingMatrixToZero(void);
-    void vSetHomogen(const float_prec _val);
+    void roundElementToZero(const int16_t _i, const int16_t _j);
+    Matrix roundElementsToZero(void);
+    void setHomogen(const double _val);
     void setZero(void);
-    void vSetRandom(const int32_t _maxRand, const int32_t _minRand);
-    void setDiag(const float_prec _val);
-    void vSetIdentity(void);
+    void setRandom(const int32_t _maxRand, const int32_t _minRand);
+    void setDiag(const double _val);
+    void setIdentity(void);
     Matrix Transpose(void);
     bool isUnitVector(void);
     /* ------------------------------------------ Matrix/Vector insertion operations ------------------------------------------ */
-    Matrix InsertVector(const Matrix& _Vector, const int16_t _posCol);
+    Matrix insertVector(const Matrix& _Vector, const int16_t _posCol);
     Matrix InsertSubMatrix(const Matrix& _subMatrix, const int16_t _posRow, const int16_t _posCol);
     Matrix InsertSubMatrix(const Matrix& _subMatrix, const int16_t _posRow, const int16_t _posCol,
                            const int16_t _lenRow, const int16_t _lenColumn);
@@ -262,7 +259,7 @@ public:
      */
     Matrix ForwardSubtitution(const Matrix& A, const Matrix& B) const;
     /* ----------------------------------------------- Matrix printing function ----------------------------------------------- */
-    void vPrint(void);
+    void print(void);
     void vPrintFull(void);
     
 private:
@@ -288,35 +285,24 @@ private:
      */
     int16_t i16row;
     int16_t i16col;
-    float_prec floatData[MATRIX_MAXIMUM_SIZE][MATRIX_MAXIMUM_SIZE];
+    double floatData[MATRIX_MAXIMUM_SIZE][MATRIX_MAXIMUM_SIZE];
     
     /* Private way to access floatData without bound checking.
      *  TODO: For Matrix member function we could do the bound checking once at the beginning of the function, and use this
      *          to access the floatData instead of (i,j) operator. From preliminary experiment doing this only on elementary
      *          operation (experiment @2020-04-27), we can get up to 45% computation boost!!! (MPC benchmark 414 us -> 226 us)!
      */
-    float_prec& _at(const int16_t _row, const int16_t _col) { return this->floatData[_row][_col]; }
-    float_prec _at(const int16_t _row, const int16_t _col) const { return this->floatData[_row][_col]; }
+    double& _at(const int16_t _row, const int16_t _col) { return this->floatData[_row][_col]; }
+    double _at(const int16_t _row, const int16_t _col) const { return this->floatData[_row][_col]; }
 };
 
-inline Matrix operator + (const float_prec _scalar, const Matrix& _mat);
-inline Matrix operator - (const float_prec _scalar, const Matrix& _mat);
-inline Matrix operator * (const float_prec _scalar, const Matrix& _mat);
+inline Matrix operator + (const double _scalar, const Matrix& _mat);
+inline Matrix operator - (const double _scalar, const Matrix& _mat);
+inline Matrix operator * (const double _scalar, const Matrix& _mat);
 inline Matrix MatIdentity(const int16_t _i16size);
 
-
-
-
-
-
-
-
-
-
-/* ================================================= inline definition below: ================================================= */
 /* ================================================= inline definition below: ================================================= */
 
-/* ------------------------------------------ Basic Matrix Class functions ------------------------------------------ */
 /* ------------------------------------------ Basic Matrix Class functions ------------------------------------------ */
 
 inline Matrix::Matrix(const int16_t _i16row, const int16_t _i16col, const InitZero _init) {
@@ -324,16 +310,16 @@ inline Matrix::Matrix(const int16_t _i16row, const int16_t _i16col, const InitZe
     this->i16col = _i16col;
     
     if (_init == InitMatWithZero) {
-        this->vSetHomogen(0.0);
+        this->setHomogen(0.0);
     }
 }
 
-inline Matrix::Matrix(const int16_t _i16row, const int16_t _i16col, const float_prec* initData, const InitZero _init) {
+inline Matrix::Matrix(const int16_t _i16row, const int16_t _i16col, const double* initData, const InitZero _init) {
     this->i16row = _i16row;
     this->i16col = _i16col;
     
     if (_init == InitMatWithZero) {
-        this->vSetHomogen(0.0);
+        this->setHomogen(0.0);
     }
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
@@ -348,12 +334,12 @@ inline Matrix::Matrix(const Matrix& old_obj) {
     this->i16row = old_obj.i16row;
     this->i16col = old_obj.i16col;
     
-    const float_prec *sourc = old_obj.floatData[0];
-    float_prec *desti = this->floatData[0];
+    const double *sourc = old_obj.floatData[0];
+    double *desti = this->floatData[0];
 
     for (int16_t _i = 0; _i < i16row; _i++) {
         /* Still valid with invalid matrix ((i16row == -1) or (i16col == -1)) */
-        memcpy(desti, sourc, sizeof(float_prec)*size_t((this->i16col)));
+        memcpy(desti, sourc, sizeof(double)*size_t((this->i16col)));
         sourc += (MATRIX_MAXIMUM_SIZE);
         desti += (MATRIX_MAXIMUM_SIZE);
     }
@@ -364,12 +350,12 @@ inline Matrix& Matrix::operator = (const Matrix& obj) {
     this->i16row = obj.i16row;
     this->i16col = obj.i16col;
     
-    const float_prec *sourc = obj.floatData[0];
-    float_prec *desti = this->floatData[0];
+    const double *sourc = obj.floatData[0];
+    double *desti = this->floatData[0];
 
     for (int16_t _i = 0; _i < i16row; _i++) {
         /* Still valid with invalid matrix ((i16row == -1) or (i16col == -1)) */
-        memcpy(desti, sourc, sizeof(float_prec)*size_t((this->i16col)));
+        memcpy(desti, sourc, sizeof(double)*size_t((this->i16col)));
         sourc += (MATRIX_MAXIMUM_SIZE);
         desti += (MATRIX_MAXIMUM_SIZE);
     }
@@ -387,7 +373,7 @@ inline Matrix::~Matrix(void) {
 /* ---------------------------------------- Matrix entry accessing functions ---------------------------------------- */
 
 /* The preferred method to access the matrix data (boring code) */
-inline float_prec& Matrix::operator () (const int16_t _row, const int16_t _col) {
+inline double& Matrix::operator () (const int16_t _row, const int16_t _col) {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         ASSERT((_row >= 0) && (_row < this->i16row) && (_row < MATRIX_MAXIMUM_SIZE),
                "Matrix index out-of-bounds (at row evaluation)");
@@ -398,7 +384,7 @@ inline float_prec& Matrix::operator () (const int16_t _row, const int16_t _col) 
     #endif
     return this->floatData[_row][_col];
 }
-inline float_prec Matrix::operator () (const int16_t _row, const int16_t _col) const {
+inline double Matrix::operator () (const int16_t _row, const int16_t _col) const {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         ASSERT((_row >= 0) && (_row < this->i16row) && (_row < MATRIX_MAXIMUM_SIZE),
                "Matrix index out-of-bounds (at row evaluation)");
@@ -413,7 +399,7 @@ inline float_prec Matrix::operator () (const int16_t _row, const int16_t _col) c
 /* Ref: https://stackoverflow.com/questions/6969881/operator-overload
  * Modified to be lvalue modifiable (I know this is so dirty, but it makes the code so FABULOUS XD)
  */
-inline float_prec & Matrix::Proxy::operator [] (const int16_t _col) {
+inline double & Matrix::Proxy::operator [] (const int16_t _col) {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         ASSERT((_col >= 0) && (_col < this->_maxCol) && (_col < MATRIX_MAXIMUM_SIZE),
                 "Matrix index out-of-bounds (at column evaluation)");
@@ -422,7 +408,7 @@ inline float_prec & Matrix::Proxy::operator [] (const int16_t _col) {
     #endif
     return _array.ptr[_col];
 }
-inline float_prec Matrix::Proxy::operator [] (const int16_t _col) const {
+inline double Matrix::Proxy::operator [] (const int16_t _col) const {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         ASSERT((_col >= 0) && (_col < this->_maxCol) && (_col < MATRIX_MAXIMUM_SIZE),
                 "Matrix index out-of-bounds (at column evaluation)");
@@ -454,7 +440,7 @@ inline const Matrix::Proxy Matrix::operator [] (const int16_t _row) const {
 /* -------------------------------------- Matrix checking function declaration -------------------------------------- */
 /* -------------------------------------- Matrix checking function declaration -------------------------------------- */
 
-inline bool Matrix::bMatrixIsValid(void) {
+inline bool Matrix::isValid(void) {
     /* Check whether the matrix is valid or not */
     if ((this->i16row > 0) && (this->i16row <= MATRIX_MAXIMUM_SIZE) &&
         (this->i16col > 0) && (this->i16col <= MATRIX_MAXIMUM_SIZE))
@@ -465,7 +451,7 @@ inline bool Matrix::bMatrixIsValid(void) {
     }
 }
 
-inline void Matrix::vSetMatrixInvalid(void) {
+inline void Matrix::setMatrixInvalid(void) {
     this->i16row = -1;
     this->i16col = -1;
 }
@@ -489,7 +475,7 @@ inline bool Matrix::operator == (const Matrix& _compare) const {
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
-            if (fabs((*this)(_i,_j) - _compare(_i,_j)) > float_prec(float_prec_ZERO_ECO)) {
+            if (fabs((*this)(_i,_j) - _compare(_i,_j)) > double(EPSILON_ECO)) {
                 return false;
             }
         }
@@ -512,7 +498,7 @@ inline Matrix Matrix::operator - (void) const {
     return _outp;
 }
 
-inline Matrix Matrix::operator + (const float_prec _scalar) const {
+inline Matrix Matrix::operator + (const double _scalar) const {
     Matrix _outp(this->i16row, this->i16col, Matrix::NoInitMatZero);
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
@@ -523,7 +509,7 @@ inline Matrix Matrix::operator + (const float_prec _scalar) const {
     return _outp;
 }
 
-inline Matrix Matrix::operator - (const float_prec _scalar) const {
+inline Matrix Matrix::operator - (const double _scalar) const {
     Matrix _outp(this->i16row, this->i16col, Matrix::NoInitMatZero);
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
@@ -534,7 +520,7 @@ inline Matrix Matrix::operator - (const float_prec _scalar) const {
     return _outp;
 }
 
-inline Matrix Matrix::operator * (const float_prec _scalar) const {
+inline Matrix Matrix::operator * (const double _scalar) const {
     Matrix _outp(this->i16row, this->i16col, Matrix::NoInitMatZero);
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
@@ -545,11 +531,11 @@ inline Matrix Matrix::operator * (const float_prec _scalar) const {
     return _outp;
 }
 
-inline Matrix Matrix::operator / (const float_prec _scalar) const {
+inline Matrix Matrix::operator / (const double _scalar) const {
     Matrix _outp(this->i16row, this->i16col, Matrix::NoInitMatZero);
 
-    if (fabs(_scalar) < float_prec(float_prec_ZERO_ECO)) {
-        _outp.vSetMatrixInvalid();
+    if (fabs(_scalar) < double(EPSILON_ECO)) {
+        _outp.setMatrixInvalid();
         return _outp;
     }
     for (int16_t _i = 0; _i < this->i16row; _i++) {
@@ -561,7 +547,7 @@ inline Matrix Matrix::operator / (const float_prec _scalar) const {
 }
 
 
-inline Matrix operator + (const float_prec _scalar, const Matrix& _mat) {
+inline Matrix operator + (const double _scalar, const Matrix& _mat) {
     Matrix _outp(_mat.getRows(), _mat.getCols(), Matrix::NoInitMatZero);
 
     for (int16_t _i = 0; _i < _mat.getRows(); _i++) {
@@ -573,7 +559,7 @@ inline Matrix operator + (const float_prec _scalar, const Matrix& _mat) {
 }
 
 
-inline Matrix operator - (const float_prec _scalar, const Matrix& _mat) {
+inline Matrix operator - (const double _scalar, const Matrix& _mat) {
     Matrix _outp(_mat.getRows(), _mat.getCols(), Matrix::NoInitMatZero);
 
     for (int16_t _i = 0; _i < _mat.getRows(); _i++) {
@@ -585,7 +571,7 @@ inline Matrix operator - (const float_prec _scalar, const Matrix& _mat) {
 }
 
 
-inline Matrix operator * (const float_prec _scalar, const Matrix& _mat) {
+inline Matrix operator * (const double _scalar, const Matrix& _mat) {
     Matrix _outp(_mat.getRows(), _mat.getCols(), Matrix::NoInitMatZero);
 
     for (int16_t _i = 0; _i < _mat.getRows(); _i++) {
@@ -599,7 +585,7 @@ inline Matrix operator * (const float_prec _scalar, const Matrix& _mat) {
 inline Matrix Matrix::operator + (const Matrix& _matAdd) const {
     Matrix _outp(this->i16row, this->i16col, NoInitMatZero);
     if ((this->i16row != _matAdd.i16row) || (this->i16col != _matAdd.i16col)) {
-        _outp.vSetMatrixInvalid();
+        _outp.setMatrixInvalid();
         return _outp;
     }
 
@@ -614,7 +600,7 @@ inline Matrix Matrix::operator + (const Matrix& _matAdd) const {
 inline Matrix Matrix::operator - (const Matrix& _matSub) const {
     Matrix _outp(this->i16row, this->i16col, NoInitMatZero);
     if ((this->i16row != _matSub.i16row) || (this->i16col != _matSub.i16col)) {
-        _outp.vSetMatrixInvalid();
+        _outp.setMatrixInvalid();
         return _outp;
     }
 
@@ -629,7 +615,7 @@ inline Matrix Matrix::operator - (const Matrix& _matSub) const {
 inline Matrix Matrix::operator * (const Matrix& _matMul) const {
     Matrix _outp(this->i16row, _matMul.i16col, NoInitMatZero);
     if ((this->i16col != _matMul.i16row)) {
-        _outp.vSetMatrixInvalid();
+        _outp.setMatrixInvalid();
         return _outp;
     }
 
@@ -646,18 +632,18 @@ inline Matrix Matrix::operator * (const Matrix& _matMul) const {
 
 
 /* -------------------------------------------- Simple Matrix operations -------------------------------------------- */
-/* -------------------------------------------- Simple Matrix operations -------------------------------------------- */
 
-inline void Matrix::vRoundingElementToZero(const int16_t _i, const int16_t _j) {
-    if (fabs((*this)(_i,_j)) < float_prec(float_prec_ZERO_ECO)) {
+
+inline void Matrix::roundElementToZero(const int16_t _i, const int16_t _j) {
+    if (fabs((*this)(_i,_j)) < double(EPSILON_ECO)) {
         (*this)(_i,_j) = 0.0;
     }
 }
 
-inline Matrix Matrix::RoundingMatrixToZero(void) {
+inline Matrix Matrix::roundElementsToZero(void) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
-            if (fabs((*this)(_i,_j)) < float_prec(float_prec_ZERO_ECO)) {
+            if (fabs((*this)(_i,_j)) < double(EPSILON_ECO)) {
                 (*this)(_i,_j) = 0.0;
             }
         }
@@ -665,7 +651,7 @@ inline Matrix Matrix::RoundingMatrixToZero(void) {
     return (*this);
 }
 
-inline void Matrix::vSetHomogen(const float_prec _val) {
+inline void Matrix::setHomogen(const double _val) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             (*this)(_i,_j) = _val;
@@ -674,18 +660,18 @@ inline void Matrix::vSetHomogen(const float_prec _val) {
 }
 
 inline void Matrix::setZero(void) {
-    this->vSetHomogen(0.0);
+    this->setHomogen(0.0);
 }
 
-inline void Matrix::vSetRandom(const int32_t _maxRand, const int32_t _minRand) {
+inline void Matrix::setRandom(const int32_t _maxRand, const int32_t _minRand) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
-            (*this)(_i,_j) = float_prec((rand() % (_maxRand - _minRand + 1)) + _minRand);
+            (*this)(_i,_j) = double((rand() % (_maxRand - _minRand + 1)) + _minRand);
         }
     }
 }
 
-inline void Matrix::setDiag(const float_prec _val) {
+inline void Matrix::setDiag(const double _val) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             if (_i == _j) {
@@ -697,7 +683,7 @@ inline void Matrix::setDiag(const float_prec _val) {
     }
 }
 
-inline void Matrix::vSetIdentity(void) {
+inline void Matrix::setIdentity(void) {
     this->setDiag(1.0);
 }
 
@@ -720,7 +706,7 @@ inline Matrix Matrix::Transpose(void) {
 
 /* Normalize the vector */
 inline bool Matrix::isUnitVector(void) {
-    float_prec _normM = 0.0;
+    double _normM = 0.0;
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             _normM = _normM + ((*this)(_i,_j) * (*this)(_i,_j));
@@ -728,7 +714,7 @@ inline bool Matrix::isUnitVector(void) {
     }
 
     /* Rounding to zero to avoid case where sqrt(0-), and _normM always positive */
-    if (_normM < float_prec(float_prec_ZERO)) {
+    if (_normM < double(EPSILON)) {
         return false;
     }
     _normM = sqrt(_normM);
@@ -742,7 +728,7 @@ inline bool Matrix::isUnitVector(void) {
 
 
 /* --------------------------------------- Matrix/Vector insertion operations --------------------------------------- */
-/* --------------------------------------- Matrix/Vector insertion operations --------------------------------------- */
+
 
 /* Insert vector into matrix at _posCol position
  * Example: A = Matrix 3x3, B = Vector 3x1
@@ -757,11 +743,11 @@ inline bool Matrix::isUnitVector(void) {
  *      [A10  B10  A12]
  *      [A20  B20  A22]
  */
-inline Matrix Matrix::InsertVector(const Matrix& _Vector, const int16_t _posCol) {
+inline Matrix Matrix::insertVector(const Matrix& _Vector, const int16_t _posCol) {
     Matrix _outp(*this);
     if ((_Vector.i16row > this->i16row) || (_Vector.i16col+_posCol > this->i16col)) {
         /* Return false */
-        _outp.vSetMatrixInvalid();
+        _outp.setMatrixInvalid();
         return _outp;
     }
     for (int16_t _i = 0; _i < _Vector.i16row; _i++) {
@@ -790,7 +776,7 @@ inline Matrix Matrix::InsertSubMatrix(const Matrix& _subMatrix, const int16_t _p
     Matrix _outp(*this);
     if (((_subMatrix.i16row+_posRow) > this->i16row) || ((_subMatrix.i16col+_posCol) > this->i16col)) {
         /* Return false */
-        _outp.vSetMatrixInvalid();
+        _outp.setMatrixInvalid();
         return _outp;
     }
     for (int16_t _i = 0; _i < _subMatrix.i16row; _i++) {
@@ -827,7 +813,7 @@ inline Matrix Matrix::InsertSubMatrix(const Matrix& _subMatrix, const int16_t _p
         (_lenRow > _subMatrix.i16row) || (_lenColumn > _subMatrix.i16col))
     {
         /* Return false */
-        _outp.vSetMatrixInvalid();
+        _outp.setMatrixInvalid();
         return _outp;
     }
     for (int16_t _i = 0; _i < _lenRow; _i++) {
@@ -864,7 +850,7 @@ inline Matrix Matrix::InsertSubMatrix(const Matrix& _subMatrix, const int16_t _p
         ((_posRowSub+_lenRow) > _subMatrix.i16row) || ((_posColSub+_lenColumn) > _subMatrix.i16col))
     {
         /* Return false */
-        _outp.vSetMatrixInvalid();
+        _outp.setMatrixInvalid();
         return _outp;
     }
     for (int16_t _i = 0; _i < _lenRow; _i++) {
@@ -883,25 +869,25 @@ inline Matrix Matrix::InsertSubMatrix(const Matrix& _subMatrix, const int16_t _p
 inline Matrix Matrix::Invers(void) const {
     Matrix _outp(this->i16row, this->i16col, NoInitMatZero);
     Matrix _temp(*this);
-    _outp.vSetIdentity();
+    _outp.setIdentity();
     
     /* Gauss Elimination... */
     for (int16_t _j = 0; _j < (_temp.i16row)-1; _j++) {
         for (int16_t _i = _j+1; _i < _temp.i16row; _i++) {
-            if (fabs(_temp(_j,_j)) < float_prec(float_prec_ZERO)) {
+            if (fabs(_temp(_j,_j)) < double(EPSILON)) {
                 /* Matrix is non-invertible */
-                _outp.vSetMatrixInvalid();
+                _outp.setMatrixInvalid();
                 return _outp;
             }
 
-            float_prec _tempfloat = _temp(_i,_j) / _temp(_j,_j);
+            double _tempfloat = _temp(_i,_j) / _temp(_j,_j);
 
             for (int16_t _k = 0; _k < _temp.i16col; _k++) {
                 _temp(_i,_k) -= (_temp(_j,_k) * _tempfloat);
                 _outp(_i,_k) -= (_outp(_j,_k) * _tempfloat);
 
-                _temp.vRoundingElementToZero(_i, _k);
-                _outp.vRoundingElementToZero(_i, _k);
+                _temp.roundElementToZero(_i, _k);
+                _outp.roundElementToZero(_i, _k);
             }
 
         }
@@ -922,19 +908,19 @@ inline Matrix Matrix::Invers(void) const {
     /* Jordan... */
     for (int16_t _j = (_temp.i16row)-1; _j > 0; _j--) {
         for (int16_t _i = _j-1; _i >= 0; _i--) {
-            if (fabs(_temp(_j,_j)) < float_prec(float_prec_ZERO)) {
+            if (fabs(_temp(_j,_j)) < double(EPSILON)) {
                 /* Matrix is non-invertible */
-                _outp.vSetMatrixInvalid();
+                _outp.setMatrixInvalid();
                 return _outp;
             }
 
-            float_prec _tempfloat = _temp(_i,_j) / _temp(_j,_j);
+            double _tempfloat = _temp(_i,_j) / _temp(_j,_j);
             _temp(_i,_j) -= (_temp(_j,_j) * _tempfloat);
-            _temp.vRoundingElementToZero(_i, _j);
+            _temp.roundElementToZero(_i, _j);
 
             for (int16_t _k = (_temp.i16row - 1); _k >= 0; _k--) {
                 _outp(_i,_k) -= (_outp(_j,_k) * _tempfloat);
-                _outp.vRoundingElementToZero(_i, _k);
+                _outp.roundElementToZero(_i, _k);
             }
         }
     }
@@ -942,13 +928,13 @@ inline Matrix Matrix::Invers(void) const {
 
     /* Normalization */
     for (int16_t _i = 0; _i < _temp.i16row; _i++) {
-        if (fabs(_temp(_i,_i)) < float_prec(float_prec_ZERO)) {
+        if (fabs(_temp(_i,_i)) < double(EPSILON)) {
             /* Matrix is non-invertible */
-            _outp.vSetMatrixInvalid();
+            _outp.setMatrixInvalid();
             return _outp;
         }
 
-        float_prec _tempfloat = _temp(_i,_i);
+        double _tempfloat = _temp(_i,_i);
         _temp(_i,_i) = 1.0;
 
         for (int16_t _j = 0; _j < _temp.i16row; _j++) {
@@ -971,7 +957,7 @@ inline bool Matrix::bMatrixIsPositiveDefinite(const bool checkPosSemidefinite) c
     /* Gauss Elimination... */
     for (int16_t _j = 0; _j < (_temp.i16row)-1; _j++) {
         for (int16_t _i = _j+1; _i < _temp.i16row; _i++) {
-            if (fabs(_temp(_j,_j)) < float_prec(float_prec_ZERO)) {
+            if (fabs(_temp(_j,_j)) < double(EPSILON)) {
                 /* Q: Do we still need to check this?
                  * A: idk, it's 3 AM. I need sleep :<
                  * 
@@ -980,11 +966,11 @@ inline bool Matrix::bMatrixIsPositiveDefinite(const bool checkPosSemidefinite) c
                 return false;
             }
             
-            float_prec _tempfloat = _temp(_i,_j) / _temp(_j,_j);
+            double _tempfloat = _temp(_i,_j) / _temp(_j,_j);
             
             for (int16_t _k = 0; _k < _temp.i16col; _k++) {
                 _temp(_i,_k) -= (_temp(_j,_k) * _tempfloat);
-                _temp.vRoundingElementToZero(_i, _k);
+                _temp.roundElementToZero(_i, _k);
             }
 
         }
@@ -993,11 +979,11 @@ inline bool Matrix::bMatrixIsPositiveDefinite(const bool checkPosSemidefinite) c
     _posDef = true;
     _posSemiDef = true;
     for (int16_t _i = 0; _i < _temp.i16row; _i++) {
-        if (_temp(_i,_i) < float_prec(float_prec_ZERO)) {
+        if (_temp(_i,_i) < double(EPSILON)) {
             /* false if less than 0+ (zero included) */
             _posDef = false;
         }
-        if (_temp(_i,_i) < -float_prec(float_prec_ZERO)) {
+        if (_temp(_i,_i) < -double(EPSILON)) {
             /* false if less than 0- (zero is not included) */
             _posSemiDef = false;
         }
@@ -1025,7 +1011,7 @@ inline Matrix Matrix::GetDiagonalEntries(void) const {
     Matrix _temp(this->i16row, 1, NoInitMatZero);
     
     if (this->i16row != this->i16col) {
-        _temp.vSetMatrixInvalid();
+        _temp.setMatrixInvalid();
         return _temp;
     }
     for (int16_t _i = 0; _i < this->i16row; _i++) {
@@ -1049,13 +1035,13 @@ inline Matrix Matrix::GetDiagonalEntries(void) const {
  *           is symmetry).
  */
 inline Matrix Matrix::CholeskyDec(void) const {
-    float_prec _tempFloat;
+    double _tempFloat;
 
     /* Note that _outp need to be initialized as zero matrix */
     Matrix _outp(this->i16row, this->i16col, InitMatWithZero);
     
     if (this->i16row != this->i16col) {
-        _outp.vSetMatrixInvalid();
+        _outp.setMatrixInvalid();
         return _outp;
     }
     for (int16_t _j = 0; _j < this->i16col; _j++) {
@@ -1065,13 +1051,13 @@ inline Matrix Matrix::CholeskyDec(void) const {
                 for (int16_t _k = 0; _k < _j; _k++) {
                     _tempFloat = _tempFloat - (_outp(_i,_k) * _outp(_i,_k));
                 }
-                if (_tempFloat < -float_prec(float_prec_ZERO)) {
+                if (_tempFloat < -double(EPSILON)) {
                     /* Matrix is not positif (semi)definit */
-                    _outp.vSetMatrixInvalid();
+                    _outp.setMatrixInvalid();
                     return _outp;
                 }
                 /* Rounding to zero to avoid case where sqrt(0-) */
-                if (fabs(_tempFloat) < float_prec(float_prec_ZERO)) {
+                if (fabs(_tempFloat) < double(EPSILON)) {
                     _tempFloat = 0.0;
                 }
                 _outp(_i,_i) = sqrt(_tempFloat);
@@ -1079,9 +1065,9 @@ inline Matrix Matrix::CholeskyDec(void) const {
                 for (int16_t _k = 0; _k < _j; _k++) {
                     _tempFloat = _tempFloat - (_outp(_i,_k) * _outp(_j,_k));
                 }
-                if (fabs(_outp(_j,_j)) < float_prec(float_prec_ZERO)) {
+                if (fabs(_outp(_j,_j)) < double(EPSILON)) {
                     /* Matrix is not positif definit */
-                    _outp.vSetMatrixInvalid();
+                    _outp.setMatrixInvalid();
                     return _outp;
                 }
                 _outp(_i,_j) = _tempFloat / _outp(_j,_j);
@@ -1095,18 +1081,18 @@ inline Matrix Matrix::CholeskyDec(void) const {
  *              out = HouseholderTransformQR(A, i, j)
  */
 inline Matrix Matrix::HouseholderTransformQR(const int16_t _rowTransform, const int16_t _colTransform) {
-    float_prec _tempFloat;
-    float_prec _xLen;
-    float_prec _x1;
-    float_prec _u1;
-    float_prec _vLen2;
+    double _tempFloat;
+    double _xLen;
+    double _x1;
+    double _u1;
+    double _vLen2;
     
     /* Note that _outp & _vectTemp need to be initialized as zero matrix */
     Matrix _outp(this->i16row, this->i16row, InitMatWithZero);
     Matrix _vectTemp(this->i16row, 1, InitMatWithZero);
     
     if ((_rowTransform >= this->i16row) || (_colTransform >= this->i16col)) {
-        _outp.vSetMatrixInvalid();
+        _outp.setMatrixInvalid();
         return _outp;
     }
     
@@ -1139,17 +1125,17 @@ inline Matrix Matrix::HouseholderTransformQR(const int16_t _rowTransform, const 
     _vLen2 += (_u1*_u1);
     _vectTemp(_rowTransform,0) = _u1;
     
-    if (fabs(_vLen2) < float_prec(float_prec_ZERO_ECO)) {
+    if (fabs(_vLen2) < double(EPSILON_ECO)) {
         /* x vector is collinear with basis vector e, return result = I */
-        _outp.vSetIdentity();
+        _outp.setIdentity();
     } else {
         /* P = -2*(u1*u1')/v_len2 + I */
         /* PR TODO: We need to investigate more on this */
         for (int16_t _i = 0; _i < this->i16row; _i++) {
             _tempFloat = _vectTemp(_i,0);
-            if (fabs(_tempFloat) > float_prec(float_prec_ZERO)) {
+            if (fabs(_tempFloat) > double(EPSILON)) {
                 for (int16_t _j = 0; _j < this->i16row; _j++) {
-                    if (fabs(_vectTemp(_j,0)) > float_prec(float_prec_ZERO)) {
+                    if (fabs(_vectTemp(_j,0)) > double(EPSILON)) {
                         _outp(_i,_j) = _vectTemp(_j,0);
                         _outp(_i,_j) = _outp(_i,_j) * _tempFloat;
                         _outp(_i,_j) = _outp(_i,_j) * (-2.0/_vLen2);
@@ -1180,17 +1166,17 @@ inline bool Matrix::QRDec(Matrix& Qt, Matrix& R) const {
     if ((this->i16row < this->i16col) || (!Qt.bMatrixIsSquare()) || (Qt.i16row != this->i16row) ||
         (R.i16row != this->i16row) || (R.i16col != this->i16col))
     {
-        Qt.vSetMatrixInvalid();
-        R.vSetMatrixInvalid();
+        Qt.setMatrixInvalid();
+        R.setMatrixInvalid();
         return false;
     }
     R = (*this);
-    Qt.vSetIdentity();
+    Qt.setIdentity();
     for (int16_t _i = 0; (_i < (this->i16row - 1)) && (_i < this->i16col-1); _i++) {
         Qn  = R.HouseholderTransformQR(_i, _i);
-        if (!Qn.bMatrixIsValid()) {
-            Qt.vSetMatrixInvalid();
-            R.vSetMatrixInvalid();
+        if (!Qn.isValid()) {
+            Qt.setMatrixInvalid();
+            R.setMatrixInvalid();
             return false;
         }
         Qt = Qn * Qt;
@@ -1200,7 +1186,7 @@ inline bool Matrix::QRDec(Matrix& Qt, Matrix& R) const {
     Qt.RoundingMatrixToZero();
     R.RoundingMatrixToZero();
 #else
-    Qt.RoundingMatrixToZero();
+    Qt.roundElementsToZero();
     for (int16_t _i = 1; ((_i < R.i16row) && (_i < R.i16col)); _i++) {
         for (int16_t _j = 0; _j < _i; _j++) {
             R(_i, _j) = 0.0;
@@ -1223,7 +1209,7 @@ inline bool Matrix::QRDec(Matrix& Qt, Matrix& R) const {
 inline Matrix Matrix::BackSubtitution(const Matrix& A, const Matrix& B) const {
     Matrix _outp(A.i16row, 1, NoInitMatZero);
     if ((A.i16row != A.i16col) || (A.i16row != B.i16row)) {
-        _outp.vSetMatrixInvalid();
+        _outp.setMatrixInvalid();
         return _outp;
     }
 
@@ -1232,8 +1218,8 @@ inline Matrix Matrix::BackSubtitution(const Matrix& A, const Matrix& B) const {
         for (int16_t _j = _i + 1; _j < A.i16col; _j++) {
             _outp(_i,0) = _outp(_i,0) - A(_i,_j)*_outp(_j,0);
         }
-        if (fabs(A(_i,_i)) < float_prec(float_prec_ZERO)) {
-            _outp.vSetMatrixInvalid();
+        if (fabs(A(_i,_i)) < double(EPSILON)) {
+            _outp.setMatrixInvalid();
             return _outp;
         }
         _outp(_i,0) = _outp(_i,0) / A(_i,_i);
@@ -1253,7 +1239,7 @@ inline Matrix Matrix::BackSubtitution(const Matrix& A, const Matrix& B) const {
 inline Matrix Matrix::ForwardSubtitution(const Matrix& A, const Matrix& B) const {
     Matrix _outp(A.i16row, 1, NoInitMatZero);
     if ((A.i16row != A.i16col) || (A.i16row != B.i16row)) {
-        _outp.vSetMatrixInvalid();
+        _outp.setMatrixInvalid();
         return _outp;
     }
 
@@ -1262,8 +1248,8 @@ inline Matrix Matrix::ForwardSubtitution(const Matrix& A, const Matrix& B) const
         for (int16_t _j = 0; _j < _i; _j++) {
             _outp(_i,0) = _outp(_i,0) - A(_i,_j)*_outp(_j,0);
         }
-        if (fabs(A(_i,_i)) < float_prec(float_prec_ZERO)) {
-            _outp.vSetMatrixInvalid();
+        if (fabs(A(_i,_i)) < double(EPSILON)) {
+            _outp.setMatrixInvalid();
             return _outp;
         }
         _outp(_i,0) = _outp(_i,0) / A(_i,_i);
@@ -1273,12 +1259,12 @@ inline Matrix Matrix::ForwardSubtitution(const Matrix& A, const Matrix& B) const
 
 
 /* -------------------------------------------- Matrix printing function -------------------------------------------- */
-    inline void Matrix::vPrint(void) {
+    inline void Matrix::print(void) {
         char _bufSer[10];
         for (int16_t _i = 0; _i < this->i16row; _i++) {
             Serial.print("[ ");
             for (int16_t _j = 0; _j < this->i16col; _j++) {
-                snprintf(_bufSer, sizeof(_bufSer)-1, "%2.2f ", (*this)(_i,_j));
+                snprintf(_bufSer, sizeof(_bufSer)-1, "%2.4f ", (*this)(_i,_j));
                 Serial.print(_bufSer);
             }
             Serial.println("]");

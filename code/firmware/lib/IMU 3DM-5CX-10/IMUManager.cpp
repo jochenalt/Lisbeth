@@ -3,8 +3,6 @@
 #include <TimePassedBy.h>
 #include <ukf.h>
 
-// #include <EKFManager.h>
-
 void IMUManager::setup(uint16_t targetFreq) {
       // IMU's power is controlled by this PIN
       // Initially the IMU is down, start happens in main loop
@@ -13,7 +11,7 @@ void IMUManager::setup(uint16_t targetFreq) {
 
   sampleFreq  = targetFreq; 
 
-  setupKalman();
+  filter.setup(targetFreq);
 }
 void IMUManager::loop() {
 
@@ -37,7 +35,7 @@ void IMUManager::loop() {
   
         double x,y,z,w;
         uint64_t u64compuTime = micros();
-        computeKalman(Ax,Ay,Az,p,q,r, x,y, z,w);
+        filter.compute(Ax,Ay,Az,p,q,r, x,y, z,w);
         ekftime  = (ekftime + (micros() - u64compuTime))/2;
         quaternion[0] = x;
         quaternion[1] = y;
@@ -78,24 +76,34 @@ void IMUManager::updatePowerState() {
       switch (imuState) {
         case IMU_UNPOWERED:
           if (cmdPowerUp) {
-            println("power up IMU");
-            digitalWrite(PIN_IMU_POWER, LOW);
-            warmingStart_ms = millis();
-            imuState = IMU_WARMING_UP;
+            println("IMU:prepare for power up");
+            digitalWrite(PIN_IMU_POWER, HIGH);
+            lastPhaseStart_ms = millis();
+            imuState = IMU_PREPARE_POWER_UP;
             cmdPowerUp = false;
           } 
           break;
+        // ledave power off for 500ms to ensure it is properly down
+        // (this is relevant for resets of the uC, which would otherwise turn off power only for 50ms)
+        case IMU_PREPARE_POWER_UP:
+          if (millis() - lastPhaseStart_ms > prepare_power_up_ms) {
+            println("IMU:turn on power");
+            digitalWrite(PIN_IMU_POWER, LOW);
+            lastPhaseStart_ms = millis();
+            imuState = IMU_WARMING_UP;
+          }
+          break;
+        // power is on, wait  200ms before trying to communicate
         case IMU_WARMING_UP:
-          if (millis() - warmingStart_ms > warmup_duration_ms) {
-            println("warm up IMU");
+          if (millis() - lastPhaseStart_ms > warmup_duration_ms) {
+            println("IMU:setup");
             imuState = IMU_POWERED_UP;
           }
           break;
         case IMU_POWERED_UP: {
             slowWatchdog();
-            println("setup IMU");
             bool ok = device.setup(&Serial4, sampleFreq);
-            resetKalman();
+            filter.reset();
 
             fastWatchdog();
             if (ok) {
@@ -104,7 +112,7 @@ void IMUManager::updatePowerState() {
             else {
               digitalWrite(PIN_IMU_POWER, HIGH);
               imuState = IMU_COOLING_DOWN;
-              warmingStart_ms = millis();
+              lastPhaseStart_ms = millis();
             }
             break;
           }
@@ -112,15 +120,15 @@ void IMUManager::updatePowerState() {
             device.loop();
             if (cmdPowerDown) {
               digitalWrite(PIN_IMU_POWER, HIGH);
-              println("cool down IMU");
+              println("IMU:cool down");
               imuState = IMU_COOLING_DOWN;
-              warmingStart_ms = millis();
+              lastPhaseStart_ms = millis();
               cmdPowerDown = false;
             }
             break;
           case IMU_COOLING_DOWN:
-            if (millis() - warmingStart_ms > warmup_duration_ms) {
-              println("IMU is unpowered");
+            if (millis() - lastPhaseStart_ms > warmup_duration_ms) {
+              println("IMU:power turned off");
               imuState = IMU_UNPOWERED;
             }
             break;

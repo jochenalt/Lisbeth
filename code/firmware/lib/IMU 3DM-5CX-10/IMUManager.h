@@ -5,6 +5,7 @@
 #include <Arduino.h>
 // communication protocol to Microstrain IMU
 #include <MicrostrainCommProtocol.h>
+#include <ukf.h>
 
 // the IMU can be powered by this PIN
 // LOW = power on
@@ -17,8 +18,9 @@
  */
 class IMUManager {
   public:
-    enum ImuStateType  { IMU_UNPOWERED = 0, IMU_WARMING_UP = 1, IMU_POWERED_UP = 2, IMU_SETUP = 3, IMU_COOLING_DOWN = 4};
+    enum ImuStateType  { IMU_UNPOWERED = 0, IMU_WARMING_UP = 1, IMU_PREPARE_POWER_UP=2, IMU_POWERED_UP = 3, IMU_SETUP = 4, IMU_COOLING_DOWN = 5};
     const uint32_t warmup_duration_ms = 2000;
+    const uint32_t prepare_power_up_ms = 500;
 
     IMUManager() {};
 
@@ -41,7 +43,7 @@ class IMUManager {
     bool cmdPowerDown = false;
     bool cmdPowerUp = false;
     ImuStateType imuState = IMU_UNPOWERED;
-    uint32_t warmingStart_ms = 0;
+    uint32_t lastPhaseStart_ms = 0;
     bool logisOn = false;
 
     // interface to Lord Microstrain 33DM-GX3-25
@@ -51,6 +53,8 @@ class IMUManager {
     double RPY_deg[3] = {0,0,0};
     double quaternion[4] = {0,0,0,0};    
     uint16_t sampleFreq;   
+
+    UnscentedKalmanFilter filter;
 
 };
 

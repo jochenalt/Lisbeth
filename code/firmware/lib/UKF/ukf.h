@@ -80,46 +80,40 @@
 
 #include "matrix.h"
 
-/* State Space dimension */
-#define SS_X_LEN    (4) // State: Quaternion 
-#define SS_Z_LEN    (3) // Output: Accel
-#define SS_U_LEN    (3) // Input:  Gyro
 
-/* UKF initialization constant -------------------------------------------------------------------------------------- */
-#define P_INIT      (1000.)
-#define Rv_INIT     (1e-7)
-#define Rn_INIT_ACC (0.0015)
+class UnscentedKalmanFilter
+{
+public:
+    UnscentedKalmanFilter() {};
 
-
-void setupKalman();
-void resetKalman();
-void computeKalman(double accX, double accY, double accZ, 
+    void setup(double targetFreq);
+    void reset();
+    void compute(double accX, double accY, double accZ, 
                    double gyroX, double gyroY, double gyroZ,
                    double &x, double &y, double &z, double &w);
 
-
-class UKF
-{
-public:
-    UKF() {};
+private:
     void init(double sampleTime, const double PInit, const double QInit, const double RInit);
     void vReset();
     void update(Matrix &Z, Matrix &U);
     Matrix getX() { return X_Est; }
     Matrix getP() { return P; }
     Matrix getErr() { return Err; }
-
-protected:
-    typedef  void (UKF::*UpdateNonLinear)(Matrix &X_dot, Matrix &X, Matrix &U);
-    bool calculateSigmaPoint();
-    bool unscentedTransform(Matrix &Out, Matrix &OutSigma, Matrix &P, Matrix &DSig,
+    typedef  void (UnscentedKalmanFilter::*UpdateNonLinear)(Matrix &X_dot, Matrix &X, Matrix &U);
+    void calculateSigmaPoint();
+    void unscentedTransform(Matrix &Out, Matrix &OutSigma, Matrix &P, Matrix &DSig,
                              UpdateNonLinear _vFuncNonLinear,
                              Matrix &InpSigma, Matrix &InpVector,
-                             Matrix &_Wm, Matrix &_Wc, Matrix &_CovNoise);
+                              Matrix &_CovNoise);
     void updateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &U);
     void updateNonlinearZ(Matrix &Z_est, Matrix &X, Matrix &U);
 
-private:
+
+    /* State Space dimension */
+    #define SS_X_LEN    (4) // State: Quaternion 
+    #define SS_Z_LEN    (3) // Output: Accel
+    #define SS_U_LEN    (3) // Input:  Gyro
+
     Matrix X_Est{SS_X_LEN, 1};
     Matrix X_Sigma{SS_X_LEN, (2*SS_X_LEN + 1)};
     
@@ -130,7 +124,7 @@ private:
     Matrix P_Chol{SS_X_LEN, SS_X_LEN};
     
     Matrix DX{SS_X_LEN, (2*SS_X_LEN + 1)};
-    Matrix DZ{SS_Z_LEN, (2*SS_X_LEN + 1)};
+    Matrix Dy{SS_Z_LEN, (2*SS_X_LEN + 1)};
     
     Matrix Py{SS_Z_LEN, SS_Z_LEN};
     Matrix Pxy{SS_X_LEN, SS_Z_LEN};
@@ -145,11 +139,12 @@ private:
     Matrix Gain{SS_X_LEN, SS_Z_LEN};
     double Gamma;
 
-    double Pinit;
-    double Qinit;
-    double Rinit;
+    double Pinit = 1;
+    double Qinit = 1e-7;
+    double Rinit = 0.0015;
 
-    double dT;
+    double dT = 0;
 };
+
 
 #endif // UKF_H
