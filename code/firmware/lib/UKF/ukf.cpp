@@ -78,9 +78,14 @@
 #include "ukf.h"
 
 
+Matrix Z(SS_Z_LEN, 1);
+Matrix U(SS_U_LEN, 1);
+Matrix dataQuaternion(SS_X_LEN, 1);
+
+
 #define ModelSistem_ACC_Z0 (1)
 
-UKF::UKF(const float_prec PInit, const float_prec QInit, const float_prec RInit)
+void UKF::init(const float_prec PInit, const float_prec QInit, const float_prec RInit)
 {
     /* Van der. Merwe, .. (2004). Sigma-Point Kalman Filters for Probabilistic Inference in Dynamic State-Space Models 
      * (Ph.D. thesis). Oregon Health & Science University. Page 6:
@@ -90,6 +95,11 @@ UKF::UKF(const float_prec PInit, const float_prec QInit, const float_prec RInit)
      * 0 or 3−L (see [45] for details), and β is an extra degree of freedom scalar parameter used to incorporate any extra 
      * prior knowledge of the distribution of x (for Gaussian distributions, β = 2 is optimal).
      */
+
+    Pinit = PInit;
+    Qinit = QInit;
+    Rinit = RInit;
+
     float_prec _alpha   = 1e-2;
     float_prec _k       = 0.0;
     float_prec _beta    = 2.0;
@@ -113,14 +123,14 @@ UKF::UKF(const float_prec PInit, const float_prec QInit, const float_prec RInit)
     Wc = Wm;
     Wc[0][0] = Wc[0][0] + (1.0-(_alpha*_alpha)+_beta);
 
-    UKFconst = sqrt((SS_X_LEN + _lambda));
+    Gamma = sqrt((SS_X_LEN + _lambda));
 }
 
-void UKF::vReset(const float_prec PInit, const float_prec QInit, const float_prec RInit)
+void UKF::vReset()
 {
-    P.vSetDiag(PInit);
-    Q.vSetDiag(QInit);
-    R.vSetDiag(RInit);
+    P.vSetDiag(Pinit);
+    Q.vSetDiag(Qinit);
+    R.vSetDiag(Rinit);
     X_Est.vSetToZero();
     X_Est[0][0] = 1.0;       /* Quaternion(k = 0) = [1 0 0 0]' */
 }
@@ -152,7 +162,7 @@ void UKF::vUpdate(Matrix &Z, Matrix &U)
     Matrix PZ_Inv = PZ.Invers();
     if (!PZ_Inv.bMatrixIsValid()) {
         /* return false; */
-        this->vReset(1000., Q[0][0], R[0][0]);
+        this->vReset();
         return;
     }
     Gain = CrossCov * PZ_Inv;
@@ -172,7 +182,7 @@ void UKF::vUpdate(Matrix &Z, Matrix &U)
     /* HATI-HATI!! Jika inisialisasi salah, (X(k=0) = [0]), hitungan akan NAN (pembagian dengan nol)!!  */
     if (!X_Est.bNormVector()) {
         /* System error, reset EKF (atau sekalian reset MCU via watchdog?) */
-        vReset(1000., Q[0][0], R[0][0]);
+        vReset();
     }
 }
 
@@ -189,7 +199,7 @@ bool UKF::bCalculateSigmaPoint(void)
         /* System Fail */
         return false;
     }
-    P_Chol = P_Chol * UKFconst;     /* UKFconst = sqrt(C), dihitung di fungsi Constructor UKF() */
+    P_Chol = P_Chol * Gamma;     /* UKFconst = sqrt(C), dihitung di fungsi Constructor UKF() */
 
     /* _xSigma = [x Y+C*sqrt(P) Y-C*sqrt(P)], dimana
      *  Y = [x x ... x] dengan ukuran (len(x) x len(x))     (misal x = 3x1, Y = 3x3)
@@ -315,5 +325,61 @@ void UKF::vUpdateNonlinearZ(Matrix &Z_est, Matrix &X, Matrix &U)
     Z_est[1][0] = (2*q2*q3 +2*q0*q1) * ModelSistem_ACC_Z0;
 
     Z_est[2][0] = (+(q0_2) -(q1_2) -(q2_2) +(q3_2)) * ModelSistem_ACC_Z0;
+}
+
+
+UKF ukf;       /* Best */
+
+void computeKalman(double accX, double accY, double accZ, 
+                   double gyroX, double gyroY, double gyroZ,
+                   double &x, double &y, double &z, double &w) {
+        Z[0][0] = accX;
+        Z[1][0] = accY;
+        Z[2][0] = accZ;
+        U[0][0] = gyroX;
+        U[1][0] = gyroY;
+        U[2][0] = gyroZ;
+        /* Normalisasi */
+        double _normG = (Z[0][0] * Z[0][0]) + (Z[1][0] * Z[1][0]) + (Z[2][0] * Z[2][0]);
+        _normG = sqrt(_normG);
+        Z[0][0] = Z[0][0] / _normG;
+        Z[1][0] = Z[1][0] / _normG;
+        Z[2][0] = Z[2][0] / _normG;
+
+        /* Update Kalman */
+        ukf.vUpdate(Z, U);
+        dataQuaternion = ukf.getX();
+        w = dataQuaternion[0][0];
+        x = dataQuaternion[1][0];
+        y = dataQuaternion[2][0];
+        z = dataQuaternion[3][0];
+        
+}
+
+
+void resetKalman() {
+    dataQuaternion.vSetToZero();
+    dataQuaternion[0][0] = 1.0;
+    ukf.vReset( );
+}
+
+void serialFloatPrint(float f) {
+    byte * b = (byte *) &f;
+    for (int i = 0; i < 4; i++) {
+        byte b1 = (b[i] >> 4) & 0x0f;
+        byte b2 = (b[i] & 0x0f);
+
+        char c1 = (b1 < 10) ? ('0' + b1) : 'A' + b1 - 10;
+        char c2 = (b2 < 10) ? ('0' + b2) : 'A' + b2 - 10;
+
+        Serial.print(c1);
+        Serial.print(c2);
+    }
+}
+
+
+void setupKalman() {
+    ukf.init(P_INIT, Rv_INIT, Rn_INIT_ACC);
+    resetKalman();
 }
 
