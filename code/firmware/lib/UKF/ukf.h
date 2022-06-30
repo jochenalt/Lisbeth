@@ -84,8 +84,6 @@
 #define SS_X_LEN    (4) // State: Quaternion 
 #define SS_Z_LEN    (3) // Output: Accel
 #define SS_U_LEN    (3) // Input:  Gyro
-#define SS_DT_MILIS (1.0)                            /* 20 ms */
-#define SS_DT       (SS_DT_MILIS/1000.)   /* Sampling time */
 
 /* UKF initialization constant -------------------------------------------------------------------------------------- */
 #define P_INIT      (1000.)
@@ -104,22 +102,22 @@ class UKF
 {
 public:
     UKF() {};
-    void init(const double PInit, const double QInit, const double RInit);
+    void init(double sampleTime, const double PInit, const double QInit, const double RInit);
     void vReset();
-    void vUpdate(Matrix &Z, Matrix &U);
+    void update(Matrix &Z, Matrix &U);
     Matrix getX() { return X_Est; }
     Matrix getP() { return P; }
     Matrix getErr() { return Err; }
 
 protected:
     typedef  void (UKF::*UpdateNonLinear)(Matrix &X_dot, Matrix &X, Matrix &U);
-    bool bCalculateSigmaPoint();
-    bool bUnscentedTransform(Matrix &Out, Matrix &OutSigma, Matrix &P, Matrix &DSig,
+    bool calculateSigmaPoint();
+    bool unscentedTransform(Matrix &Out, Matrix &OutSigma, Matrix &P, Matrix &DSig,
                              UpdateNonLinear _vFuncNonLinear,
                              Matrix &InpSigma, Matrix &InpVector,
                              Matrix &_Wm, Matrix &_Wc, Matrix &_CovNoise);
-    void vUpdateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &U);
-    void vUpdateNonlinearZ(Matrix &Z_est, Matrix &X, Matrix &U);
+    void updateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &U);
+    void updateNonlinearZ(Matrix &Z_est, Matrix &X, Matrix &U);
 
 private:
     Matrix X_Est{SS_X_LEN, 1};
@@ -150,6 +148,8 @@ private:
     double Pinit;
     double Qinit;
     double Rinit;
+
+    double dT;
 };
 
 #endif // UKF_H

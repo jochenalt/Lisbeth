@@ -85,7 +85,7 @@ Matrix dataQuaternion(SS_X_LEN, 1);
 
 #define ModelSistem_ACC_Z0 (1)
 
-void UKF::init(const float_prec PInit, const float_prec QInit, const float_prec RInit)
+void UKF::init(double sampleTime, const float_prec PInit, const float_prec QInit, const float_prec RInit)
 {
     /* Van der. Merwe, .. (2004). Sigma-Point Kalman Filters for Probabilistic Inference in Dynamic State-Space Models 
      * (Ph.D. thesis). Oregon Health & Science University. Page 6:
@@ -96,6 +96,7 @@ void UKF::init(const float_prec PInit, const float_prec QInit, const float_prec 
      * prior knowledge of the distribution of x (for Gaussian distributions, β = 2 is optimal).
      */
 
+    dT = sampleTime;
     Pinit = PInit;
     Qinit = QInit;
     Rinit = RInit;
@@ -105,19 +106,19 @@ void UKF::init(const float_prec PInit, const float_prec QInit, const float_prec 
     float_prec _beta    = 2.0;
     float_prec _lambda  = (_alpha*_alpha)*(SS_X_LEN+_k) - SS_X_LEN;
     
-    P.vSetToZero();
-    Rv.vSetToZero();
-    Rn.vSetToZero();
-    X_Est.vSetToZero();
+    P.setZero();
+    Rv.setZero();
+    Rn.setZero();
+    X_Est.setZero();
     X_Est[0][0] = 1.0;       /* Quaternion(k = 0) = [1 0 0 0]' */
 
-    P.vSetDiag(PInit);
-    Rv.vSetDiag(QInit);
-    Rn.vSetDiag(RInit);
+    P.setDiag(PInit);
+    Rv.setDiag(QInit);
+    Rn.setDiag(RInit);
 
 
     Wm[0][0] = _lambda/(SS_X_LEN + _lambda);
-    for (int32_t _i = 1; _i < Wm.i16getCol(); _i++) {
+    for (int32_t _i = 1; _i < Wm.getCols(); _i++) {
         Wm[0][_i] = 0.5/(SS_X_LEN + _lambda);
     }
     Wc = Wm;
@@ -128,31 +129,33 @@ void UKF::init(const float_prec PInit, const float_prec QInit, const float_prec 
 
 void UKF::vReset()
 {
-    P.vSetDiag(Pinit);
-    Rv.vSetDiag(Qinit);
-    Rn.vSetDiag(Rinit);
-    X_Est.vSetToZero();
+    P.setDiag(Pinit);
+    Rv.setDiag(Qinit);
+    Rn.setDiag(Rinit);
+    dataQuaternion.setZero();
+    dataQuaternion[0][0] = 1.0;
+    X_Est.setZero();
     X_Est[0][0] = 1.0;       /* Quaternion(k = 0) = [1 0 0 0]' */
 }
 
-void UKF::vUpdate(Matrix &Z, Matrix &U)
+void UKF::update(Matrix &Z, Matrix &U)
 {
     /* Dijalankan satu kali per waktu cuplik */
 
     /*  XSigma = [X~ Y+sqrt(C*P) Y-sqrt(C*P)    ; Y = [X~ ... X~], Y=NxN    ...{UKF_3}  */
-    bCalculateSigmaPoint();
+    calculateSigmaPoint();
     
     /* Unscented Transform XSigma [f,XSigma,U,Wm,Wc,Q] -> [X~,XSigma,P,dSigX]: ======== */
-    bUnscentedTransform(X_Est, X_Sigma, P, DX, (&UKF::vUpdateNonlinearX), X_Sigma, U, Wm, Wc, Rv);       /* {UKF_4} - {UKF_7} */
+    unscentedTransform(X_Est, X_Sigma, P, DX, (&UKF::updateNonlinearX), X_Sigma, U, Wm, Wc, Rv);       /* {UKF_4} - {UKF_7} */
     
     /* Unscented Transform ZSigma [h,XSigma,U,Wm,Wc,R] -> [Z~,ZSigma,Pz,dSigZ]: ======= */
-    bUnscentedTransform(Y_Est, Y_Sigma, Py, DZ, (&UKF::vUpdateNonlinearZ), X_Sigma, U, Wm, Wc, Rn);      /* {UKF_4} - {UKF_7} */
+    unscentedTransform(Y_Est, Y_Sigma, Py, DZ, (&UKF::updateNonlinearZ), X_Sigma, U, Wm, Wc, Rn);      /* {UKF_4} - {UKF_7} */
 
 
     /* Update the estimated system: =================================================== */
     /*  CrossCov(k) = sum(Wc(i)*dSigX(i)*dSigZ(i)')     ; i=1...(2N+1)      ...{UKF_8}  */
-    for (int32_t _i = 0; _i < DX.i16getRow(); _i++) {
-        for (int32_t _j = 0; _j < DX.i16getCol(); _j++) {
+    for (int32_t _i = 0; _i < DX.getRows(); _i++) {
+        for (int32_t _j = 0; _j < DX.getCols(); _j++) {
             DX[_i][_j] *= Wc[0][_j];
         }
     }
@@ -180,13 +183,13 @@ void UKF::vUpdate(Matrix &Z, Matrix &U)
      * X = X/math.sqrt(X[0]**2 + X[1]**2 + X[2]**2 + X[3]**2)
      */
     /* HATI-HATI!! Jika inisialisasi salah, (X(k=0) = [0]), hitungan akan NAN (pembagian dengan nol)!!  */
-    if (!X_Est.bNormVector()) {
+    if (!X_Est.isUnitVector()) {
         /* System error, reset EKF (atau sekalian reset MCU via watchdog?) */
         vReset();
     }
 }
 
-bool UKF::bCalculateSigmaPoint(void)
+bool UKF::calculateSigmaPoint(void)
 {
     /* XSigma(k|k-1) = [X~ Y+sqrt(C*P) Y-sqrt(C*P)]     ; Y = [X~ ... X~]   ...{UKF_3}
      *                                                  ; Y=NxN
@@ -209,7 +212,7 @@ bool UKF::bCalculateSigmaPoint(void)
     for (int32_t _i = 0; _i < SS_X_LEN; _i++) {
         _Y = _Y.InsertVector(X_Est, _i);
     }
-    X_Sigma.vSetToZero();
+    X_Sigma.setZero();
     /* Set _xSigma = [x 0 0] */
     X_Sigma = X_Sigma.InsertVector(X_Est, 0);
     /* Set _xSigma = [x Y+C*sqrt(P) 0] */
@@ -220,19 +223,19 @@ bool UKF::bCalculateSigmaPoint(void)
     return true;
 }
 
-bool UKF::bUnscentedTransform(Matrix &Out, Matrix &OutSigma, Matrix &P, Matrix &DSig,
+bool UKF::unscentedTransform(Matrix &Out, Matrix &OutSigma, Matrix &P, Matrix &DSig,
                               UpdateNonLinear _vFuncNonLinear,
                               Matrix &InpSigma, Matrix &InpVector,
                               Matrix &_Wm, Matrix &_Wc, Matrix &_CovNoise)
 {
     /* XSigma(k|k-1) = f(XSigma(k-1|k-1), u(k))                             ...{UKF_4}  */
     /* X~(k|k-1) = sum(Wm(i) * XSigma(k|k-1)(i))    ; i = 1 ... (2N+1)      ...{UKF_5}  */
-    Out.vSetToZero();
-    for (int32_t _j = 0; _j < InpSigma.i16getCol(); _j++) {
+    Out.setZero();
+    for (int32_t _j = 0; _j < InpSigma.getCols(); _j++) {
         /* Transformasi non-linear per kolom */
-        Matrix _AuxSigma1(InpSigma.i16getRow(), 1);
-        Matrix _AuxSigma2(OutSigma.i16getRow(), 1);
-        for (int32_t _i = 0; _i < InpSigma.i16getRow(); _i++) {
+        Matrix _AuxSigma1(InpSigma.getRows(), 1);
+        Matrix _AuxSigma2(OutSigma.getRows(), 1);
+        for (int32_t _i = 0; _i < InpSigma.getRows(); _i++) {
             _AuxSigma1[_i][0] = InpSigma[_i][_j];
         }
         (this->*(_vFuncNonLinear))(_AuxSigma2, _AuxSigma1, InpVector);      /* Welp... */
@@ -245,16 +248,16 @@ bool UKF::bUnscentedTransform(Matrix &Out, Matrix &OutSigma, Matrix &P, Matrix &
 
     /* dSigX = XSigma(k|k-1)(i) - Y(k)  ; Y(k) = [X~(k|k-1) .. X~(k|k-1)] */
     /*                                  ; Y(k)=Nx(2N+1)                     ...{UKF_6}  */
-    Matrix _AuxSigma1(OutSigma.i16getRow(), OutSigma.i16getCol());
-    for (int32_t _j = 0; _j < OutSigma.i16getCol(); _j++) {
+    Matrix _AuxSigma1(OutSigma.getRows(), OutSigma.getCols());
+    for (int32_t _j = 0; _j < OutSigma.getCols(); _j++) {
         _AuxSigma1 = _AuxSigma1.InsertVector(Out, _j);
     }
     DSig = OutSigma - _AuxSigma1;
 
     /* P(k|k-1) = sum(Wc(i)*dSigX(i)*dSigX(i)') + Q   ; i=1...(2N+1)        ...{UKF_7}  */
     _AuxSigma1 = DSig;
-    for (int32_t _i = 0; _i < DSig.i16getRow(); _i++) {
-        for (int32_t _j = 0; _j < DSig.i16getCol(); _j++) {
+    for (int32_t _i = 0; _i < DSig.getRows(); _i++) {
+        for (int32_t _j = 0; _j < DSig.getCols(); _j++) {
             _AuxSigma1[_i][_j] *= _Wc[0][_j];
         }
     }
@@ -263,7 +266,7 @@ bool UKF::bUnscentedTransform(Matrix &Out, Matrix &OutSigma, Matrix &P, Matrix &
     return true;
 }
 
-void UKF::vUpdateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &U)
+void UKF::updateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &U)
 {
     float_prec q0, q1, q2, q3;
     float_prec p, q, r;
@@ -290,13 +293,13 @@ void UKF::vUpdateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &U)
      *  q3 = q3 + q3_dot * dT;
      */
 
-    X_Next[0][0] = (0.5 * (+0.00 -p*q1 -q*q2 -r*q3))*SS_DT + q0;
-    X_Next[1][0] = (0.5 * (+p*q0 +0.00 +r*q2 -q*q3))*SS_DT + q1;
-    X_Next[2][0] = (0.5 * (+q*q0 -r*q1 +0.00 +p*q3))*SS_DT + q2;
-    X_Next[3][0] = (0.5 * (+r*q0 +q*q1 -p*q2 +0.00))*SS_DT + q3;
+    X_Next[0][0] = (0.5 * (+0.00 -p*q1 -q*q2 -r*q3))*dT + q0;
+    X_Next[1][0] = (0.5 * (+p*q0 +0.00 +r*q2 -q*q3))*dT + q1;
+    X_Next[2][0] = (0.5 * (+q*q0 -r*q1 +0.00 +p*q3))*dT + q2;
+    X_Next[3][0] = (0.5 * (+r*q0 +q*q1 -p*q2 +0.00))*dT + q3;
 }
 
-void UKF::vUpdateNonlinearZ(Matrix &Z_est, Matrix &X, Matrix &U)
+void UKF::updateNonlinearZ(Matrix &Z_est, Matrix &X, Matrix &U)
 {
     float_prec q0, q1, q2, q3;
     float_prec q0_2, q1_2, q2_2, q3_2;
@@ -347,7 +350,7 @@ void computeKalman(double accX, double accY, double accZ,
         Z[2][0] = Z[2][0] / _normG;
 
         /* Update Kalman */
-        ukf.vUpdate(Z, U);
+        ukf.update(Z, U);
         dataQuaternion = ukf.getX();
         w = dataQuaternion[0][0];
         x = dataQuaternion[1][0];
@@ -358,7 +361,7 @@ void computeKalman(double accX, double accY, double accZ,
 
 
 void resetKalman() {
-    dataQuaternion.vSetToZero();
+    dataQuaternion.setZero();
     dataQuaternion[0][0] = 1.0;
     ukf.vReset( );
 }
@@ -379,7 +382,7 @@ void serialFloatPrint(float f) {
 
 
 void setupKalman() {
-    ukf.init(P_INIT, Rv_INIT, Rn_INIT_ACC);
+    ukf.init(1.0/1000.0, P_INIT, Rv_INIT, Rn_INIT_ACC);
     double x,y,z,w;
     computeKalman(0,0,0,0,0,0,x,y,z,w);
     resetKalman();

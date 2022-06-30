@@ -176,8 +176,8 @@ public:
     /* Destructor */
     ~Matrix(void);
     /* Get internal state */
-    inline int16_t i16getRow(void) const { return this->i16row; }
-    inline int16_t i16getCol(void) const { return this->i16col; }
+    inline int16_t getRows(void) const { return this->i16row; }
+    inline int16_t getCols(void) const { return this->i16col; }
     
     
     /* ------------------------------------------- Matrix entry accessing functions ------------------------------------------- */
@@ -226,12 +226,12 @@ public:
     void vRoundingElementToZero(const int16_t _i, const int16_t _j);
     Matrix RoundingMatrixToZero(void);
     void vSetHomogen(const float_prec _val);
-    void vSetToZero(void);
+    void setZero(void);
     void vSetRandom(const int32_t _maxRand, const int32_t _minRand);
-    void vSetDiag(const float_prec _val);
+    void setDiag(const float_prec _val);
     void vSetIdentity(void);
     Matrix Transpose(void);
-    bool bNormVector(void);
+    bool isUnitVector(void);
     /* ------------------------------------------ Matrix/Vector insertion operations ------------------------------------------ */
     Matrix InsertVector(const Matrix& _Vector, const int16_t _posCol);
     Matrix InsertSubMatrix(const Matrix& _subMatrix, const int16_t _posRow, const int16_t _posCol);
@@ -562,10 +562,10 @@ inline Matrix Matrix::operator / (const float_prec _scalar) const {
 
 
 inline Matrix operator + (const float_prec _scalar, const Matrix& _mat) {
-    Matrix _outp(_mat.i16getRow(), _mat.i16getCol(), Matrix::NoInitMatZero);
+    Matrix _outp(_mat.getRows(), _mat.getCols(), Matrix::NoInitMatZero);
 
-    for (int16_t _i = 0; _i < _mat.i16getRow(); _i++) {
-        for (int16_t _j = 0; _j < _mat.i16getCol(); _j++) {
+    for (int16_t _i = 0; _i < _mat.getRows(); _i++) {
+        for (int16_t _j = 0; _j < _mat.getCols(); _j++) {
             _outp(_i,_j) = _scalar + _mat(_i,_j);
         }
     }
@@ -574,10 +574,10 @@ inline Matrix operator + (const float_prec _scalar, const Matrix& _mat) {
 
 
 inline Matrix operator - (const float_prec _scalar, const Matrix& _mat) {
-    Matrix _outp(_mat.i16getRow(), _mat.i16getCol(), Matrix::NoInitMatZero);
+    Matrix _outp(_mat.getRows(), _mat.getCols(), Matrix::NoInitMatZero);
 
-    for (int16_t _i = 0; _i < _mat.i16getRow(); _i++) {
-        for (int16_t _j = 0; _j < _mat.i16getCol(); _j++) {
+    for (int16_t _i = 0; _i < _mat.getRows(); _i++) {
+        for (int16_t _j = 0; _j < _mat.getCols(); _j++) {
             _outp(_i,_j) = _scalar - _mat(_i,_j);
         }
     }
@@ -586,10 +586,10 @@ inline Matrix operator - (const float_prec _scalar, const Matrix& _mat) {
 
 
 inline Matrix operator * (const float_prec _scalar, const Matrix& _mat) {
-    Matrix _outp(_mat.i16getRow(), _mat.i16getCol(), Matrix::NoInitMatZero);
+    Matrix _outp(_mat.getRows(), _mat.getCols(), Matrix::NoInitMatZero);
 
-    for (int16_t _i = 0; _i < _mat.i16getRow(); _i++) {
-        for (int16_t _j = 0; _j < _mat.i16getCol(); _j++) {
+    for (int16_t _i = 0; _i < _mat.getRows(); _i++) {
+        for (int16_t _j = 0; _j < _mat.getCols(); _j++) {
             _outp(_i,_j) = _scalar * _mat(_i,_j);
         }
     }
@@ -673,7 +673,7 @@ inline void Matrix::vSetHomogen(const float_prec _val) {
     }
 }
 
-inline void Matrix::vSetToZero(void) {
+inline void Matrix::setZero(void) {
     this->vSetHomogen(0.0);
 }
 
@@ -685,7 +685,7 @@ inline void Matrix::vSetRandom(const int32_t _maxRand, const int32_t _minRand) {
     }
 }
 
-inline void Matrix::vSetDiag(const float_prec _val) {
+inline void Matrix::setDiag(const float_prec _val) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             if (_i == _j) {
@@ -698,12 +698,12 @@ inline void Matrix::vSetDiag(const float_prec _val) {
 }
 
 inline void Matrix::vSetIdentity(void) {
-    this->vSetDiag(1.0);
+    this->setDiag(1.0);
 }
 
 inline Matrix MatIdentity(const int16_t _i16size) {
     Matrix _outp(_i16size, _i16size, Matrix::NoInitMatZero);
-    _outp.vSetDiag(1.0);   
+    _outp.setDiag(1.0);   
     return _outp;
 }
 
@@ -719,7 +719,7 @@ inline Matrix Matrix::Transpose(void) {
 }
 
 /* Normalize the vector */
-inline bool Matrix::bNormVector(void) {
+inline bool Matrix::isUnitVector(void) {
     float_prec _normM = 0.0;
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
