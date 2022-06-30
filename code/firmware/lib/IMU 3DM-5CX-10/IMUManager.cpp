@@ -108,6 +108,8 @@ void IMUManager::updatePowerState() {
             fastWatchdog();
             if (ok) {
               imuState = IMU_SETUP;
+              filterWarmedUp = false;
+              lastPhaseStart_ms = millis();
             }
             else {
               digitalWrite(PIN_IMU_POWER, HIGH);
@@ -124,6 +126,10 @@ void IMUManager::updatePowerState() {
               imuState = IMU_COOLING_DOWN;
               lastPhaseStart_ms = millis();
               cmdPowerDown = false;
+              filterWarmedUp = false;
+            } else {
+              if (millis() - lastPhaseStart_ms >warmup_filter_ms)
+                filterWarmedUp = true;
             }
             break;
           case IMU_COOLING_DOWN:

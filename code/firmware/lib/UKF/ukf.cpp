@@ -144,7 +144,7 @@ void UnscentedKalmanFilter::init(double sampleTime, const double PInit, const do
 
 }
 
-void UnscentedKalmanFilter::vReset()
+void UnscentedKalmanFilter::resetFilter()
 {
     P.setDiag(Pinit);
     Rv.setDiag(Qinit);
@@ -155,7 +155,7 @@ void UnscentedKalmanFilter::vReset()
     X_Est[0][0] = 1.0;       /* Quaternion(k = 0) = [1 0 0 0]' */
 }
 
-void UnscentedKalmanFilter::update(Matrix &Y, Matrix &U)
+void UnscentedKalmanFilter::updateFilter(Matrix &Y, Matrix &U)
 {
    /* Run once every sampling time */
 
@@ -182,7 +182,7 @@ void UnscentedKalmanFilter::update(Matrix &Y, Matrix &U)
     /* Calculate the Kalman Gain:
      *  K           = Pxy(k) * (Py(k)^-1)                                   ...{UKF_10}
      */
-    Matrix PyInv = Py.Invers();
+    Matrix PyInv = Py.inverse();
 
     Gain = Pxy * PyInv;
     /* Update the Estimated State Variable:
@@ -199,7 +199,7 @@ void UnscentedKalmanFilter::update(Matrix &Y, Matrix &U)
      if (!X_Est.isUnitVector()) {
         Serial.println("System error");
         /* System error, reset EKF */ 
-        vReset();
+        resetFilter();
 
     }
 }
@@ -211,7 +211,7 @@ void UnscentedKalmanFilter::calculateSigmaPoint()
      * XSigma(k-1) = [x(k-1) Xs(k-1)+GPsq Xs(k-1)-GPsq]                     ...{UKF_4}
      */
     /* Use Cholesky Decomposition to compute sqrt(P) */
-    P_Chol = P.CholeskyDec();
+    P_Chol = P.choleskyDec();
     P_Chol = P_Chol * Gamma;     
 
 
@@ -356,7 +356,7 @@ void UnscentedKalmanFilter::compute(double accX, double accY, double accZ,
         Z[2][0] = Z[2][0] / _normG;
 
         /* Update Kalman */
-        update(Z, U);
+        updateFilter(Z, U);
 
         dataQuaternion = getX();
         w = dataQuaternion[0][0];
@@ -370,7 +370,7 @@ void UnscentedKalmanFilter::compute(double accX, double accY, double accZ,
 void UnscentedKalmanFilter::reset() {
     dataQuaternion.setZero();
     dataQuaternion[0][0] = 1.0;
-    vReset( );
+    resetFilter( );
 }
 
 void UnscentedKalmanFilter::setup(double targetFreq) {

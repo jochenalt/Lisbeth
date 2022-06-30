@@ -232,32 +232,32 @@ public:
     /* ------------------------------------------ Matrix/Vector insertion operations ------------------------------------------ */
     Matrix insertVector(const Matrix& _Vector, const int16_t _posCol);
     Matrix InsertSubMatrix(const Matrix& _subMatrix, const int16_t _posRow, const int16_t _posCol);
-    Matrix InsertSubMatrix(const Matrix& _subMatrix, const int16_t _posRow, const int16_t _posCol,
+    Matrix insertSubMatrix(const Matrix& _subMatrix, const int16_t _posRow, const int16_t _posCol,
                            const int16_t _lenRow, const int16_t _lenColumn);
-    Matrix InsertSubMatrix(const Matrix& _subMatrix, const int16_t _posRow, const int16_t _posCol,
+    Matrix insertSubMatrix(const Matrix& _subMatrix, const int16_t _posRow, const int16_t _posCol,
                            const int16_t _posRowSub, const int16_t _posColSub,
                            const int16_t _lenRow, const int16_t _lenColumn);
     /* ---------------------------------------------------- Big operations ---------------------------------------------------- */
     /* Matrix invertion using Gauss-Jordan algorithm */
-    Matrix Invers(void) const;
+    Matrix inverse(void) const;
     /* Check the definiteness of a matrix */
-    bool bMatrixIsPositiveDefinite(const bool checkPosSemidefinite = false) const;
+    bool isPositiveDefinite(const bool checkPosSemidefinite = false) const;
     /* Return the vector (Mx1 matrix) correspond with the diagonal entries of 'this' */
-    Matrix GetDiagonalEntries(void) const;
+    Matrix getDiagonalEntries(void) const;
     /* Do the Cholesky Decomposition using Cholesky-Crout algorithm, return 'L' matrix */
-    Matrix CholeskyDec(void) const;
+    Matrix choleskyDec(void) const;
     /* Do Householder Transformation for QR Decomposition operation */
-    Matrix HouseholderTransformQR(const int16_t _rowTransform, const int16_t _colTransform);
+    Matrix hHouseholderTransformQR(const int16_t _rowTransform, const int16_t _colTransform);
     /* Do QR Decomposition for matrix using Householder Transformation */
     bool QRDec(Matrix& Qt, Matrix& R) const;
     /* Do back-subtitution for upper triangular matrix A & column matrix B:
      * x = BackSubtitution(&A, &B)          ; for Ax = B
      */
-    Matrix BackSubtitution(const Matrix& A, const Matrix& B) const;
+    Matrix backSubtitution(const Matrix& A, const Matrix& B) const;
     /* Do forward-subtitution for lower triangular matrix A & column matrix B:
      * x = ForwardSubtitution(&A, &B)       ; for Ax = B
      */
-    Matrix ForwardSubtitution(const Matrix& A, const Matrix& B) const;
+    Matrix forwardSubtitution(const Matrix& A, const Matrix& B) const;
     /* ----------------------------------------------- Matrix printing function ----------------------------------------------- */
     void print(void);
     void vPrintFull(void);
@@ -805,7 +805,7 @@ inline Matrix Matrix::InsertSubMatrix(const Matrix& _subMatrix, const int16_t _p
  *      [A20  B10  B11  A23]
  *      [A30  A31  A32  A33]
  */
-inline Matrix Matrix::InsertSubMatrix(const Matrix& _subMatrix, const int16_t _posRow, const int16_t _posCol,
+inline Matrix Matrix::insertSubMatrix(const Matrix& _subMatrix, const int16_t _posRow, const int16_t _posCol,
                                       const int16_t _lenRow, const int16_t _lenColumn)
 {
     Matrix _outp(*this);
@@ -841,7 +841,7 @@ inline Matrix Matrix::InsertSubMatrix(const Matrix& _subMatrix, const int16_t _p
  *      [A20  A21  A22  A23]
  *      [A30  A31  A32  A33]
  */
-inline Matrix Matrix::InsertSubMatrix(const Matrix& _subMatrix, const int16_t _posRow, const int16_t _posCol,
+inline Matrix Matrix::insertSubMatrix(const Matrix& _subMatrix, const int16_t _posRow, const int16_t _posCol,
                         const int16_t _posRowSub, const int16_t _posColSub,
                         const int16_t _lenRow, const int16_t _lenColumn)
 {
@@ -866,7 +866,7 @@ inline Matrix Matrix::InsertSubMatrix(const Matrix& _subMatrix, const int16_t _p
 /* ------------------------------------------------- Big operations ------------------------------------------------- */
 
 /* Invers operation using Gauss-Jordan algorithm */
-inline Matrix Matrix::Invers(void) const {
+inline Matrix Matrix::inverse(void) const {
     Matrix _outp(this->i16row, this->i16col, NoInitMatZero);
     Matrix _temp(*this);
     _outp.setIdentity();
@@ -950,7 +950,7 @@ inline Matrix Matrix::Invers(void) const {
  * Useful if we want to check whether the matrix is positive definite or not
  *  (useful before calling CholeskyDec function).
  */
-inline bool Matrix::bMatrixIsPositiveDefinite(const bool checkPosSemidefinite) const {
+inline bool Matrix::isPositiveDefinite(const bool checkPosSemidefinite) const {
     bool _posDef, _posSemiDef;
     Matrix _temp(*this);
     
@@ -1007,7 +1007,7 @@ inline bool Matrix::bMatrixIsPositiveDefinite(const bool checkPosSemidefinite) c
  *                                   [a22]
  *                                   [a33]
  */
-inline Matrix Matrix::GetDiagonalEntries(void) const {
+inline Matrix Matrix::getDiagonalEntries(void) const {
     Matrix _temp(this->i16row, 1, NoInitMatZero);
     
     if (this->i16row != this->i16col) {
@@ -1034,7 +1034,7 @@ inline Matrix Matrix::GetDiagonalEntries(void) const {
  *           the upper triangular of _A. The result should be equal mathematically if A
  *           is symmetry).
  */
-inline Matrix Matrix::CholeskyDec(void) const {
+inline Matrix Matrix::choleskyDec(void) const {
     double _tempFloat;
 
     /* Note that _outp need to be initialized as zero matrix */
@@ -1080,7 +1080,7 @@ inline Matrix Matrix::CholeskyDec(void) const {
 /* Do the Householder Transformation for QR Decomposition operation.
  *              out = HouseholderTransformQR(A, i, j)
  */
-inline Matrix Matrix::HouseholderTransformQR(const int16_t _rowTransform, const int16_t _colTransform) {
+inline Matrix Matrix::hHouseholderTransformQR(const int16_t _rowTransform, const int16_t _colTransform) {
     double _tempFloat;
     double _xLen;
     double _x1;
@@ -1173,7 +1173,7 @@ inline bool Matrix::QRDec(Matrix& Qt, Matrix& R) const {
     R = (*this);
     Qt.setIdentity();
     for (int16_t _i = 0; (_i < (this->i16row - 1)) && (_i < this->i16col-1); _i++) {
-        Qn  = R.HouseholderTransformQR(_i, _i);
+        Qn  = R.hHouseholderTransformQR(_i, _i);
         if (!Qn.isValid()) {
             Qt.setMatrixInvalid();
             R.setMatrixInvalid();
@@ -1206,7 +1206,7 @@ inline bool Matrix::QRDec(Matrix& Qt, Matrix& R) const {
  * CATATAN! NOTE! To lower the computation cost, we don't check that A is a upper triangular
  *  matrix (it's assumed that user already make sure of that before calling this routine).
  */
-inline Matrix Matrix::BackSubtitution(const Matrix& A, const Matrix& B) const {
+inline Matrix Matrix::backSubtitution(const Matrix& A, const Matrix& B) const {
     Matrix _outp(A.i16row, 1, NoInitMatZero);
     if ((A.i16row != A.i16col) || (A.i16row != B.i16row)) {
         _outp.setMatrixInvalid();
@@ -1236,7 +1236,7 @@ inline Matrix Matrix::BackSubtitution(const Matrix& A, const Matrix& B) const {
  * CATATAN! NOTE! To lower the computation cost, we don't check that A is a lower triangular
  *  matrix (it's assumed that user already make sure of that before calling this routine).
  */
-inline Matrix Matrix::ForwardSubtitution(const Matrix& A, const Matrix& B) const {
+inline Matrix Matrix::forwardSubtitution(const Matrix& A, const Matrix& B) const {
     Matrix _outp(A.i16row, 1, NoInitMatZero);
     if ((A.i16row != A.i16col) || (A.i16row != B.i16row)) {
         _outp.setMatrixInvalid();

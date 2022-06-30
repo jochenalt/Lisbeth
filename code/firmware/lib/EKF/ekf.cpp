@@ -128,7 +128,7 @@ bool EKF::bUpdate(const Matrix& Y, const Matrix& U)
     S = (H*P*(H.Transpose())) + R;
 
     /* K       = P(k|k-1)*H'*(S^-1)                                     ...{EKF_6} */
-    Gain = P*(H.Transpose())*(S.Invers());
+    Gain = P*(H.Transpose())*(S.inverse());
     if (!Gain.isValid()) {
         return false;
     }

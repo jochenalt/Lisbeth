@@ -1,72 +1,80 @@
 /**********************************************************************************************************************
- *  Fungsi Discrete Unscented-kalman-filter (dihitung secara diskrit), Ref:
- *          Van der. Merwe, .. (2004). Sigma-Point Kalman Filters for Probabilistic
- *          Inference in Dynamic State-Space Models (Ph.D. thesis). Oregon Health &
- *          Science University.
+ *  Class for Discrete Unscented Kalman Filter 
+ *  Ref: Van der. Merwe, .. (2004). Sigma-Point Kalman Filters for Probabilistic Inference in Dynamic 
+ *      State-Space Models (Ph.D. thesis). Oregon Health & Science University.
  *
- *         Formulasi plant yang diestimasi:
- *              x*(k) = f[x(k-1), u(k)] + w(k)          ; x=Nx1,    u=Mx1               ...{UKF_1}
- *              z(k)  = h[x(k), u(k)] + v(k)            ; z=Zx1                         ...{UKF_2}
+ *  The system to be estimated is defined as a discrete nonlinear dynamic dystem:
+ *              x(k+1) = f[x(k), u(k)] + v(k)           ; x = Nx1,    u = Mx1
+ *              y(k)   = h[x(k), u(k)] + n(k)           ; y = Zx1
  *
- *        dimana:
- *          x*(k)   : Update x(k-1) terhadap waktu cuplik       : Nx1
- *          x(k-1)  : State Variable sistem waktu ke-k          : Nx1
- *          z(k)    : Keluaran sistem waktu ke-k                : Zx1
- *          u(k)    : Masukan sistem waktu ke-k                 : Mx1
- *          w(k)    : Noise proses, asumsi AWGN, kovarian Q     : Nx1
- *          v(k)    : Noise pengukuran, asumsi AWGN, kovarian R : Nx1
+ *        Where:
+ *          x(k) : State Variable at time-k                          : Nx1
+ *          y(k) : Measured output at time-k                         : Zx1
+ *          u(k) : System input at time-k                            : Mx1
+ *          v(k) : Process noise, AWGN assumed, w/ covariance  Rv    : Nx1
+ *          n(k) : Measurement noise, AWGN assumed, w/ covariance Rn : Nx1
  *
- *          f(..), h(..) adalah model (non-linear) dari sistem yang ingin diprediksi
+ *          f(..), h(..) is a nonlinear transformation of the system to be estimated.
  *
  **********************************************************************************************************************
- *         Algoritma Discrete Unscented-kalman-filter:
- *          Init:
- *                  P (k=0|k=0) = Identitas * Kovarian(P(k=0)), biasanya diisi dg nilai yg besar
- *                  X~(k=0|k=0) = Ekspektasi(X(k=0)), biasanya = 0
- *                  Wc, Wm      = First order & second order weight
- *          Lakukan iterasi:
- *              Kalkulasi sigma point:
- *                  XSigma(k|k-1) = [X~ Y+sqrt(C*P) Y-sqrt(C*P)]    ; Y = [X~ ... X~]   ...{UKF_3}
- *                                                                  ; Y=NxN
- *                                                                  ; C = (N + Lambda)
+ *      Unscented Kalman Filter algorithm:
+ *          Initialization:
+ *              P (k=0|k=0) = Identitas * covariant(P(k=0)), typically initialized with some big number.
+ *              x(k=0|k=0)  = Expected value of x at time-0 (i.e. x(k=0)), typically set to zero.
+ *              Rv, Rn      = Covariance matrices of process & measurement. As this implementation 
+ *                              the noise as AWGN (and same value for every variable), this is set
+ *                              to Rv=diag(RvInit,...,RvInit) and Rn=diag(RnInit,...,RnInit).
+ *              Wc, Wm      = First order & second order weight, respectively.
+ *              alpha, beta, kappa, gamma = scalar constants.
+ *              
+ *              lambda = (alpha^2)*(N+kappa)-N,         gamma = sqrt(N+alpha)           ...{UKF_1}
+ *              Wm = [lambda/(N+lambda)         1/(2(N+lambda)) ... 1/(2(N+lambda))]    ...{UKF_2}
+ *              Wc = [Wm(0)+(1-alpha(^2)+beta)  1/(2(N+lambda)) ... 1/(2(N+lambda))]    ...{UKF_3}
+ *              
+ *          
+ *          UKF Calculation (every sampling time):
+ *              Calculate the Sigma Point:
+ *                  Xs(k-1) = [x(k-1) ... x(k-1)]            ; Xs(k-1) = NxN
+ *                  GPsq = gamma * sqrt(P(k-1))
+ *                  XSigma(k-1) = [x(k-1) Xs(k-1)+GPsq Xs(k-1)-GPsq]                    ...{UKF_4}
+ *              
+ *              
+ *              Unscented Transform XSigma [f,XSigma,u,Rv] -> [x,XSigma,P,DX]:
+ *                  XSigma(k) = f(XSigma(k-1), u(k-1))                                  ...{UKF_5a}
  * 
- *              Unscented Transform XSigma [f,XSigma,U,Wm,Wc,Q] -> [X~,XSigma,P,dSigX]:
- *                  XSigma(k|k-1) = f(XSigma(k-1|k-1), u(k))                            ...{UKF_4}
- *                  X~(k|k-1) = sum(Wm(i) * XSigma(k|k-1)(i))       ; i = 1 ... (2N+1)  ...{UKF_5}
+ *                  x(k|k-1) = sum(Wm(i) * XSigma(k)(i))    ; i = 1 ... (2N+1)          ...{UKF_6a}
  * 
- *                  dSigX = XSigma(k|k-1)(i) - Y(k)  ; Y(k) = [X~(k|k-1) .. X~(k|k-1)]
- *                                                   ; Y(k) = Nx(2N+1)                  ...{UKF_6}
- *                  P(k|k-1) = sum(Wc(i)*dSigX(i)*dSigX(i)') + Q    ; i = 1 ... (2N+1)  ...{UKF_7}
+ *                  DX = XSigma(k)(i) - Xs(k)   ; Xs(k) = [x(k|k-1) ... x(k|k-1)]
+ *                                              ; Xs(k) = Nx(2N+1)                      ...{UKF_7a}
+ * 
+ *                  P(k|k-1) = sum(Wc(i)*DX*DX') + Rv       ; i = 1 ... (2N+1)          ...{UKF_8a}
  *
  * 
- *              Unscented Transform ZSigma [h,XSigma,U,Wm,Wc,R] -> [Z~,ZSigma,Pz,dSigZ]:
- *                  ZSigma(k|k-1) = h(XSigma(k|k-1), u(k))                              ...{UKF_4}
- *                  Z~(k|k-1) = sum(Wm(i) * ZSigma(k|k-1)(i))       ; i = 1 ... (2N+1)  ...{UKF_5}
+ *              Unscented Transform YSigma [h,XSigma,u,Rn] -> [y_est,YSigma,Py,DY]:
+ *                  YSigma(k) = h(XSigma(k), u(k|k-1))      ; u(k|k-1) = u(k)           ...{UKF_5b}
  * 
- *                  dSigZ = ZSigma(k|k-1)(i) - Y(k)  ; Y(k) = [Z~(k|k-1) .. Z~(k|k-1)]
- *                                                   ; Y(k) = Zx(2N+1)                  ...{UKF_6}
- *                  Pz(k|k-1) = sum(Wc(i)*dSigZ(i)*dSigZ(i)') + R   ; i = 1 ... (2N+1)  ...{UKF_7}
+ *                  y_est(k) = sum(Wm(i) * YSigma(k)(i))    ; i = 1 ... (2N+1)          ...{UKF_6b}
+ * 
+ *                  DY = YSigma(k)(i) - Ys(k)   ; Ys(k) = [y_est(k) ... y_est(k)]
+ *                                              ; Ys(k) = Zx(2N+1)                      ...{UKF_7b}
+ * 
+ *                  Py(k) = sum(Wc(i)*DY*DY') + Rn          ; i = 1 ... (2N+1)          ...{UKF_8b}
  * 
  * 
- *              Update the estimated system:
- *                  CrossCov(k) = sum(Wc(i)*dSigX(i)*dSigZ(i)')     ; i = 1 ... (2N+1)  ...{UKF_8}
- *                  K           = CrossCov(k) * Pz^-1                                   ...{UKF_9}
- *                  X~(k|k)     = X~(k|k-1) + K * (Z(k) - Z~(k|k-1))                    ...{UKF_10}
- *                  P(k|k)      = P(k|k-1) - K*Pz*K'                                    ...{UKF_11}
- *
- *        *Catatan tambahan:
- *              - Perhatikan persamaan f pada {UKF_4} adalah update versi diskrit!!!!
- *                              X~(k) = f(X~(k-1),u(k))
- *              - Dengan asumsi masukan plant ZOH, u(k) = u(k|k-1),
- *                  Dengan asumsi tambahan observer dijalankan sebelum pengendali, u(k|k-1) = u(k-1),
- *                  sehingga u(k) [untuk perhitungan kalman] adalah nilai u(k-1) [dari pengendali].
- *              - Notasi yang benar adalah u(k|k-1), tapi disini menggunakan notasi u(k) untuk
- *                  menyederhanakan penulisan rumus.
- *              - Pada contoh di atas X~(k=0|k=0) = [0]. Untuk mempercepat konvergensi bisa digunakan
- *                  informasi plant-spesific. Misal pada implementasi EKF untuk memfilter sensor
- *                  IMU (Inertial measurement unit) dengan X = [quaternion], dengan asumsi IMU
- *                  awalnya menghadap ke atas tanpa rotasi, X~(k=0|k=0) = [1, 0, 0, 0]'
- *
+ *              Calculate Cross-Covariance Matrix:
+ *                  Pxy(k) = sum(Wc(i)*DX*DY(i))            ; i = 1 ... (2N+1)          ...{UKF_9}
+ *              
+ *              
+ *              Calculate the Kalman Gain:
+ *                  K           = Pxy(k) * (Py(k)^-1)                                   ...{UKF_10}
+ *              
+ *              
+ *              Update the Estimated State Variable:
+ *                  x(k|k)      = x(k|k-1) + K * (y(k) - y_est(k))                      ...{UKF_11}
+ *              
+ *              
+ *              Update the Covariance Matrix:
+ *                  P(k|k)      = P(k|k-1) - K*Py(k)*K'                                 ...{UKF_12}
  *        Variabel:
  *          X_kira(k)    : X~(k) = X_Estimasi(k) kalman filter   : Nx1
  *          P(k)         : P(k) = matrix kovarian kalman filter  : NxN
@@ -94,8 +102,8 @@ public:
 
 private:
     void init(double sampleTime, const double PInit, const double QInit, const double RInit);
-    void vReset();
-    void update(Matrix &Z, Matrix &U);
+    void resetFilter();
+    void updateFilter(Matrix &Z, Matrix &U);
     Matrix getX() { return X_Est; }
     Matrix getP() { return P; }
     Matrix getErr() { return Err; }
