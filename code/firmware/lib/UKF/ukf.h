@@ -109,14 +109,14 @@ private:
     // intialise data structures of unscented Kalman filter
     void init(double sampleTime, const double PInit, const double QInit, const double RInit);
 
-    // reset internal data structures
-    void resetFilter();
-
     // carry out filtering
     void updateFilter(Matrix &Z, Matrix &U);
 
     // return the estimated result of the filter
     Matrix getX() { return X_Est; }
+
+    // return covariance 
+    Matrix getY() { return Y_Est; }
 
     // return covariance 
     Matrix getP() { return P; }
@@ -134,7 +134,7 @@ private:
                              Matrix &InpSigma, Matrix &InpVector,
                               Matrix &_CovNoise);
     void updateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &U);
-    void updateNonlinearZ(Matrix &Z_est, Matrix &X, Matrix &U);
+    void updateNonlinearY(Matrix &Z_est, Matrix &X, Matrix &U);
 
     #define SS_X_LEN    (4) // State: Quaternion 
     #define SS_Z_LEN    (3) // Output: Accel

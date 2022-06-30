@@ -142,7 +142,7 @@ void UnscentedKalmanFilter::init(double sampleTime, const double PInit, const do
 
 }
 
-void UnscentedKalmanFilter::resetFilter()
+void UnscentedKalmanFilter::reset()
 {
     P.setDiag(Pinit);
     Rv.setDiag(Qinit);
@@ -164,7 +164,7 @@ void UnscentedKalmanFilter::updateFilter(Matrix &Y, Matrix &U)
     unscentedTransform(X_Est, X_Sigma, P, DX, (&UnscentedKalmanFilter::updateNonlinearX), X_Sigma, U, Rv);     
     
     /* Unscented Transform YSigma [h,XSigma,u,Rn] -> [y_est,YSigma,Py,DY]:  ...{UKF_5b} - {UKF_8b} */
-    unscentedTransform(Y_Est, Y_Sigma, Py, DY, (&UnscentedKalmanFilter::updateNonlinearZ), X_Sigma, U, Rn);     
+    unscentedTransform(Y_Est, Y_Sigma, Py, DY, (&UnscentedKalmanFilter::updateNonlinearY), X_Sigma, U, Rn);     
 
 
     /* Calculate Cross-Covariance Matrix:
@@ -197,7 +197,7 @@ void UnscentedKalmanFilter::updateFilter(Matrix &Y, Matrix &U)
      if (!X_Est.isUnitVector()) {
         Serial.println("System error");
         /* System error, reset EKF */ 
-        resetFilter();
+        reset();
 
     }
 }
@@ -211,7 +211,6 @@ void UnscentedKalmanFilter::calculateSigmaPoint()
     /* Use Cholesky Decomposition to compute sqrt(P) */
     P_Chol = P.choleskyDec();
     P_Chol = P_Chol * Gamma;     
-
 
     Matrix _Y(SS_X_LEN, SS_X_LEN);
     for (int32_t _i = 0; _i < SS_X_LEN; _i++) {
@@ -228,9 +227,9 @@ void UnscentedKalmanFilter::calculateSigmaPoint()
 }
 
 void UnscentedKalmanFilter::unscentedTransform(Matrix &Out, Matrix &OutSigma, Matrix &P, Matrix &DSig,
-                              UpdateNonLinear _vFuncNonLinear,
-                              Matrix &InpSigma, Matrix &InpVector,
-                               Matrix &_CovNoise)
+                                             UpdateNonLinear _vFuncNonLinear,
+                                             Matrix &InpSigma, Matrix &InpVector,
+                                             Matrix &_CovNoise)
 {
     /* XSigma(k) = f(XSigma(k-1), u(k-1))                                  ...{UKF_5a}  */
     /* x(k|k-1) = sum(Wm(i) * XSigma(k)(i))    ; i = 1 ... (2N+1)          ...{UKF_6a}  */
@@ -269,25 +268,15 @@ void UnscentedKalmanFilter::unscentedTransform(Matrix &Out, Matrix &OutSigma, Ma
         }
     }
 
-    
     P = (_AuxSigma1 * (DSig.Transpose())) + _CovNoise;
 }
 
 void UnscentedKalmanFilter::updateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &U)
 {
-    double q0, q1, q2, q3;
-    double p, q, r;
-
-    q0 = X[0][0];
-    q1 = X[1][0];
-    q2 = X[2][0];
-    q3 = X[3][0];
-
-    p = U[0][0];
-    q = U[1][0];
-    r = U[2][0];
-
-    /* Kode python box_quaternion_tanpa_magnetometer_EKF_vIMU6DOF+HMC.py:
+    /* Insert the nonlinear update transformation here
+     *          x(k+1) = f[x(k), u(k)]
+     *
+     * The quaternion update function:
      *  q0_dot = 1/2. * (  0   - p*q1 - q*q2 - r*q3)
      *  q1_dot = 1/2. * ( p*q0 +   0  + r*q2 - q*q3)
      *  q2_dot = 1/2. * ( q*q0 - r*q1 +  0   + p*q3)
@@ -299,6 +288,14 @@ void UnscentedKalmanFilter::updateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &
      *  q2 = q2 + q2_dot * dT;
      *  q3 = q3 + q3_dot * dT;
      */
+    double q0 = X[0][0];
+    double q1 = X[1][0];
+    double q2 = X[2][0];
+    double q3 = X[3][0];
+
+    double p = U[0][0];
+    double q = U[1][0];
+    double r = U[2][0];
 
     X_Next[0][0] = (0.5 * (+0.00 -p*q1 -q*q2 -r*q3))*dT + q0;
     X_Next[1][0] = (0.5 * (+p*q0 +0.00 +r*q2 -q*q3))*dT + q1;
@@ -306,30 +303,29 @@ void UnscentedKalmanFilter::updateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &
     X_Next[3][0] = (0.5 * (+r*q0 +q*q1 -p*q2 +0.00))*dT + q3;
 }
 
-void UnscentedKalmanFilter::updateNonlinearZ(Matrix &Z_est, Matrix &X, Matrix &U)
+void UnscentedKalmanFilter::updateNonlinearY(Matrix &Z_est, Matrix &X, Matrix &U)
 {
-    double q0, q1, q2, q3;
-    double q0_2, q1_2, q2_2, q3_2;
-
-    q0 = X[0][0];
-    q1 = X[1][0];
-    q2 = X[2][0];
-    q3 = X[3][0];
-
-    q0_2 = q0 * q0;
-    q1_2 = q1 * q1;
-    q2_2 = q2 * q2;
-    q3_2 = q3 * q3;
-
-    /* Kode python box_quaternion_EKF_vIMU6DOF+HMC.py:
-     *     DCM     = numpy.array([[(+(q0**2)+(q1**2)-(q2**2)-(q3**2)),                        2*(q1*q2+q0*q3),                        2*(q1*q3-q0*q2)],
-     *                           [                   2*(q1*q2-q0*q3),     (+(q0**2)-(q1**2)+(q2**2)-(q3**2)),                        2*(q2*q3+q0*q1)],
-     *                           [                   2*(q1*q3+q0*q2),                        2*(q2*q3-q0*q1),     (+(q0**2)-(q1**2)-(q2**2)+(q3**2))]],
-     *                           "float32")
+    /* Insert the nonlinear measurement transformation here
+     *          y(k)   = h[x(k), u(k)]
+     *
+     * The measurement output is the gravitational and magnetic projection to the body
+     *     DCM     = [(+(q0**2)+(q1**2)-(q2**2)-(q3**2)),                        2*(q1*q2+q0*q3),                        2*(q1*q3-q0*q2)]
+     *               [                   2*(q1*q2-q0*q3),     (+(q0**2)-(q1**2)+(q2**2)-(q3**2)),                        2*(q2*q3+q0*q1)]
+     *               [                   2*(q1*q3+q0*q2),                        2*(q2*q3-q0*q1),     (+(q0**2)-(q1**2)-(q2**2)+(q3**2))]
      * 
-     *  G_proj_sens = DCM * [0 0 -g]              --> Proyeksi gravitasi ke sensors
-     *  M_proj_sens = DCM * [Mx My 0]             --> Proyeksi medan magnet ke sensors
+     *  G_proj_sens = DCM * [0 0 1]             --> Gravitational projection to the accelerometer sensor
+     *  M_proj_sens = DCM * [Mx My Mz]          --> (Earth) magnetic projection to the magnetometer sensor
      */
+    double q0 = X[0][0];
+    double q1 = X[1][0];
+    double q2 = X[2][0];
+    double q3 = X[3][0];
+
+    double q0_2 = q0 * q0;
+    double q1_2 = q1 * q1;
+    double q2_2 = q2 * q2;
+    double q3_2 = q3 * q3;
+
     Z_est[0][0] = (2*q1*q3 -2*q0*q2) * IMU_ACC_Z0;
     Z_est[1][0] = (2*q2*q3 +2*q0*q1) * IMU_ACC_Z0;
     Z_est[2][0] = (+(q0_2) -(q1_2) -(q2_2) +(q3_2)) * IMU_ACC_Z0;
@@ -337,41 +333,35 @@ void UnscentedKalmanFilter::updateNonlinearZ(Matrix &Z_est, Matrix &X, Matrix &U
 
 
 void UnscentedKalmanFilter::compute(double accX, double accY, double accZ, 
-                   double gyroX, double gyroY, double gyroZ,
-                   double &x, double &y, double &z, double &w) {
-        Z[0][0] = accX;
-        Z[1][0] = accY;
-        Z[2][0] = accZ;
+                                    double gyroX, double gyroY, double gyroZ,
+                                    double &x, double &y, double &z, double &w) {
+    // set accel data in [g]
+    Z[0][0] = accX;
+    Z[1][0] = accY;
+    Z[2][0] = accZ;
 
-        U[0][0] = gyroX;
-        U[1][0] = gyroY;
-        U[2][0] = gyroZ;
+    // set gyro data in [rad/s]
+    U[0][0] = gyroX;
+    U[1][0] = gyroY;
+    U[2][0] = gyroZ;
 
-        
-        /* Normalise */
-        double _normG = (Z[0][0] * Z[0][0]) + (Z[1][0] * Z[1][0]) + (Z[2][0] * Z[2][0]);
-        _normG = sqrt(_normG);
-        Z[0][0] = Z[0][0] / _normG;
-        Z[1][0] = Z[1][0] / _normG;
-        Z[2][0] = Z[2][0] / _normG;
+    // normalise
+    double _normG = sqrt((Z[0][0] * Z[0][0]) + (Z[1][0] * Z[1][0]) + (Z[2][0] * Z[2][0]));
+    Z[0][0] = Z[0][0] / _normG;
+    Z[1][0] = Z[1][0] / _normG;
+    Z[2][0] = Z[2][0] / _normG;
 
-        /* Update Kalman */
-        updateFilter(Z, U);
+    // Update Kalman 
+    updateFilter(Z, U);
 
-        dataQuaternion = getX();
-        w = dataQuaternion[0][0];
-        x = dataQuaternion[1][0];
-        y = dataQuaternion[2][0];
-        z = dataQuaternion[3][0];
-        
+    // get result
+    dataQuaternion = getX();
+    w = dataQuaternion[0][0];
+    x = dataQuaternion[1][0];
+    y = dataQuaternion[2][0];
+    z = dataQuaternion[3][0];
 }
 
-
-void UnscentedKalmanFilter::reset() {
-    dataQuaternion.setZero();
-    dataQuaternion[0][0] = 1.0;
-    resetFilter( );
-}
 
 void UnscentedKalmanFilter::setup(double targetFreq) {
     init(1.0/targetFreq, P_INIT, Rv_INIT, Rn_INIT_ACC);
