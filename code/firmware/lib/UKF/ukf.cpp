@@ -81,9 +81,7 @@
 #define Rv_INIT     (1e-7)
 #define Rn_INIT_ACC (0.0015)
 
-Matrix Z(SS_Z_LEN, 1);
-Matrix U(SS_U_LEN, 1);
-Matrix dataQuaternion(SS_X_LEN, 1);
+
 
 
 #define IMU_ACC_Z0   (1)
@@ -166,7 +164,7 @@ void UnscentedKalmanFilter::updateFilter(Matrix &Y, Matrix &U)
     unscentedTransform(X_Est, X_Sigma, P, DX, (&UnscentedKalmanFilter::updateNonlinearX), X_Sigma, U, Rv);     
     
     /* Unscented Transform YSigma [h,XSigma,u,Rn] -> [y_est,YSigma,Py,DY]:  ...{UKF_5b} - {UKF_8b} */
-    unscentedTransform(Y_Est, Y_Sigma, Py, Dy, (&UnscentedKalmanFilter::updateNonlinearZ), X_Sigma, U, Rn);     
+    unscentedTransform(Y_Est, Y_Sigma, Py, DY, (&UnscentedKalmanFilter::updateNonlinearZ), X_Sigma, U, Rn);     
 
 
     /* Calculate Cross-Covariance Matrix:
@@ -177,7 +175,7 @@ void UnscentedKalmanFilter::updateFilter(Matrix &Y, Matrix &U)
             DX[_i][_j] *= Wc[0][_j];
         }
     }
-    Pxy = DX * (Dy.Transpose());
+    Pxy = DX * (DY.Transpose());
 
     /* Calculate the Kalman Gain:
      *  K           = Pxy(k) * (Py(k)^-1)                                   ...{UKF_10}
@@ -270,6 +268,8 @@ void UnscentedKalmanFilter::unscentedTransform(Matrix &Out, Matrix &OutSigma, Ma
             _AuxSigma1[_i][_j] *= Wc[0][_j];
         }
     }
+
+    
     P = (_AuxSigma1 * (DSig.Transpose())) + _CovNoise;
 }
 

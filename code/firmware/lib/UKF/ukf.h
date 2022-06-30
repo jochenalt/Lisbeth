@@ -94,21 +94,41 @@ class UnscentedKalmanFilter
 public:
     UnscentedKalmanFilter() {};
 
+    // initialize filter and tell it the frequency, compute is going to be called  
     void setup(double targetFreq);
+
+    // reset all internal date structures and start from scratch
     void reset();
+
+    // do the filtering. Input is Gyro [rad/s] and Accel [g], output is a quat 
     void compute(double accX, double accY, double accZ, 
-                   double gyroX, double gyroY, double gyroZ,
-                   double &x, double &y, double &z, double &w);
+                 double gyroX, double gyroY, double gyroZ,
+                 double &x, double &y, double &z, double &w);
 
 private:
+    // intialise data structures of unscented Kalman filter
     void init(double sampleTime, const double PInit, const double QInit, const double RInit);
+
+    // reset internal data structures
     void resetFilter();
+
+    // carry out filtering
     void updateFilter(Matrix &Z, Matrix &U);
+
+    // return the estimated result of the filter
     Matrix getX() { return X_Est; }
+
+    // return covariance 
     Matrix getP() { return P; }
+
+    // return difference between estimate and prediction
     Matrix getErr() { return Err; }
+
+    // updateNonLinearX/Z is called from unscented Transform twice, a function pointer makes this convinient  
     typedef  void (UnscentedKalmanFilter::*UpdateNonLinear)(Matrix &X_dot, Matrix &X, Matrix &U);
+    
     void calculateSigmaPoint();
+
     void unscentedTransform(Matrix &Out, Matrix &OutSigma, Matrix &P, Matrix &DSig,
                              UpdateNonLinear _vFuncNonLinear,
                              Matrix &InpSigma, Matrix &InpVector,
@@ -116,23 +136,26 @@ private:
     void updateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &U);
     void updateNonlinearZ(Matrix &Z_est, Matrix &X, Matrix &U);
 
-
-    /* State Space dimension */
     #define SS_X_LEN    (4) // State: Quaternion 
     #define SS_Z_LEN    (3) // Output: Accel
     #define SS_U_LEN    (3) // Input:  Gyro
 
-    Matrix X_Est{SS_X_LEN, 1};
+    Matrix U{SS_U_LEN, 1};                              // input: Gyro
+    Matrix Z{SS_Z_LEN, 1};                              // outpu: Accel
+    
+    Matrix dataQuaternion{SS_X_LEN, 1};                 // output quat
+    
+    Matrix X_Est{SS_X_LEN, 1};                          // state variable, estimated
     Matrix X_Sigma{SS_X_LEN, (2*SS_X_LEN + 1)};
     
     Matrix Y_Est{SS_Z_LEN, 1};
     Matrix Y_Sigma{SS_Z_LEN, (2*SS_X_LEN + 1)};
     
-    Matrix P{SS_X_LEN, SS_X_LEN};
+    Matrix P{SS_X_LEN, SS_X_LEN};                       // covariance matrix
     Matrix P_Chol{SS_X_LEN, SS_X_LEN};
     
-    Matrix DX{SS_X_LEN, (2*SS_X_LEN + 1)};
-    Matrix Dy{SS_Z_LEN, (2*SS_X_LEN + 1)};
+    Matrix DX{SS_X_LEN, (2*SS_X_LEN + 1)};              // Cross-Covariance Matrix of X
+    Matrix DY{SS_Z_LEN, (2*SS_X_LEN + 1)};              // Cross-Covariance Matrix of Y
     
     Matrix Py{SS_Z_LEN, SS_Z_LEN};
     Matrix Pxy{SS_X_LEN, SS_Z_LEN};
@@ -140,11 +163,11 @@ private:
     Matrix Wm{1, (2*SS_X_LEN + 1)};
     Matrix Wc{1, (2*SS_X_LEN + 1)};
     
-    Matrix Rv{SS_X_LEN, SS_X_LEN};
-    Matrix Rn{SS_Z_LEN, SS_Z_LEN};
+    Matrix Rv{SS_X_LEN, SS_X_LEN};                      // covariance Matrix of process
+    Matrix Rn{SS_Z_LEN, SS_Z_LEN};                      // covariance Matrix of measurement
 
-    Matrix Err{SS_Z_LEN, 1};
-    Matrix Gain{SS_X_LEN, SS_Z_LEN};
+    Matrix Err{SS_Z_LEN, 1};                            // difference between X_Est and X
+    Matrix Gain{SS_X_LEN, SS_Z_LEN};                    // Kalman Gain
     double Gamma;
 
     double Pinit = 1;
