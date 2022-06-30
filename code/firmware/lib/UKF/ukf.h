@@ -125,8 +125,8 @@ private:
     Matrix X_Est{SS_X_LEN, 1};
     Matrix X_Sigma{SS_X_LEN, (2*SS_X_LEN + 1)};
     
-    Matrix Z_Est{SS_Z_LEN, 1};
-    Matrix Z_Sigma{SS_Z_LEN, (2*SS_X_LEN + 1)};
+    Matrix Y_Est{SS_Z_LEN, 1};
+    Matrix Y_Sigma{SS_Z_LEN, (2*SS_X_LEN + 1)};
     
     Matrix P{SS_X_LEN, SS_X_LEN};
     Matrix P_Chol{SS_X_LEN, SS_X_LEN};
@@ -134,14 +134,14 @@ private:
     Matrix DX{SS_X_LEN, (2*SS_X_LEN + 1)};
     Matrix DZ{SS_Z_LEN, (2*SS_X_LEN + 1)};
     
-    Matrix PZ{SS_Z_LEN, SS_Z_LEN};
-    Matrix CrossCov{SS_X_LEN, SS_Z_LEN};
+    Matrix Py{SS_Z_LEN, SS_Z_LEN};
+    Matrix Pxy{SS_X_LEN, SS_Z_LEN};
     
     Matrix Wm{1, (2*SS_X_LEN + 1)};
     Matrix Wc{1, (2*SS_X_LEN + 1)};
     
-    Matrix Q{SS_X_LEN, SS_X_LEN};
-    Matrix R{SS_Z_LEN, SS_Z_LEN};
+    Matrix Rv{SS_X_LEN, SS_X_LEN};
+    Matrix Rn{SS_Z_LEN, SS_Z_LEN};
 
     Matrix Err{SS_Z_LEN, 1};
     Matrix Gain{SS_X_LEN, SS_Z_LEN};

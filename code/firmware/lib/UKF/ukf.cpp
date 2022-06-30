@@ -106,14 +106,14 @@ void UKF::init(const float_prec PInit, const float_prec QInit, const float_prec 
     float_prec _lambda  = (_alpha*_alpha)*(SS_X_LEN+_k) - SS_X_LEN;
     
     P.vSetToZero();
-    Q.vSetToZero();
-    R.vSetToZero();
+    Rv.vSetToZero();
+    Rn.vSetToZero();
     X_Est.vSetToZero();
     X_Est[0][0] = 1.0;       /* Quaternion(k = 0) = [1 0 0 0]' */
 
     P.vSetDiag(PInit);
-    Q.vSetDiag(QInit);
-    R.vSetDiag(RInit);
+    Rv.vSetDiag(QInit);
+    Rn.vSetDiag(RInit);
 
 
     Wm[0][0] = _lambda/(SS_X_LEN + _lambda);
@@ -129,8 +129,8 @@ void UKF::init(const float_prec PInit, const float_prec QInit, const float_prec 
 void UKF::vReset()
 {
     P.vSetDiag(Pinit);
-    Q.vSetDiag(Qinit);
-    R.vSetDiag(Rinit);
+    Rv.vSetDiag(Qinit);
+    Rn.vSetDiag(Rinit);
     X_Est.vSetToZero();
     X_Est[0][0] = 1.0;       /* Quaternion(k = 0) = [1 0 0 0]' */
 }
@@ -143,10 +143,10 @@ void UKF::vUpdate(Matrix &Z, Matrix &U)
     bCalculateSigmaPoint();
     
     /* Unscented Transform XSigma [f,XSigma,U,Wm,Wc,Q] -> [X~,XSigma,P,dSigX]: ======== */
-    bUnscentedTransform(X_Est, X_Sigma, P, DX, (&UKF::vUpdateNonlinearX), X_Sigma, U, Wm, Wc, Q);       /* {UKF_4} - {UKF_7} */
+    bUnscentedTransform(X_Est, X_Sigma, P, DX, (&UKF::vUpdateNonlinearX), X_Sigma, U, Wm, Wc, Rv);       /* {UKF_4} - {UKF_7} */
     
     /* Unscented Transform ZSigma [h,XSigma,U,Wm,Wc,R] -> [Z~,ZSigma,Pz,dSigZ]: ======= */
-    bUnscentedTransform(Z_Est, Z_Sigma, PZ, DZ, (&UKF::vUpdateNonlinearZ), X_Sigma, U, Wm, Wc, R);      /* {UKF_4} - {UKF_7} */
+    bUnscentedTransform(Y_Est, Y_Sigma, Py, DZ, (&UKF::vUpdateNonlinearZ), X_Sigma, U, Wm, Wc, Rn);      /* {UKF_4} - {UKF_7} */
 
 
     /* Update the estimated system: =================================================== */
@@ -156,23 +156,23 @@ void UKF::vUpdate(Matrix &Z, Matrix &U)
             DX[_i][_j] *= Wc[0][_j];
         }
     }
-    CrossCov = DX * (DZ.Transpose());
+    Pxy = DX * (DZ.Transpose());
 
     /*  K           = CrossCov(k) * Pz^-1                                   ...{UKF_9}  */
-    Matrix PZ_Inv = PZ.Invers();
+    Matrix PZ_Inv = Py.Invers();
     if (!PZ_Inv.bMatrixIsValid()) {
         /* return false; */
         this->vReset();
         return;
     }
-    Gain = CrossCov * PZ_Inv;
+    Gain = Pxy * PZ_Inv;
 
     /*  X~(k|k)     = X~(k|k-1) + K * (Z(k) - Z~(k|k-1))                    ...{UKF_10}  */
-    Err = Z - Z_Est;
+    Err = Z - Y_Est;
     X_Est = X_Est + (Gain*Err);
 
     /*  P(k|k)      = P(k|k-1) - K*Pz*K'                                    ...{UKF_11}  */
-    P = P - (Gain * PZ * Gain.Transpose());
+    P = P - (Gain * Py * Gain.Transpose());
 
 
     /* ======= Tambahan untuk plant berupa sistem inersia berbasis quaternion ======= */
@@ -380,6 +380,8 @@ void serialFloatPrint(float f) {
 
 void setupKalman() {
     ukf.init(P_INIT, Rv_INIT, Rn_INIT_ACC);
+    double x,y,z,w;
+    computeKalman(0,0,0,0,0,0,x,y,z,w);
     resetKalman();
 }
 
