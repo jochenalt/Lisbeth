@@ -78,18 +78,38 @@
 #ifndef UKF_H
 #define UKF_H
 
-#include "konfig.h"
 #include "matrix.h"
+
+/* State Space dimension */
+#define SS_X_LEN    (4) // State: Quaternion 
+#define SS_Z_LEN    (3) // Output: Accel
+#define SS_U_LEN    (3) // Input:  Gyro
+#define SS_DT_MILIS (1.0)                            /* 20 ms */
+#define SS_DT       (SS_DT_MILIS/1000.)   /* Sampling time */
+
+/* UKF initialization constant -------------------------------------------------------------------------------------- */
+#define P_INIT      (1000.)
+#define Rv_INIT     (1e-7)
+#define Rn_INIT_ACC (0.0015)
+
+
+void setupKalman();
+void resetKalman();
+void computeKalman(double accX, double accY, double accZ, 
+                   double gyroX, double gyroY, double gyroZ,
+                   double &x, double &y, double &z, double &w);
+
 
 class UKF
 {
 public:
-    UKF(const float_prec PInit, const float_prec QInit, const float_prec RInit);
-    void vReset(const float_prec PInit, const float_prec QInit, const float_prec RInit);
+    UKF() {};
+    void init(const double PInit, const double QInit, const double RInit);
+    void vReset();
     void vUpdate(Matrix &Z, Matrix &U);
-    Matrix BacaDataX() { return X_Est; }
-    Matrix BacaDataP() { return P; }
-    Matrix BacaDataErr() { return Err; }
+    Matrix getX() { return X_Est; }
+    Matrix getP() { return P; }
+    Matrix getErr() { return Err; }
 
 protected:
     typedef  void (UKF::*UpdateNonLinear)(Matrix &X_dot, Matrix &X, Matrix &U);
@@ -125,7 +145,11 @@ private:
 
     Matrix Err{SS_Z_LEN, 1};
     Matrix Gain{SS_X_LEN, SS_Z_LEN};
-    float_prec UKFconst;
+    double Gamma;
+
+    double Pinit;
+    double Qinit;
+    double Rinit;
 };
 
 #endif // UKF_H
