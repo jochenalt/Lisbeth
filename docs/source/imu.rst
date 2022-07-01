@@ -24,9 +24,7 @@ The IMU is the source of the entire pipeline, therefore it is needs to be very f
 .. |pic2| image:: /videos/SensorConnect.gif
    :width: 70%
 
-|pic1|  |pic2| 
-
-To set it up, it makes sense to try out the `SensorConnect <https://www.microstrain.com/software/sensorconnect>`_ first, that allows to set baud rate to 460800 baud and to see the accel and gyro live. 460800 baud is also needed by the firmware to establish a connection to the IMU. This is a little show-off from the vendor site how sensor connect looks like:   
+|pic1|  |pic2| To set it up, it makes sense to try out the `SensorConnect <https://www.microstrain.com/software/sensorconnect>`_ first, that allows to set baud rate to 460800 baud and to see the accel and gyro live. 460800 baud is also needed by the firmware to establish a connection to the IMU. This is a little show-off from the vendor site how sensor connect looks like:   
 
 
 
