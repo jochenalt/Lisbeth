@@ -160,7 +160,7 @@
 <wire x1="92.055" y1="0" x2="92.055" y2="91.11" width="0" layer="20"/>
 <wire x1="92.055" y1="91.11" x2="-6.35" y2="91.11" width="0" layer="20"/>
 <wire x1="-6.35" y1="91.11" x2="-6.35" y2="0" width="0" layer="20"/>
-<text x="70.485" y="38.1" size="2.54" layer="25" rot="R90">Cerebellar 1.0</text>
+<text x="69.215" y="31.115" size="2.54" layer="25" rot="R90">Cerebellar 1.0</text>
 <hole x="-3.81" y="88.265" drill="2.032"/>
 <hole x="-3.175" y="3.175" drill="2.286"/>
 <hole x="88.9" y="88.265" drill="2.286"/>
