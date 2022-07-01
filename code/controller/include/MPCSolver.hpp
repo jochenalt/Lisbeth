@@ -80,9 +80,9 @@ class MPCSolver {
   int construct_S();
   int construct_gait(Eigen::MatrixXd fsteps_in);
 
-  Params* params_;
+  Params* params;
 
-  double dt, mass, mu, T_gait;
+  double mass, mu, T_gait;
   int n_steps, cpt_ML, cpt_P;
 
   Eigen::Matrix<double, 3, 3> gI;

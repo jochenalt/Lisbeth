@@ -20,7 +20,7 @@ struct FootTrajectoryGeneratorPythonVisitor : public bp::def_visitor<FootTraject
                  "Initialize FootTrajectoryGenerator from Python.\n")
 
             // Compute target location of footsteps from Python
-            .def("update", &FootTrajectoryGenerator::update, bp::args("k", "targetFootstep"),
+            .def("update", &FootTrajectoryGenerator::update, bp::args("startNewCycle", "targetFootstep"),
                  "Compute target location of footsteps from Python.\n");
 
     }

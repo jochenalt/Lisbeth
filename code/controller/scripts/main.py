@@ -186,7 +186,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     t = 0.0
     k = 0
     t_max = (params.N_SIMULATION-2) * params.dt_wbc
-            
+    add = 0
     while ((not device.hardware.IsTimeout()) and (t < t_max) and (not controller.error)):
         for j in range(30000):
             if (j == -1):
@@ -206,6 +206,8 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             remoteControl.update_v_ref(k, controller.velID)
     
             # Desired torques
+            device.baseOrientation[2] = device.baseOrientation[2] + add
+            print (device.baseOrientation)
             controller.compute(params, device, remoteControl)
             
             controllerCpp.command_gait(remoteControl.gaitCode)

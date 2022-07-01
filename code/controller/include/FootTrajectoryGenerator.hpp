@@ -58,7 +58,7 @@ class FootTrajectoryGenerator {
   /// \param[in] targetFootstep Desired target locations at the end of the swing phases
   ///
   ////////////////////////////////////////////////////////////////////////////////////////////////
-  void update(int k, MatrixN const &targetFootstep);
+  void update(bool startNewCycle, MatrixN const &targetFootstep);
 
   MatrixN getTargetPosition() { return targetFootstep_; }  // Get the foot goal position
   MatrixN getFootPosition() { return position_; }          // Get the next foot position
@@ -69,9 +69,8 @@ class FootTrajectoryGenerator {
   Vector4 getTswing() { return t_swing; }                  // Get the flying period for each foot
 
  private:
+  Params* params;
   Gait *gait_;        // Target lock before the touchdown
-  double dt_wbc;      // Time step of the whole body control
-  int k_mpc;          // Number of wbc time steps for each MPC time step
   double maxHeight_;  // Apex height of the swinging trajectory
   double lockTime_;   // Target lock before the touchdown
   double vertTime_;   // Duration during which feet move only along Z when taking off and landing

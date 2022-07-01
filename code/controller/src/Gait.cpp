@@ -4,7 +4,6 @@ Gait::Gait()
     : pastGait_()
     , currentGait_()
     , desiredGait_()
-    , dt_(0.0)
 	, nRows_(0)
     , remainingTime_(0.0)
     , newPhase_(false)
@@ -16,16 +15,16 @@ Gait::Gait()
 }
 
 
-void Gait::initialize(Params &params)
+void Gait::initialize(Params &params_in)
 {
-    dt_ = params.dt_mpc;
-    nRows_ = (int)params.gait.rows();
+	params = &params_in;
+   nRows_ = (int)params->gait.rows();
 
-    pastGait_ = MatrixN4::Zero(params.N_gait, 4);
-    currentGait_ = MatrixN4::Zero(params.N_gait, 4);
-    desiredGait_ = MatrixN4::Zero(params.N_gait, 4);
+   pastGait_ = MatrixN4::Zero(params->N_gait, 4);
+   currentGait_ = MatrixN4::Zero(params->N_gait, 4);
+   desiredGait_ = MatrixN4::Zero(params->N_gait, 4);
 
-    is_static_ = false;
+   is_static_ = false;
   	createStatic();
   	currentGait_= desiredGait_;
 
@@ -51,29 +50,29 @@ void Gait::createWalk()
 
 void Gait::createTrot()
 {
-    // Number of timesteps in a half period of gait
-	  // Number of timesteps in 1/4th period of gait
+   // Number of timesteps in a half period of gait
+	// Number of timesteps in 1/4th period of gait
 	long int N = nRows_ / 2;
-    desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
+   desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 
-    RowVector4 sequence;
-    sequence << 1.0, 0.0, 0.0, 1.0;
-    desiredGait_.block(0, 0, N, 4) = sequence.colwise().replicate(N);
-    sequence << 0.0, 1.0, 1.0, 0.0;
-    desiredGait_.block(N, 0, N, 4) = sequence.colwise().replicate(N);
+   RowVector4 sequence;
+   sequence << 1.0, 0.0, 0.0, 1.0;
+   desiredGait_.block(0, 0, N, 4) = sequence.colwise().replicate(N);
+   sequence << 0.0, 1.0, 1.0, 0.0;
+   desiredGait_.block(N, 0, N, 4) = sequence.colwise().replicate(N);
 }
 
 void Gait::createPacing()
 {
-    // Number of timesteps in a half period of gait
+   // Number of timesteps in a half period of gait
 	long int N = nRows_ / 2;
-    desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
+   desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 
-    RowVector4 sequence;
-    sequence << 1.0, 0.0, 1.0, 0.0;
-    desiredGait_.block(0, 0, N, 4) = sequence.colwise().replicate(N);
-    sequence << 0.0, 1.0, 0.0, 1.0;
-    desiredGait_.block(N, 0, N, 4) = sequence.colwise().replicate(N);
+   RowVector4 sequence;
+   sequence << 1.0, 0.0, 1.0, 0.0;
+   desiredGait_.block(0, 0, N, 4) = sequence.colwise().replicate(N);
+   sequence << 0.0, 1.0, 0.0, 1.0;
+   desiredGait_.block(N, 0, N, 4) = sequence.colwise().replicate(N);
 }
 
 void Gait::createBounding()
@@ -175,7 +174,7 @@ double Gait::getPhaseDuration(int gaitPhaseIdx, int legNo, FootPhase footPhase)
         }
     }
     // We suppose that we found the beginning of the swing/stance phase either in currentGait_ or pastGait_
-    return t_phase * dt_;  // Take into account time step value
+    return t_phase * params->dt_mpc;  // Take into account time step value
 }
 double Gait::getElapsedTime(int i, int j) {
   double state = currentGait_(i, j);
@@ -196,7 +195,7 @@ double Gait::getElapsedTime(int i, int j) {
         nPhase++;
     }
   }
-  return nPhase * dt_;
+  return nPhase * params->dt_mpc;
 }
 
 double Gait::getPhaseDuration(int i, int j) { return getElapsedTime(i, j) + getRemainingTime(i, j); }
@@ -219,7 +218,7 @@ double Gait::getRemainingTime(int i, int j) {
       nPhase++;
     }
   }
-  return nPhase * dt_;
+  return nPhase * params->dt_mpc;
 }
 
 
@@ -312,8 +311,9 @@ void Gait::rollGait()
 {
    // Transfer current gait into past gait
 	// shift pastGait from [0..9] to [1..10]
-	for (int m = nRows_; m > 0; m--)
+	for (int m = nRows_; m > 0; m--) {
         pastGait_.row(m).swap(pastGait_.row(m-1));
+	}
 	// and assign current gait to [0]
    pastGait_.row(0) = currentGait_.row(0);
 

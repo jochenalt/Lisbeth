@@ -277,7 +277,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 										estimator.getHVFiltered(), estimator.getBaseVelRef());
 
 	// Update pos, vel and acc references for feet
-	footTrajectoryGenerator.update(k, o_targetFootstep);
+	footTrajectoryGenerator.update(startNewGaitCycle, o_targetFootstep);
 
 	// Run state planner (outputs the reference trajectory of the base)
 	statePlanner.computeReferenceStates(q_filt_mpc.head(6), h_v_filt_mpc, vref_filt_mpc);

@@ -307,7 +307,7 @@ class Controller:
                                                                 self.v_ref)
 
         # Update pos, vel and acc references for feet
-        self.footTrajectoryGenerator.update(self.k, o_targetFootstep)
+        self.footTrajectoryGenerator.update(startNewGaitCycle, o_targetFootstep)
 
         # Run state planner (outputs the reference trajectory of the base)
         self.statePlanner.computeReferenceStates(self.q_filtered[:6], self.h_v_filtered,

@@ -68,6 +68,11 @@ class Params {
   VectorN get_t_switch() { return t_switch; }
   MatrixN get_v_switch() { return v_switch; }
 
+  double getT_Gait() { return N_gait * dt_mpc; }
+
+  // Number of wbc time steps for each MPC time step
+  int getK_mpc() { return (int)std::round(dt_mpc / dt_wbc); };
+
   // legacy
   int N_gait;			// Number of rows in the gait matrix. Arbitrary value that should be set high enough,so that there is always at least one empty line at the end of the gait matrix
   int velID;			//  Identifier of the reference velocity profile to choose which one will be sent to the robot

@@ -79,18 +79,15 @@ private:
 
     void createStatic();
 
-
     MatrixN4 pastGait_;     // Past gait
+
 public:
     MatrixN4 currentGait_;  // Current and future gait. needs to be public to be used from python
 private:
     MatrixN4 desiredGait_;  // Future desired gait
 
-    double dt_;      // Time step of the contact sequence (time step of the MPC)
+    Params* params;
     int nRows_;  // number of rows in the gait matrix
-
-    double T_gait_;  // Gait period
-    double T_mpc_;   // MPC period (prediction horizon)
 
     double remainingTime_;
 

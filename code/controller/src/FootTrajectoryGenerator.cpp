@@ -4,8 +4,6 @@
 
 FootTrajectoryGenerator::FootTrajectoryGenerator()
     : gait_(NULL),
-      dt_wbc(0.0),
-      k_mpc(0),
       maxHeight_(0.0),
       lockTime_(0.0),
       feet(Eigen::Matrix<int, 1, 4>::Zero()),
@@ -22,14 +20,13 @@ FootTrajectoryGenerator::FootTrajectoryGenerator()
       velocity_base_(Matrix34::Zero()),
       acceleration_base_(Matrix34::Zero()) {}
 
-void FootTrajectoryGenerator::initialize(Params &params, Gait &gaitIn) {
-  dt_wbc = params.dt_wbc;
-  k_mpc = (int)std::round(params.dt_mpc / params.dt_wbc);
-  maxHeight_ = params.max_height;
-  lockTime_ = params.lock_time;
-  vertTime_ = params.vert_time;
-  targetFootstep_ << Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(params.footsteps_init.data(),
-                                                                   params.footsteps_init.size());
+void FootTrajectoryGenerator::initialize(Params &params_in, Gait &gaitIn) {
+  params = &params_in;
+  maxHeight_ = params->max_height;
+  lockTime_ = params->lock_time;
+  vertTime_ = params->vert_time;
+  targetFootstep_ << Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(params->footsteps_init.data(),
+                                                                   params->footsteps_init.size());
   position_ = targetFootstep_;
   position_base_ = targetFootstep_;
   gait_ = &gaitIn;
@@ -58,7 +55,7 @@ void FootTrajectoryGenerator::updateFootPosition(int const j, Vector3 const &tar
 
   double t = t0s[j] - vertTime_;
   double d = t_swing[j] - 2 * vertTime_;
-  double dt = dt_wbc;
+  double dt = params->dt_wbc;
 
   if (t < d - lockTime_) {
 	double t2 = t*t;
@@ -222,8 +219,8 @@ void FootTrajectoryGenerator::updateFootPosition(int const j, Vector3 const &tar
 
 }
 
-void FootTrajectoryGenerator::update(int k, MatrixN const &targetFootstep) {
-  if ((k % k_mpc) == 0) {
+void FootTrajectoryGenerator::update(bool startNewCycle, MatrixN const &targetFootstep) {
+  if (startNewCycle) {
     // Status of feet
     feet = gait_->getCurrentGait().row(0).cast<int>();
 
@@ -245,7 +242,7 @@ void FootTrajectoryGenerator::update(int k, MatrixN const &targetFootstep) {
     // Increment of one time step for feet in swing phase
     for (int i = 0; i < 4; i++) {
       if (feet(0, i) == 0) {
-        double value = t0s[i] + dt_wbc;
+        double value = t0s[i] + params->dt_wbc;
         t0s[i] = std::max(0.0, value);
       }
     }

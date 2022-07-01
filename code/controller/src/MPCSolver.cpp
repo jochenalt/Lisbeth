@@ -1,11 +1,10 @@
 #include <MPCSolver.hpp>
 #include "st_to_cc.hpp"
 
-MPCSolver::MPCSolver(Params& params) {
-  params_ = &params;
+MPCSolver::MPCSolver(Params& params_in) {
+  params = &params_in;
 
-  dt = params_->dt_mpc;
-  n_steps = static_cast<int>(params_->gait.rows());
+  n_steps = static_cast<int>(params->gait.rows());
 
   xref = Matrix12N::Zero(12, 1 + n_steps);
   x = VectorN::Zero(12 * n_steps * 2);
@@ -13,25 +12,25 @@ MPCSolver::MPCSolver(Params& params) {
   warmxf = VectorN::Zero(12 * n_steps * 2);
   x_f_applied = MatrixN::Zero(24, n_steps);
 
-  gait = MatrixN4i::Zero(params_->gait.rows(), 4);
+  gait = MatrixN4i::Zero(params->gait.rows(), 4);
 
   // Predefined variables
-  mass = params.mass;
+  mass = params->mass;
   mu = 0.9f;
   cpt_ML = 0;
   cpt_P = 0;
 
   // deviation of base from centre of mass
-  offset_CoM = Vector3(params.CoM_offset[0], params.CoM_offset[1],params.CoM_offset[2]);
+  offset_CoM = Vector3(params->CoM_offset[0], params->CoM_offset[1],params->CoM_offset[2]);
 
   // initial contact positions of feet
-  footholds << Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(params.footsteps_under_shoulders.data(),
-	                                                          params.footsteps_under_shoulders.size());
+  footholds << Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(params->footsteps_under_shoulders.data(),
+	                                                          params->footsteps_under_shoulders.size());
 
   //  Composite rigid body inertia in init position
-  gI << Eigen::Map<VectorN, Eigen::Unaligned>(params_->I_mat.data(), params_->I_mat.size());
+  gI << Eigen::Map<VectorN, Eigen::Unaligned>(params->I_mat.data(), params->I_mat.size());
 
-  g(8, 0) = -9.81f * dt;
+  g(8, 0) = -9.81f * params->dt_mpc;
 
   osqp_set_default_settings(settings);
 
@@ -95,7 +94,7 @@ int MPCSolver::create_ML() {
   }
 
   // Fill matrix A (for other functions)
-  A.block(0, 6, 6, 6) = dt * Matrix6::Identity();
+  A.block(0, 6, 6, 6) = params->dt_mpc * Matrix6::Identity();
 
   // Put A matrices in M
   for (int k = 0; k < (n_steps - 1); k++) {
@@ -103,12 +102,12 @@ int MPCSolver::create_ML() {
       add_to_ML((k + 1) * 12 + i, (k * 12) + i, 1.0, r_ML, c_ML, v_ML);
     }
     for (int j = 0; j < 6; j++) {
-      add_to_ML((k + 1) * 12 + j, (k * 12) + j + 6, dt, r_ML, c_ML, v_ML);
+      add_to_ML((k + 1) * 12 + j, (k * 12) + j + 6, params->dt_mpc, r_ML, c_ML, v_ML);
     }
   }
 
   // Put B matrices in M
-  double div_tmp = dt / mass;
+  double div_tmp = params->dt_mpc / mass;
   for (int k = 0; k < n_steps; k++) {
     for (int i = 0; i < 4; i++) {
       add_to_ML(12 * k + 6, 12 * (n_steps + k) + 0 + 3 * i, div_tmp, r_ML, c_ML, v_ML);
@@ -219,7 +218,7 @@ int MPCSolver::create_ML() {
     // Get skew-symetric matrix for each foothold
     Matrix34 l_arms = footholds - (xref.block(0, k, 3, 1)).replicate<1, 4>();
     for (int i = 0; i < 4; i++) {
-      B.block(9, 3 * i, 3, 3) = dt * (I_inv * getSkew(l_arms.col(i)));
+      B.block(9, 3 * i, 3, 3) = params->dt_mpc * (I_inv * getSkew(l_arms.col(i)));
     }
 
     int i_iter = 24 * 4 * k;
@@ -276,7 +275,7 @@ int MPCSolver::create_NK() {
       D((k + 1) * 12 + i, (k * 12) + i) = -1.0;
     }
     for (int i = 0; i < 6; i++) {
-      D((k + 1) * 12 + i, (k * 12) + i + 6) = -dt;
+      D((k + 1) * 12 + i, (k * 12) + i + 6) = -params->dt_mpc;
     }
   }
 
@@ -288,7 +287,7 @@ int MPCSolver::create_NK() {
   // Matrix K is already initialized (0 values)
   VectorN inf_lower_bount = -std::numeric_limits<double>::infinity() * VectorN::Ones(20 * n_steps, 1);
   for (int k = 0; (4 + 5 * k) < (20 * n_steps); k++) {
-    inf_lower_bount(4 + 5 * k, 0) = -params_->osqp_Nz_lim;  // Maximum vertical contact force [N]
+    inf_lower_bount(4 + 5 * k, 0) = -params->osqp_Nz_lim;  // Maximum vertical contact force [N]
   }
 
   NK_low.block(0, 0, 12 * n_steps * 2, 1) = NK_up.block(0, 0, 12 * n_steps * 2, 1);
@@ -319,16 +318,16 @@ int MPCSolver::create_weight_matrices() {
   // double w[12] = {2.0f, 2.0f, 20.0f, 0.25f, 0.25f, 10.0f, 0.2f, 0.2f, 0.2f, 0.0f, 0.0f, 0.3f};
   for (int k = 0; k < n_steps; k++) {
     for (int i = 0; i < 12; i++) {
-      add_to_P(12 * k + i, 12 * k + i, params_->osqp_w_states[i], r_P, c_P, v_P);
+      add_to_P(12 * k + i, 12 * k + i, params->osqp_w_states[i], r_P, c_P, v_P);
     }
   }
 
   // Define weights for the force components of the optimization vector
   for (int k = n_steps; k < (2 * n_steps); k++) {
     for (int i = 0; i < 4; i++) {
-      add_to_P(12 * k + 3 * i + 0, 12 * k + 3 * i + 0, params_->osqp_w_forces[0], r_P, c_P, v_P);
-      add_to_P(12 * k + 3 * i + 1, 12 * k + 3 * i + 1, params_->osqp_w_forces[1], r_P, c_P, v_P);
-      add_to_P(12 * k + 3 * i + 2, 12 * k + 3 * i + 2, params_->osqp_w_forces[2], r_P, c_P, v_P);
+      add_to_P(12 * k + 3 * i + 0, 12 * k + 3 * i + 0, params->osqp_w_forces[0], r_P, c_P, v_P);
+      add_to_P(12 * k + 3 * i + 1, 12 * k + 3 * i + 1, params->osqp_w_forces[1], r_P, c_P, v_P);
+      add_to_P(12 * k + 3 * i + 2, 12 * k + 3 * i + 2, params->osqp_w_forces[2], r_P, c_P, v_P);
     }
   }
 
@@ -417,7 +416,7 @@ int MPCSolver::update_ML(MatrixN fsteps) {
 
       lever_arms = footholds_bis - (xref.block(0, k, 3, 1) + offset_CoM).replicate<1, 4>();
       for (int i = 0; i < 4; i++) {
-        B.block(9, 3 * i, 3, 3) = dt * (I_inv * getSkew(lever_arms.col(i)));
+        B.block(9, 3 * i, 3, 3) = params->dt_mpc * (I_inv * getSkew(lever_arms.col(i)));
       }
 
       // Replace the coefficient directly in ML.data
