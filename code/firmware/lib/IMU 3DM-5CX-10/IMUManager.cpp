@@ -2,6 +2,7 @@
 #include <IMUManager.h>
 #include <TimePassedBy.h>
 #include <ukf.h>
+#include <Magnetometer.h>
 
 void IMUManager::setup(uint16_t targetFreq) {
       // IMU's power is controlled by this PIN

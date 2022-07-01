@@ -80,14 +80,16 @@
 #define P_INIT      (1.)
 #define Rv_INIT     (1e-7)
 #define Rn_INIT_ACC (0.0015)
-
-
-
-
 #define IMU_ACC_Z0   (1)
 
-void UnscentedKalmanFilter::init(double sampleTime, const double PInit, const double QInit, const double RInit)
-{
+
+// setup the filter with the targetfrequency. The IMU is configured to deliver a datapoint in that
+// frequency, it is not measured in here.
+void UnscentedKalmanFilter::setup(double targetFreq) {
+
+    // later on, we need the sample time in [s]
+    dT = 1.0/targetFreq;
+    
     /* Initialization:
      *  P (k=0|k=0) = Identitas * covariant(P(k=0)), typically initialized with some big number.
      *  x(k=0|k=0)  = Expected value of x at time-0 (i.e. x(k=0)), typically set to zero.
@@ -96,10 +98,10 @@ void UnscentedKalmanFilter::init(double sampleTime, const double PInit, const do
      *                to Rv=diag(RvInit,...,RvInit) and Rn=diag(RnInit,...,RnInit).
      */
 
-    dT = sampleTime;
-    Pinit = PInit;
-    Qinit = QInit;
-    Rinit = RInit;
+    
+    Pinit = P_INIT;
+    Qinit = Rv_INIT;
+    Rinit = Rn_INIT_ACC;
 
     /* Van der. Merwe, .. (2004). Sigma-Point Kalman Filters for Probabilistic Inference in Dynamic State-Space Models 
      * (Ph.D. thesis). Oregon Health & Science University. Page 6:
@@ -126,9 +128,9 @@ void UnscentedKalmanFilter::init(double sampleTime, const double PInit, const do
     X_Est.setZero();
     X_Est[0][0] = 1.0;       /* Quaternion(k = 0) = [1 0 0 0]' */
 
-    P.setDiag(PInit);
-    Rv.setDiag(QInit);
-    Rn.setDiag(RInit);
+    P.setDiag(Pinit);
+    Rv.setDiag(Qinit);
+    Rn.setDiag(Rinit);
 
     /* Wm = [lambda/(N+lambda)         1/(2(N+lambda)) ... 1/(2(N+lambda))]     ...{UKF_2} */
     Wm[0][0] = _lambda/(SS_X_LEN + _lambda);
@@ -152,6 +154,37 @@ void UnscentedKalmanFilter::reset()
     X_Est.setZero();
     X_Est[0][0] = 1.0;       /* Quaternion(k = 0) = [1 0 0 0]' */
 }
+
+void UnscentedKalmanFilter::compute(double accX, double accY, double accZ, 
+                                double gyroX, double gyroY, double gyroZ,
+                                double &x, double &y, double &z, double &w) {
+    // set accel data in [g]
+    Z[0][0] = accX;
+    Z[1][0] = accY;
+    Z[2][0] = accZ;
+
+    // set gyro data in [rad/s]
+    U[0][0] = gyroX;
+    U[1][0] = gyroY;
+    U[2][0] = gyroZ;
+
+    // normalise
+    double _normG = sqrt((Z[0][0] * Z[0][0]) + (Z[1][0] * Z[1][0]) + (Z[2][0] * Z[2][0]));
+    Z[0][0] = Z[0][0] / _normG;
+    Z[1][0] = Z[1][0] / _normG;
+    Z[2][0] = Z[2][0] / _normG;
+
+    // Update Kalman 
+    updateFilter(Z, U);
+
+    // get result
+    dataQuaternion = getX();
+    w = dataQuaternion[0][0];
+    x = dataQuaternion[1][0];
+    y = dataQuaternion[2][0];
+    z = dataQuaternion[3][0];
+}
+
 
 void UnscentedKalmanFilter::updateFilter(Matrix &Y, Matrix &U)
 {
@@ -330,41 +363,3 @@ void UnscentedKalmanFilter::updateNonlinearY(Matrix &Z_est, Matrix &X, Matrix &U
     Z_est[1][0] = (2*q2*q3 +2*q0*q1) * IMU_ACC_Z0;
     Z_est[2][0] = (+(q0_2) -(q1_2) -(q2_2) +(q3_2)) * IMU_ACC_Z0;
 }
-
-
-void UnscentedKalmanFilter::compute(double accX, double accY, double accZ, 
-                                    double gyroX, double gyroY, double gyroZ,
-                                    double &x, double &y, double &z, double &w) {
-    // set accel data in [g]
-    Z[0][0] = accX;
-    Z[1][0] = accY;
-    Z[2][0] = accZ;
-
-    // set gyro data in [rad/s]
-    U[0][0] = gyroX;
-    U[1][0] = gyroY;
-    U[2][0] = gyroZ;
-
-    // normalise
-    double _normG = sqrt((Z[0][0] * Z[0][0]) + (Z[1][0] * Z[1][0]) + (Z[2][0] * Z[2][0]));
-    Z[0][0] = Z[0][0] / _normG;
-    Z[1][0] = Z[1][0] / _normG;
-    Z[2][0] = Z[2][0] / _normG;
-
-    // Update Kalman 
-    updateFilter(Z, U);
-
-    // get result
-    dataQuaternion = getX();
-    w = dataQuaternion[0][0];
-    x = dataQuaternion[1][0];
-    y = dataQuaternion[2][0];
-    z = dataQuaternion[3][0];
-}
-
-
-void UnscentedKalmanFilter::setup(double targetFreq) {
-    init(1.0/targetFreq, P_INIT, Rv_INIT, Rn_INIT_ACC);
-    reset();
-}
-

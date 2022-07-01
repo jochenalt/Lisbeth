@@ -378,13 +378,13 @@ void loop() {
   imuMgr.loop();
 
   // wait for any pending commands to be executed
-  // powerManager.loop();
+  powerManager.loop();
 
-  /*
   static Measurement m;
   m.tick();
   static TimePassedBy printTimer (1000);
   if (printTimer.isDue()) {
+    /*
     if (imu.isNewPackageAvailable()) {
          float f = imu.getMeasuremt().getAvrFreq();
          float d = imu.getMeasuremt().getAvrDeviation()*100.0;;
@@ -397,8 +397,12 @@ void loop() {
 
          Serial.println("\nBUS\tSHUNT\tCURRENT\tPOWER");
     }
+    */
+    uint32_t start = micros(); 
     Serial.print(INA.getShuntVoltage_mV(), 3);
-    Serial.print("mV\t");
+    Serial.print("mV\t ");
+    Serial.print(micros()-start);
+    Serial.println(" us");
 
     Serial.print(INA.getBusVoltage(), 3);
     Serial.print("V\t");
@@ -408,7 +412,5 @@ void loop() {
     Serial.print("mW\t");
     Serial.println();
   }
-  */
-
   
 }

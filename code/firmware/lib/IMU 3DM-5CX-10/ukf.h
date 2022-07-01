@@ -83,11 +83,10 @@
  *
  **********************************************************************************************************************/
 
-#ifndef UKF_H
-#define UKF_H
+#ifndef UNSCENTED_KALMAN_FILTER_H
+#define UNSCENTED_KALMAN_FILTER_H
 
 #include "matrix.h"
-
 
 class UnscentedKalmanFilter
 {
