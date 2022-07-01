@@ -10,13 +10,13 @@ The IMU is the source of the entire pipeline, therefore it is needs to be very f
 
 .. list-table:: 
 
-      - .. figure:: /images/Lord_Microstrain_3DMCV5-IMU.png
+    * - .. figure:: /images/Lord_Microstrain_3DMCV5-IMU.png
     			:width: 150
 				:alt: Lord Microstrain 3DM-CV5-10
 				:target: https://www.microstrain.com/inertial-sensors/3dm-cv5-10
 
 
-      - .. figure:: /videos/SensorConnect.gif
+    *  - .. figure:: /videos/SensorConnect.gif
 				:width: 400
 				:alt: Microstrain SensorConnect Application
 				:target: https://www.microstrain.com/software/sensorconnect
