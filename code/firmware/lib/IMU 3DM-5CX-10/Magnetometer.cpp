@@ -27,6 +27,7 @@ bool Magnetometer::isDataAvailable() {
         return true;
     return false;
 }
+
 void Magnetometer::read(double &x, double &y, double &z) {
     x = mag_x;
     y = mag_y;
@@ -48,7 +49,7 @@ void Magnetometer::loop() {
         fetchData();
         dataIsAvailable = true;
     } else {
-        // timeout. After 5ms of waiting, something went wrong, ignore the last request
+        // Timeout. After 5ms of waiting, something went wrong, ignore the last request
         // and dont wait for a reply anymore
         if (micros() - dataRequestTime_us > 5000) {
             dataRequested = false;

@@ -8,23 +8,35 @@ The IMU is the source of the entire pipeline, therefore it is needs to be very f
 	:alt: Lord Microstrain 3DM-CV5-10
 	:target: https://www.microstrain.com/inertial-sensors/3dm-cv5-10
 
+.. list-table:: 
 
-To set it up, it makes sense to try out the `SensorConnect <https://www.microstrain.com/software/sensorconnect>`_ first, that allows to set baud rate to 460800 baud and to see the accel and gyro live. 460800 baud is also needed by the firmware to establish a connection to the IMU  
+    * - .. figure:: /images/Lord_Microstrain_3DMCV5-IMU.png
+    			:width: 150
+				:alt: Lord Microstrain 3DM-CV5-10
+				:target: https://www.microstrain.com/inertial-sensors/3dm-cv5-10
+
+
+      - .. figure:: /videos/SensorConnect.gif
+				:width: 400
+				:alt: Microstrain SensorConnect Application
+				:target: https://www.microstrain.com/software/sensorconnect
+
+To set it up, it makes sense to try out the `SensorConnect <https://www.microstrain.com/software/sensorconnect>`_ first, that allows to set baud rate to 460800 baud and to see the accel and gyro live. 460800 baud is also needed by the firmware to establish a connection to the IMU. This is a little show-off from the vendor site how sensor connect looks like:   
 
 .. image:: /videos/SensorConnect.gif
-	:width: 500
+	:width: 400
 	:alt: Microstrain SensorConnect Application
 	:target: https://www.microstrain.com/software/sensorconnect
 
 
-In order to do so, it needs to be connected to a regular UART->USB converter. I used a `IDC(SWT) cable <https://www.adafruit.com/product/1675>`_ from Adafruit, cut off one end and connected it to a regular 5-pin JST XH connector:
+Anyhow. In order to set it up, it needs to be connected via a regular UART->USB converter. I used a `IDC(SWT) cable <https://www.adafruit.com/product/1675>`_ from Adafruit, cut off one end and connected it to a regular 5-pin JST XH connector:
 
 .. image:: /images/IMU_Cable_Layout.png
 	:width: 700
 	:alt: 2x5 pin 1.27mm IDC cable
 	:target: https://www.adafruit.com/product/1675
 
-The pins shown are specified in the  `IMUs User Manual <https://www.microstrain.com/sites/default/files/3dm-cv5-10_user_manual_8500-0074_1.pdf>`_.
+The pins in the column "IMU", are coming from the  `IMUs User Manual <https://www.microstrain.com/sites/default/files/3dm-cv5-10_user_manual_8500-0074_1.pdf>`_, they specify the pins of the IMUs 2x5 IDC socket with the annoying 1.27mm pitch.
 
 .. image:: /images/3DM-CV5-10_Pin_layout.png
 	:width: 700
