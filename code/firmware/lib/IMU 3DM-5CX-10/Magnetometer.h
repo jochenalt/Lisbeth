@@ -3,7 +3,13 @@
 
 #include "LIS3MDL.h"
 
-
+/**
+ * Manage the magnetometer 
+ * - power management with correct timing
+ * - initialise sensor with passed frequency and sensitivity
+ * - fetch data in the background in a non-blocking via via loop()
+ * - convert sensor data to [gauss]
+ */ 
 class Magnetometer {
     public:
         Magnetometer() {};

@@ -1,9 +1,9 @@
 Inertial Measurement Unit (IMU)
 ===============================
 
-The IMU is the source of the entire pipeline, therefore it is needs to be very fast, if the pipeline is supposed to work with a decent frequency. Most hobby  IMU go up to 100Hz, which is okay, but above that things quickly get expensive. Heavy hearted I went with the `Lord Microstrain 3DM-CV5 IMU <https://www.microstrain.com/inertial-sensors/3dm-cv5-10>`_. Don't even ask.
+The IMU is the source of the entire pipeline, therefore it is needs to be very fast as the pipeline is supposed to work with a decent frequency. Most hobby IMUs go up to 100Hz, which is okay, but above that things quickly get expensive. Heavy hearted I went with the `Lord Microstrain 3DM-CV5 IMU <https://www.microstrain.com/inertial-sensors/3dm-cv5-10>`_. Don't even ask.
 
-Anyhow. To set it up, it makes sense to try out the `SensorConnect <https://www.microstrain.com/software/sensorconnect>`_ first, that allows to set baud rate to 460800 baud and to see the accel and gyro live. 460800 baud is also needed by the firmware to establish a connection to the IMU. This is a little show-off from the vendor site how sensor connect looks like:   
+Anyhow. To set it up, it makes sense to try out `SensorConnect <https://www.microstrain.com/software/sensorconnect>`_ first, that allows to set the baud rate, and to see the accel and gyro live. 460800 baud is also needed by the firmware to establish a connection to the IMU. This is a little show-off from the vendor site how sensor connect looks like:   
 
 .. |pic1| image:: /images/Lord_Microstrain_3DMCV5-IMU.png
    :width: 20%
@@ -15,7 +15,7 @@ Anyhow. To set it up, it makes sense to try out the `SensorConnect <https://www.
    :alt: Microstrain SensorConnect Application
    :target: https://www.microstrain.com/software/sensorconnect
 
-|pic1|  |pic2| 
+|pic1| 			|pic2| 
 
 
 All Microstrain IMUs have this annoying 1.27mm IDC socket, which is hard to source. I used a `IDC(SWT) cable <https://www.adafruit.com/product/1675>`_ from Adafruit, cut off one end and connected it to a regular 5-pin JST XH connector:
@@ -39,6 +39,6 @@ Coming back to the setup. This needs to be done only once, so it is perfectly ok
 	:alt: FTDI Adapter to USB
 
 
-After pluging in, Sensorconnect should be able to connect to the device with the default baud rate of 115200. I changed it to 460800 to be able to run it at 1000Hz.
+After pluging in, Sensorconnect should be able to connect to the device with the default baud rate of 115200. I changed it to 460800 to be able to run the pipeline at 1000Hz.
 
 
