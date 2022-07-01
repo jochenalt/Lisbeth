@@ -86,6 +86,20 @@
 #ifndef UNSCENTED_KALMAN_FILTER_H
 #define UNSCENTED_KALMAN_FILTER_H
 
+
+#define WITH_MAG
+
+
+#define SS_X_LEN    (4) // State: Quaternion 
+#define SS_U_LEN    (3) // Input:  Gyro
+
+#ifdef WITH_MAG   
+    #define SS_Z_LEN    (6) // Output: Accel & Mag
+#else
+    #define SS_Z_LEN    (3) // Output: Accel
+#endif
+#define MATRIX_MAXIMUM_SIZE     (SS_Z_LEN*2+1) // needs to be set before including matrix.h
+
 #include "matrix.h"
 
 class UnscentedKalmanFilter
@@ -136,8 +150,13 @@ private:
     void updateNonlinearY(Matrix &Z_est, Matrix &X, Matrix &U);
 
     #define SS_X_LEN    (4) // State: Quaternion 
+ #ifdef WITH_MAG   
+    #define SS_Z_LEN    (6) // Output: Accel & Mag
+#else
     #define SS_Z_LEN    (3) // Output: Accel
+#endif
     #define SS_U_LEN    (3) // Input:  Gyro
+    #define MATRIX_MAXIMUM_SIZE     (SS_Z_LEN*2+1)
 
     Matrix U{SS_U_LEN, 1};                              // input: Gyro
     Matrix Z{SS_Z_LEN, 1};                              // outpu: Accel
@@ -174,6 +193,8 @@ private:
     double Rinit = 0.0015;
 
     double dT = 0;
+
+    const double Mag_B0[3] = {1,1,0};
 };
 
 

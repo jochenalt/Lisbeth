@@ -77,9 +77,10 @@
 
 #include "ukf.h"
 
-#define P_INIT      (1.)
-#define Rv_INIT     (1e-7)
-#define Rn_INIT_ACC (0.0015)
+#define P_INIT       (1.)
+#define Rv_INIT      (1e-7)
+#define Rn_INIT_ACC  (0.0015)
+#define Rn_INIT_MAG  (0.00015)
 #define IMU_ACC_Z0   (1)
 
 

@@ -147,8 +147,7 @@ inline void printErrorAndQuit(char const * str)
 #define EPSILON_ECO (1e-8)      /* 'Economical' zero, for noisy calculation where 'somewhat zero' is good enough */
 
 
-/* Change this size based on the biggest matrix you will use */
-#define MATRIX_MAXIMUM_SIZE     (9)
+
 
 /* Define this to enable matrix bound checking */
 #define MATRIX_USE_BOUNDS_CHECKING
