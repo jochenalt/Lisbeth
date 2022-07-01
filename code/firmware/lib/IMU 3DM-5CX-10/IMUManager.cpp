@@ -36,7 +36,11 @@ void IMUManager::loop() {
   
         double x,y,z,w;
         uint64_t u64compuTime = micros();
-        filter.compute(Ax,Ay,Az,p,q,r, x,y, z,w);
+        filter.compute(Ax,Ay,Az,p,q,r, 
+#ifdef WITH_MAG       
+                        0,0,0,
+#endif                        
+        x,y, z,w);
         ekftime  = (ekftime + (micros() - u64compuTime))/2;
         quaternion[0] = x;
         quaternion[1] = y;

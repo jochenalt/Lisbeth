@@ -13,7 +13,7 @@ The IMU is the source of the entire pipeline, therefore it is needs to be very f
 .. container:: rightside
 
 	.. image:: /videos/SensorConnect.gif
-		:width: 400
+		:width: 200
 		:alt: Microstrain SensorConnect Application
 		:target: https://www.microstrain.com/software/sensorconnect
 

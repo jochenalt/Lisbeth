@@ -23,7 +23,7 @@ class IMUManager {
     // So we take care that it is properly turned off for 500ms, then turned on, and after 1000ms the communciation starts 
     // we also give the Kalman filter 100ms to warmup before delivering data
     enum ImuStateType  { IMU_UNPOWERED = 0, IMU_WARMING_UP = 1, IMU_PREPARE_POWER_UP=2, IMU_POWERED_UP = 3, IMU_SETUP = 4, IMU_COOLING_DOWN = 5};
-    const uint32_t warmup_duration_ms = 1000;
+    const uint32_t warmup_duration_ms = 1500;
     const uint32_t prepare_power_up_ms = 500;
     const uint32_t warmup_filter_ms = 100;
 

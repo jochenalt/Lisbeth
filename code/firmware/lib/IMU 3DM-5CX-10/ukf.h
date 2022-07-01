@@ -87,7 +87,7 @@
 #define UNSCENTED_KALMAN_FILTER_H
 
 
-#define WITH_MAG
+// #define WITH_MAG
 
 
 #define SS_X_LEN    (4) // State: Quaternion 
@@ -95,12 +95,14 @@
 
 #ifdef WITH_MAG   
     #define SS_Z_LEN    (6) // Output: Accel & Mag
+    #define MATRIX_MAXIMUM_SIZE     (SS_Z_LEN*2+1) // needs to be set before including matrix.h
 #else
     #define SS_Z_LEN    (3) // Output: Accel
+    #define MATRIX_MAXIMUM_SIZE     (SS_X_LEN*2+1) // needs to be set before including matrix.h
 #endif
-#define MATRIX_MAXIMUM_SIZE     (SS_Z_LEN*2+1) // needs to be set before including matrix.h
 
 #include "matrix.h"
+
 
 class UnscentedKalmanFilter
 {
@@ -116,6 +118,10 @@ public:
     // do the filtering. Input is Gyro [rad/s] and Accel [g], output is a quat 
     void compute(double accX, double accY, double accZ, 
                  double gyroX, double gyroY, double gyroZ,
+#ifdef WITH_MAG       
+                 double magX, double magY, double magZ,
+#endif                                
+
                  double &x, double &y, double &z, double &w);
 
 private:
@@ -149,17 +155,6 @@ private:
     void updateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &U);
     void updateNonlinearY(Matrix &Z_est, Matrix &X, Matrix &U);
 
-    #define SS_X_LEN    (4) // State: Quaternion 
- #ifdef WITH_MAG   
-    #define SS_Z_LEN    (6) // Output: Accel & Mag
-#else
-    #define SS_Z_LEN    (3) // Output: Accel
-#endif
-    #define SS_U_LEN    (3) // Input:  Gyro
-    #define MATRIX_MAXIMUM_SIZE     (SS_Z_LEN*2+1)
-
-    Matrix U{SS_U_LEN, 1};                              // input: Gyro
-    Matrix Z{SS_Z_LEN, 1};                              // outpu: Accel
     
     Matrix dataQuaternion{SS_X_LEN, 1};                 // output quat
     

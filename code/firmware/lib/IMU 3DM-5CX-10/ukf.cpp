@@ -81,8 +81,10 @@
 #define Rv_INIT      (1e-7)
 #define Rn_INIT_ACC  (0.0015)
 #define Rn_INIT_MAG  (0.00015)
-#define IMU_ACC_Z0   (1)
+#define IMU_ACC_Z0   (-11)
 
+double HARD_IRON_BIAS_data[3] = {0, 0, 0};
+Matrix HARD_IRON_BIAS(3, 1, HARD_IRON_BIAS_data);
 
 // setup the filter with the targetfrequency. The IMU is configured to deliver a datapoint in that
 // frequency, it is not measured in here.
@@ -132,7 +134,11 @@ void UnscentedKalmanFilter::setup(double targetFreq) {
     P.setDiag(Pinit);
     Rv.setDiag(Qinit);
     Rn.setDiag(Rinit);
-
+ #ifdef USE_MAG   
+    Rn[3][3] = Rn_INIT_MAG;
+    Rn[4][4] = Rn_INIT_MAG;
+    Rn[5][5] = Rn_INIT_MAG;
+#endif
     /* Wm = [lambda/(N+lambda)         1/(2(N+lambda)) ... 1/(2(N+lambda))]     ...{UKF_2} */
     Wm[0][0] = _lambda/(SS_X_LEN + _lambda);
     for (int32_t _i = 1; _i < Wm.getCols(); _i++) {
@@ -158,25 +164,52 @@ void UnscentedKalmanFilter::reset()
 
 void UnscentedKalmanFilter::compute(double accX, double accY, double accZ, 
                                 double gyroX, double gyroY, double gyroZ,
+#ifdef WITH_MAG       
+                                double magX, double magY, double magZ,
+#endif                                
                                 double &x, double &y, double &z, double &w) {
+    Matrix Y{SS_Z_LEN, 1};          
+
     // set accel data in [g]
-    Z[0][0] = accX;
-    Z[1][0] = accY;
-    Z[2][0] = accZ;
+    Y[0][0] = accX;
+    Y[1][0] = accY;
+    Y[2][0] = accZ;
+
+    // normalise
+    double _normG = sqrt((Y[0][0] * Y[0][0]) + (Y[1][0] * Y[1][0]) + (Y[2][0] * Y[2][0]));
+    Y[0][0] = Y[0][0] / _normG;
+    Y[1][0] = Y[1][0] / _normG;
+    Y[2][0] = Y[2][0] / _normG;
+
+#ifdef WITH_MAG
+    /* Output 4:6 = magnetometer */
+    Y[3][0] = magX; 
+    Y[4][0] = magY; 
+    Y[5][0] = magZ;
+
+    double _normM = sqrt(Y[3][0] * Y[3][0]) + (Y[4][0] * Y[4][0]) + (Y[5][0] * Y[5][0]);
+    Y[3][0] = Y[3][0] / _normM;
+    Y[4][0] = Y[4][0] / _normM;
+    Y[5][0] = Y[5][0] / _normM;
+
+    /* Compensating Hard-Iron Bias for magnetometer */
+    Y[3][0] = Y[3][0]-HARD_IRON_BIAS[0][0];
+    Y[4][0] = Y[4][0]-HARD_IRON_BIAS[1][0];
+    Y[5][0] = Y[5][0]-HARD_IRON_BIAS[2][0];
+#endif
+
+
+    Matrix U{SS_U_LEN, 1};  
+
 
     // set gyro data in [rad/s]
     U[0][0] = gyroX;
     U[1][0] = gyroY;
     U[2][0] = gyroZ;
 
-    // normalise
-    double _normG = sqrt((Z[0][0] * Z[0][0]) + (Z[1][0] * Z[1][0]) + (Z[2][0] * Z[2][0]));
-    Z[0][0] = Z[0][0] / _normG;
-    Z[1][0] = Z[1][0] / _normG;
-    Z[2][0] = Z[2][0] / _normG;
 
     // Update Kalman 
-    updateFilter(Z, U);
+    updateFilter(Y, U);
 
     // get result
     dataQuaternion = getX();
@@ -337,7 +370,7 @@ void UnscentedKalmanFilter::updateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &
     X_Next[3][0] = (0.5 * (+r*q0 +q*q1 -p*q2 +0.00))*dT + q3;
 }
 
-void UnscentedKalmanFilter::updateNonlinearY(Matrix &Z_est, Matrix &X, Matrix &U)
+void UnscentedKalmanFilter::updateNonlinearY(Matrix &Y, Matrix &X, Matrix &U)
 {
     /* Insert the nonlinear measurement transformation here
      *          y(k)   = h[x(k), u(k)]
@@ -360,7 +393,21 @@ void UnscentedKalmanFilter::updateNonlinearY(Matrix &Z_est, Matrix &X, Matrix &U
     double q2_2 = q2 * q2;
     double q3_2 = q3 * q3;
 
-    Z_est[0][0] = (2*q1*q3 -2*q0*q2) * IMU_ACC_Z0;
-    Z_est[1][0] = (2*q2*q3 +2*q0*q1) * IMU_ACC_Z0;
-    Z_est[2][0] = (+(q0_2) -(q1_2) -(q2_2) +(q3_2)) * IMU_ACC_Z0;
+    Y[0][0] = (2*q1*q3 -2*q0*q2) * IMU_ACC_Z0;
+    Y[1][0] = (2*q2*q3 +2*q0*q1) * IMU_ACC_Z0;
+    Y[2][0] = (+(q0_2) -(q1_2) -(q2_2) +(q3_2)) * IMU_ACC_Z0;
+
+#ifdef WITH_MAG
+    Y[3][0] = (+(q0_2)+(q1_2)-(q2_2)-(q3_2)) * Mag_B0[0]
+              +2*(q1*q2+q0*q3) * Mag_B0[1]
+              +2*(q1*q3-q0*q2) * Mag_B0[2];
+
+    Y[4][0] = 2*(q1*q2-q0*q3) * Mag_B0[0]
+              +(+(q0_2)-(q1_2)+(q2_2)-(q3_2)) * Mag_B0[1]
+              +2*(q2*q3+q0*q1) * Mag_B0[2];
+
+    Y[5][0] = 2*(q1*q3+q0*q2) * Mag_B0[0]
+              +2*(q2*q3-q0*q1) * Mag_B0[1]
+              +(+(q0_2)-(q1_2)-(q2_2)+(q3_2)) * Mag_B0[2];
+#endif
 }
