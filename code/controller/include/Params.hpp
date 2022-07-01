@@ -71,7 +71,7 @@ class Params {
   double getT_Gait() { return N_gait * dt_mpc; }
 
   // Number of wbc time steps for each MPC time step
-  int getK_mpc() { return (int)std::round(dt_mpc / dt_wbc); };
+  int get_k_mpc() { return (int)std::round(dt_mpc / dt_wbc); };
 
   // legacy
   int N_gait;			// Number of rows in the gait matrix. Arbitrary value that should be set high enough,so that there is always at least one empty line at the end of the gait matrix

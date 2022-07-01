@@ -12,9 +12,7 @@
 using namespace std;
 
 Estimator::Estimator()
-    : perfectEstimator(false),
-      dt(0.0),
-      feetFrames({0,0,0,0}),
+    : feetFrames({0,0,0,0}),
       footRadius(0.155),
       alphaPos({0.995, 0.995, 0.9}),
       alphaAcc({0,0,0}),
@@ -42,7 +40,6 @@ Estimator::Estimator()
       qEstimate(Vector19::Zero()),
       vEstimate(Vector18::Zero()),
       vSecurity(Vector12::Zero()),
-      windowSize(0),
       vFiltered(Vector6::Zero()),
       qRef(Vector18::Zero()),
       vRef(Vector18::Zero()),
@@ -60,42 +57,38 @@ Estimator::Estimator()
 }
 
 
-void Estimator::initialize(Params& params) {
+void Estimator::initialize(Params& params_in) {
 
-	// sample frequency
-	this->dt = params.dt_wbc;
-	this->perfectEstimator = params.perfect_estimator;
+	params = &params_in;
 
 	// Filtering estimated linear velocity
-	int k_mpc = (int)(std::round(params.dt_mpc / params.dt_wbc));
-	windowSize = (int)(k_mpc * params.gait.rows() / params.N_periods);
-	vx_queue.resize(windowSize, 0.0);  // List full of 0.0
-	vy_queue.resize(windowSize, 0.0);  // List full of 0.0
-	vz_queue.resize(windowSize, 0.0);  // List full of 0.0
+	vx_queue.resize(get_windows_size(), 0.0);  // List full of 0.0
+	vy_queue.resize(get_windows_size(), 0.0);  // List full of 0.0
+	vz_queue.resize(get_windows_size(), 0.0);  // List full of 0.0
 
 	// Filtering velocities used for security checks
 	double fc = 6.0;
-	double y = 1 - cos(2*M_PI*fc*dt);
+	double y = 1 - cos(2*M_PI*fc*params->dt_wbc);
 	this->alphaSecurity = -y+sqrt(y*y+2*y);
-	this->alphaSecurity = 1-(dt / ( dt + 1/fc));
+	this->alphaSecurity = 1-(params->dt_wbc / ( params->dt_wbc + 1/fc));
 
-	  // Initialize Quantities
-	  basePositionFK(2) = params.h_ref;
-	  velocityFilter.initialize(dt, Vector3::Zero(), Vector3::Zero());
-	  positionFilter.initialize(dt, Vector3::Zero(), basePositionFK);
-	  qRef(2, 0) = params.h_ref;
-	  qRef.tail(12) = Vector12(params.q_init.data());
+	// Initialize Quantities
+	basePositionFK(2) = params->h_ref;
+	velocityFilter.initialize(params->dt_wbc, Vector3::Zero(), Vector3::Zero());
+	positionFilter.initialize(params->dt_wbc, Vector3::Zero(), basePositionFK);
+	qRef(2, 0) = params->h_ref;
+	qRef.tail(12) = Vector12(params->q_init.data());
 
-	  // Initialize Pinocchio
-	  const std::string filename = std::string(URDF_MODEL);
-	  pinocchio::urdf::buildModel(filename, pinocchio::JointModelFreeFlyer(), velocityModel, false);
-	  pinocchio::urdf::buildModel(filename, pinocchio::JointModelFreeFlyer(), positionModel, false);
-	  velocityData = pinocchio::Data(velocityModel);
-	  positionData = pinocchio::Data(positionModel);
-	  pinocchio::computeAllTerms(velocityModel, velocityData, qEstimate, vEstimate);
-	  pinocchio::computeAllTerms(positionModel, positionData, qEstimate, vEstimate);
-	  this->feetFrames = {(int)positionModel.getFrameId("FL_FOOT"), (int)positionModel.getFrameId("FR_FOOT"),
-	  	      (int)positionModel.getFrameId("HL_FOOT"), (int)positionModel.getFrameId("HR_FOOT")};
+	// Initialize Pinocchio
+	const std::string filename = std::string(URDF_MODEL);
+	pinocchio::urdf::buildModel(filename, pinocchio::JointModelFreeFlyer(), velocityModel, false);
+	pinocchio::urdf::buildModel(filename, pinocchio::JointModelFreeFlyer(), positionModel, false);
+	velocityData = pinocchio::Data(velocityModel);
+	positionData = pinocchio::Data(positionModel);
+	pinocchio::computeAllTerms(velocityModel, velocityData, qEstimate, vEstimate);
+	pinocchio::computeAllTerms(positionModel, positionData, qEstimate, vEstimate);
+	this->feetFrames = {(int)positionModel.getFrameId("FL_FOOT"), (int)positionModel.getFrameId("FR_FOOT"),
+	  	      		     (int)positionModel.getFrameId("HL_FOOT"), (int)positionModel.getFrameId("HR_FOOT")};
 }
 
 
@@ -161,9 +154,9 @@ void Estimator::run(MatrixN4 gait, Matrix34 feetTargets,
 
 void Estimator::updateReferenceState(VectorN const& newvRef) {
   // Update reference acceleration and velocities
-  Matrix3 Rz = pinocchio::rpy::rpyToMatrix(0., 0., -baseVelRef[5] * dt);
-  baseAccRef.head(3) = (newvRef.head(3) - Rz * baseVelRef.head(3)) / dt;
-  baseAccRef.tail(3) = (newvRef.tail(3) - Rz * baseVelRef.tail(3)) / dt;
+  Matrix3 Rz = pinocchio::rpy::rpyToMatrix(0., 0., -baseVelRef[5] * params->dt_wbc);
+  baseAccRef.head(3) = (newvRef.head(3) - Rz * baseVelRef.head(3)) / params->dt_wbc;
+  baseAccRef.tail(3) = (newvRef.tail(3) - Rz * baseVelRef.tail(3)) / params->dt_wbc;
   baseVelRef = newvRef;
 
   // Update position and velocity state vectors
@@ -172,10 +165,10 @@ void Estimator::updateReferenceState(VectorN const& newvRef) {
   vRef[5] = baseVelRef[5];
   vRef.tail(12) = vActuators;
 
-  qRef.head(2) += vRef.head(2) * dt;
+  qRef.head(2) += vRef.head(2) * params->dt_wbc;
   qRef[2] = qEstimate[2];
   qRef.segment(3, 2) = IMURpy.head(2);
-  qRef[5] += baseVelRef[5] * dt;
+  qRef[5] += baseVelRef[5] * params->dt_wbc;
   qRef.tail(12) = qActuators;
 
   // Transformation matrices
@@ -351,9 +344,10 @@ void Estimator::filterVelocity() {
   vx_queue.push_front(vEstimate(0));
   vy_queue.push_front(vEstimate(1));
   vz_queue.push_front(vEstimate(2));
-  vFiltered(0) = std::accumulate(vx_queue.begin(), vx_queue.end(), 0.) / windowSize;
-  vFiltered(1) = std::accumulate(vy_queue.begin(), vy_queue.end(), 0.) / windowSize;
-  vFiltered(2) = std::accumulate(vz_queue.begin(), vz_queue.end(), 0.) / windowSize;
+  int window_size = get_windows_size();
+  vFiltered(0) = std::accumulate(vx_queue.begin(), vx_queue.end(), 0.) / window_size;
+  vFiltered(1) = std::accumulate(vy_queue.begin(), vy_queue.end(), 0.) / window_size;
+  vFiltered(2) = std::accumulate(vz_queue.begin(), vz_queue.end(), 0.) / window_size;
 }
 
 

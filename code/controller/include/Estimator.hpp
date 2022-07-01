@@ -132,10 +132,11 @@ private:
 	// Filter the estimated velocity over a moving window
 	void filterVelocity();
 
+	// Number of samples in the averaging window
+	int get_windows_size() { return  (int)(params->get_k_mpc() * params->gait.rows() / params->N_periods); };
 
 
-	bool perfectEstimator;	// Enable perfect estimator (directly from the PyBullet simulation)
-	double dt;				// Time step of the estimator
+	Params* params;
 
 	std::array<int, 4> feetFrames;	// Frame indexes of the four feet
 	double footRadius;      // radius of a foot
@@ -160,8 +161,6 @@ private:
 
 	Vector12 qActuators; // positions of feet in the order FL, FR, HL, HR, as returned by device measurement
 	Vector12 vActuators; // velocities of feet in the order FL, FR, HL, HR, as returned by device measurement
-
-
 
 	int phaseRemainingDuration;		// Number of iterations left for the current gait phase
 	Vector4 feetStancePhaseDuration;// Number of loops during which each foot has been in contact
@@ -198,10 +197,8 @@ private:
 	// filtered actuators_vel, velocities of feet in the order FL, FR, HL, HR, as returned by device measurement
 	Vector12 vSecurity;
 
-	int windowSize;                                     // Number of samples in the averaging window
 	Vector6 vFiltered;                                  // Base velocity (in base frame) filtered by averaging window
 	std::deque<double> vx_queue, vy_queue, vz_queue;  // Queues that hold samples
-
 
     Vector18 qRef;        // Configuration vector in ideal world frame
     Vector18 vRef;        // Velocity vector in ideal world frame
