@@ -4,7 +4,7 @@
 
 #include <Arduino.h>
 // communication protocol to Microstrain IMU
-#include <MicrostrainCommProtocol.h>
+#include <MicrostrainComm.h>
 #include <ukf.h>
 
 // the IMU can be enabled  by this PIN

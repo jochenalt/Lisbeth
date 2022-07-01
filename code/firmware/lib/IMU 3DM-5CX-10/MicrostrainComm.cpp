@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "HardwareSerial.h"
-#include "MicrostrainCommProtocol.h"
+#include "MicrostrainComm.h"
 
 HardwareSerial* serial = &Serial8;
 Measurement dataStreamClock;
@@ -10,21 +10,6 @@ union float_int {
   unsigned long ul;
 };
 
-
-/*
-union double_long {
-  double f;
-  uint8_t buffer[8];
-};
-
-static double parseDouble(ResponseParser &res) {
-  double_long dl;
-  for (int i = 0;i<8;i++)
-    dl.buffer[i] = res.fields[res.field_idx].payload[res.parse_idx+i];
-  res.parse_idx += 8;
-  return dl.f;
-}
-*/
 static bool assert(bool condition, String name) {
   if (!condition) {
     Serial.print("ASSERT:");

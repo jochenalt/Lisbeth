@@ -100,6 +100,8 @@ class LIS3MDL
     void writeReg(uint8_t reg, uint8_t value);
     uint8_t readReg(uint8_t reg);
 
+    // true if the hardware buffer holds the next data point
+    bool isDataAvailable();
     void requestData();
 
     // read data in [gauss]

@@ -2,7 +2,6 @@
 #include <Wire.h>
 #include <math.h>
 
-// Defines ////////////////////////////////////////////////////////////////
 
 // The Arduino two-wire interface uses a 7-bit number for the address,
 // and sets the last bit correctly based on reads and writes
@@ -13,17 +12,12 @@
 
 #define LIS3MDL_WHO_ID  0x3D
 
-// Constructors ////////////////////////////////////////////////////////////////
-
 LIS3MDL::LIS3MDL(void)
 {
   io_timeout = 0;  // 0 = no timeout
   did_timeout = false;
 }
 
-// Public Methods //////////////////////////////////////////////////////////////
-
-// Did a timeout occur in read() since the last call to timeoutOccurred()?
 bool LIS3MDL::timeoutOccurred()
 {
   bool tmp = did_timeout;
@@ -53,15 +47,6 @@ bool LIS3MDL::init()
   return true;
 }
 
-/*
-Enables the LIS3MDL's magnetometer. Also:
-- Selects ultra-high-performance mode for all axes
-- Sets ODR (output data rate) to default power-on value of 10 Hz
-- Sets magnetometer full scale (gain) to default power-on value of +/- 4 gauss
-- Enables continuous conversion mode
-Note that this function will also reset other settings controlled by
-the registers it writes to.
-*/
 void LIS3MDL::setup(dataRate_t dataRate, range_t dataRange)
 {
     init();
@@ -171,19 +156,12 @@ void LIS3MDL::requestData()
 }
 
 // Reads the 3 mag channels and stores them in vector m
+bool   LIS3MDL::isDataAvailable() {
+      return Wire1.available() >= 6;
+}
+
 void  LIS3MDL::read(double  &mag_x, double &mag_y, double &mag_z )
 {
-
-  uint16_t millis_start = millis();
-  while (Wire1.available() < 6)
-  {
-    if (io_timeout > 0 && ((uint16_t)millis() - millis_start) > io_timeout)
-    {
-      did_timeout = true;
-      return;
-    }
-  }
-
   uint8_t xlm = Wire1.read();
   uint8_t xhm = Wire1.read();
   uint8_t ylm = Wire1.read();
@@ -196,11 +174,16 @@ void  LIS3MDL::read(double  &mag_x, double &mag_y, double &mag_z )
   double y = (int16_t)(yhm << 8 | ylm);
   double z = (int16_t)(zhm << 8 | zlm);
 
-
+  // scale to [gauss]
   mag_x = x / rangeScale;
-  mag_x = y / rangeScale;
-  mag_x = z / rangeScale;
+  mag_y = y / rangeScale;
+  mag_z = z / rangeScale;
 
+  // normalise
+  double length = sqrt((mag_x * mag_x) + (mag_y * mag_y) + (mag_z * mag_z));
+  mag_x /= length;
+  mag_y /= length;
+  mag_z /= length;
 }
 
 void LIS3MDL::vector_normalize(vector<float> *a)
