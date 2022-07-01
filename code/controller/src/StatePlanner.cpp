@@ -1,17 +1,17 @@
 #include "StatePlanner.hpp"
 
 StatePlanner::StatePlanner() :
-		dt(0.0), h_ref(0.0), n_steps(0), RPY(Vector3::Zero()) {
+		h_ref(0.0), n_steps(0), RPY(Vector3::Zero()) {
 }
 
 void StatePlanner::initialize(Params &params_in)
 {
-	dt = params_in.dt_mpc;
-	h_ref = params_in.h_ref;
-	n_steps = static_cast<int>(params_in.gait.rows());
+	params = &params_in;
+	h_ref = params->h_ref;
+	n_steps = static_cast<int>(params->gait.rows());
 	referenceStates = MatrixN::Zero(12, 1 + n_steps);
-	dt_vector = VectorN::LinSpaced(n_steps, dt,
-			static_cast<double>(n_steps) * dt);
+	dt_vector = VectorN::LinSpaced(n_steps, params->dt_mpc,
+			static_cast<double>(n_steps) * params->dt_mpc);
 }
 
 void StatePlanner::computeReferenceStates(Vector6 const &q, Vector6 const &v,	Vector6 const &vref)

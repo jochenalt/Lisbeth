@@ -34,7 +34,6 @@ public:
 
 private:
     Params* params;
-    double dt;         // Time step of the contact sequence (time step of the MPC)
     double h_ref;       // Reference height for the trunk
     int n_steps;        // Number of time steps in the prediction horizon
 
