@@ -77,16 +77,11 @@ class FootstepPlanner {
   Params* params;  							// Params object to store parameters
   Gait* gait;      							// Gait object to hold the gait informations
 
-  double dt;      							// Time step of the contact sequence (time step of the MPC)
-  double dt_wbc;  							// Time step of the whole body control
   double h_ref;   							// Reference height for the trunk
 
   // Predefined quantities
   double g;  									// Value of the gravity acceleartion
   double L;  									// Value of the maximum allowed deviation due to leg length
-
-  // Number of time steps in the prediction horizon
-  int n_steps; 	 							// T_mpc / time step of the MPC
 
   // Constant sized matrices
   Matrix34 footsteps_under_shoulders;  // Positions of footsteps to be "under the shoulder"

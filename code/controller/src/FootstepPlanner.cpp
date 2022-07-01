@@ -18,10 +18,7 @@ FootstepPlanner::FootstepPlanner() :
 void FootstepPlanner::initialize(Params &params_in, Gait &gait_in)
 {
 	params = &params_in;
-	dt = params->dt_mpc;
-	dt_wbc = params->dt_wbc;
 	h_ref = params->h_ref;
-	n_steps = static_cast<int>(params->gait.rows());
 	footsteps_under_shoulders
 			<< Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(
 					params->footsteps_under_shoulders.data(),
@@ -86,11 +83,11 @@ Matrix34 FootstepPlanner::updateFootsteps(bool refresh, int k, Vector18 const &q
 	}
 
 	// Feet in contact with the ground are moving in base frame (they don't move in world frame)
-	double rotation_yaw = dt_wbc * b_vref(5); // Rotation along Z for the last time step
+	double rotation_yaw = params->dt_wbc * b_vref(5); // Rotation along Z for the last time step
 	double c = std::cos(rotation_yaw);
 	double s = std::sin(rotation_yaw);
 	Rz.topLeftCorner<2, 2>() << c, s, -s, c;
-	Vector2 dpos = dt_wbc * b_vref.head(2); // Displacement along X and Y for the last time step
+	Vector2 dpos = params->dt_wbc * b_vref.head(2); // Displacement along X and Y for the last time step
 	for (int j = 0; j < 4; j++)
 	{
 		if (gait->getCurrentGait(0, j) == 1.0)
@@ -124,12 +121,12 @@ void FootstepPlanner::computeFootsteps(int steps_left_in_gait, Vector6 const &b_
 
 	// Cumulative time by adding the terms in the first column (remaining number of timesteps)
 	// Get future yaw yaws compared to current position
-	dt_cum(0) = dt_wbc * steps_left_in_gait;
+	dt_cum(0) = params->dt_wbc * steps_left_in_gait;
 	yaws(0) = b_vref(5) * dt_cum(0);
 	for (uint j = 1; j < footsteps.size(); j++)
 	{
 		dt_cum(j) =
-				current_gait.row(j).isZero() ? dt_cum(j - 1) : dt_cum(j - 1) + dt;
+				current_gait.row(j).isZero() ? dt_cum(j - 1) : dt_cum(j - 1) + params->dt_mpc;
 		yaws(j) = b_vref(5) * dt_cum(j);
 	}
 
