@@ -1,17 +1,23 @@
 #include "Gait.hpp"
 
 Gait::Gait() :
-		pastGait_(), currentGait_(), desiredGait_(), nRows_(0), remainingTime_(
-				0.0), newPhase_(false), is_static_(true), currentGaitType_(
-				GaitType::NoGait), prevGaitType_(GaitType::NoGait), subGait(
-				GaitType::Walking)
+		pastGait_(),
+		currentGait_(),
+		desiredGait_(),
+		nRows_(0),
+		remainingTime_(0.0),
+		newPhase_(false),
+		is_static_(true),
+		currentGaitType_(GaitType::NoGait),
+		prevGaitType_(GaitType::NoGait),
+		subGait(GaitType::Walking)
 {
 }
 
 void Gait::initialize(Params &params_in)
 {
 	params = &params_in;
-	nRows_ = (int) params->gait.rows();
+	nRows_ = params->get_N_steps();
 
 	pastGait_ = MatrixN4::Zero(params->N_gait, 4);
 	currentGait_ = MatrixN4::Zero(params->N_gait, 4);
@@ -21,7 +27,6 @@ void Gait::initialize(Params &params_in)
 	is_static_ = false;
 	createStatic();
 	currentGait_ = desiredGait_;
-
 }
 
 void Gait::createWalk()

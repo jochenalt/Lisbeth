@@ -36,11 +36,11 @@ void FootstepPlanner::initialize(Params &params_in, Gait &gait_in)
 	gait = &gait_in;
 	targetFootstep = currentFootstep;
 	o_targetFootstep = currentFootstep;
-	dt_cum = VectorN::Zero(params->gait.rows());
-	yaws = VectorN::Zero(params->gait.rows());
-	dx = VectorN::Zero(params->gait.rows());
-	dy = VectorN::Zero(params->gait.rows());
-	for (int i = 0; i < params->gait.rows(); i++)
+	dt_cum = VectorN::Zero(params->get_N_steps());
+	yaws = VectorN::Zero(params->get_N_steps());
+	dx = VectorN::Zero(params->get_N_steps());
+	dy = VectorN::Zero(params->get_N_steps());
+	for (int i = 0; i < params->get_N_steps(); i++)
 	{
 		footsteps.push_back(Matrix34::Zero());
 	}

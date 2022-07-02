@@ -155,10 +155,6 @@ void Params::initialize(const std::string& file_path)
   assert_yaml_parsing(robot_node, "robot", "Kff_main");
   Kff_main = robot_node["Kff_main"].as<double>();
 
-  assert_yaml_parsing(robot_node, "robot", "gait");
-  gait_vec = robot_node["gait"].as<std::vector<int> >();
-  convert_gait_vec();
-
   assert_yaml_parsing(robot_node, "robot", "gp_alpha_vel");
   gp_alpha_vel = robot_node["gp_alpha_vel"].as<double>();
 
@@ -271,38 +267,6 @@ void Params::initialize(const std::string& file_path)
   if (!SIMULATION) perfect_estimator = false;
 }
 
-void Params::convert_gait_vec() {
-  if (gait_vec.size() % 5 != 0) {
-    throw std::runtime_error(
-        "gait matrix in yaml is not in the correct format. It should have five "
-        "columns, with the first column containing the number of timestep for "
-        "each phase and the four others containing 0 and 1 to describe the "
-        "feet status during that phase.");
-  }
-
-  // Get the number of lines in the gait matrix
-  int N_gait = 0;
-  for (uint i = 0; i < gait_vec.size() / 5; i++) {
-    N_gait += gait_vec[5 * i];
-  }
-
-  // Resize gait matrix
-  gait = MatrixN::Zero(N_steps * N_periods, 4);
-
-  // Fill gait matrix
-  int k = 0;
-  for (uint i = 0; i < gait_vec.size() / 5; i++) {
-    for (int j = 0; j < gait_vec[5 * i]; j++) {
-      gait.row(k) << gait_vec[5 * i + 1], gait_vec[5 * i + 2], gait_vec[5 * i + 3], gait_vec[5 * i + 4];
-      k++;
-    }
-  }
-
-  // Repeat gait for other periods
-  for (int i = 1; i < N_periods; i++) {
-    gait.block(i * N_gait, 0, N_gait, 4) = gait.block(0, 0, N_gait, 4);
-  }
-}
 
 void Params::convert_t_switch() {
   // Resize t_switch matrix

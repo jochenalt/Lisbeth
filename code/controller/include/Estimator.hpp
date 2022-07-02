@@ -133,7 +133,7 @@ private:
 	void filterVelocity();
 
 	// Number of samples in the averaging window
-	int get_windows_size() { return  (int)(params->get_k_mpc() * params->gait.rows() / params->N_periods); };
+	int get_windows_size() { return  (int)(params->get_k_mpc() * params->get_N_steps() / params->N_periods); };
 
 
 	Params* params;

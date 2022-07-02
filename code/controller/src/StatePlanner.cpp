@@ -10,7 +10,7 @@ void StatePlanner::initialize(Params &params_in, Gait &gait_in)
 	params = &params_in;
 	gait = &gait_in;
 	h_ref = params->h_ref;
-	n_steps = static_cast<int>(params->gait.rows());
+	n_steps = params->get_N_steps();
 	std::cout << "n_steps" << n_steps << std::endl;
 	std::cout << "N_gait" << params->N_gait << std::endl;
 	std::cout << "gait" << gait->getCurrentGait() << std::endl;

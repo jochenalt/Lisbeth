@@ -43,12 +43,6 @@ class Params {
   ////////////////////////////////////////////////////////////////////////////////////////////////
   void initialize(const std::string& file_path);
 
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  ///
-  /// \brief Convert the gait vector of the yaml into an Eigen matrix
-  ///
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  void convert_gait_vec();
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   ///
@@ -64,7 +58,6 @@ class Params {
   ////////////////////////////////////////////////////////////////////////////////////////////////
   void convert_v_switch();
 
-  MatrixN get_gait() { return gait; }
   VectorN get_t_switch() { return t_switch; }
   MatrixN get_v_switch() { return v_switch; }
 
@@ -103,9 +96,6 @@ class Params {
   std::vector<double> Kp_main;  // Proportional gains for the PD+
   std::vector<double> Kd_main;  // Derivative gains for the PD+
   double Kff_main;              // Feedforward torques multiplier for the PD+
-
-  // Parameters of Gait
-  std::vector<int> gait_vec;  // Initial gait matrix (vector)
 
   // Parameters of Joystick
   double gp_alpha_vel;               // Coefficient of the low pass filter applied to gamepad velocity
@@ -164,7 +154,6 @@ class Params {
   int bezier_degree;          //  Degree of the Bezier curve
 
   // Not defined in yaml
-  MatrixN gait;                                   // Initial gait matrix (Eigen)
   double mass;                                    // Mass of the robot
   std::vector<double> I_mat;                      // Inertia matrix
   std::vector<double> CoM_offset;                 // Center of Mass offset

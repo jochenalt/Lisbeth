@@ -4,7 +4,7 @@
 MPCSolver::MPCSolver(Params& params_in) {
   params = &params_in;
 
-  n_steps = static_cast<int>(params->gait.rows());
+  n_steps = static_cast<int>(params->get_N_steps());
 
   xref = Matrix12N::Zero(12, 1 + n_steps);
   x = VectorN::Zero(12 * n_steps * 2);
@@ -12,7 +12,7 @@ MPCSolver::MPCSolver(Params& params_in) {
   warmxf = VectorN::Zero(12 * n_steps * 2);
   x_f_applied = MatrixN::Zero(24, n_steps);
 
-  gait = MatrixN4i::Zero(params->gait.rows(), 4);
+  gait = MatrixN4i::Zero(params->get_N_steps(), 4);
 
   // Predefined variables
   mass = params->mass;

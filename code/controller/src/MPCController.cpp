@@ -103,8 +103,8 @@ void MPCController::initialize(Params& params_in) {
   last_available_result.col(0).tail(12) = (Vector3(0.0, 0.0, 8.0)).replicate<4, 1>();
 
   // Initialize buffer memory memory
-  thread_buffer.ref_states = MatrixN::Zero(12, params->gait.rows() + 1);
-  thread_buffer.footsteps = MatrixN::Zero(params->gait.rows(), 12);
+  thread_buffer.ref_states = MatrixN::Zero(12, params->get_N_steps() + 1);
+  thread_buffer.footsteps = MatrixN::Zero(params->get_N_steps(), 12);
 
   // start thread
   solver_thread = new std::thread(&MPCController::solver_loop, this);  // spawn new thread that runs MPC in parallel

@@ -28,7 +28,6 @@ struct ParamsPythonVisitor : public bp::def_visitor<ParamsPythonVisitor<Params>>
          .def_readwrite("predefined_vel", &Params::predefined_vel)
          .def_readwrite("enable_pyb_GUI", &Params::enable_pyb_GUI)
         	.def_readwrite("N_periods", &Params::N_periods)
-        	.def_readwrite("gait", &Params::gait)
         	.def_readwrite("CoM_offset", &Params::CoM_offset)
 			.def_readwrite("shoulders", &Params::shoulders)
         	.def_readwrite("footsteps_init", &Params::footsteps_init)
