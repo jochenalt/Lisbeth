@@ -27,14 +27,14 @@ void Gait::initialize(Params &params_in)
 	currentGait_ = desiredGait_;
 }
 
-void Gait::setGait(int pos,int sequences, MatrixN4 & gait, std::string sequence) {
-	int repetition = params->get_N_steps() / (params->N_periods * sequences);
+void Gait::setGait(int i,int n_sequences, MatrixN4 & gait, std::string sequence) {
+	int repetition = params->get_N_steps() / (params->N_periods * n_sequences);
 
 	RowVector4 gaitSequence;
 	gaitSequence << (sequence[0]-'0'), sequence[1]-'0', sequence[2]-'0',sequence[3]-'0';
 
-	for (int i = 0;i< params->N_periods;i++) {
-		gait.block(i*sequences*repetition + repetition*pos, 0, repetition, 4) = gaitSequence.colwise().replicate(repetition);
+	for (int p = 0;p< params->N_periods;p++) {
+		gait.block(p*n_sequences*repetition + repetition*i, 0, repetition, 4) = gaitSequence.colwise().replicate(repetition);
 	}
 }
 
