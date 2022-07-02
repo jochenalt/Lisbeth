@@ -4,6 +4,7 @@
 #include <Arduino.h>
 
 
+
 /** The magnetometer ranges */
 typedef enum {
   RANGE_4_GAUSS = 0b00,  ///< +/- 4g (default value)
@@ -96,16 +97,12 @@ class LIS3MDL
     void readSync(double &x, double &y, double &z);
 
     // read data in [gauss]
-    void read(double &x, double &y, double &z);
+    void readResponse(double &x, double &y, double &z);
 
     void setTimeout(uint16_t timeout);
     uint16_t getTimeout(void);
     bool timeoutOccurred(void);
-
-    // vector functions
-    template <typename Ta, typename Tb, typename To> static void vector_cross(const vector<Ta> *a, const vector<Tb> *b, vector<To> *out);
-    template <typename Ta, typename Tb> static float vector_dot(const vector<Ta> *a, const vector<Tb> *b);
-    static void vector_normalize(vector<float> *a);
+    void convertData(double &x, double &y, double &z);
 
   private:
     uint8_t address;
@@ -117,18 +114,6 @@ class LIS3MDL
 
     int16_t testReg(uint8_t address, regAddr reg);
 };
-
-template <typename Ta, typename Tb, typename To> void LIS3MDL::vector_cross(const vector<Ta> *a, const vector<Tb> *b, vector<To> *out)
-{
-  out->x = (a->y * b->z) - (a->z * b->y);
-  out->y = (a->z * b->x) - (a->x * b->z);
-  out->z = (a->x * b->y) - (a->y * b->x);
-}
-
-template <typename Ta, typename Tb> float LIS3MDL::vector_dot(const vector<Ta> *a, const vector<Tb> *b)
-{
-  return (a->x * b->x) + (a->y * b->y) + (a->z * b->z);
-}
 
 #endif
 

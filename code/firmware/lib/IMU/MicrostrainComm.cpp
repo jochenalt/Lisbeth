@@ -3,7 +3,7 @@
 #include "MicrostrainComm.h"
 
 HardwareSerial* serial = &Serial8;
-Measurement dataStreamClock;
+
 
 union float_int {
   float f;
@@ -55,25 +55,6 @@ static String parseString(CommandData &res, uint8_t len) {
   return s;
 }
 
-static void print(const char* format, ...) {
-	char s[256];
-	__gnuc_va_list  args;
-		  
-	va_start (args, format);
-	vsprintf (s, format, args);
-	va_end (args);		
-  Serial.print(s);
-}
-
-static void println(const char* format, ...) {
-	char s[256];
-	__gnuc_va_list  args;
-		  
-	va_start (args, format);
-	vsprintf (s, format, args);
-	va_end (args);		
-  Serial.println(s);
-};
 
 uint16_t generateChecksum(uint8_t buffer[], uint8_t buffer_len) {
   uint8_t checksum_byte1 = 0, checksum_byte2 = 0;

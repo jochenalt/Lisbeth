@@ -1,9 +1,10 @@
 #include "Magnetometer.h"
 #include "TimePassedBy.h"
-
+#include "MicrostrainComm.h"
 static volatile bool newDataIsAvailable = false;
 void newDataAvailableInterrupt() {
   newDataIsAvailable = true;
+
 }
 
 bool Magnetometer::setup(dataRate_t freq, range_t dataRange) {
@@ -27,7 +28,7 @@ void Magnetometer::requestData() {
 }
 
 void Magnetometer::fetchData() {
-    device.read(mag_x,mag_y,mag_z);
+    device.readResponse(mag_x,mag_y,mag_z);
 }
 
 bool Magnetometer::isDataAvailable() {
@@ -45,12 +46,11 @@ void Magnetometer::read(double &x, double &y, double &z) {
 }
 
 void Magnetometer::loop() {
-    if (initialised) {
-
-        
+    if (initialised) {     
         // if interrupt fired         
         if (newDataIsAvailable) {
             requestData();
+            dataStreamClock.tick();
             dataRequestTime_us = micros();
             dataRequested = true;
             newDataIsAvailable = false;
@@ -61,6 +61,10 @@ void Magnetometer::loop() {
             if (device.isDataAvailable()) {
                 dataRequested = false;
                 fetchData();
+
+                 static TimePassedBy printTimer (1000);
+                if (printTimer.isDue()) {
+   
                 Serial.print("MAG");
 
                 Serial.print("x=");
@@ -69,6 +73,11 @@ void Magnetometer::loop() {
                 Serial.print(mag_y);
                 Serial.print("z=");
                 Serial.println(mag_z);
+                Serial.println(dataStreamClock.getAvrFreq());
+                }
+
+                
+
 
                 dataIsAvailable = true;
             } else {

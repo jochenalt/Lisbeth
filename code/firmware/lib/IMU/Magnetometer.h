@@ -2,6 +2,7 @@
 #define MAGNETOMETER_H
 
 #include "LIS3MDL.h"
+#include "MicrostrainComm.h"
 
 /**
  * Manage the magnetometer 
@@ -30,7 +31,7 @@ class Magnetometer {
         void read(double &x, double &y, double &z);
 
         bool isInitialised() { return initialised; };
-
+        Measurement& getMeasuremt() { return dataStreamClock;};
     private:
         void requestData();
         void fetchData();
@@ -41,5 +42,6 @@ class Magnetometer {
         double mag_x,mag_y,mag_z = 0;
         bool dataIsAvailable = false;
         bool initialised = false;
+        Measurement dataStreamClock;
 };
 #endif

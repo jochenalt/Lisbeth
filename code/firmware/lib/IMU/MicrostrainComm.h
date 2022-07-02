@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <utils.h>
 
 #define BUFFER_SIZE 256
 #define FIELD_BUFFER_SIZE 128
@@ -40,61 +41,6 @@ struct IMUSensorData
   bool rpy_modified = false;
 };
 
-
-class Measurement {
-  const uint8_t filter = 16;
-  public:
-    Measurement() {
-        start_time = micros();
-        end_time = start_time;
-        duration = 0;
-        duration_avr = 0;
-        deviation_avr = 0;
-    };
-    virtual ~Measurement() {};
-
-    void start() { 
-        start_time = micros();
-        end_time = start_time;
-    }
-    void stop()  {
-       end_time = micros(); 
-       duration = end_time - start_time;
-       duration_avr = (duration_avr*(filter-1) + duration)/filter;
-       uint32_t deviation = duration > duration_avr?duration-duration_avr:duration_avr-duration;
-       deviation_avr = (deviation_avr*(filter-1) +deviation)/filter;
-    }
-    float getTime() { return ((float)duration)/1000000.0; };
-    float getAvrTime() { return ((float)duration_avr)/1000000.0; };
-    float getAvrFreq() { 
-      if (duration_avr > 0)
-        return 1000000.0/(float)duration_avr;
-      else
-        return 0;
-     }
-    float getAvrDeviation() { 
-      if (deviation_avr > 0)
-        return ((float)deviation_avr / (float)duration_avr);
-      else
-        return 0;
-     }
-
-    void tick() {
-      end_time = micros();
-      duration = end_time - start_time;
-      uint32_t deviation = duration > duration_avr?duration-duration_avr:duration_avr-duration;
-      deviation_avr = (deviation_avr*(filter-1) + deviation)/filter;
-      duration_avr = (duration_avr*(filter-1) + duration)/filter;
-      start_time = end_time;
-    } 
-
-  private:
-    uint32_t start_time;
-    uint32_t end_time;
-    uint32_t duration;
-    uint32_t duration_avr;
-    uint32_t deviation_avr;
-};
 
 
 struct FieldType {
@@ -179,6 +125,7 @@ class MicrostrainIMU {
         bool is_initialised;
         uint32_t baud_rate;
         uint16_t targetFreq = 100;
+        Measurement dataStreamClock;
 }; 
 
 

@@ -284,7 +284,7 @@ void executeCommand() {
           break;
       }
       case 'm' :{
-          mag.setup(DATARATE_10_HZ, RANGE_4_GAUSS);
+          mag.setup(DATARATE_1000_HZ, RANGE_4_GAUSS);
       }
 
       case 10:
@@ -379,7 +379,7 @@ void loop() {
   // get feedback of all odrives
   // odrives.loop();
 
-  imuMgr.loop();
+  // imuMgr.loop();
 
   // wait for any pending commands to be executed
   powerManager.loop();

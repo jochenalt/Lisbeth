@@ -47,7 +47,7 @@ bool LIS3MDL::init()
             if (testReg(LIS3MDL_SA1_LOW_ADDRESS, WHO_AM_I) == LIS3MDL_WHO_ID)
                 address =  LIS3MDL_SA1_LOW_ADDRESS ;
             else {
-                Serial.print("LIS3MDL hasnt been found");
+                Serial.print("LIS3MDL hasn't been found");
                 return false;
             }
     }
@@ -57,16 +57,17 @@ bool LIS3MDL::init()
 
 bool  LIS3MDL::setup(dataRate_t dataRate, range_t dataRange)
 {
-    Wire1.begin();
-    bool ok = init();
-    if (!ok )
-        return false;
+  Wire1.begin();
 
-    range = dataRange;
-    uint8_t temperature_enable = 0;
+  bool ok = init();
+  if (!ok )
+      return false;
 
-    uint8_t self_test_enable = 0;  
-    uint8_t perf_mode = LOWPOWERMODE;
+  range = dataRange;
+  uint8_t temperature_enable = 0;
+
+  uint8_t self_test_enable = 0;  
+  uint8_t perf_mode = LOWPOWERMODE;
   if (dataRate == DATARATE_155_HZ) {
     // set OP to UHP
     perf_mode = ULTRAHIGHMODE;
@@ -84,30 +85,18 @@ bool  LIS3MDL::setup(dataRate_t dataRate, range_t dataRange)
     perf_mode = LOWPOWERMODE;
   }
 
-    // 0x70 = 0b01110000
-    // OM = 11 (ultra-high-performance mode for X and Y); DO = 100 (10 Hz ODR)
-    writeReg(CTRL_REG1, 0x70);
-    // writeReg(CTRL_REG1, (temperature_enable << 7)  | (perf_mode << 5) | (dataRate << 1) | self_test_enable);
+    writeReg(CTRL_REG1, (temperature_enable << 7)  | (perf_mode << 5) | (dataRate << 1) | self_test_enable);
 
-    // 0x00 = 0b00000000
-    // FS = 00 (+/- 4 gauss full scale)
-    writeReg(CTRL_REG2, 0x00 );
-    // writeReg(CTRL_REG2, range << 5);
+    writeReg(CTRL_REG2, range << 5);
 
-    // 0x00 = 0b00000000
-    // MD = 00 (continuous-conversion mode)
     writeReg(CTRL_REG3, CONTINUOUSMODE);
 
-    // 0x0C = 0b00001100
-    // OMZ = 11 (ultra-high-performance mode for Z)
-    writeReg(CTRL_REG4, 0x0C);
-    // writeReg(CTRL_REG4, perf_mode << 2);
-
+    writeReg(CTRL_REG4, perf_mode << 2);
 
     bool enableX = false;
     bool enableY = false;
     bool enableZ = true;
-    bool polarity = true;
+    bool polarity = false;
     bool latch = false;
     bool enableInt = true;
     uint8_t value = 0x08; // set default bits, see table 36
@@ -157,9 +146,24 @@ uint8_t LIS3MDL::readReg(uint8_t reg)
   return value;
 }
 
+void LIS3MDL::convertData(double &x, double &y, double &z) {
+  // scale to [gauss]
+  x = x / rangeScale;
+  y = y / rangeScale;
+  z = z / rangeScale;
+
+  // normalise
+  /*
+  double length = sqrt((mag_x * mag_x) + (mag_y * mag_y) + (mag_z * mag_z));
+  mag_x /= length;
+  mag_y /= length;
+  mag_z /= length;
+  */
+}
+
 
 // Reads the 3 mag channels and stores them in vector m
-void LIS3MDL::readSync(double &x, double &y, double &z)
+void LIS3MDL::readSync(double  &mag_x, double &mag_y, double &mag_z )
 {
   Wire1.beginTransmission(address);
   // assert MSB to enable subaddress updating
@@ -184,10 +188,13 @@ void LIS3MDL::readSync(double &x, double &y, double &z)
   uint8_t zlm = Wire1.read();
   uint8_t zhm = Wire1.read();
 
+  
   // combine high and low bytes
-  x = (int16_t)(xhm << 8 | xlm);
-  y = (int16_t)(yhm << 8 | ylm);
-  z = (int16_t)(zhm << 8 | zlm);
+  mag_x = (int16_t)(xhm << 8 | xlm);
+  mag_y = (int16_t)(yhm << 8 | ylm);
+  mag_z = (int16_t)(zhm << 8 | zlm);
+
+  convertData(mag_x, mag_y, mag_z);
 }
 
 // Reads the 3 mag channels and stores them in vector m
@@ -205,7 +212,7 @@ bool   LIS3MDL::isDataAvailable() {
       return Wire1.available() >= 6;
 }
 
-void  LIS3MDL::read(double  &mag_x, double &mag_y, double &mag_z )
+void  LIS3MDL::readResponse(double  &mag_x, double &mag_y, double &mag_z )
 {
   uint8_t xlm = Wire1.read();
   uint8_t xhm = Wire1.read();
@@ -215,28 +222,11 @@ void  LIS3MDL::read(double  &mag_x, double &mag_y, double &mag_z )
   uint8_t zhm = Wire1.read();
 
   // combine high and low bytes
-  double x = (int16_t)(xhm << 8 | xlm);
-  double y = (int16_t)(yhm << 8 | ylm);
-  double z = (int16_t)(zhm << 8 | zlm);
+  mag_x = (int16_t)(xhm << 8 | xlm);
+  mag_y = (int16_t)(yhm << 8 | ylm);
+  mag_z = (int16_t)(zhm << 8 | zlm);
 
-  // scale to [gauss]
-  mag_x = x / rangeScale;
-  mag_y = y / rangeScale;
-  mag_z = z / rangeScale;
-
-  // normalise
-  double length = sqrt((mag_x * mag_x) + (mag_y * mag_y) + (mag_z * mag_z));
-  mag_x /= length;
-  mag_y /= length;
-  mag_z /= length;
-}
-
-void LIS3MDL::vector_normalize(vector<float> *a)
-{
-  float mag = sqrt(vector_dot(a, a));
-  a->x /= mag;
-  a->y /= mag;
-  a->z /= mag;
+  convertData(mag_x, mag_y, mag_z);
 }
 
 // Private Methods //////////////////////////////////////////////////////////////
