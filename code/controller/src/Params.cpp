@@ -2,7 +2,7 @@
 
 using namespace yaml_control_interface;
 Params::Params()
-    : // legacy
+    : N_steps (16), // Number of steps in the prediction horizon
       N_gait(40),
       velID(2),
 
@@ -84,6 +84,9 @@ void Params::initialize(const std::string& file_path)
    // legacy parameters
    assert_yaml_parsing(robot_node, "robot", "velID");
    velID = robot_node["velID"].as<int>();
+
+   assert_yaml_parsing(robot_node, "robot", "N_steps");
+   N_steps = robot_node["N_steps"].as<int>();
 
    // Retrieve robot parameters
    assert_yaml_parsing(robot_node, "robot", "mass");
@@ -284,7 +287,7 @@ void Params::convert_gait_vec() {
   }
 
   // Resize gait matrix
-  gait = MatrixN::Zero(N_gait * N_periods, 4);
+  gait = MatrixN::Zero(N_steps * N_periods, 4);
 
   // Fill gait matrix
   int k = 0;

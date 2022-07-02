@@ -35,6 +35,8 @@ robot:
 
     # Parameters of Gait
     N_periods: 1
+    N_steps: 16  # number of steps in the prediction horizon
+
     gait: [8, 1, 0, 0, 1,
            8, 0, 1, 1, 0]  # Initial gait matrix
            
