@@ -197,12 +197,13 @@ class Controller:
         self.q[0:6] = np.array([0.0, 0.0, self.h_ref, 0.0, 0.0, 0.0])
         self.q[6:] = q_init
         self.mpc_f_cmd = np.zeros((12,1))
-        self.statePlanner = core.StatePlanner()
-        self.statePlanner.initialize(params)
 
         self.gait = core.Gait()
         self.gait.initialize(params)
         self.gait.update(True,  Types.GaitType.NoMovement.value)
+
+        self.statePlanner = core.StatePlanner()
+        self.statePlanner.initialize(params, self.gait)
 
         self.shoulders = np.zeros((3, 4))
         self.footstepPlanner = core.FootstepPlanner()

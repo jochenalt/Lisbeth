@@ -8,7 +8,7 @@
 
 #include "Types.h"
 #include "Params.hpp"
-
+#include "Gait.hpp"
 
 class StatePlanner
 {
@@ -16,7 +16,7 @@ public:
     StatePlanner();
     ~StatePlanner() {}
 
-    void initialize(Params& params);
+    void initialize(Params& params, Gait& gait);
 
     // Compute the reference trajectory of the CoM for each time step of the
     // prediction horizon. The output is a matrix of size 12 by (N+1) with N the number
@@ -29,14 +29,14 @@ public:
     //		z_average average height of feet currently in stance phase
     void computeReferenceStates(Vector6 const& q, Vector6 const& v, Vector6 const& vref);
 
+
     Matrix12N getReferenceStates() { return referenceStates; }
-    int getNSteps() { return n_steps; }
 
 private:
     Params* params;
+    Gait*  gait;
     double h_ref;       // Reference height for the trunk
-    int n_steps;        // Number of time steps in the prediction horizon
-
+    int n_steps = 0;
     Vector3 RPY;        // To store roll, pitch and yaw angles 
 
     // Reference trajectory matrix of size 12 by (1 + N)  with the current state of

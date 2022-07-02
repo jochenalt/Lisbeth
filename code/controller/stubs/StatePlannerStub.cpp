@@ -17,9 +17,8 @@ struct StatePlannerPythonVisitor : public bp::def_visitor<StatePlannerPythonVisi
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
 
             .def("getReferenceStates", &StatePlanner::getReferenceStates, "Get xref matrix.\n")
-            .def("getNSteps", &StatePlanner::getNSteps, "Get number of steps in prediction horizon.\n")
 
-            .def("initialize", &StatePlanner::initialize, bp::args("params"),
+            .def("initialize", &StatePlanner::initialize, bp::args("params", "gait"),
                  "Initialize StatePlanner from Python.\n")
 
             // Run StatePlanner from Python

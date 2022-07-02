@@ -82,7 +82,7 @@ class MPCSolver {
 
   Params* params;
 
-  double mass, mu, T_gait;
+  double mass, mu;
   int n_steps, cpt_ML, cpt_P;
 
   Eigen::Matrix<double, 3, 3> gI;

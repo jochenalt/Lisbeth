@@ -146,7 +146,7 @@ void Controller::initialize(Params& params_in) {
 	  init_robot();
 
 	  // Initialization of the control blocks
-	  statePlanner.initialize(params_in);
+	  statePlanner.initialize(params_in, gait);
 	  gait.initialize(params_in);
      gait.update(true,  GaitType::NoMovement);
 

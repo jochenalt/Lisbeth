@@ -55,6 +55,9 @@ public:
 
     void rollGait();
 
+    // Number of time steps in the prediction horizon
+    int get_n_steps() { return static_cast<int>(currentGait_.rows()); }
+
     MatrixN4 getCurrentGait() { return currentGait_; }
     double getCurrentGait(int i, int j) { return currentGait_(i, j); }
     bool getIsStatic() { return is_static_; }
