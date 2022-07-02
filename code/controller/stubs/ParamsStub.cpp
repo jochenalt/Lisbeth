@@ -23,7 +23,6 @@ struct ParamsPythonVisitor : public bp::def_visitor<ParamsPythonVisitor<Params>>
          .def_readwrite("envID", &Params::envID)
          .def_readwrite("velID", &Params::velID)
          .def_readwrite("dt_mpc", &Params::dt_mpc)
-         .def_readwrite("T_gait", &Params::T_gait)
          .def_readwrite("T_mpc", &Params::T_mpc)
          .def_readwrite("N_SIMULATION", &Params::N_SIMULATION)
          .def_readwrite("use_flat_plane", &Params::use_flat_plane)

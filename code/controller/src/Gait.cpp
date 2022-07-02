@@ -17,6 +17,7 @@ void Gait::initialize(Params &params_in)
 	currentGait_ = MatrixN4::Zero(params->N_gait, 4);
 	desiredGait_ = MatrixN4::Zero(params->N_gait, 4);
 
+	std::cout << "GAIT N_gait" << params->N_gait << std::endl;
 	is_static_ = false;
 	createStatic();
 	currentGait_ = desiredGait_;

@@ -68,8 +68,6 @@ class Params {
   VectorN get_t_switch() { return t_switch; }
   MatrixN get_v_switch() { return v_switch; }
 
-  double getT_Gait() { return N_gait * dt_mpc; }
-
   // Number of wbc time steps for each MPC time step
   int get_k_mpc() { return (int)std::round(dt_mpc / dt_wbc); };
 
@@ -166,7 +164,6 @@ class Params {
 
   // Not defined in yaml
   MatrixN gait;                                   // Initial gait matrix (Eigen)
-  double T_gait;                                  // Period of the gait
   double mass;                                    // Mass of the robot
   std::vector<double> I_mat;                      // Inertia matrix
   std::vector<double> CoM_offset;                 // Center of Mass offset

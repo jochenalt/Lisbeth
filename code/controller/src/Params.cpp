@@ -3,7 +3,7 @@
 using namespace yaml_control_interface;
 Params::Params()
     : // legacy
-      N_gait(20),
+      N_gait(40),
       velID(2),
       T_mpc(0.32),
 
@@ -61,7 +61,6 @@ Params::Params()
       Fz_min(0.0),
       enable_comp_forces(false),
 
-      T_gait(0.0),         // Period of the gait
       mass(1.0),           // Mass of the robot
       I_mat(9, 0.0),       // Fill with zeros, will be filled with values later
       CoM_offset(3, 0.0),  // Fill with zeros, will be filled with values later
@@ -288,9 +287,6 @@ void Params::convert_gait_vec() {
   for (uint i = 0; i < gait_vec.size() / 5; i++) {
     N_gait += gait_vec[5 * i];
   }
-
-  // Save period of the gait
-  T_gait = N_gait * dt_mpc;
 
   // Resize gait matrix
   gait = MatrixN::Zero(N_gait * N_periods, 4);
