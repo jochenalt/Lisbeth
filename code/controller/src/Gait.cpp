@@ -98,7 +98,6 @@ void Gait::createCustomGallop()
 
 void Gait::createStatic()
 {
-	// Number of timesteps in a period of gait
 	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
 		setGait(0,1,desiredGait_, "1111");

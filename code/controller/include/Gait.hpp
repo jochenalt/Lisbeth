@@ -1,13 +1,16 @@
 /**
- * header for Gait class
- * Planner that outputs current and future locations of footsteps, the reference
- * trajectory of the base and the position, velocity, acceleration commands for feet in
- * swing phase based on the reference velocity given by the user and the current
- * position/velocity of the base
- * */
+ * Planner for Gait.
+ *
+ * output is an array representing if feet are touching the ground, e.g.
+ * 	1 1 0 0
+ * 	0 0 1 1
+ *
+ * represents a running cheetah-gait. The gait is the basis for the next steps like foot step planning and trajectory generation
+ *
+ */
 
-#ifndef GAIT_H_INCLUDED
-#define GAIT_H_INCLUDED
+#ifndef GAIT_H_
+#define GAIT_H_
 
 #include "Types.h"
 #include "Params.hpp"
@@ -23,10 +26,6 @@ public:
     Gait();
     virtual ~Gait() {}
 
-    /**
-     * initializes the gait manager
-     *
-     */
     void initialize(Params& params);
 
     /**
@@ -38,10 +37,7 @@ public:
      */
     double getPhaseDuration(int gaitPhaseIdx, int footIdx, FootPhase phase);
 
-    /** Handle the joystick code to trigger events (change of gait for instance)
-     * gaitTypeInput target gait, coming from GaitType, because of Python binding needs to be int
-     * q current position vector of the flying base in world frame (linear and angular stacked)
-     */
+    // Change the gait to the passed type
     bool changeGait(int gaitTypeInput);
 
     /** Move one step further in the gait cycle
