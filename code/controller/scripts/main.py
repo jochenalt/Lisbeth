@@ -227,6 +227,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             #        break
     
             # Set desired quantities for the actuators
+            print("Main")
             if (not np.allclose(controller.result.q_des, controllerCpp.qdes)):
                 print ("alt.q_des", controller.result.q_des)            
                 print ("new.q_des", controllerCpp.qdes)            

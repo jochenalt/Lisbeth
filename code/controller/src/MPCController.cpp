@@ -52,7 +52,9 @@ void MPCController::solver_loop() {
     if (read_in(ref_states, footsteps)) {
       // Run the asynchronous MPC with the data that as been retrieved
       uint64_t start = get_micros();
+      std::cout  << "MPC start";
       solver->run(ref_states, footsteps);
+      std::cout  << "MPC end";
 
       uint64_t time = get_micros() - start;
       time_per_run_us = (time_per_run_us + (int)time)/2;
@@ -103,8 +105,8 @@ void MPCController::initialize(Params& params_in) {
   last_available_result.col(0).tail(12) = (Vector3(0.0, 0.0, 8.0)).replicate<4, 1>();
 
   // Initialize buffer memory memory
-  thread_buffer.ref_states = MatrixN::Zero(12, params->get_N_steps() + 1);
-  thread_buffer.footsteps = MatrixN::Zero(params->get_N_steps(), 12);
+  thread_buffer.ref_states = MatrixN::Zero(12, params->get_N_steps()*params->N_periods + 1);
+  thread_buffer.footsteps = MatrixN::Zero(params->get_N_steps()*params->N_periods, 12);
 
   // start thread
   solver_thread = new std::thread(&MPCController::solver_loop, this);  // spawn new thread that runs MPC in parallel

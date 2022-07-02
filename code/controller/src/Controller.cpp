@@ -236,10 +236,11 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(),
 		  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,
 				jointsPositions,jointsVelocities);
+	std::cout << "est1" << std::endl;
 
 	// Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames
 	estimator.updateReferenceState(cmd_v_ref);
-
+	std::cout << "estimator" << std::endl;
 	// Quantities go through a 1st order low pass filter with fc = 15 Hz (avoid >25Hz foldback)
 	q_filt_mpc = estimator.getQReference();
 	q_filt_mpc.head(6) = filter_mpc_q.filter(estimator.getQReference().head(6), true);
@@ -270,17 +271,21 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	int k_left_in_gait = k_mpc - (k % k_mpc);
 	gait.update(startNewGaitCycle, cmd_gait);
 	cmd_gait = GaitType::NoGait;
+	std::cout << "gait" << std::endl;
 
 	// Compute target footstep based on current and reference velocities
 	o_targetFootstep = footstepPlanner.updateFootsteps(
 										startNewGaitCycle && (k != 0), k_left_in_gait, estimator.getQReference(),
 										estimator.getHVFiltered(), estimator.getBaseVelRef());
+	std::cout << "fsplanner" << std::endl;
 
 	// Update pos, vel and acc references for feet
 	footTrajectoryGenerator.update(startNewGaitCycle, o_targetFootstep);
+	std::cout << "ftg" << std::endl;
 
 	// Run state planner (outputs the reference trajectory of the base)
 	statePlanner.computeReferenceStates(q_filt_mpc.head(6), h_v_filt_mpc, vref_filt_mpc);
+	std::cout << "stpl" << std::endl;
 
 	// Solve MPC problem once every k_mpc iterations of the main loop
 	if (startNewGaitCycle) {
@@ -289,6 +294,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	}
 	if ((k % k_mpc) >= 2)
 		f_mpc = mpcController.get_latest_result();
+	std::cout << "mpc" << std::endl;
 
 	// Whole Body Control
 	// If nothing wrong happened yet in the WBC controller
@@ -327,6 +333,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    wbcController.compute(q_wbc, dq_wbc, f_mpc, gait.getCurrentGait().row(0),
 	    					  feet_p_cmd,feet_v_cmd,feet_a_cmd,
 	    					  base_targets);
+	 	std::cout << "wbc" << std::endl;
 
 	    // Quantities sent to the control board
 	    q_des = wbcController.get_qdes();
@@ -341,6 +348,8 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	  // Increment loop counter
 	  k++;
+	 	std::cout << "done" << std::endl;
+
 }
 
 void Controller::command_speed(double vX, double vY, double heightZ, double rotX, double rotY, double angSpeedZ) {
