@@ -44,23 +44,6 @@ class Params {
   void initialize(const std::string& file_path);
 
 
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  ///
-  /// \brief Convert the t_switch vector of the yaml into an Eigen vector
-  ///
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  void convert_t_switch();
-
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  ///
-  /// \brief Convert the v_switch vector of the yaml into an Eigen matrix
-  ///
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  void convert_v_switch();
-
-  VectorN get_t_switch() { return t_switch; }
-  MatrixN get_v_switch() { return v_switch; }
-
   // Number of wbc time steps for each MPC time step
   int get_k_mpc() { return (int)std::round(dt_mpc / dt_wbc); };
   int get_N_steps() { return N_steps; };
@@ -100,10 +83,6 @@ class Params {
   // Parameters of Joystick
   double gp_alpha_vel;               // Coefficient of the low pass filter applied to gamepad velocity
   double gp_alpha_pos;               // Coefficient of the low pass filter applied to gamepad position
-  std::vector<double> t_switch_vec;  // Predefined velocity switch times vector
-  VectorN t_switch;                  // Predefined velocity switch times matrix
-  std::vector<double> v_switch_vec;  // Predefined velocity switch values vector
-  MatrixN v_switch;                  // Predefined velocity switch values matrix
 
   // Parameters of Estimator
   double fc_v_esti;  // Cut frequency for the low pass that filters the estimated base velocity
