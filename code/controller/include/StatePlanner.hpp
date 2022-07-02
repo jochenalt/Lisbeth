@@ -35,16 +35,10 @@ public:
 private:
     Params* params;
     Gait*  gait;
-    double h_ref;       // Reference height for the trunk
-    int n_steps = 0;
-    Vector3 RPY;        // To store roll, pitch and yaw angles 
 
     // Reference trajectory matrix of size 12 by (1 + N)  with the current state of
     // the robot in column 0 and the N steps of the prediction horizon in the others
     Matrix12N referenceStates;
-
-    VectorN dt_vector;  // Vector containing all time steps in the prediction horizon
-
 };
 
 #endif  // STATEPLANNER_H_INCLUDED
