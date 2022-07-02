@@ -22,9 +22,6 @@ robot:
     enable_pyb_GUI: True  # Enable/disable PyBullet GUI
            
     # General control parameters
-    # q_init: [ 0.00208551,  0.97841023, -1.77335038,  0.0020868,   0.97951833, -1.77534163, 0.00208551,  0.97841023, -1.77335038,  0.0020868,   0.97951833, -1.77534163]
-    # q_init: [0.0, 0.865, -1.583, 0.0, 0.865, -1.583, 0.0, 0.865, -1.583, 0.0, 0.865, -1.583] # h_com = 0.2
-    # q_init: [0.0, 0.764, -1.407, 0.0, 0.76407, -1.4, 0.0, 0.76407, -1.407, 0.0, 0.764, -1.407]  # h_com = 0.218
     q_init: [0.0, 0.7, -1.4, 0.0, 0.7, -1.4, 0.0, -0.7, 1.4, 0.0, -0.7, 1.4]  # Initial articular positions
            
     dt_wbc: 0.002  # Time step of the whole body control
@@ -34,8 +31,8 @@ robot:
     Kff_main: 1.0  # Feedforward torques multiplier for the PD+
 
     # Parameters of Gait
-    N_periods: 1
-    N_steps: 16  # number of steps in the prediction horizon
+    N_periods: 2        # MPC considers two full gait periods
+    N_steps: 32         # in total we have that many steps in the prediction horizon (i.e. 2x16 )
            
     # Parameters of Joystick
     gp_alpha_vel: 0.003  # Coefficient of the low pass filter applied to gamepad velocity

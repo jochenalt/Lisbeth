@@ -79,7 +79,7 @@ private:
 
     void createStatic();
 
-    void setGait(int period, int pos, int sequences, MatrixN4 & gait, std::string sequence);
+    void setGait(int pos, int sequences, MatrixN4 & gait, std::string sequence);
 
     MatrixN4 pastGait_;     // Past gait
 

@@ -206,8 +206,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             remoteControl.update_v_ref(k, controller.velID)
     
             # Desired torques
-            device.baseOrientation[2] = device.baseOrientation[2] + add
-            print (device.baseOrientation)
+            # device.baseOrientation[2] = device.baseOrientation[2] + add
             controller.compute(params, device, remoteControl)
             
             controllerCpp.command_gait(remoteControl.gaitCode)
@@ -227,7 +226,6 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             #        break
     
             # Set desired quantities for the actuators
-            print("Main")
             if (not np.allclose(controller.result.q_des, controllerCpp.qdes)):
                 print ("alt.q_des", controller.result.q_des)            
                 print ("new.q_des", controllerCpp.qdes)            
@@ -237,7 +235,6 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             if (not np.allclose(controller.result.tau_ff, controllerCpp.tau_ff, rtol=0.01)):
                 print ("oldv.tau_ff", controller.result.tau_ff)            
                 print ("newv.tau_ff", controllerCpp.tau_ff)            
-
             device.SetDesiredJointPDgains(controllerCpp.P, controllerCpp.D)
             device.SetDesiredJointPosition(controllerCpp.qdes)
             device.SetDesiredJointVelocity(controllerCpp.vdes)

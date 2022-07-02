@@ -52,9 +52,7 @@ void MPCController::solver_loop() {
     if (read_in(ref_states, footsteps)) {
       // Run the asynchronous MPC with the data that as been retrieved
       uint64_t start = get_micros();
-      std::cout  << "MPC start";
       solver->run(ref_states, footsteps);
-      std::cout  << "MPC end";
 
       uint64_t time = get_micros() - start;
       time_per_run_us = (time_per_run_us + (int)time)/2;

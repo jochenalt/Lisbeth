@@ -71,11 +71,6 @@ void FootstepPlanner::initialize(Params &params_in, Gait &gait_in)
 Matrix34 FootstepPlanner::updateFootsteps(bool refresh, int k, Vector18 const &q,
 		Vector6 const &b_v, Vector6 const &b_vref)
 {
-	if (q.rows() != 18)
-	{
-		throw std::runtime_error("q should be a vector of size 18 (pos+RPY+mot)");
-	}
-
 	// Update location of feet in stance phase (for those which just entered stance phase)
 	if (refresh && gait->isNewPhase())
 	{

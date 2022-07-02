@@ -27,34 +27,32 @@ void Gait::initialize(Params &params_in)
 	currentGait_ = desiredGait_;
 }
 
-void Gait::setGait(int period, int pos,int sequences, MatrixN4 & gait, std::string sequence) {
-	int repetition = params->get_N_steps() / sequences;
+void Gait::setGait(int pos,int sequences, MatrixN4 & gait, std::string sequence) {
+	int repetition = params->get_N_steps() / (params->N_periods * sequences);
 
 	RowVector4 gaitSequence;
 	gaitSequence << (sequence[0]-'0'), sequence[1]-'0', sequence[2]-'0',sequence[3]-'0';
 
-	gait.block(period*sequences*repetition + repetition*pos, 0, repetition, 4) = gaitSequence.colwise().replicate(repetition);
+	for (int i = 0;i< params->N_periods;i++) {
+		gait.block(i*sequences*repetition + repetition*pos, 0, repetition, 4) = gaitSequence.colwise().replicate(repetition);
+	}
 }
 
 void Gait::createWalk()
 {
 	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
-	for (int i = 0;i<params->N_periods;i++) {
-		setGait(i,0,4,desiredGait_, "0111");
-		setGait(i,1,4,desiredGait_, "1011");
-		setGait(i,2,4,desiredGait_, "1101");
-		setGait(i,3,4,desiredGait_, "1110");
-	}
-
-	exit(1);
+	setGait(0,4,desiredGait_, "0111");
+	setGait(1,4,desiredGait_, "1011");
+	setGait(2,4,desiredGait_, "1101");
+	setGait(3,4,desiredGait_, "1110");
 }
 
 void Gait::createTrot()
 {
 	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
-		setGait(i,0,2,desiredGait_, "1001");
-		setGait(i,1,2,desiredGait_, "0110");
+		setGait(0,2,desiredGait_, "1001");
+		setGait(1,2,desiredGait_, "0110");
 	}
 }
 
@@ -62,8 +60,8 @@ void Gait::createPacing()
 {
 	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
-		setGait(i,0,2,desiredGait_, "1010");
-		setGait(i,1,2,desiredGait_, "0101");
+		setGait(0,2,desiredGait_, "1010");
+		setGait(1,2,desiredGait_, "0101");
 	}
 }
 
@@ -71,8 +69,8 @@ void Gait::createBounding()
 {
 	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
-		setGait(i,0,2,desiredGait_, "1100");
-		setGait(i,1,2,desiredGait_, "0011");
+		setGait(0,2,desiredGait_, "1100");
+		setGait(1,2,desiredGait_, "0011");
 	}
 }
 
@@ -80,10 +78,10 @@ void Gait::createWalkingTrot()
 {
 	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
-		setGait(i,0,4,desiredGait_, "1001");
-		setGait(i,1,4,desiredGait_, "1111");
-		setGait(i,2,4,desiredGait_, "0110");
-		setGait(i,3,4,desiredGait_, "1111");
+		setGait(0,4,desiredGait_, "1001");
+		setGait(1,4,desiredGait_, "1111");
+		setGait(2,4,desiredGait_, "0110");
+		setGait(3,4,desiredGait_, "1111");
 	}
 }
 
@@ -91,10 +89,10 @@ void Gait::createCustomGallop()
 {
 	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
-		setGait(i,0,4,desiredGait_, "1010");
-		setGait(i,1,4,desiredGait_, "1001");
-		setGait(i,2,4,desiredGait_, "0101");
-		setGait(i,3,4,desiredGait_, "0110");
+		setGait(0,4,desiredGait_, "1010");
+		setGait(1,4,desiredGait_, "1001");
+		setGait(2,4,desiredGait_, "0101");
+		setGait(3,4,desiredGait_, "0110");
 	}
 }
 
@@ -103,7 +101,7 @@ void Gait::createStatic()
 	// Number of timesteps in a period of gait
 	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
-		setGait(i,0,1,desiredGait_, "1111");
+		setGait(0,1,desiredGait_, "1111");
 	}
 }
 
