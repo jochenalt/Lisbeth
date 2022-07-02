@@ -4,7 +4,7 @@
 MPCSolver::MPCSolver(Params& params_in) {
   params = &params_in;
 
-  n_steps = static_cast<int>(params->get_N_steps());
+  int n_steps = params->get_N_steps();
 
   xref = Matrix12N::Zero(12, 1 + n_steps);
   x = VectorN::Zero(12 * n_steps * 2);
@@ -88,6 +88,7 @@ int MPCSolver::create_ML() {
   std::fill_n(c_ML, size_nz_ML, 0);
   std::fill_n(v_ML, size_nz_ML, 0.0);  // initialized to -1.0
 
+  int n_steps = params->get_N_steps();
   // Put identity matrices in M
   for (int k = 0; k < (12 * n_steps); k++) {
     add_to_ML(k, k, -1.0, r_ML, c_ML, v_ML);
@@ -254,6 +255,8 @@ int MPCSolver::create_ML() {
 Create the N and K matrices involved in the MPC constraint equations M.X = N and L.X <= K
 */
 int MPCSolver::create_NK() {
+	int n_steps = params->get_N_steps();
+
   // Create NK matrix (upper and lower bounds)
   NK_up = VectorN::Zero(12 * n_steps * 2 + 20 * n_steps, 1);
   NK_low = VectorN::Zero(12 * n_steps * 2 + 20 * n_steps, 1);
@@ -303,6 +306,8 @@ int MPCSolver::create_NK() {
 Create the weight matrices P and q in the cost function x^T.P.x + x^T.q of the QP problem
 */
 int MPCSolver::create_weight_matrices() {
+	int n_steps = params->get_N_steps();
+
   int *r_P = new int[size_nz_P];        // row indexes of non-zero values in matrix P
   int *c_P = new int[size_nz_P];        // col indexes of non-zero values in matrix P
   double *v_P = new double[size_nz_P];  // non-zero values in matrix P
@@ -398,6 +403,8 @@ Update the M and L constaint matrices depending on the current state of the gait
 
 */
 int MPCSolver::update_ML(MatrixN fsteps) {
+	int n_steps = params->get_N_steps();
+
   int k_cum = 0;
   // Iterate over all phases of the gait
   for (int j = 0; j < gait.rows(); j++) {
@@ -445,6 +452,8 @@ int MPCSolver::update_ML(MatrixN fsteps) {
 Update the N and K matrices involved in the MPC constraint equations M.X = N and L.X <= K
 */
 int MPCSolver::update_NK() {
+	int n_steps = params->get_N_steps();
+
   // Matrix g is already created and not changed
 
   // Reset NK
@@ -475,6 +484,8 @@ int MPCSolver::update_NK() {
 
 
 float MPCSolver::retrieve_cost() {
+	int n_steps = params->get_N_steps();
+
   // Cost function is x^T P x + q^T x
   // Here P is a diagonal matrix and q = 0
   double cost = 0.0;
@@ -485,6 +496,8 @@ float MPCSolver::retrieve_cost() {
 }
 
 void MPCSolver::init_solver() {
+	int n_steps = params->get_N_steps();
+
   // Initial guess for forces (mass evenly supported by all legs in contact)
   warmxf.block(0, 0, 12 * (n_steps - 1), 1) = x.block(12, 0, 12 * (n_steps - 1), 1);
   warmxf.block(12 * n_steps, 0, 12 * (n_steps - 1), 1) = x.block(12 * (n_steps + 1), 0, 12 * (n_steps - 1), 1);
@@ -515,6 +528,8 @@ void MPCSolver::init_solver() {
 Create an initial guess and call the solver to solve the QP problem
 */
 void MPCSolver::call_solver() {
+	int n_steps = params->get_N_steps();
+
   // Initial guess for forces (mass evenly supported by all legs in contact)
   warmxf.block(0, 0, 12 * (n_steps - 1), 1) = x.block(12, 0, 12 * (n_steps - 1), 1);
   warmxf.block(12 * n_steps, 0, 12 * (n_steps - 1), 1) = x.block(12 * (n_steps + 1), 0, 12 * (n_steps - 1), 1);
@@ -533,6 +548,7 @@ Extract relevant information from the output of the QP solver
 */
 int MPCSolver::retrieve_result() {
   // Retrieve the "contact forces" part of the solution of the QP problem
+	int n_steps = params->get_N_steps();
   for (int i = 0; i < (n_steps); i++) {
     for (int k = 0; k < 12; k++) {
       x_f_applied(k, i) = (workspce->solution->x)[k + 12 * i] + xref(k, 1 + i);

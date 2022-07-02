@@ -79,6 +79,8 @@ private:
 
     void createStatic();
 
+    void setGait(int period, int pos, int sequences, MatrixN4 & gait, std::string sequence);
+
     MatrixN4 pastGait_;     // Past gait
 
 public:
@@ -87,7 +89,6 @@ private:
     MatrixN4 desiredGait_;  // Future desired gait
 
     Params* params;
-    int nRows_;  // number of rows in the gait matrix
 
     double remainingTime_;
 
