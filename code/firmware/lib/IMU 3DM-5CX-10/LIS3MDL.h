@@ -4,16 +4,6 @@
 #include <Arduino.h>
 
 
-#define LIS3MDL_REG_WHO_AM_I 0x0F  ///< Register that contains the part ID
-#define LIS3MDL_REG_CTRL_REG1 0x20 ///< Register address for control 1
-#define LIS3MDL_REG_CTRL_REG2 0x21 ///< Register address for control 2
-#define LIS3MDL_REG_CTRL_REG3 0x22 ///< Register address for control 3
-#define LIS3MDL_REG_CTRL_REG4 0x23 ///< Register address for control 3
-#define LIS3MDL_REG_STATUS 0x27    ///< Register address for status
-#define LIS3MDL_REG_OUT_X_L 0x28   ///< Register address for X axis lower byte
-#define LIS3MDL_REG_INT_CFG 0x30   ///< Interrupt configuration register
-#define LIS3MDL_REG_INT_THS_L 0x32 ///< Low byte of the irq threshold
-
 /** The magnetometer ranges */
 typedef enum {
   RANGE_4_GAUSS = 0b00,  ///< +/- 4g (default value)
@@ -91,11 +81,11 @@ class LIS3MDL
 
     uint8_t last_status; // status of last I2C transmission
 
-    LIS3MDL(void);
+    LIS3MDL();
 
     bool init();
 
-    void setup(dataRate_t dataRate,range_t dataRange);
+    bool setup(dataRate_t dataRate,range_t dataRange);
 
     void writeReg(uint8_t reg, uint8_t value);
     uint8_t readReg(uint8_t reg);
@@ -103,6 +93,7 @@ class LIS3MDL
     // true if the hardware buffer holds the next data point
     bool isDataAvailable();
     void requestData();
+    void readSync(double &x, double &y, double &z);
 
     // read data in [gauss]
     void read(double &x, double &y, double &z);

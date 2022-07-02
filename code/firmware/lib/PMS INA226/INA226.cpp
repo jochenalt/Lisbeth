@@ -37,17 +37,6 @@ INA226::INA226(const uint8_t address, TwoWire *wire)
 }
 
 
-#if defined (ESP8266) || defined(ESP32)
-bool INA226::begin(const uint8_t sda, const uint8_t scl)
-{
-  _wire = &Wire;
-  _wire->begin(sda, scl);
-  if (! isConnected()) return false;
-  return true;
-}
-#endif
-
-
 bool INA226::begin()
 {
   _wire->begin();

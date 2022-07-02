@@ -1,3 +1,5 @@
+
+#include <Arduino.h>
 #include <LIS3MDL.h>
 #include <Wire.h>
 #include <math.h>
@@ -5,8 +7,8 @@
 
 // The Arduino two-wire interface uses a 7-bit number for the address,
 // and sets the last bit correctly based on reads and writes
-#define LIS3MDL_SA1_HIGH_ADDRESS  0b0011110
-#define LIS3MDL_SA1_LOW_ADDRESS   0b0011100
+#define LIS3MDL_SA1_HIGH_ADDRESS  0x1C
+#define LIS3MDL_SA1_LOW_ADDRESS   0x1E
 
 #define TEST_REG_ERROR -1
 
@@ -42,20 +44,29 @@ bool LIS3MDL::init()
         address =  LIS3MDL_SA1_HIGH_ADDRESS ;
       }
       else {
-         address =  LIS3MDL_SA1_LOW_ADDRESS ;
+            if (testReg(LIS3MDL_SA1_LOW_ADDRESS, WHO_AM_I) == LIS3MDL_WHO_ID)
+                address =  LIS3MDL_SA1_LOW_ADDRESS ;
+            else {
+                Serial.print("LIS3MDL hasnt been found");
+                return false;
+            }
     }
   return true;
 }
 
-void LIS3MDL::setup(dataRate_t dataRate, range_t dataRange)
+
+bool  LIS3MDL::setup(dataRate_t dataRate, range_t dataRange)
 {
-    init();
+    Wire1.begin();
+    bool ok = init();
+    if (!ok )
+        return false;
 
     range = dataRange;
     uint8_t temperature_enable = 0;
 
     uint8_t self_test_enable = 0;  
-    uint8_t perf_mode = 0;
+    uint8_t perf_mode = LOWPOWERMODE;
   if (dataRate == DATARATE_155_HZ) {
     // set OP to UHP
     perf_mode = ULTRAHIGHMODE;
@@ -75,13 +86,13 @@ void LIS3MDL::setup(dataRate_t dataRate, range_t dataRange)
 
     // 0x70 = 0b01110000
     // OM = 11 (ultra-high-performance mode for X and Y); DO = 100 (10 Hz ODR)
-    // writeReg(CTRL_REG1, 0x70);
-    writeReg(CTRL_REG1, (temperature_enable << 7) | (dataRate << 1) | (perf_mode << 5) | self_test_enable);
+    writeReg(CTRL_REG1, 0x70);
+    // writeReg(CTRL_REG1, (temperature_enable << 7)  | (perf_mode << 5) | (dataRate << 1) | self_test_enable);
 
     // 0x00 = 0b00000000
     // FS = 00 (+/- 4 gauss full scale)
-    // writeReg(CTRL_REG2, 0x00 );
-    writeReg(CTRL_REG2, range << 5);
+    writeReg(CTRL_REG2, 0x00 );
+    // writeReg(CTRL_REG2, range << 5);
 
     // 0x00 = 0b00000000
     // MD = 00 (continuous-conversion mode)
@@ -89,14 +100,14 @@ void LIS3MDL::setup(dataRate_t dataRate, range_t dataRange)
 
     // 0x0C = 0b00001100
     // OMZ = 11 (ultra-high-performance mode for Z)
-    // writeReg(CTRL_REG4, 0x0C);
-    writeReg(CTRL_REG4, perf_mode << 2);
+    writeReg(CTRL_REG4, 0x0C);
+    // writeReg(CTRL_REG4, perf_mode << 2);
 
 
     bool enableX = false;
     bool enableY = false;
     bool enableZ = true;
-    bool polarity = false;
+    bool polarity = true;
     bool latch = false;
     bool enableInt = true;
     uint8_t value = 0x08; // set default bits, see table 36
@@ -106,7 +117,7 @@ void LIS3MDL::setup(dataRate_t dataRate, range_t dataRange)
     value |= polarity << 2;
     value |= latch << 1;
     value |= enableInt;
-    writeReg(LIS3MDL_REG_INT_CFG, value);
+    writeReg(INT_CFG, value);
 
     
   rangeScale = 1; // LSB per gauss
@@ -118,6 +129,8 @@ void LIS3MDL::setup(dataRate_t dataRate, range_t dataRange)
     rangeScale = 3421;
   if (range == RANGE_4_GAUSS)
     rangeScale = 6842;
+
+    return true; // all good
 }
 
 // Writes a mag register
@@ -144,6 +157,38 @@ uint8_t LIS3MDL::readReg(uint8_t reg)
   return value;
 }
 
+
+// Reads the 3 mag channels and stores them in vector m
+void LIS3MDL::readSync(double &x, double &y, double &z)
+{
+  Wire1.beginTransmission(address);
+  // assert MSB to enable subaddress updating
+  Wire1.write(OUT_X_L | 0x80);
+  Wire1.endTransmission();
+  Wire1.requestFrom(address, (uint8_t)6);
+
+  uint16_t millis_start = millis();
+  while (Wire1.available() < 6)
+  {
+    if (io_timeout > 0 && ((uint16_t)millis() - millis_start) > io_timeout)
+    {
+      did_timeout = true;
+      return;
+    }
+  }
+
+  uint8_t xlm = Wire1.read();
+  uint8_t xhm = Wire1.read();
+  uint8_t ylm = Wire1.read();
+  uint8_t yhm = Wire1.read();
+  uint8_t zlm = Wire1.read();
+  uint8_t zhm = Wire1.read();
+
+  // combine high and low bytes
+  x = (int16_t)(xhm << 8 | xlm);
+  y = (int16_t)(yhm << 8 | ylm);
+  z = (int16_t)(zhm << 8 | zlm);
+}
 
 // Reads the 3 mag channels and stores them in vector m
 void LIS3MDL::requestData()
@@ -202,13 +247,16 @@ int16_t LIS3MDL::testReg(uint8_t address, regAddr reg)
   Wire1.write((uint8_t)reg);
   if (Wire1.endTransmission() != 0)
   {
+    
     return TEST_REG_ERROR;
   }
 
   Wire1.requestFrom(address, (uint8_t)1);
+
   if (Wire1.available())
   {
-    return Wire1.read();
+    uint8_t readWhoAmI =  Wire1.read();
+    return readWhoAmI;
   }
   else
   {

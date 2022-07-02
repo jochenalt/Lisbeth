@@ -5,10 +5,10 @@
 #include <Magnetometer.h>
 
 void IMUManager::setup(uint16_t targetFreq) {
-      // IMU's power is controlled by this PIN
-      // Initially the IMU is down, start happens in main loop
-      pinMode(PIN_IMU_POWER, OUTPUT);
-      digitalWrite(PIN_IMU_POWER, HIGH); // turn off IMU
+  // IMU's power is controlled by this PIN
+  // Initially the IMU is down, start happens in main loop
+  pinMode(PIN_IMU_POWER, OUTPUT);
+  digitalWrite(PIN_IMU_POWER, HIGH); // turn off IMU
 
   sampleFreq  = targetFreq; 
 

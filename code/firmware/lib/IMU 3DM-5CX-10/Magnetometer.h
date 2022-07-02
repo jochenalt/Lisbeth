@@ -16,7 +16,7 @@ class Magnetometer {
 
         // call setup with the intended of the sensor
         // it  has only predefined frequencies 
-        void setup(dataRate_t freq, range_t dataRange);
+        bool setup(dataRate_t freq, range_t dataRange);
 
         // this handles the datastream from the sensor, call as often as possible, requires only minimal CPU
         void loop();
@@ -29,6 +29,8 @@ class Magnetometer {
         // fetches data in [gauss]
         void read(double &x, double &y, double &z);
 
+        bool isInitialised() { return initialised; };
+
     private:
         void requestData();
         void fetchData();
@@ -38,5 +40,6 @@ class Magnetometer {
         bool dataRequested = false;
         double mag_x,mag_y,mag_z = 0;
         bool dataIsAvailable = false;
+        bool initialised = false;
 };
 #endif
