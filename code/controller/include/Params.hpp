@@ -74,7 +74,6 @@ class Params {
   // legacy
   int N_gait;			// Number of rows in the gait matrix. Arbitrary value that should be set high enough,so that there is always at least one empty line at the end of the gait matrix
   int velID;			//  Identifier of the reference velocity profile to choose which one will be sent to the robot
-  double T_mpc;			// Duration of the prediction horizon
 
   // See .yaml file for meaning of parameters
   // General parameters

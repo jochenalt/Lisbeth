@@ -3,8 +3,6 @@ robot:
     velID: 2              # Identifier of the reference velocity profile to choose which one will be sent to the robot
     mass: 2.5             # [kg] 
     
-    T_mpc: 0.32           # [s] Duration of the prediction horizon, devided by dt_mpc gives the number of prediction steps
-
     # General parameters
     config_file: config_solo12.yaml  #  Name of the yaml file containing hardware information
     interface: enp2s0

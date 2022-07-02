@@ -5,7 +5,6 @@ Params::Params()
     : // legacy
       N_gait(40),
       velID(2),
-      T_mpc(0.32),
 
       config_file(""),
       interface(""),
@@ -85,9 +84,6 @@ void Params::initialize(const std::string& file_path)
    // legacy parameters
    assert_yaml_parsing(robot_node, "robot", "velID");
    velID = robot_node["velID"].as<int>();
-
-   assert_yaml_parsing(robot_node, "robot", "T_mpc");
-   T_mpc = robot_node["T_mpc"].as<double>();
 
    // Retrieve robot parameters
    assert_yaml_parsing(robot_node, "robot", "mass");
@@ -263,7 +259,6 @@ void Params::initialize(const std::string& file_path)
 
   assert_yaml_parsing(robot_node, "robot", "bezier_N_sample");
   bezier_N_sample = robot_node["bezier_N_sample"].as<int>();
-
   assert_yaml_parsing(robot_node, "robot", "bezier_N_sample_ineq");
   bezier_N_sample_ineq = robot_node["bezier_N_sample_ineq"].as<int>();
 
