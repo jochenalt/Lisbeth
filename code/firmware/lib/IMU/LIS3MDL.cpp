@@ -115,7 +115,7 @@ bool  LIS3MDL::setup(dataRate_t dataRate, range_t dataRange)
   if (range == RANGE_4_GAUSS)
     rangeScale = 1.0/6842.0;
   
-  // scale from [gauss] to [uT]
+  // convert from [gauss] to [uT]
   rangeScale *= 100.0;
   
   return true; // all good
@@ -147,19 +147,16 @@ uint8_t LIS3MDL::readReg(uint8_t reg)
 
 void LIS3MDL::convertData(double &x, double &y, double &z) {
   // scale to [uT]
-  x = x * rangeScale;
-  y = y * rangeScale;
-  z = z * rangeScale;
+  double tmp_x = x * rangeScale;
+  double tmp_y = y * rangeScale;
+  double tmp_z = z * rangeScale;
 
-  // normalise
-  /*
-  double length = sqrt((mag_x * mag_x) + (mag_y * mag_y) + (mag_z * mag_z));
-  mag_x /= length;
-  mag_y /= length;
-  mag_z /= length;
-  */
+  // consider how the magnetometer is mounted on top of the IMU
+  // After the following, x,y,z axis of IMU and Magnetometer are aligned.
+  y = - tmp_x;
+  x = tmp_y;
+  z = tmp_z;
 }
-
 
 // Reads the 3 mag channels and stores them in vector m
 void LIS3MDL::readSync(double  &mag_x, double &mag_y, double &mag_z )
@@ -208,7 +205,7 @@ void LIS3MDL::requestData()
 
 // Reads the 3 mag channels and stores them in vector m
 bool   LIS3MDL::isDataAvailable() {
-      return Wire1.available() >= 6;
+  return Wire1.available() >= 6;
 }
 
 void  LIS3MDL::readResponse(double  &mag_x, double &mag_y, double &mag_z )
@@ -235,17 +232,14 @@ int16_t LIS3MDL::testReg(uint8_t address, regAddr reg)
   Wire1.beginTransmission(address);
   Wire1.write((uint8_t)reg);
   if (Wire1.endTransmission() != 0)
-  {
-    
+  {  
     return TEST_REG_ERROR;
   }
 
   Wire1.requestFrom(address, (uint8_t)1);
-
   if (Wire1.available())
   {
-    uint8_t readWhoAmI =  Wire1.read();
-    return readWhoAmI;
+    return Wire1.read();
   }
   else
   {
