@@ -65,7 +65,6 @@ bool  LIS3MDL::setup(dataRate_t dataRate, range_t dataRange)
 
   range = dataRange;
   uint8_t temperature_enable = 0;
-
   uint8_t self_test_enable = 0;  
   uint8_t perf_mode = LOWPOWERMODE;
   if (dataRate == DATARATE_155_HZ) {
@@ -86,11 +85,8 @@ bool  LIS3MDL::setup(dataRate_t dataRate, range_t dataRange)
   }
 
     writeReg(CTRL_REG1, (temperature_enable << 7)  | (perf_mode << 5) | (dataRate << 1) | self_test_enable);
-
     writeReg(CTRL_REG2, range << 5);
-
     writeReg(CTRL_REG3, CONTINUOUSMODE);
-
     writeReg(CTRL_REG4, perf_mode << 2);
 
     bool enableX = false;
@@ -111,15 +107,18 @@ bool  LIS3MDL::setup(dataRate_t dataRate, range_t dataRange)
     
   rangeScale = 1; // LSB per gauss
   if (range == RANGE_16_GAUSS)
-    rangeScale = 1711;
+    rangeScale = 1.0/1711.0;
   if (range == RANGE_12_GAUSS)
-    rangeScale = 2281;
+    rangeScale = 1.0/2281.0;
   if (range == RANGE_8_GAUSS)
-    rangeScale = 3421;
+    rangeScale = 1.0/3421.0;
   if (range == RANGE_4_GAUSS)
-    rangeScale = 6842;
-
-    return true; // all good
+    rangeScale = 1.0/6842.0;
+  
+  // scale from [gauss] to [uT]
+  rangeScale *= 100.0;
+  
+  return true; // all good
 }
 
 // Writes a mag register
@@ -147,10 +146,10 @@ uint8_t LIS3MDL::readReg(uint8_t reg)
 }
 
 void LIS3MDL::convertData(double &x, double &y, double &z) {
-  // scale to [gauss]
-  x = x / rangeScale;
-  y = y / rangeScale;
-  z = z / rangeScale;
+  // scale to [uT]
+  x = x * rangeScale;
+  y = y * rangeScale;
+  z = z * rangeScale;
 
   // normalise
   /*
