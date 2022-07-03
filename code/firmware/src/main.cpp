@@ -9,7 +9,6 @@
 #include <INA226.h>
 #include <IMUManager.h>
 #include <PowerManager.h>
-#include <Magnetometer.h>
 
 
 //  baud rate of Serial0 that is used for logging 
@@ -43,7 +42,6 @@ uint32_t commandLastChar_us = 0;                             // time when the la
 // Power sensor is done via an INA226 sensor
 INA226 INA(0x40);
 
-Magnetometer mag;
 // Teensy LED blinker
 static uint8_t DefaultBlinkPattern[3] = { 0b11001000,0b00001100,0b10000000}; // nice pattern. Each digit represents 50ms
 static uint8_t BlockingBlinkPattern[1] = { 0b11111110};                      // blocking pattern, used for blocking actions like startup of motors 
@@ -284,7 +282,6 @@ void executeCommand() {
           break;
       }
       case 'm' :{
-          mag.setup(DATARATE_1000_HZ, RANGE_4_GAUSS);
       }
 
       case 10:
@@ -379,12 +376,10 @@ void loop() {
   // get feedback of all odrives
   // odrives.loop();
 
-  // imuMgr.loop();
+  imuMgr.loop();
 
   // wait for any pending commands to be executed
   powerManager.loop();
-
-  mag.loop();
 
   static Measurement m;
   m.tick();

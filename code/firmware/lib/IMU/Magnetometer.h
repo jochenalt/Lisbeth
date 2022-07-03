@@ -20,7 +20,8 @@ class Magnetometer {
         bool setup(dataRate_t freq, range_t dataRange);
 
         // this handles the datastream from the sensor, call as often as possible, requires only minimal CPU
-        void loop();
+        // returns true if new value is available
+        bool loop();
 
         // returns true if read can be called.
         // is reset afterwards, i.e. it returns true only once, the next call will return false again.
@@ -30,13 +31,25 @@ class Magnetometer {
         // fetches data in [gauss]
         void read(double &x, double &y, double &z);
 
+        // true if setup was successful. Stat calling loop() now.
         bool isInitialised() { return initialised; };
+
+        // returns measurement about the frequency
         Measurement& getMeasuremt() { return dataStreamClock;};
 
         void startHardIronCalibration();
         void startNorthCalibration();
-       
+
+        // loop this during the calibration process, and merge with acceleration data from IMU
+        // Acceleration data is used to compute the angle between earth magnetic field and gravity
         void calibrateLoop(double accX, double accY, double accZ, double max_x, double mag_y, double mag_z);
+
+        // returns the result of the hard iron calibration
+        Matrix& getHardIronBase() { return hard_iron_base; };
+
+        // returns the result of the North calibration
+        Matrix& getIMUMagB0() { return imu_mag_b0; };
+
 
     private:
         void requestData();
@@ -63,14 +76,14 @@ class Magnetometer {
         Matrix RLS_in{4,1};             /* Input data */
         Matrix RLS_out{1,1};            /* Output data */
         Matrix RLS_gain{4,1};           /* RLS gain */
-        uint32_t RLS_u32iterData = 0;   /* To track how much data we take */
+        uint32_t calibrationStart_ms = 0;
 
         /* Magnetic vector constant (align with local magnetic vector) */
-        double  IMU_MAG_B0_data[3] = {cos(0), sin(0), 0.000000};
-        Matrix IMU_MAG_B0{3, 1, IMU_MAG_B0_data};
+        double  imu_mag_b0_preset[3] = {cos(0), sin(0), 0.000000};
+        Matrix imu_mag_b0{3, 1, imu_mag_b0_preset};
 
         /* The hard-magnet bias */
-        double  HARD_IRON_BIAS_data[3] = {-20.0, 2.0, -14.0};
-        Matrix HARD_IRON_BIAS{3, 1, HARD_IRON_BIAS_data};
+        double  hard_iron_base_preset[3] = {-20.0, 2.0, -14.0};
+        Matrix hard_iron_base{3, 1, hard_iron_base_preset};
 };
 #endif

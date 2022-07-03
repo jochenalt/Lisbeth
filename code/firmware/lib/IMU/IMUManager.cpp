@@ -12,9 +12,19 @@ void IMUManager::setup(uint16_t targetFreq) {
 
   sampleFreq  = targetFreq; 
 
+  // initialise unsenced kalman filter
   filter.setup(targetFreq);
+
+  // the magnetometer can only work at 155Hz at maximum precision 
+  // power management of magnetometer quite robust, does not need the 
+  // fancy power management like the IMU
+  mag.setup(DATARATE_155_HZ, RANGE_4_GAUSS);
 }
+
 void IMUManager::loop() {
+
+  // loop the magnetometer
+  bool new_mag_value = mag.loop();
 
   // take care that imu is correctly powered up or powered down
   updatePowerState();
@@ -26,21 +36,33 @@ void IMUManager::loop() {
       if (device.isNewPackageAvailable()) {
         IMUSensorData sensorData = device.getIMUSensorData();
         
-        /* ================== Read the sensor data / simulate the system here ================== */
-        float Ax = sensorData.acc_x;
-        float Ay = sensorData.acc_y;
-        float Az = sensorData.acc_z;
-        float p = sensorData.gyro_x;
-        float q = sensorData.gyro_y;
-        float r = sensorData.gyro_z;
-  
+        
+        // read accel and gyro data
+        double Ax = sensorData.acc_x;
+        double Ay = sensorData.acc_y;
+        double Az = sensorData.acc_z;
+
+        double p = sensorData.gyro_x;
+        double q = sensorData.gyro_y;
+        double r = sensorData.gyro_z;
+
+        // read last data point from magnetometer (might be the same, since it runs slower)
+        double Bx, By, Bz;
+        mag.read(Bx, By, Bz);
+
+        // in the magnetometer calibration process we need 
+        // accel from the IMU to get the north
+        if (new_mag_value) {
+          mag.calibrateLoop(Ax, Ay, Az, Bx, By, Bz);
+        }
+ 
         double x,y,z,w;
         uint64_t u64compuTime = micros();
         filter.compute(Ax,Ay,Az,p,q,r, 
 #ifdef WITH_MAG       
                         0,0,0,
 #endif                        
-        x,y, z,w);
+                       x,y, z,w);
         ekftime  = (ekftime + (micros() - u64compuTime))/2;
         quaternion[0] = x;
         quaternion[1] = y;
@@ -60,8 +82,7 @@ void IMUManager::loop() {
     if (imuTimer.isDue()) {
       float freq = getAvrFrequency();
       device.printData();
-      println("   EKF time: %d us",ekftime);
-
+      println("   UKF time: %d us",ekftime);
       println("   avr freq : %.2f Hz",freq);
       println("   RPY : %.1f / %.1f / %.1f",RPY_deg[0], RPY_deg[1], RPY_deg[2]);
       println("   Quat : (%.3f, %.4f, %.3f, %.3f)",quaternion[0],quaternion[1], quaternion[2], quaternion[3]);
@@ -148,3 +169,13 @@ void IMUManager::updatePowerState() {
             break;
       }
 }
+
+
+void IMUManager::startHardIronCalibration() {
+
+}
+
+void IMUManager::startNorthCalibration(){
+
+}
+

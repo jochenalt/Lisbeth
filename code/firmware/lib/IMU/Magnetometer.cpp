@@ -55,7 +55,7 @@ void Magnetometer::read(double &x, double &y, double &z) {
     z = mag_z;
 }
 
-void Magnetometer::loop() {
+bool Magnetometer::loop() {
     if (initialised) {     
         // if interrupt fired         
         if (newDataIsAvailable) {
@@ -71,8 +71,7 @@ void Magnetometer::loop() {
             if (device.isDataAvailable()) {
                 dataRequested = false;
                 fetchData();
-                calibrateLoop(0,0,0, mag_x, mag_y, mag_z);
-
+    
                  static TimePassedBy printTimer (1000);
                 if (printTimer.isDue()) {
    
@@ -87,6 +86,7 @@ void Magnetometer::loop() {
                 Serial.println(dataStreamClock.getAvrFreq());
                 }
                 dataIsAvailable = true;
+                return true;
             } else {
                 // Timeout. After 5ms of waiting, something went wrong, ignore the last request
                 // and dont wait for a reply anymore
@@ -96,18 +96,18 @@ void Magnetometer::loop() {
             }
         }
     }
+    return false;
 }
 
 
 void Magnetometer::startHardIronCalibration() {
     Serial.println("start moving the sensor in the shape of an 8");
     state = STATE_MAGNETO_BIAS_IDENTIFICATION;
-    RLS_u32iterData = 0;
+    calibrationStart_ms = millis();
 }
 
 void Magnetometer::startNorthCalibration() {
     state = STATE_NORTH_VECTOR_IDENTIFICATION;
-    RLS_u32iterData = 0;
 }
 
 void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, double mag_x, double mag_y, double mag_z) {
@@ -124,8 +124,6 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, doubl
         RLS_P     = (RLS_P - RLS_gain*RLS_in.Transpose()*RLS_P)/RLS_lambda;
         RLS_theta = RLS_theta + err*RLS_gain;
                 
-        RLS_u32iterData++;
-
         Matrix P_check{RLS_P.getDiagonalEntries()};
         double error = (P_check.Transpose()*P_check)[0][0];
 
@@ -135,19 +133,19 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, doubl
             state = STATE_UKF_RUNNING;
                     
             /* Reconstruct the matrix compensation solution */
-            HARD_IRON_BIAS[0][0] = RLS_theta[0][0] / 2.0;
-            HARD_IRON_BIAS[1][0] = RLS_theta[1][0] / 2.0;
-            HARD_IRON_BIAS[2][0] = RLS_theta[2][0] / 2.0;
+            hard_iron_base[0][0] = RLS_theta[0][0] / 2.0;
+            hard_iron_base[1][0] = RLS_theta[1][0] / 2.0;
+            hard_iron_base[2][0] = RLS_theta[2][0] / 2.0;
     
             Serial.println("Calibration finished, the hard-iron bias identified:");
-            println("%f %f %f\r\n", HARD_IRON_BIAS[0][0], HARD_IRON_BIAS[1][0], HARD_IRON_BIAS[2][0]);
+            println("%f %f %f\r\n", hard_iron_base[0][0], hard_iron_base[1][0], hard_iron_base[2][0]);
         }
 
         static TimePassedBy printTimer (500);
         if (printTimer.isDue()) {
                 println( "Hard iron calibration %.3f %.3f %.3f (P = %f > 0.001!)", RLS_theta[0][0] / 2.0, RLS_theta[1][0] / 2.0, RLS_theta[2][0] / 2.0, error);
         }
-        if (RLS_u32iterData >= 10000) {
+        if (millis() - calibrationStart_ms > 10000) {
             /* We take the data too long but the error still large, terminate without updating the hard-iron bias */
             state = STATE_UKF_RUNNING;
                     
@@ -158,9 +156,9 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, doubl
         float Ax = acc_x;
         float Ay = acc_y;
         float Az = acc_z;
-        float Bx = mag_x - HARD_IRON_BIAS[0][0];
-        float By = mag_y - HARD_IRON_BIAS[1][0];
-        float Bz = mag_z - HARD_IRON_BIAS[2][0];
+        float Bx = mag_x - hard_iron_base[0][0];
+        float By = mag_y - hard_iron_base[1][0];
+        float Bz = mag_z - hard_iron_base[2][0];
                 
         /* Normalizing the acceleration vector & projecting the gravitational vector (gravity is negative acceleration) */
         double _normG = sqrt((Ax * Ax) + (Ay * Ay) + (Az * Az));
@@ -183,12 +181,12 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, doubl
         /* float m_tilt_z = -Bx*sin(pitch)             + By*sin(roll)*cos(pitch)   + Bz*cos(roll)*cos(pitch); */
                 
         float mag_dec = atan2(m_tilt_y, m_tilt_x);
-        IMU_MAG_B0[0][0] = cos(mag_dec);
-        IMU_MAG_B0[1][0] = sin(mag_dec);
-        IMU_MAG_B0[2][0] = 0;
+        imu_mag_b0[0][0] = cos(mag_dec);
+        imu_mag_b0[1][0] = sin(mag_dec);
+        imu_mag_b0[2][0] = 0;
                 
         Serial.println("North identification finished, the north vector identified:");
-        println("%.3f %.3f %.3f", IMU_MAG_B0[0][0], IMU_MAG_B0[1][0], IMU_MAG_B0[2][0]);
+        println("%.3f %.3f %.3f", imu_mag_b0[0][0], imu_mag_b0[1][0], imu_mag_b0[2][0]);
                 
         state  = STATE_UKF_RUNNING;
     }

@@ -6,7 +6,7 @@
 // communication protocol to Microstrain IMU
 #include <MicrostrainComm.h>
 #include <ukf.h>
-
+#include <Magnetometer.h>
 // the IMU can be enabled  by this PIN
 // LOW = power on
 // HIGH = power off
@@ -41,6 +41,8 @@ class IMUManager {
     bool isLogging() { return logisOn; }
 
     float getAvrFrequency();
+    void startHardIronCalibration();
+    void startNorthCalibration();  
 
   private:
     void updatePowerState();
@@ -59,6 +61,7 @@ class IMUManager {
 
     MicrostrainIMU  device;                 // communication interface to any Parker Lord Microstrain IMU
     UnscentedKalmanFilter filter;           // magic filter
+    Magnetometer mag;
 };
 
 #endif
