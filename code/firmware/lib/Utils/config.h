@@ -6,6 +6,7 @@
 
 #include <version.h>
 #include <EEPROM.h>
+#include <IMUManager.h>
 
 // This is the configuration memory block that is stored in EEPROM in a "bank". It contains a write_counter for counting the number of 
 // write operations determining the right time when to switch the bank.
@@ -15,6 +16,8 @@ struct configuration_type {
     /** block with application configuration data */ 
 	uint8_t debugLevel = 0;		
 
+	// configuration data of IMU (mainly magnetometer) 
+	IMUConfigDataType imu;
 	/** end of block with application configuration data */
 
 	// initialize all configuration values to factory settings

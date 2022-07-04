@@ -26,20 +26,13 @@ bool Magnetometer::setup(dataRate_t freq, range_t dataRange) {
     RLS_P.setIdentity();
     RLS_P = RLS_P * 1000;
 
-    state = STATE_UKF_RUNNING;
+    state = PROCESSING;
 
     startHardIronCalibration();
 
     return true;
 };
 
-void Magnetometer::requestData() {
-    device.requestData();
-}
-
-void Magnetometer::fetchData() {
-    device.readResponse(mag_x,mag_y,mag_z);
-}
 
 bool Magnetometer::isDataAvailable() {
     bool saveFlag = dataIsAvailable;
@@ -59,7 +52,7 @@ bool Magnetometer::loop() {
     if (initialised) {     
         // if interrupt fired         
         if (newDataIsAvailable) {
-            requestData();
+            device.requestData();
             dataStreamClock.tick();
             dataRequestTime_us = micros();
             dataRequested = true;
@@ -70,7 +63,17 @@ bool Magnetometer::loop() {
         if (dataRequested) {
             if (device.isDataAvailable()) {
                 dataRequested = false;
-                fetchData();
+                device.readResponse(mag_x,mag_y,mag_z);
+
+                // read from sensor and do the hard iron compensation
+                double tmp_x = mag_x - hard_iron_base[0][0];
+                double tmp_y = mag_y - hard_iron_base[1][0];
+                double tmp_z = mag_z - hard_iron_base[2][0];
+
+                // Align the coordinate system of the magnetometer with the one from the IMU
+                mag_y = - tmp_x;
+                mag_x = tmp_y;
+                mag_z = tmp_z;
     
                  static TimePassedBy printTimer (1000);
                 if (printTimer.isDue()) {
@@ -102,17 +105,23 @@ bool Magnetometer::loop() {
 
 void Magnetometer::startHardIronCalibration() {
     Serial.println("start moving the sensor in the shape of an 8");
-    state = STATE_MAGNETO_BIAS_IDENTIFICATION;
-    calibrationStart_ms = millis();
+    state = CALIBRATE_HARD_IRON;
+    hardIronCalibStart_ms = millis();
 }
 
 void Magnetometer::startNorthCalibration() {
-    state = STATE_NORTH_VECTOR_IDENTIFICATION;
+    state = CALIBRATE_NORTH_VECTOR;
 }
 
 void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, double mag_x, double mag_y, double mag_z) {
 
-    if (state == STATE_MAGNETO_BIAS_IDENTIFICATION) {
+    if (state == CALIBRATE_HARD_IRON) {
+        // remove the existing hard iron correction to get the raw sensor data
+        mag_x += hard_iron_base[0][0];
+        mag_y += hard_iron_base[1][0];
+        mag_z += hard_iron_base[2][0];
+
+        // use recursive least squares filter to find the best hard iron compensation
         RLS_in[0][0] =  mag_x;
         RLS_in[1][0] =  mag_y;
         RLS_in[2][0] =  mag_z;
@@ -120,7 +129,7 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, doubl
         RLS_out[0][0] = (mag_x*mag_x) + (mag_y*mag_y) + (mag_z*mag_z);
                 
         float err = (RLS_out - (RLS_in.Transpose() * RLS_theta))[0][0];
-        RLS_gain  = RLS_P*RLS_in / (RLS_lambda + RLS_in.Transpose()*RLS_P*RLS_in)[0][0];
+        RLS_gain  =  RLS_P*RLS_in / (RLS_lambda + RLS_in.Transpose()*RLS_P*RLS_in)[0][0];
         RLS_P     = (RLS_P - RLS_gain*RLS_in.Transpose()*RLS_P)/RLS_lambda;
         RLS_theta = RLS_theta + err*RLS_gain;
                 
@@ -130,7 +139,7 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, doubl
         if (error < 1e-4) {
             /* The data collection is finished, go back to state UKF running */
             // state = STATE_NORTH_VECTOR_IDENTIFICATION;
-            state = STATE_UKF_RUNNING;
+            state = PROCESSING;
                     
             /* Reconstruct the matrix compensation solution */
             hard_iron_base[0][0] = RLS_theta[0][0] / 2.0;
@@ -139,26 +148,27 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, doubl
     
             Serial.println("Calibration finished, the hard-iron bias identified:");
             println("%f %f %f\r\n", hard_iron_base[0][0], hard_iron_base[1][0], hard_iron_base[2][0]);
+            calib_hard_iron_done = true;
         }
 
         static TimePassedBy printTimer (500);
         if (printTimer.isDue()) {
                 println( "Hard iron calibration %.3f %.3f %.3f (P = %f > 0.001!)", RLS_theta[0][0] / 2.0, RLS_theta[1][0] / 2.0, RLS_theta[2][0] / 2.0, error);
         }
-        if (millis() - calibrationStart_ms > 10000) {
+        if (millis() - hardIronCalibStart_ms > 10000) {
             /* We take the data too long but the error still large, terminate without updating the hard-iron bias */
-            state = STATE_UKF_RUNNING;
+            state = PROCESSING;
                     
             Serial.println("Calibration timeout, the hard-iron bias won't be updated\r\n");
         }           
     }
-    else if (state == STATE_NORTH_VECTOR_IDENTIFICATION) {
+    if (state == CALIBRATE_NORTH_VECTOR) {
         float Ax = acc_x;
         float Ay = acc_y;
         float Az = acc_z;
-        float Bx = mag_x - hard_iron_base[0][0];
-        float By = mag_y - hard_iron_base[1][0];
-        float Bz = mag_z - hard_iron_base[2][0];
+        float Bx = mag_x;
+        float By = mag_y;
+        float Bz = mag_z;
                 
         /* Normalizing the acceleration vector & projecting the gravitational vector (gravity is negative acceleration) */
         double _normG = sqrt((Ax * Ax) + (Ay * Ay) + (Az * Az));
@@ -173,21 +183,30 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, doubl
         Bz = Bz / _normG;
         
         /* Projecting the magnetic vector into plane orthogonal to the gravitational vector */
-        float pitch = asin(-Ax);
-        float roll = asin(Ay/cos(pitch));
-        float m_tilt_x =  Bx*cos(pitch)             + By*sin(roll)*sin(pitch)   + Bz*cos(roll)*sin(pitch);
-        float m_tilt_y =                            + By*cos(roll)              - Bz*sin(roll);
-        // ignore yaw (otherwise would have been )
-        /* float m_tilt_z = -Bx*sin(pitch)             + By*sin(roll)*cos(pitch)   + Bz*cos(roll)*cos(pitch); */
+        double pitch = asin(-Ax);
+        double roll = asin(Ay/cos(pitch));
+        double m_tilt_x =  Bx*cos(pitch)             + By*sin(roll)*sin(pitch)   + Bz*cos(roll)*sin(pitch);
+        double m_tilt_y =                            + By*cos(roll)              - Bz*sin(roll);
+        double m_tilt_z = -Bx*sin(pitch)             + By*sin(roll)*cos(pitch)   + Bz*cos(roll)*cos(pitch); 
+
+        // ignore yaw
+        double mag_dec = atan2(m_tilt_y, m_tilt_x);
+        north_vector[0][0] = cos(mag_dec);
+        north_vector[1][0] = sin(mag_dec);
+        north_vector[2][0] = m_tilt_z*0;
                 
-        float mag_dec = atan2(m_tilt_y, m_tilt_x);
-        imu_mag_b0[0][0] = cos(mag_dec);
-        imu_mag_b0[1][0] = sin(mag_dec);
-        imu_mag_b0[2][0] = 0;
+        println("Calibration finished: North vector =(%.3f,%.3f,%.3f)", north_vector[0][0], north_vector[1][0], north_vector[2][0]);
                 
-        Serial.println("North identification finished, the north vector identified:");
-        println("%.3f %.3f %.3f", imu_mag_b0[0][0], imu_mag_b0[1][0], imu_mag_b0[2][0]);
-                
-        state  = STATE_UKF_RUNNING;
+        state  = PROCESSING;
+        calib_north_vector_done = true;
     }
+}
+
+bool Magnetometer::newCalibDataAvailable() {
+    if (calib_north_vector_done && calib_hard_iron_done) {
+        calib_north_vector_done = false;
+        calib_hard_iron_done = false;
+        return true;
+    }
+    return false;
 }

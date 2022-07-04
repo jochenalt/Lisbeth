@@ -83,9 +83,6 @@
 #define Rn_INIT_MAG  (0.00015)
 #define IMU_ACC_Z0   (-11)
 
-double HARD_IRON_BIAS_data[3] = {0, 0, 0};
-Matrix HARD_IRON_BIAS(3, 1, HARD_IRON_BIAS_data);
-
 // setup the filter with the targetfrequency. The IMU is configured to deliver a datapoint in that
 // frequency, it is not measured in here.
 void UnscentedKalmanFilter::setup(double targetFreq) {
@@ -100,8 +97,6 @@ void UnscentedKalmanFilter::setup(double targetFreq) {
      *                the noise as AWGN (and same value for every variable), this is set
      *                to Rv=diag(RvInit,...,RvInit) and Rn=diag(RnInit,...,RnInit).
      */
-
-    
     Pinit = P_INIT;
     Qinit = Rv_INIT;
     Rinit = Rn_INIT_ACC;
@@ -121,9 +116,6 @@ void UnscentedKalmanFilter::setup(double targetFreq) {
       /* lambda = (alpha^2)*(N+kappa)-N,         gamma = sqrt(N+alpha)            ...{UKF_1} */
     double _lambda  = (_alpha*_alpha)*(SS_X_LEN+_k) - SS_X_LEN;
     Gamma = sqrt((SS_X_LEN + _lambda));
-
-    dataQuaternion.setZero();
-    dataQuaternion[0][0] = 1;
 
     P.setZero();
     Rv.setZero();
@@ -151,15 +143,19 @@ void UnscentedKalmanFilter::setup(double targetFreq) {
 
 }
 
+void UnscentedKalmanFilter::setNorthVector( Matrix& northCalibration)
+{
+    north_vector = northCalibration;
+    reset();
+}
+
 void UnscentedKalmanFilter::reset()
 {
     P.setDiag(Pinit);
     Rv.setDiag(Qinit);
     Rn.setDiag(Rinit);
-    dataQuaternion.setZero();
-    dataQuaternion[0][0] = 1.0;
     X_Est.setZero();
-    X_Est[0][0] = 1.0;       /* Quaternion(k = 0) = [1 0 0 0]' */
+    X_Est[0][0] = 1.0;          // Quaternion = [1 0 0 0]
 }
 
 void UnscentedKalmanFilter::compute(double accX, double accY, double accZ, 
@@ -187,22 +183,20 @@ void UnscentedKalmanFilter::compute(double accX, double accY, double accZ,
     Y[4][0] = magY; 
     Y[5][0] = magZ;
 
+    /* Compensating Hard-Iron Bias for magnetometer */
+    Y[3][0] = Y[3][0];
+    Y[4][0] = Y[4][0];
+    Y[5][0] = Y[5][0];
+
     double _normM = sqrt(Y[3][0] * Y[3][0]) + (Y[4][0] * Y[4][0]) + (Y[5][0] * Y[5][0]);
     Y[3][0] = Y[3][0] / _normM;
     Y[4][0] = Y[4][0] / _normM;
     Y[5][0] = Y[5][0] / _normM;
-
-    /* Compensating Hard-Iron Bias for magnetometer */
-    Y[3][0] = Y[3][0]-HARD_IRON_BIAS[0][0];
-    Y[4][0] = Y[4][0]-HARD_IRON_BIAS[1][0];
-    Y[5][0] = Y[5][0]-HARD_IRON_BIAS[2][0];
 #endif
 
 
-    Matrix U{SS_U_LEN, 1};  
-
-
     // set gyro data in [rad/s]
+    Matrix U{SS_U_LEN, 1};  
     U[0][0] = gyroX;
     U[1][0] = gyroY;
     U[2][0] = gyroZ;
@@ -212,11 +206,11 @@ void UnscentedKalmanFilter::compute(double accX, double accY, double accZ,
     updateFilter(Y, U);
 
     // get result
-    dataQuaternion = getX();
-    w = dataQuaternion[0][0];
-    x = dataQuaternion[1][0];
-    y = dataQuaternion[2][0];
-    z = dataQuaternion[3][0];
+    Matrix result  = getX();
+    w = result[0][0];
+    x = result[1][0];
+    y = result[2][0];
+    z = result[3][0];
 }
 
 
@@ -398,16 +392,16 @@ void UnscentedKalmanFilter::updateNonlinearY(Matrix &Y, Matrix &X, Matrix &U)
     Y[2][0] = (+(q0_2) -(q1_2) -(q2_2) +(q3_2)) * IMU_ACC_Z0;
 
 #ifdef WITH_MAG
-    Y[3][0] = (+(q0_2)+(q1_2)-(q2_2)-(q3_2)) * Mag_B0[0]
-              +2*(q1*q2+q0*q3) * Mag_B0[1]
-              +2*(q1*q3-q0*q2) * Mag_B0[2];
+    Y[3][0] = (+(q0_2)+(q1_2)-(q2_2)-(q3_2))    * north_vector[0][0]
+              +2*(q1*q2+q0*q3)                  * north_vector[1][0]
+              +2*(q1*q3-q0*q2)                  * north_vector[2][0];
 
-    Y[4][0] = 2*(q1*q2-q0*q3) * Mag_B0[0]
-              +(+(q0_2)-(q1_2)+(q2_2)-(q3_2)) * Mag_B0[1]
-              +2*(q2*q3+q0*q1) * Mag_B0[2];
+    Y[4][0] = 2*(q1*q2-q0*q3)                   * north_vector[0][0]
+              +(+(q0_2)-(q1_2)+(q2_2)-(q3_2))   * north_vector[1][0]
+              +2*(q2*q3+q0*q1)                  * north_vector[2][0];
 
-    Y[5][0] = 2*(q1*q3+q0*q2) * Mag_B0[0]
-              +2*(q2*q3-q0*q1) * Mag_B0[1]
-              +(+(q0_2)-(q1_2)-(q2_2)+(q3_2)) * Mag_B0[2];
+    Y[5][0] =  2*(q1*q3+q0*q2)                  * north_vector[0][0]
+              +2*(q2*q3-q0*q1)                  * north_vector[1][0]
+              +(+(q0_2)-(q1_2)-(q2_2)+(q3_2))   * north_vector[2][0];
 #endif
 }

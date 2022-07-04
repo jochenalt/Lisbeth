@@ -7,15 +7,15 @@
 void IMUManager::setup(uint16_t targetFreq) {
   // IMU's power is controlled by this PIN
   // Initially the IMU is down, start happens in main loop
-  pinMode(PIN_IMU_POWER, OUTPUT);
-  digitalWrite(PIN_IMU_POWER, HIGH); // turn off IMU
+  pinMode(PIN_IMU_ENABLE, OUTPUT);
+  digitalWrite(PIN_IMU_ENABLE, HIGH); // turn off IMU
 
   sampleFreq  = targetFreq; 
 
   // initialise unsenced kalman filter
   filter.setup(targetFreq);
 
-  // the magnetometer can only work at 155Hz at maximum precision 
+  // the magnetometer works with maximum precision at 155Hz  
   // power management of magnetometer quite robust, does not need the 
   // fancy power management like the IMU
   mag.setup(DATARATE_155_HZ, RANGE_4_GAUSS);
@@ -23,7 +23,7 @@ void IMUManager::setup(uint16_t targetFreq) {
 
 void IMUManager::loop() {
 
-  // loop the magnetometer
+  // loop the magnetometer (it runs slower than the IMU, so new_mag_value indicates when a new data point is available)
   bool new_mag_value = mag.loop();
 
   // take care that imu is correctly powered up or powered down
@@ -35,7 +35,6 @@ void IMUManager::loop() {
   if (isUpAndRunning()) {
       if (device.isNewPackageAvailable()) {
         IMUSensorData sensorData = device.getIMUSensorData();
-        
         
         // read accel and gyro data
         double Ax = sensorData.acc_x;
@@ -51,7 +50,7 @@ void IMUManager::loop() {
         mag.read(Bx, By, Bz);
 
         // in the magnetometer calibration process we need 
-        // accel from the IMU to get the north
+        // the acceleration data from the IMU to get the north
         if (new_mag_value) {
           mag.calibrateLoop(Ax, Ay, Az, Bx, By, Bz);
         }
@@ -60,7 +59,7 @@ void IMUManager::loop() {
         uint64_t u64compuTime = micros();
         filter.compute(Ax,Ay,Az,p,q,r, 
 #ifdef WITH_MAG       
-                        0,0,0,
+                        Bx,By,Bz,
 #endif                        
                        x,y, z,w);
         ekftime  = (ekftime + (micros() - u64compuTime))/2;
@@ -103,7 +102,7 @@ void IMUManager::updatePowerState() {
         case IMU_UNPOWERED:
           if (cmdPowerUp) {
             println("IMU:prepare for power up");
-            digitalWrite(PIN_IMU_POWER, HIGH);
+            digitalWrite(PIN_IMU_ENABLE, HIGH);
             lastPhaseStart_ms = millis();
             imuState = IMU_PREPARE_POWER_UP;
             cmdPowerUp = false;
@@ -114,7 +113,7 @@ void IMUManager::updatePowerState() {
         case IMU_PREPARE_POWER_UP:
           if (millis() - lastPhaseStart_ms > prepare_power_up_ms) {
             println("IMU:turn on power");
-            digitalWrite(PIN_IMU_POWER, LOW);
+            digitalWrite(PIN_IMU_ENABLE, LOW);
             lastPhaseStart_ms = millis();
             imuState = IMU_WARMING_UP;
           }
@@ -138,7 +137,7 @@ void IMUManager::updatePowerState() {
               lastPhaseStart_ms = millis();
             }
             else {
-              digitalWrite(PIN_IMU_POWER, HIGH);
+              digitalWrite(PIN_IMU_ENABLE, HIGH);
               imuState = IMU_COOLING_DOWN;
               lastPhaseStart_ms = millis();
             }
@@ -147,7 +146,7 @@ void IMUManager::updatePowerState() {
           case IMU_SETUP:
             device.loop();
             if (cmdPowerDown) {
-              digitalWrite(PIN_IMU_POWER, HIGH);
+              digitalWrite(PIN_IMU_ENABLE, HIGH);
               println("IMU:cool down");
               imuState = IMU_COOLING_DOWN;
               lastPhaseStart_ms = millis();
@@ -172,10 +171,35 @@ void IMUManager::updatePowerState() {
 
 
 void IMUManager::startHardIronCalibration() {
-
+  mag.startHardIronCalibration();
 }
 
 void IMUManager::startNorthCalibration(){
-
+  mag.startNorthCalibration();
 }
 
+void IMUManager::getCalibrationData(IMUConfigDataType& calib) {
+  calib.hardIron[0] = mag.getHardIronBase()[0][0];
+  calib.hardIron[1] = mag.getHardIronBase()[1][0];
+  calib.hardIron[2] = mag.getHardIronBase()[2][0];
+
+  calib.northVector[0] = mag.getNorthVector()[0][0];
+  calib.northVector[1] = mag.getNorthVector()[1][0];
+  calib.northVector[2] = mag.getNorthVector()[2][0];
+}
+
+void IMUManager::setCalibrationData(IMUConfigDataType& calib) {
+  mag.getHardIronBase()[0][0] = calib.hardIron[0];
+  mag.getHardIronBase()[1][0] = calib.hardIron[1];
+  mag.getHardIronBase()[2][0] = calib.hardIron[2];
+
+  mag.getNorthVector()[0][0] = calib.northVector[0];
+  mag.getNorthVector()[1][0] = calib.northVector[1];
+  mag.getNorthVector()[2][0] = calib.northVector[2];
+
+  filter.setNorthVector(mag.getNorthVector());
+}
+
+bool IMUManager::newCalibrationData() {
+  return mag.newCalibDataAvailable();
+}

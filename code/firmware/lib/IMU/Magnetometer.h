@@ -2,15 +2,20 @@
 #define MAGNETOMETER_H
 
 #include "LIS3MDL.h"
-#include "MicrostrainComm.h"
-#include "ukf.h"
+#include "ukf.h" // to include matrix.h, UKF defines MAX_MATRIX_SIZE
+#include "utils.h"
+
 /**
  * Manage the magnetometer 
- * - power management with correct timing
- * - initialise sensor with passed frequency and sensitivity
+ * - power management 
+ * - initialise sensor with frequency and sensitivity
  * - fetch data in the background in a non-blocking via via loop()
- * - convert sensor data to [gauss]
+ * - do hard iron calibration
+ * - do north calibration on the basis of acceleration data coming from an IMU
+ * - convert sensor data to [uT]
+ * - turn the coord system to be aligned with the IMUs coord system
  */ 
+
 class Magnetometer {
     public:
         Magnetometer() {};
@@ -47,13 +52,12 @@ class Magnetometer {
         // returns the result of the hard iron calibration
         Matrix& getHardIronBase() { return hard_iron_base; };
 
-        // returns the result of the North calibration
-        Matrix& getIMUMagB0() { return imu_mag_b0; };
+        // returns the result of the North calibration, e.g. the difference between the magnetic field vs the gravity field. 
+        Matrix& getNorthVector() { return north_vector; };
 
-
+        bool newCalibDataAvailable();
+        
     private:
-        void requestData();
-        void fetchData();
 
         LIS3MDL device;
         uint32_t dataRequestTime_us = 0;
@@ -64,10 +68,10 @@ class Magnetometer {
         Measurement dataStreamClock;
 
         enum {
-            STATE_UKF_RUNNING = 0,
-            STATE_MAGNETO_BIAS_IDENTIFICATION = 1,
-            STATE_NORTH_VECTOR_IDENTIFICATION = 2
-        } state = STATE_UKF_RUNNING;
+            PROCESSING = 0,
+            CALIBRATE_HARD_IRON = 1,
+            CALIBRATE_NORTH_VECTOR = 2
+        } state = PROCESSING;
 
         // RLS algorithm
         double  RLS_lambda = 0.999; /* Forgetting factor */
@@ -76,14 +80,18 @@ class Magnetometer {
         Matrix RLS_in{4,1};             /* Input data */
         Matrix RLS_out{1,1};            /* Output data */
         Matrix RLS_gain{4,1};           /* RLS gain */
-        uint32_t calibrationStart_ms = 0;
+        uint32_t hardIronCalibStart_ms = 0;       // time when the hard iron calibration started
 
         /* Magnetic vector constant (align with local magnetic vector) */
-        double  imu_mag_b0_preset[3] = {cos(0), sin(0), 0.000000};
-        Matrix imu_mag_b0{3, 1, imu_mag_b0_preset};
+        double  north_vector_preset[3] = {cos(0), sin(0), 0.000000};
+        Matrix north_vector{3, 1, north_vector_preset};
 
         /* The hard-magnet bias */
         double  hard_iron_base_preset[3] = {-20.0, 2.0, -14.0};
         Matrix hard_iron_base{3, 1, hard_iron_base_preset};
+
+        // true, if new calibration results are available
+        bool calib_north_vector_done = false;
+        bool calib_hard_iron_done = true;
 };
 #endif

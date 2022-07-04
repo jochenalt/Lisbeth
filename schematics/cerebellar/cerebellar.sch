@@ -6,7 +6,7 @@
 <setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
+<grid distance="0.05" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="no" active="no"/>
 <layer number="2" name="Route2" color="16" fill="1" visible="no" active="no"/>
@@ -25469,7 +25469,7 @@ Source: 8x ADG1408_1409.pdf</description>
 </segment>
 <segment>
 <wire x1="248.92" y1="12.7" x2="228.6" y2="12.7" width="0.1524" layer="91"/>
-<label x="229.87" y="12.7" size="1.778" layer="95"/>
+<label x="234.95" y="12.7" size="1.778" layer="95"/>
 <pinref part="P17" gate="A" pin="3"/>
 </segment>
 </net>
@@ -25480,15 +25480,15 @@ Source: 8x ADG1408_1409.pdf</description>
 <label x="87.63" y="62.23" size="1.778" layer="95"/>
 </segment>
 <segment>
-<wire x1="248.92" y1="15.24" x2="228.6" y2="15.24" width="0.1524" layer="91"/>
-<label x="241.3" y="15.24" size="1.778" layer="95"/>
+<wire x1="248.92" y1="15.24" x2="227.33" y2="15.24" width="0.1524" layer="91"/>
+<label x="234.95" y="15.24" size="1.778" layer="95"/>
 <pinref part="P17" gate="A" pin="4"/>
 </segment>
 </net>
 <net name="MAG_EN" class="0">
 <segment>
 <wire x1="248.92" y1="10.16" x2="229.87" y2="10.16" width="0.1524" layer="91"/>
-<label x="241.3" y="10.16" size="1.778" layer="95"/>
+<label x="234.95" y="10.16" size="1.778" layer="95"/>
 <pinref part="P17" gate="A" pin="2"/>
 </segment>
 <segment>
@@ -25506,7 +25506,7 @@ Source: 8x ADG1408_1409.pdf</description>
 <segment>
 <pinref part="P17" gate="A" pin="1"/>
 <wire x1="248.92" y1="7.62" x2="229.87" y2="7.62" width="0.1524" layer="91"/>
-<label x="229.87" y="7.62" size="1.778" layer="95"/>
+<label x="234.95" y="7.62" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$7" class="0">

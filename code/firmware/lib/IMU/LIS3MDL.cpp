@@ -145,19 +145,6 @@ uint8_t LIS3MDL::readReg(uint8_t reg)
   return value;
 }
 
-void LIS3MDL::convertData(double &x, double &y, double &z) {
-  // scale to [uT]
-  double tmp_x = x * rangeScale;
-  double tmp_y = y * rangeScale;
-  double tmp_z = z * rangeScale;
-
-  // consider how the magnetometer is mounted on top of the IMU
-  // After the following, x,y,z axis of IMU and Magnetometer are aligned.
-  y = - tmp_x;
-  x = tmp_y;
-  z = tmp_z;
-}
-
 // Reads the 3 mag channels and stores them in vector m
 void LIS3MDL::readSync(double  &mag_x, double &mag_y, double &mag_z )
 {
@@ -177,20 +164,7 @@ void LIS3MDL::readSync(double  &mag_x, double &mag_y, double &mag_z )
     }
   }
 
-  uint8_t xlm = Wire1.read();
-  uint8_t xhm = Wire1.read();
-  uint8_t ylm = Wire1.read();
-  uint8_t yhm = Wire1.read();
-  uint8_t zlm = Wire1.read();
-  uint8_t zhm = Wire1.read();
-
-  
-  // combine high and low bytes
-  mag_x = (int16_t)(xhm << 8 | xlm);
-  mag_y = (int16_t)(yhm << 8 | ylm);
-  mag_z = (int16_t)(zhm << 8 | zlm);
-
-  convertData(mag_x, mag_y, mag_z);
+  readResponse (mag_x,mag_y,mag_z);
 }
 
 // Reads the 3 mag channels and stores them in vector m
@@ -221,8 +195,10 @@ void  LIS3MDL::readResponse(double  &mag_x, double &mag_y, double &mag_z )
   mag_x = (int16_t)(xhm << 8 | xlm);
   mag_y = (int16_t)(yhm << 8 | ylm);
   mag_z = (int16_t)(zhm << 8 | zlm);
-
-  convertData(mag_x, mag_y, mag_z);
+  
+  mag_x *= rangeScale;
+  mag_y *= rangeScale;
+  mag_z *= rangeScale;
 }
 
 // Private Methods //////////////////////////////////////////////////////////////

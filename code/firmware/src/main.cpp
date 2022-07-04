@@ -10,7 +10,6 @@
 #include <IMUManager.h>
 #include <PowerManager.h>
 
-
 //  baud rate of Serial0 that is used for logging 
 #define LOG_BAUD_RATE 115200
 
@@ -133,9 +132,11 @@ void setup() {
   INA.reset();
   INA.setMaxCurrentShunt(3, 0.1);
 
-  // initialise IMU Manager (IMU is not yet setup)
-	Serial.println("setting up IMU management on 1000Hz");
+  // initialise IMU Manager 
+	Serial.println("setting up IMU management");
   imuMgr.setup(1000);
+  imuMgr.setCalibrationData(config.imu);
+  config.imu.print();
 
   // the motor MOSFETs are controlled by this PIN
   pinMode(PIN_MOTOR_POWER, OUTPUT);
@@ -221,10 +222,9 @@ void printHelp() {
   println("   s       - startup all");
   println("   S       - shutdown all");
   println("   i       - initialise IMU");
+  println("   c       - calibrate IMU");
   println("   l       - log on/off");
-
 };
-
 
 inline void addCmd(char ch) {
 	command += ch;
@@ -267,6 +267,17 @@ void executeCommand() {
           imuMgr.powerUp();
           break;
       }
+      case 'c': {
+          // calibrate IMU
+          imuMgr.startHardIronCalibration();
+          break;
+      }
+      case 'C': {
+          // calibrate IMU
+          imuMgr.startNorthCalibration();
+          break;
+      }
+
       case 'I': {
           // setup IMU
           println("power down of IMU.");
@@ -283,7 +294,6 @@ void executeCommand() {
       }
       case 'm' :{
       }
-
       case 10:
 			case 13:
 				if (command.startsWith("c")) {
@@ -377,6 +387,14 @@ void loop() {
   // odrives.loop();
 
   imuMgr.loop();
+
+  // if calibration came to a result, store it in EPPROM
+  if (imuMgr.newCalibrationData()) {
+    Serial.println("Store calibration in EEPROM");
+    imuMgr.setCalibrationData(config.imu);
+    config.imu.print();
+    config.write(); 
+  }
 
   // wait for any pending commands to be executed
   powerManager.loop();
