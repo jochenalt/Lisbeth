@@ -53,8 +53,6 @@ private:
 	Vector12 error_value;  						// Store data about the error
 
 	int k;          								// Number of wbc time steps since the start of the controller
-	int k_mpc;      								// Number of wbc time steps for each MPC time step
-	double h_ref_;  								// Reference height of the base
 
 	// Classes of the different control blocks
 	Estimator estimator;                   // Estimator control block

@@ -1,6 +1,13 @@
 /**
- * Planner that outputs the reference trajectory of the base based on the reference
- * velocity given by the user and the current position/velocity of the base
+ * This class generates the input for the MPC solver, which is the to-be state of all feet
+ * for the full prediction horizon
+ *
+ * Compute the reference trajectory of the CoM for each time step of the
+ * prediction horizon. The output is a matrix of size 12 by (N+1) with N the number
+ * of time steps in the gait cycle (N_steps) and 12 the position, orientation,
+ * linear velocity and angular velocity vertically stacked. The first column contains
+ * the current state while the remaining N columns contains the desired future states.
+ *
  */
 
 #ifndef STATEPLANNER_H_INCLUDED
@@ -18,15 +25,11 @@ public:
 
     void initialize(Params& params, Gait& gait);
 
-    // Compute the reference trajectory of the CoM for each time step of the
-    // prediction horizon. The output is a matrix of size 12 by (N+1) with N the number
-    // of time steps in the gait cycle (T_gait/dt) and 12 the position, orientation,
-    // linear velocity and angular velocity vertically stacked. The first column contains
-    // the current state while the remaining N columns contains the desired future states.
-    //		q current position vector of the flying base in horizontal frame (linear and angular stacked)
-    //		v current velocity vector of the flying base in horizontal frame (linear and angular stacked)
-    //		vref desired velocity vector of the flying base in horizontal frame (linear and angular stacked)
-    //		z_average average height of feet currently in stance phase
+    /* compute the reference trajectory
+     * 		q current position vector of the flying base in horizontal frame (linear and angular stacked)
+     *		v current velocity vector of the flying base in horizontal frame (linear and angular stacked)
+     *		vref desired velocity vector of the flying base in horizontal frame (linear and angular stacked)
+     */
     void computeReferenceStates(Vector6 const& q, Vector6 const& v, Vector6 const& vref);
 
 

@@ -26,7 +26,6 @@ Controller::Controller()
       error_flag(0),
       error_value(Vector12::Zero()),
       k(0),
-      k_mpc(0),
       q_filt_mpc(Vector18::Zero()),
       h_v_filt_mpc(Vector6::Zero()),
       vref_filt_mpc(Vector6::Zero()),
@@ -161,8 +160,7 @@ void Controller::initialize(Params& params_in) {
 	  filter_mpc_vref.initialize(params_in);
 
 	  // Other variables
-	  k_mpc = static_cast<int>(params_in.dt_mpc / params_in.dt_wbc);
-	  h_ref_ = params_in.h_ref;
+	  params->h_ref = params_in.h_ref;
 	  P = (Vector3(params_in.Kp_main.data())).replicate<4, 1>();
 	  D = (Vector3(params_in.Kd_main.data())).replicate<4, 1>();
 	  FF = params_in.Kff_main * Vector12::Ones();
@@ -231,7 +229,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 			 Vector12 const& jointsPositions,
 			 Vector12 const& jointsVelocities)
 {
-	std::cout << "--- C++ ---" << k << " " << k % k_mpc << " " << k_mpc - (k % k_mpc)<< std::endl;
+	std::cout << "--- C++ ---" << k << " " << k % params->get_k_mpc() << " " << params->get_k_mpc() - (k % params->get_k_mpc())<< std::endl;
 
 	estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(),
 		  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,
@@ -246,7 +244,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	h_v_filt_mpc = filter_mpc_v.filter(estimator.getHV().head(6), false);
 	vref_filt_mpc = filter_mpc_vref.filter(estimator.getBaseVelRef().head(6), false);
 
-	// automatically turn on a gait with previously gait when we start moving
+	// automatically turn on previous gait when we start moving
 	if ((gait.getCurrentGaitType() == GaitType::NoMovement)  and !cmd_stop and cmd_is_moving) {
 		std::cout << "command received, start moving" << std::endl;
 		if (gait.getPrevGaitType() == GaitType::NoGait)
@@ -263,10 +261,10 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	}
 
 	// at a new gait cycle we need create the next gait round and start MPC
-	bool startNewGaitCycle = (k % k_mpc) == 0;
+	bool startNewGaitCycle = (k % params->get_k_mpc()) == 0;
 
-	// number of cycles left 1..10
-	int k_left_in_gait = k_mpc - (k % k_mpc);
+	// number of cycles left until next mpc 1..10
+	int k_left_in_gait = params->get_k_mpc() - (k % params->get_k_mpc());
 	gait.update(startNewGaitCycle, cmd_gait);
 	cmd_gait = GaitType::NoGait;
 
@@ -281,12 +279,12 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	// Run state planner (outputs the reference trajectory of the base)
 	statePlanner.computeReferenceStates(q_filt_mpc.head(6), h_v_filt_mpc, vref_filt_mpc);
 
-	// Solve MPC problem once every k_mpc iterations of the main loop
+	// Solve MPC problem once every params->get_k_mpc() iterations of the main loop
 	if (startNewGaitCycle) {
 		mpcController.solve(statePlanner.getReferenceStates(), footstepPlanner.getFootsteps(), gait.getCurrentGait());
 		f_mpc = mpcController.get_latest_result();
 	}
-	if ((k % k_mpc) >= 2)
+	if ((k % params->get_k_mpc()) >= 2)
 		f_mpc = mpcController.get_latest_result();
 
 	// Whole Body Control
@@ -297,7 +295,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    base_targets.block<2,1>(3,0) = statePlanner.getReferenceStates().block<2,1>(3,1);
 	    base_targets.block<6,1>(6,0) = vref_filt_mpc;// Velocities (in horizontal frame!)
 
-	    Vector3 T = -estimator.getoTh() - Vector3(0.0, 0.0, h_ref_);
+	    Vector3 T = -estimator.getoTh() - Vector3(0.0, 0.0, params->h_ref);
 	    Matrix3 R = estimator.gethRb() * estimator.getoRh().transpose();
 
 	    Matrix3N feet_a_cmd = R * footTrajectoryGenerator.getFootAcceleration();
@@ -308,19 +306,19 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    Vector3 v_ref03 = estimator.getBaseVelRef().block<3,1>(0,0);
 
 	    feet_a_cmd += - cross_replicate(v_ref36,cross_replicate( v_ref36, feet_p_cmd))
-        		      - 2.0* cross_replicate(v_ref36, feet_v_cmd);
+        		      	- 2.0* cross_replicate(v_ref36, feet_v_cmd);
 	    feet_v_cmd += - v_ref03.replicate(1,4)
-	    		      - cross_replicate (v_ref36, feet_p_cmd);
+	    		         - cross_replicate (v_ref36, feet_p_cmd);
 
 	    // Update configuration vector for wbc
-        q_wbc.block<3,1>(0,0) = Vector3(0,0,h_ref_);
-	    q_wbc(3, 0) = q_filt_mpc(3, 0);          // Roll
-	    q_wbc(4, 0) = q_filt_mpc(4, 0);          // Pitch
+       q_wbc.block<3,1>(0,0) = Vector3(0,0,params->h_ref);
+	    q_wbc(3, 0) = q_filt_mpc(3, 0);         	 	// Roll
+	    q_wbc(4, 0) = q_filt_mpc(4, 0);          	// Pitch
 	    q_wbc.tail(12) = wbcController.get_qdes();  // with reference angular positions of previous loop
 
 	    // Update velocity vector for wbc
-	    dq_wbc.head(6) = estimator.getVEstimate().head(6);  // Velocities in base frame (not horizontal frame!)
-	    dq_wbc.tail(12) = wbcController.get_vdes();            // with reference angular velocities of previous loop
+	    dq_wbc.head(6) = estimator.getVEstimate().head(6);  		// Velocities in base frame (not horizontal frame!)
+	    dq_wbc.tail(12) = wbcController.get_vdes();            	// with reference angular velocities of previous loop
 
 	    // Run InvKin + WBC QP
 	    wbcController.compute(q_wbc, dq_wbc, f_mpc, gait.getCurrentGait().row(0),

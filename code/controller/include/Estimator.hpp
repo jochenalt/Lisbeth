@@ -138,46 +138,45 @@ private:
 
 	Params* params;
 
-	std::array<int, 4> feetFrames;	// Frame indexes of the four feet
-	double footRadius;      // radius of a foot
+	std::array<int, 4> feetFrames_ID;	// Frame indexes of the four feet
+	double footRadius;      				// radius of a foot
 
-	Vector3 alphaPos;		// Alpha coeefficient for the position complementary filter
-	Vector3 alphaAcc;		// Alpha coeefficient for the acceleration complementary filter
+	Vector3 alphaPos;							// Alpha coeefficient for the position complementary filter
+	Vector3 alphaAcc;							// Alpha coeefficient for the acceleration complementary filter
 
-	double alphaVelMax;     // Maximum alpha value for the velocity complementary filter
-	double alphaVelMin;     // Minimum alpha value for the velocity complementary filter
+	double alphaVelMax;     				// Maximum alpha value for the velocity complementary filter
+	double alphaVelMin;     				// Minimum alpha value for the velocity complementary filter
 
 	// double alpha;
-	double alphaSecurity;   // Low pass coefficient for the outputted filtered velocity for security check
-	pinocchio::SE3 b_M_IMU;	// Transform between the base frame and the IMU frame
+	double alphaSecurity;   				// Low pass coefficient for the outputted filtered velocity for security check
+	pinocchio::SE3 b_M_IMU;					// Transform between the base frame and the IMU frame
 
 
-	double IMUYawOffset;			// Yaw orientation of the IMU at startup
-	Vector3 IMULinearAcceleration;	// 	Linear acceleration of body (base frame) from IMU
-	Vector3 IMUAngularVelocity;    	// 	angular velocity of body (base frame) from IMU
-	Vector3 IMURpy;					// Roll Pitch Yaw orientation of the IMU
-	Eigen::Quaterniond IMUQuat; 	// angular position as measured by IMU
+	double IMUYawOffset;						// Yaw orientation of the IMU at startup
+	Vector3 IMULinearAcceleration;		// 	Linear acceleration of body (base frame) from IMU
+	Vector3 IMUAngularVelocity;    		// 	angular velocity of body (base frame) from IMU
+	Vector3 IMURpy;							// Roll Pitch Yaw orientation of the IMU
+	Eigen::Quaterniond IMUQuat; 			// angular position as measured by IMU
 
+	Vector12 qActuators; 					// positions of feet in the order FL, FR, HL, HR, as returned by device measurement
+	Vector12 vActuators; 					// velocities of feet in the order FL, FR, HL, HR, as returned by device measurement
 
-	Vector12 qActuators; // positions of feet in the order FL, FR, HL, HR, as returned by device measurement
-	Vector12 vActuators; // velocities of feet in the order FL, FR, HL, HR, as returned by device measurement
+	int phaseRemainingDuration;			// Number of iterations left for the current gait phase
+	Vector4 feetStancePhaseDuration;		// Number of loops during which each foot has been in contact
 
-	int phaseRemainingDuration;		// Number of iterations left for the current gait phase
-	Vector4 feetStancePhaseDuration;// Number of loops during which each foot has been in contact
+	Vector4 feetStatus;						// Contact status of the four feet, coming from gait
+	Matrix34 feetTargets;					// Target positions of the four feet
+	Vector19 q_FK;								// Configuration vector for Forward Kinematics
+	Vector18 v_FK;								// Velocity vector for Forward Kinematics
+	Vector3 baseVelocityFK;					// Base linear velocity estimated by Forward Kinematics
+	Vector3 basePositionFK;					// Base position estimated by Forward Kinematics
+	Vector3 b_baseVelocity; 			 	// Filtered estimated velocity at center base (base frame)
+	Vector3 baseAcceleration; 				// filtered acceleration of base in world frame x',y',z'
 
-	Vector4 feetStatus;				// Contact status of the four feet
-	Matrix34 feetTargets;			// Target positions of the four feet
-	Vector19 q_FK;					// Configuration vector for Forward Kinematics
-	Vector18 v_FK;					// Velocity vector for Forward Kinematics
-	Vector3 baseVelocityFK;			// Base linear velocity estimated by Forward Kinematics
-	Vector3 basePositionFK;			// Base position estimated by Forward Kinematics
-	Vector3 b_baseVelocity; 		 // Filtered estimated velocity at center base (base frame)
-	Vector3 baseAcceleration; 	// filtered acceleration of base in world frame x',y',z'
+	Vector3 feetPositionBarycenter; 		// Barycenter of feet in contact
 
-	Vector3 feetPositionBarycenter; // Barycenter of feet in contact
-
-	pinocchio::Model velocityModel, positionModel;// Pinocchio models for frame computations and forward kinematics
-	pinocchio::Data velocityData, positionData;	// Pinocchio datas for frame computations and forward kinematics
+	pinocchio::Model velocityModel, positionModel;	// Pinocchio models for frame computations and forward kinematics
+	pinocchio::Data velocityData, positionData;		// Pinocchio datas for frame computations and forward kinematics
 
 	ComplementaryFilter positionFilter;  // Complementary filter for base position
 	ComplementaryFilter velocityFilter;  // Complementary filter for base velocity
@@ -197,8 +196,8 @@ private:
 	// filtered actuators_vel, velocities of feet in the order FL, FR, HL, HR, as returned by device measurement
 	Vector12 vSecurity;
 
-	Vector6 vFiltered;                                  // Base velocity (in base frame) filtered by averaging window
-	std::deque<double> vx_queue, vy_queue, vz_queue;  // Queues that hold samples
+	Vector6 vFiltered;                                 // Base velocity (in base frame) filtered by averaging window
+	std::deque<double> vx_queue, vy_queue, vz_queue;  	// Queues that hold samples
 
     Vector18 qRef;        // Configuration vector in ideal world frame
     Vector18 vRef;        // Velocity vector in ideal world frame
