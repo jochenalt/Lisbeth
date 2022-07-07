@@ -60,6 +60,7 @@ using MatrixN4 = Eigen::Matrix<double, Eigen::Dynamic, 4>;
 using MatrixNi = Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic>;
 
 typedef Eigen::MatrixXd matXd;
+typedef Eigen::Quaterniond Quaternion;
 
 // the legs or ordered in that sequence
 enum Legs { FL=0, FR = 1, HL = 2, HR = 3 };
@@ -69,12 +70,12 @@ typedef int LegNoType;
 // Different Gait Types:
 enum GaitType { NoGait = 0,
 	            Pacing   	= 1, /* Camel */
-				Bounding 	= 2, /* Cheetah */
-				Walking  	= 3, /* One leg up */
-				Trot     	= 4,/* Dog */
-				WalkingTrot = 5,/* Dog */
-				CustomGallop= 6,/* Dog */
-				NoMovement  = 7, /* No Movement */
+					Bounding 	= 2, /* Cheetah */
+					Walking  	= 3, /* only one leg up at a time*/
+					Trot     	= 4, /* Dog */
+					WalkingTrot = 5, /* Dog */
+					CustomGallop= 6, /* Dog */
+					NoMovement  = 7, /* No Movement */
 };
 #define GaitNo 7
 

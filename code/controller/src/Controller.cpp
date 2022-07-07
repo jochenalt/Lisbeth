@@ -226,13 +226,14 @@ Matrix34 cross_replicate(Vector3 a, Matrix34 b) {
 void Controller::compute(Vector3 const& imuLinearAcceleration,
 			 Vector3 const& imuGyroscopse,
 			 Vector3 const& imuAttitudeEuler,
+			 Vector4 const& imuAttitudeQuat,
 			 Vector12 const& jointsPositions,
 			 Vector12 const& jointsVelocities)
 {
 	std::cout << "--- C++ ---" << k << " " << k % params->get_k_mpc() << " " << params->get_k_mpc() - (k % params->get_k_mpc())<< std::endl;
 
 	estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(),
-		  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,
+		  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,  imuAttitudeQuat,
 				jointsPositions,jointsVelocities);
 
 	// Update state vectors of the robot (q and v) + transformation matrices between world and horizontal frames

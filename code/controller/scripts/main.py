@@ -213,7 +213,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             controllerCpp.command_speed(remoteControl.v_ref[0,0], remoteControl.v_ref[1,0], 
                                         remoteControl.v_ref[2,0], remoteControl.v_ref[3,0], 
                                         remoteControl.v_ref[4,0], remoteControl.v_ref[5,0]);
-            controllerCpp.compute(device.baseLinearAcceleration, device.baseAngularVelocity, device.baseOrientation, # IMU data    
+            controllerCpp.compute(device.baseLinearAcceleration, device.baseAngularVelocity, device.baseOrientation, device.baseOrientationQuad, # IMU data    
                                     device.q_mes, device.v_mes # joint positions and joint velocities coming from encoders
                                  )
             # Check that the initial position of actuators is not too far from the

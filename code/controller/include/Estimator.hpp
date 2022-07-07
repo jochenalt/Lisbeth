@@ -38,7 +38,7 @@ public:
 	 * b_perfectVelocity Velocity of the robot in base frame
 	 */
 	void run( MatrixN4 gait, Matrix34 feetTargets,
-			  Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector3 baseOrientation,
+			  Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector3 baseOrientation, Vector4 baseOrientationQuad,
 			  Vector12 const& q, Vector12 const &v);
 
 	// Update state vectors of the robot (q and v)
@@ -86,7 +86,7 @@ private:
 	// baseLinearAcceleration 	Linear acceleration of the IMU (gravity compensated)
 	// baseAngularVelocity 		Angular velocity of the IMU
 	// base_orientation 		RPY from IMU
-	void updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector3 base_orientation);
+	void updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector3 base_orientation, Vector4 base_orientation_quad);
 
 	// Update the feet relative data
 	// update feetStatus_, feetTargets_, feetStancePhaseDuration_ and phaseRemainingDuration_
@@ -136,7 +136,7 @@ private:
 	int get_windows_size() { return  (int)(params->get_k_mpc() * params->get_N_steps() / params->N_periods); };
 
 
-	Params* params;
+	Params* params;							// configuration parameters
 
 	std::array<int, 4> feetFrames_ID;	// Frame indexes of the four feet
 	double footRadius;      				// radius of a foot
@@ -149,8 +149,7 @@ private:
 
 	// double alpha;
 	double alphaSecurity;   				// Low pass coefficient for the outputted filtered velocity for security check
-	pinocchio::SE3 b_M_IMU;					// Transform between the base frame and the IMU frame
-
+	pinocchio::SE3 transBase2IMU;			// Transform between the base frame and the IMU frame
 
 	double IMUYawOffset;						// Yaw orientation of the IMU at startup
 	Vector3 IMULinearAcceleration;		// 	Linear acceleration of body (base frame) from IMU

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 
+#include "Types.h"
 #include "Estimator.hpp"
 #include "pinocchio/algorithm/compute-all-terms.hpp"
 #include "pinocchio/algorithm/frames.hpp"
@@ -51,7 +52,7 @@ Estimator::Estimator()
       h_v(Vector6::Zero()),
 	   h_vFiltered(Vector6::Zero())
 {
-  b_M_IMU = pinocchio::SE3(pinocchio::SE3::Quaternion(1.0, 0.0, 0.0, 0.0), Vector3(0.1163, 0.0, 0.02));
+  transBase2IMU = pinocchio::SE3(pinocchio::SE3::Quaternion(1.0, 0.0, 0.0, 0.0), Vector3(0.1163, 0.0, 0.02));
   q_FK(6) = 1.0;
   qEstimate(6) = 1.0;
 }
@@ -116,11 +117,11 @@ bool Estimator::isSteady() {
     goals (3x4 array): 	Target locations of feet on the ground
 */
 void Estimator::run(MatrixN4 gait, Matrix34 feetTargets,
-				 		  Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector3 baseOrientation,
+				 		  Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector3 baseOrientation, Vector4 baseOrientationQuad,
 					     Vector12 const& q, Vector12 const &v) {
 
 	// store parameter coming from IMU
-	updateIMUData (baseLinearAcceleration, baseAngularVelocity, baseOrientation);
+	updateIMUData (baseLinearAcceleration, baseAngularVelocity, baseOrientation, baseOrientationQuad);
 
 	// update feet target positions according to gait
 	updatFeetStatus(gait, feetTargets);
@@ -189,7 +190,7 @@ void Estimator::updatFeetStatus(MatrixN const& gait, MatrixN const& feetTargets)
 
 
 /** pass data from IMU */
-void Estimator::updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector3 base_orientation) {
+void Estimator::updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector3 base_orientation, Vector4 base_orientation_quad) {
 
 	//  Linear acceleration of the trunk (base frame)
     this->IMULinearAcceleration = base_linear_acc;
@@ -208,7 +209,7 @@ void Estimator::updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velo
     }
     IMURpy(2) -= IMUYawOffset; //  substract initial offset of IMU
 
-    IMUQuat = pinocchio::SE3::Quaternion(pinocchio::rpy::rpyToMatrix(IMURpy(0), IMURpy(1), IMURpy(2)));
+    IMUQuat = Quaternion (base_orientation_quad[0], base_orientation_quad[1], base_orientation_quad[2], base_orientation_quad[3]);
 }
 
 void Estimator::updateJointData(Vector12 const& q, Vector12 const &v) {
@@ -302,7 +303,7 @@ double Estimator::computeAlphaVelocity() {
 void Estimator::estimatePositionAndVelocity() {
   Vector3 alpha = Vector3::Ones() * computeAlphaVelocity();
   Matrix3 oRb = IMUQuat.toRotationMatrix();
-  Vector3 bTi = (b_M_IMU.translation()).cross(IMUAngularVelocity);
+  Vector3 bTi = (transBase2IMU.translation()).cross(IMUAngularVelocity);
 
   // At IMU location in world frame
   Vector3 oi_baseVelocityFK = oRb * (baseVelocityFK + bTi);

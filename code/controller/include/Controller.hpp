@@ -22,7 +22,7 @@ public:
 	~Controller(){};
 
 	void initialize(Params &params);
-	void compute(Vector3 const &imuLinearAcceleration,Vector3 const &imuGyroscopse, Vector3 const &imuAttitudeEuler,
+	void compute(Vector3 const &imuLinearAcceleration,Vector3 const &imuGyroscopse, Vector3 const &imuAttitudeEuler, Vector4 const& imuAttitudeQuat,
 					 Vector12 const &jointsPositions, Vector12 const &jointsVelocities);
 	void security_check();
 

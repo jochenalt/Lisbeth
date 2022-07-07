@@ -15,7 +15,7 @@ struct ControllerPythonVisitor : public bp::def_visitor<ControllerPythonVisitor<
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
 
         .def("initialize", &Controller::initialize, bp::args("params"))
-        .def("compute", &Controller::compute, bp::args("imuLinearAcceleration", "imuGyroscopse", "imuAttitudeEuler",
+        .def("compute", &Controller::compute, bp::args("imuLinearAcceleration", "imuGyroscopse", "imuAttitudeEuler","imuAttitudeQuat"
             											  "jointPositions", "jointVelocities"))
         .def("command_speed", &Controller::command_speed, bp::args("vX", "vY","heightZ", "angSpeedZ", "rotX", "rotY"))
 		  .def("command_stop", &Controller::command_stop, bp::args("ok"))
@@ -32,6 +32,7 @@ struct ControllerPythonVisitor : public bp::def_visitor<ControllerPythonVisitor<
         bp::class_<Controller>("Controller", bp::no_init).def(ControllerPythonVisitor<Controller>());
         ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
         ENABLE_SPECIFIC_MATRIX_TYPE(VectorN);
+        ENABLE_SPECIFIC_MATRIX_TYPE(Vector4);
         ENABLE_SPECIFIC_MATRIX_TYPE(Matrix242);
     }
 };

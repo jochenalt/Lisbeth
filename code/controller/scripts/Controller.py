@@ -427,7 +427,7 @@ class Controller:
         #print ("PY self.footTrajectoryGenerator.get_foot_position().", self.footTrajectoryGenerator.get_foot_position())
 
         self.estimator.run(self.gait.matrix,self.footTrajectoryGenerator.get_foot_position().copy(),
-                           device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy(), # data from IMU
+                           device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy(),device.baseOrientationQuad.copy(), # data from IMU
                            device.q_mes, device.v_mes) # data from joints
 
         self.estimator.update_reference_state(remoteControl.v_ref)
