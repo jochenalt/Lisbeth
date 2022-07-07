@@ -48,7 +48,7 @@ set(${PROJECT_NAME}_HEADERS
   include/Estimator.hpp
   include/FootTrajectoryGenerator.hpp
   include/FootstepPlanner.hpp
-  include/StatePlanner.hpp
+  include/BodyPlanner.hpp
   include/Types.h
   include/InvKin.hpp
   include/WBCSolver.hpp
@@ -74,7 +74,7 @@ set(${PROJECT_NAME}_SOURCES
   src/Gait.cpp
   src/Utils.cpp
   src/FootTrajectoryGenerator.cpp
-  src/StatePlanner.cpp
+  src/BodyPlanner.cpp
   src/Params.cpp
   src/ComplementaryFilter.cpp
   src/Filter.cpp

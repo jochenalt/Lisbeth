@@ -17,23 +17,23 @@
 #include "Params.hpp"
 #include "Gait.hpp"
 
-class StatePlanner
+class BodyPlanner
 {
 public:
-    StatePlanner();
-    ~StatePlanner() {}
+    BodyPlanner();
+    ~BodyPlanner() {}
 
-    void initialize(Params& params, Gait& gait);
+    void setup(Params& params, Gait& gait);
 
     /* compute the reference trajectory
      * 		q current position vector of the flying base in horizontal frame (linear and angular stacked)
      *		v current velocity vector of the flying base in horizontal frame (linear and angular stacked)
      *		vref desired velocity vector of the flying base in horizontal frame (linear and angular stacked)
      */
-    void computeReferenceStates(Vector6 const& q, Vector6 const& v, Vector6 const& vref);
+    void update(Vector6 const& q, Vector6 const& v, Vector6 const& vref);
 
 
-    Matrix12N getReferenceStates() { return referenceStates; }
+    Matrix12N getBodyTrajectory() { return referenceStates; }
 
 private:
     Params* params;

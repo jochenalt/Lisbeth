@@ -1,12 +1,13 @@
-#include "StatePlanner.hpp"
+#include "../include/BodyPlanner.hpp"
+
 #include "Gait.hpp"
 
 using namespace std;
 
-StatePlanner::StatePlanner() {
+BodyPlanner::BodyPlanner() {
 }
 
-void StatePlanner::initialize(Params &params_in, Gait &gait_in)
+void BodyPlanner::setup(Params &params_in, Gait &gait_in)
 {
 	params = &params_in;
 	gait = &gait_in;
@@ -16,7 +17,7 @@ void StatePlanner::initialize(Params &params_in, Gait &gait_in)
 }
 
 
-void StatePlanner::computeReferenceStates(Vector6 const &q, Vector6 const &v,	Vector6 const &vref)
+void BodyPlanner::update(Vector6 const &q, Vector6 const &v,	Vector6 const &vref)
 {
 	Vector3 RPY = q.tail(3);
 

@@ -5,11 +5,11 @@
 #ifndef CONTROLLER_H_INCLUDED
 #define CONTROLLER_H_INCLUDED
 
+#include "BodyPlanner.hpp"
 #include "Params.hpp"
 #include "Estimator.hpp"
 #include "Gait.hpp"
 #include "FootstepPlanner.hpp"
-#include "StatePlanner.hpp"
 #include "FootTrajectoryGenerator.hpp"
 #include "WBCController.hpp"
 #include "Filter.hpp"
@@ -58,7 +58,7 @@ private:
 	Estimator estimator;                   // Estimator control block
 	Gait gait;                             // Gait control block
 	FootstepPlanner footstepPlanner;       // Footstep planner control block
-	StatePlanner statePlanner;             // State planner control block
+	BodyPlanner bodyPlanner;             // State planner control block
 	MPCController mpcController;           // MPC Wrapper control block
 	FootTrajectoryGenerator footTrajectoryGenerator; // Foot Trajectory Generator control block
 	WBCController wbcController;      		// Whole body control Wrapper control block

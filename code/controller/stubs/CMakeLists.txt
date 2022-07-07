@@ -7,7 +7,7 @@ set(${PY_NAME}_SOURCES
   GaitStub.cpp
   WBCStub.cpp
   MPCStub.cpp
-  StatePlannerStub.cpp
+  BodyPlannerStub.cpp
   ParamsStub.cpp
   FilterStub.cpp
   Stubs.cpp

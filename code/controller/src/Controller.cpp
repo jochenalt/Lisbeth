@@ -145,7 +145,7 @@ void Controller::initialize(Params& params_in) {
 	  init_robot();
 
 	  // Initialization of the control blocks
-	  statePlanner.initialize(params_in, gait);
+	  bodyPlanner.setup(params_in, gait);
 	  gait.initialize(params_in);
      gait.update(true,  GaitType::NoMovement);
 
@@ -277,11 +277,11 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	footTrajectoryGenerator.update(startNewGaitCycle, o_targetFootstep);
 
 	// Run state planner (outputs the reference trajectory of the base)
-	statePlanner.computeReferenceStates(q_filt_mpc.head(6), h_v_filt_mpc, vref_filt_mpc);
+	bodyPlanner.update(q_filt_mpc.head(6), h_v_filt_mpc, vref_filt_mpc);
 
 	// Solve MPC problem once every params->get_k_mpc() iterations of the main loop
 	if (startNewGaitCycle) {
-		mpcController.solve(statePlanner.getReferenceStates(), footstepPlanner.getFootsteps(), gait.getCurrentGait());
+		mpcController.solve(bodyPlanner.getBodyTrajectory(), footstepPlanner.getFootsteps(), gait.getCurrentGait());
 		f_mpc = mpcController.get_latest_result();
 	}
 	if ((k % params->get_k_mpc()) >= 2)
@@ -292,7 +292,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	if (!error && !cmd_stop) {
 	    // Desired position, orientation and velocities of the base
 	    base_targets.head(6).setZero();
-	    base_targets.block<2,1>(3,0) = statePlanner.getReferenceStates().block<2,1>(3,1);
+	    base_targets.block<2,1>(3,0) = bodyPlanner.getBodyTrajectory().block<2,1>(3,1);
 	    base_targets.block<6,1>(6,0) = vref_filt_mpc;// Velocities (in horizontal frame!)
 
 	    Vector3 T = -estimator.getoTh() - Vector3(0.0, 0.0, params->h_ref);
