@@ -177,6 +177,7 @@ void createCommand(uint8_t descriptor_set,
 bool readResponseChar(CommandData &res){
       if (serial->available()) {
           uint8_t ch = serial->read();
+
           // print(" %#.2x", ch);
           if (res.buffer_res_idx < 4) {
             res.buffer_res[res.buffer_res_idx++] = ch;
@@ -513,7 +514,7 @@ void MicrostrainIMU::clearBuffer() {
 bool MicrostrainIMU::setup(HardwareSerial* sn, uint16_t sampleFreq) {
   println("IMU: initialise data protocol");
 
-  serial = &Serial4;
+  serial = sn;
 
   // sample rate of the outgoing data stream
   targetFreq = sampleFreq;

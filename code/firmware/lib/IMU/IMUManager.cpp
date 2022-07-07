@@ -32,12 +32,6 @@ void IMUManager::loop() {
         // in the magnetometer calibration process we need 
         // the acceleration data from the IMU to get the north
 
-        if (new_mag_value) {
-          double Bx, By, Bz;
-          mag.read(Bx, By, Bz);
-          mag.calibrateLoop(0, 0, 0, Bx, By, Bz);
-        }
-
   // if data streaming is on, pump accel and gyro into EKF
   if (isUpAndRunning()) {
       if (device.isNewPackageAvailable()) {
@@ -183,7 +177,8 @@ void IMUManager::updatePowerState() {
           break;
         case IMU_POWERED_UP: {
             slowWatchdog();
-            bool ok = device.setup(&Serial4, sampleFreq);
+            
+            bool ok = device.setup(&Serial7, sampleFreq);
             filter.reset();
 
             fastWatchdog();
@@ -245,8 +240,6 @@ void IMUManager::getCalibrationData(IMUConfigDataType& calib) {
 }
 
 void IMUManager::setCalibrationData(IMUConfigDataType& calib) {
-  println("MAG: set calibration data ");
-  calib.print();
   mag.getHardIronBase()[0][0] = calib.hardIron[0];
   mag.getHardIronBase()[1][0] = calib.hardIron[1];
   mag.getHardIronBase()[2][0] = calib.hardIron[2];

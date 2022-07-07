@@ -15,8 +15,6 @@ bool Magnetometer::setup(dataRate_t freq, range_t dataRange) {
 
     bool ok = device.setup(freq, dataRange);
 
-    if (!ok)
-        return false;
     dataRequestTime_us = 0;
     initialised = true;
     newDataIsAvailable = true; // first the first read
@@ -27,6 +25,11 @@ bool Magnetometer::setup(dataRate_t freq, range_t dataRange) {
     RLS_P = RLS_P * 1000;
 
     state = PROCESSING;
+
+    // if sensor could not be found, return false
+    if (!ok)
+        return false;
+
     return true;
 };
 
@@ -72,6 +75,8 @@ bool Magnetometer::loop() {
                 mag_x = tmp_y;
                 mag_z = tmp_z;
     
+                
+                /*
                  static TimePassedBy printTimer (1000);
                 if (printTimer.isDue()) {   
                     Serial.print("MAG");
@@ -84,6 +89,7 @@ bool Magnetometer::loop() {
                     Serial.print(" f=");
                     Serial.println(dataStreamClock.getAvrFreq());
                 }
+                */
                 dataIsAvailable = true;
                 return true;
             } else {

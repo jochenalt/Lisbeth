@@ -47,7 +47,7 @@ bool LIS3MDL::init()
             if (testReg(LIS3MDL_SA1_LOW_ADDRESS, WHO_AM_I) == LIS3MDL_WHO_ID)
                 address =  LIS3MDL_SA1_LOW_ADDRESS ;
             else {
-                Serial.print("LIS3MDL hasn't been found");
+                Serial.println("LIS3MDL hasn't been found");
                 return false;
             }
     }
