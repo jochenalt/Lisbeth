@@ -8,11 +8,11 @@
 #include "BodyPlanner.hpp"
 #include "Params.hpp"
 #include "Estimator.hpp"
-#include "Gait.hpp"
 #include "FootstepPlanner.hpp"
 #include "FootTrajectoryGenerator.hpp"
 #include "WBCController.hpp"
 #include "Filter.hpp"
+#include "GaitPlanner.hpp"
 #include "MPCController.hpp"
 
 class Controller
@@ -56,7 +56,7 @@ private:
 
 	// Classes of the different control blocks
 	Estimator estimator;                   // Estimator control block
-	Gait gait;                             // Gait control block
+	GaitPlanner gait;                             // Gait control block
 	FootstepPlanner footstepPlanner;       // Footstep planner control block
 	BodyPlanner bodyPlanner;             // State planner control block
 	MPCController mpcController;           // MPC Wrapper control block

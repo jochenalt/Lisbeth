@@ -1,8 +1,5 @@
 /**
- * This class generates the input for the MPC solver, which is the to-be state of all feet
- * for the full prediction horizon
- *
- * Compute the reference trajectory of the CoM for each time step of the
+ * Compute the reference trajectory of the Body (centre of gravity) for each time step of the
  * prediction horizon. The output is a matrix of size 12 by (N+1) with N the number
  * of time steps in the gait cycle (N_steps) and 12 the position, orientation,
  * linear velocity and angular velocity vertically stacked. The first column contains
@@ -13,17 +10,17 @@
 #ifndef STATEPLANNER_H_INCLUDED
 #define STATEPLANNER_H_INCLUDED
 
+#include "GaitPlanner.hpp"
 #include "Types.h"
 #include "Params.hpp"
-#include "Gait.hpp"
 
 class BodyPlanner
 {
 public:
-    BodyPlanner();
+    BodyPlanner() {}
     ~BodyPlanner() {}
 
-    void setup(Params& params, Gait& gait);
+    void setup(Params& params, GaitPlanner& gait);
 
     /* compute the reference trajectory
      * 		q current position vector of the flying base in horizontal frame (linear and angular stacked)
@@ -33,15 +30,15 @@ public:
     void update(Vector6 const& q, Vector6 const& v, Vector6 const& vref);
 
 
-    Matrix12N getBodyTrajectory() { return referenceStates; }
+    Matrix12N getBodyTrajectory() { return bodyTrajectory; }
 
 private:
     Params* params;
-    Gait*  gait;
+    GaitPlanner*  gait;
 
     // Reference trajectory matrix of size 12 by (1 + N)  with the current state of
     // the robot in column 0 and the N steps of the prediction horizon in the others
-    Matrix12N referenceStates;
+    Matrix12N bodyTrajectory;
 };
 
 #endif  // STATEPLANNER_H_INCLUDED

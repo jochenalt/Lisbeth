@@ -1,6 +1,6 @@
 #include <boost/python.hpp>
 #include <eigenpy/eigenpy.hpp>
-#include "../include/BodyPlanner.hpp"
+#include "BodyPlanner.hpp"
 
 namespace bp = boost::python;
 

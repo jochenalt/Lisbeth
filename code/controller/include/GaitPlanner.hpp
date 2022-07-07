@@ -18,13 +18,13 @@
 
 // Order of feet/legs: FL, FR, HL, HR
 
-class Gait
+class GaitPlanner
 {
 public:
 
 	enum FootPhase { SWING_PHASE = 0, STANCE_PHASE = 1 };
-    Gait();
-    virtual ~Gait() {}
+    GaitPlanner();
+    virtual ~GaitPlanner() {}
 
     void initialize(Params& params);
 

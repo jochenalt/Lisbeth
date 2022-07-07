@@ -43,7 +43,7 @@ SEARCH_FOR_BOOST()
 # Main Library
 set(${PROJECT_NAME}_HEADERS
   include/MPCSolver.hpp
-  include/Gait.hpp
+  include/GaitPlanner.hpp
   include/Utils.hpp
   include/Estimator.hpp
   include/FootTrajectoryGenerator.hpp
@@ -71,7 +71,7 @@ set(${PROJECT_NAME}_SOURCES
   src/WBCSolver.cpp
   src/MPCSolver.cpp
   src/st_to_cc.cpp
-  src/Gait.cpp
+  src/GaitPlanner.cpp
   src/Utils.cpp
   src/FootTrajectoryGenerator.cpp
   src/BodyPlanner.cpp

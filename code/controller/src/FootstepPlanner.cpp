@@ -15,7 +15,7 @@ FootstepPlanner::FootstepPlanner() :
 {
 }
 
-void FootstepPlanner::initialize(Params &params_in, Gait &gait_in)
+void FootstepPlanner::initialize(Params &params_in, GaitPlanner &gait_in)
 {
 	params = &params_in;
 	h_ref = params->h_ref;

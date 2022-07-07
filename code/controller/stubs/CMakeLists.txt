@@ -4,7 +4,7 @@ set(${PY_NAME}_SOURCES
   InvKinStub.cpp
   FootstepPlannerStub.cpp
   FootTrajectoryGeneratorStub.cpp
-  GaitStub.cpp
+  GaitPlannerStub.cpp
   WBCStub.cpp
   MPCStub.cpp
   BodyPlannerStub.cpp
