@@ -5,7 +5,7 @@
  */  
 #include <Arduino.h>
 #include <EEPROM.h>
-#include <config.h>
+#include "config.h"
 
 const long EEPROM_MAGIC_NUMBER = 1565+VERSION;  // magic number to indicate whether the AVR's EEPROM has been initialized already
 #define EEPROM_MAX_WRITES 50000UL				// maximum number of writes in EEPROM before switching to next memory block

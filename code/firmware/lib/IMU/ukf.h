@@ -142,10 +142,7 @@ private:
 
     // return covariance 
     Matrix getP() { return P; }
-
-    // return difference between estimate and prediction
-    Matrix getErr() { return Err; }
-
+    
     // updateNonLinearX/Z is called from unscented Transform twice, a function pointer makes this convinient  
     typedef  void (UnscentedKalmanFilter::*UpdateNonLinear)(Matrix &X_dot, Matrix &X, Matrix &U);
     
@@ -179,7 +176,6 @@ private:
     Matrix Rv{SS_X_LEN, SS_X_LEN};                      // covariance Matrix of process
     Matrix Rn{SS_Z_LEN, SS_Z_LEN};                      // covariance Matrix of measurement
 
-    Matrix Err{SS_Z_LEN, 1};                            // difference between X_Est and X
     Matrix Gain{SS_X_LEN, SS_Z_LEN};                    // Kalman Gain
     double Gamma;
 

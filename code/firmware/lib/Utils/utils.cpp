@@ -44,7 +44,7 @@ void watchdogWarning() {
 }
 
 
-// set the watchdog timer to 100ms
+// set the watchdog timer to 100ms for normal operations
 void fastWatchdog() {
   WDT_timings_t config;
   config.trigger = 0.1; /* [s], trigger is how long before the watchdog callback fires */
@@ -54,7 +54,7 @@ void fastWatchdog() {
 }
 
 
-// set the watchdog timer to 120s (used for longer things like calibrating motors)
+// set the watchdog timer to 120s (only used for longer things like calibrating things)
 void slowWatchdog() {
   WDT_timings_t config;
   config.trigger = 128.0; /* [s], trigger is how long before the watchdog callback fires */
@@ -63,19 +63,12 @@ void slowWatchdog() {
   wdt.begin(config);
 }
 
-
-void threeaxisrot(double r11, double r12, double r21, double r31, double r32, double res[]){
-  res[0] = atan2( r31, r32 );
-  res[1] = asin ( r21 );
-  res[2] = atan2( r11, r12 );
-}
-
 // code stolen from https://stackoverflow.com/questions/11103683/euler-angle-to-quaternion-then-quaternion-to-euler-angle
 void quaternion2RPY(double x, double y, double z, double w , double rpy[])
 {
 
     // roll (x-axis rotation)
-    double sinr_cosp = 2 * (w * x + y * z);
+    double sinr_cosp =     2 * (w * x + y * z);
     double cosr_cosp = 1 - 2 * (x * x + y * y);
     rpy[0] = atan2(sinr_cosp, cosr_cosp);
 
@@ -109,3 +102,35 @@ void RPY2Quaternion(double RPY[], double &x, double &y, double &z, double &w) {
 };
 
 
+void  cross_product(double v_A[], double  v_B[], double c_P[3]) {
+  c_P[0] =   v_A[1] * v_B[2] - v_A[2] * v_B[1];
+  c_P[1] = -(v_A[0] * v_B[2] - v_A[2] * v_B[0]);
+  c_P[2] =   v_A[0] * v_B[1] - v_A[1] * v_B[0];
+}
+
+double dot_product(double vector_a[3], double vector_b[3]) {
+   double product = vector_a[0] * vector_b[0] + vector_a[1] * vector_b[1] + vector_a[2] * vector_b[2];
+   return product;
+}
+
+void rotate_by_quat(double value[3], double rotation[4], double result[3])
+{
+    float num12 = rotation[1] + rotation[1];
+    float num2 = rotation[2] + rotation[2];
+    float num = rotation[3] + rotation[3];
+    float num11 = rotation[0] * num12;
+    float num10 = rotation[0] * num2;
+    float num9 = rotation[0] * num;
+    float num8 = rotation[1] * num12;
+    float num7 = rotation[1] * num2;
+    float num6 = rotation[1] * num;
+    float num5 = rotation[2] * num2;
+    float num4 = rotation[2] * num;
+    float num3 = rotation[3] * num;
+    float num15 = ((value[0] * ((1. - num5) - num3)) + (value[1] * (num7 - num9))) + (value[2] * (num6 + num10));
+    float num14 = ((value[0] * (num7 + num9)) + (value[1] * ((1. - num8) - num3))) + (value[2] * (num4 - num11));
+    float num13 = ((value[0] * (num6 - num10)) + (value[1] * (num4 + num11))) + (value[2] * ((1. - num8) - num5));
+    result[0] = num15;
+    result[1] = num14;
+    result[2] = num13;
+}

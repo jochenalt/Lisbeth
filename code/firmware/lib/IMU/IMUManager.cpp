@@ -16,7 +16,7 @@ void IMUManager::setup(uint16_t targetFreq) {
   filter.setup(targetFreq);
 
   // the magnetometer works with maximum precision at 155Hz  
-  // power management of magnetometer quite robust, does not need the 
+  // its power management is quite robust, does not need the 
   // fancy power management like the IMU
   mag.setup(DATARATE_155_HZ, RANGE_4_GAUSS);
 }
@@ -29,7 +29,14 @@ void IMUManager::loop() {
   // take care that imu is correctly powered up or powered down
   updatePowerState();
 
-  static uint32_t ekftime = 0;
+        // in the magnetometer calibration process we need 
+        // the acceleration data from the IMU to get the north
+
+        if (new_mag_value) {
+          double Bx, By, Bz;
+          mag.read(Bx, By, Bz);
+          mag.calibrateLoop(0, 0, 0, Bx, By, Bz);
+        }
 
   // if data streaming is on, pump accel and gyro into EKF
   if (isUpAndRunning()) {
@@ -45,7 +52,7 @@ void IMUManager::loop() {
         double q = sensorData.gyro_y;
         double r = sensorData.gyro_z;
 
-        // read last data point from magnetometer (might be the same, since it runs slower)
+        // read last data point from magnetometer (might be the same like last time, since magnetometer runs slower)
         double Bx, By, Bz;
         mag.read(Bx, By, Bz);
 
@@ -54,24 +61,46 @@ void IMUManager::loop() {
         if (new_mag_value) {
           mag.calibrateLoop(Ax, Ay, Az, Bx, By, Bz);
         }
- 
-        double x,y,z,w;
-        uint64_t u64compuTime = micros();
+
+        // run unscented kalman filter
+        double res_x,res_y,res_z,res_w;
         filter.compute(Ax,Ay,Az,p,q,r, 
 #ifdef WITH_MAG       
-                        Bx,By,Bz,
+                       Bx,By,Bz,
 #endif                        
-                       x,y, z,w);
-        ekftime  = (ekftime + (micros() - u64compuTime))/2;
-        quaternion[0] = x;
-        quaternion[1] = y;
-        quaternion[2] = z;
-        quaternion[3] = w;
-        
-        quaternion2RPY(x, y,z,w, RPY);
-        RPY_deg[0] = RPY[0]/(2*3.1415)*360.0;
-        RPY_deg[1] = RPY[1]/(2*3.1415)*360.0;
-        RPY_deg[2] = RPY[2]/(2*3.1415)*360.0;
+                       res_x,res_y, res_z,res_w);
+
+        // convert into RPY
+        pose_quat[0] = res_w;
+        pose_quat[1] = res_x;
+        pose_quat[2] = res_y;
+        pose_quat[3] = res_z;
+
+        // save last result to compute dRPY
+        RPY_prev[0] = RPY[0];
+        RPY_prev[1] = RPY[1];
+        RPY_prev[2] = RPY[2];
+
+        // compute angular rate
+        // since he filter is running warm we do not have to take care of the very first sample, which will give a crazy angular rate
+        double dT = 1.0/sampleFreq;
+        ang_rate[0] = (RPY[0] - RPY_prev[0]) *dT;
+        ang_rate[1] = (RPY[1] - RPY_prev[1]) *dT;
+        ang_rate[2] = (RPY[2] - RPY_prev[2]) *dT;
+
+        // compute linear acceleration by removing the gravity vector
+        double gravity[3] = {0,0,1};
+        double rotated_gravity[3] = {0,0,0};
+        rotate_by_quat(gravity, pose_quat, rotated_gravity);
+        lin_acc[0] -= rotated_gravity[0];
+        lin_acc[1] -= rotated_gravity[1];
+        lin_acc[2] -= rotated_gravity[2];
+
+        quaternion2RPY(res_x, res_y,res_z,res_w, RPY);
+
+        RPY_deg[0] = RPY[0]/(2*M_PI)*360.0;
+        RPY_deg[1] = RPY[1]/(2*M_PI)*360.0;
+        RPY_deg[2] = RPY[2]/(2*M_PI)*360.0;
       }
   }
 
@@ -81,14 +110,41 @@ void IMUManager::loop() {
     if (imuTimer.isDue()) {
       float freq = getAvrFrequency();
       device.printData();
-      println("   UKF time: %d us",ekftime);
       println("   avr freq : %.2f Hz",freq);
       println("   RPY : %.1f / %.1f / %.1f",RPY_deg[0], RPY_deg[1], RPY_deg[2]);
-      println("   Quat : (%.3f, %.4f, %.3f, %.3f)",quaternion[0],quaternion[1], quaternion[2], quaternion[3]);
+      println("   Quat : (%.3f, %.4f, %.3f, %.3f)",pose_quat[0],pose_quat[1], pose_quat[2], pose_quat[3]);
     }
   }
-
 }
+
+// fetch latest pose in RPY 
+void IMUManager::getPoseRPY(double &r, double &p, double &y) {
+    r = RPY[0];
+    p = RPY[1];
+    y = RPY[2];
+}
+
+// fetch latest pose in RPY 
+void IMUManager::getPoseQuat(double &w, double &x, double &y, double &z) {
+    w = pose_quat[0];
+    x = pose_quat[1];
+    y = pose_quat[2];
+    z = pose_quat[3];
+}
+
+// fetch latest data point in RPY 
+void IMUManager::getAngualarRate(double &x, double &y, double &z) {
+  x = ang_rate[0];
+  y = ang_rate[1];
+  z = ang_rate[2];
+}
+
+void IMUManager::getLinearAcceleration(double &x, double &y, double &z){
+  x = lin_acc[0];
+  y = lin_acc[1];
+  z = lin_acc[2];
+}
+
 
 float IMUManager::getAvrFrequency() { 
       if (isUpAndRunning()) {
@@ -189,6 +245,8 @@ void IMUManager::getCalibrationData(IMUConfigDataType& calib) {
 }
 
 void IMUManager::setCalibrationData(IMUConfigDataType& calib) {
+  println("MAG: set calibration data ");
+  calib.print();
   mag.getHardIronBase()[0][0] = calib.hardIron[0];
   mag.getHardIronBase()[1][0] = calib.hardIron[1];
   mag.getHardIronBase()[2][0] = calib.hardIron[2];
@@ -203,3 +261,4 @@ void IMUManager::setCalibrationData(IMUConfigDataType& calib) {
 bool IMUManager::newCalibrationData() {
   return mag.newCalibDataAvailable();
 }
+

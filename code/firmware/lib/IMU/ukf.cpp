@@ -79,9 +79,12 @@
 
 #define P_INIT       (1.)
 #define Rv_INIT      (1e-7)
-#define Rn_INIT_ACC  (0.0015)
-#define Rn_INIT_MAG  (0.00015)
-#define IMU_ACC_Z0   (-11)
+
+// from 3DM-CV5-x datasheet: noise of acceleromter is 100ug/sqrt(frequency) = 
+#define Rn_INIT_ACC  (0.00003)
+// from LIS3DM datasheet: noise in ultra performance mode is 3.5 milli gauss = 3.5 = 0.35 uT
+#define Rn_INIT_MAG  (0.35)
+#define IMU_ACC_Z0   (-1)
 
 // setup the filter with the targetfrequency. The IMU is configured to deliver a datapoint in that
 // frequency, it is not measured in here.
@@ -113,7 +116,8 @@ void UnscentedKalmanFilter::setup(double targetFreq) {
     double _k       = 0.0;
     double _beta    = 2.0;
 
-      /* lambda = (alpha^2)*(N+kappa)-N,         gamma = sqrt(N+alpha)            ...{UKF_1} */
+      /* lambda = (alpha^2)*(N+kappa)-N,         
+         gamma = sqrt(N+alpha)            ...{UKF_1} */
     double _lambda  = (_alpha*_alpha)*(SS_X_LEN+_k) - SS_X_LEN;
     Gamma = sqrt((SS_X_LEN + _lambda));
 
@@ -159,11 +163,11 @@ void UnscentedKalmanFilter::reset()
 }
 
 void UnscentedKalmanFilter::compute(double accX, double accY, double accZ, 
-                                double gyroX, double gyroY, double gyroZ,
+                                    double gyroX, double gyroY, double gyroZ,
 #ifdef WITH_MAG       
-                                double magX, double magY, double magZ,
+                                    double magX, double magY, double magZ,
 #endif                                
-                                double &x, double &y, double &z, double &w) {
+                                    double &x, double &y, double &z, double &w) {
     Matrix Y{SS_Z_LEN, 1};          
 
     // set accel data in [g]
@@ -247,8 +251,7 @@ void UnscentedKalmanFilter::updateFilter(Matrix &Y, Matrix &U)
     /* Update the Estimated State Variable:
      *  x(k|k)      = x(k|k-1) + K * (y(k) - y_est(k))                      ...{UKF_11}
      */
-    Err = Y - Y_Est;
-    X_Est = X_Est + (Gain*Err);
+    X_Est = X_Est + (Gain*(Y - Y_Est));
 
     /* Update the Covariance Matrix:
      *  P(k|k)      = P(k|k-1) - K*Py(k)*K'                                 ...{UKF_12}
@@ -288,21 +291,21 @@ void UnscentedKalmanFilter::calculateSigmaPoint()
 }
 
 void UnscentedKalmanFilter::unscentedTransform(Matrix &Out, Matrix &OutSigma, Matrix &P, Matrix &DSig,
-                                             UpdateNonLinear _vFuncNonLinear,
-                                             Matrix &InpSigma, Matrix &InpVector,
-                                             Matrix &_CovNoise)
+                                             UpdateNonLinear funcNonLinear,
+                                             Matrix &inpSigma, Matrix &inpVector,
+                                             Matrix &covNoise)
 {
     /* XSigma(k) = f(XSigma(k-1), u(k-1))                                  ...{UKF_5a}  */
     /* x(k|k-1) = sum(Wm(i) * XSigma(k)(i))    ; i = 1 ... (2N+1)          ...{UKF_6a}  */
     Out.setZero();
-    for (int32_t _j = 0; _j < InpSigma.getCols(); _j++) {
+    for (int32_t _j = 0; _j < inpSigma.getCols(); _j++) {
         /* Transformasi non-linear per kolom */
-        Matrix _AuxSigma1(InpSigma.getRows(), 1);
+        Matrix _AuxSigma1(inpSigma.getRows(), 1);
         Matrix _AuxSigma2(OutSigma.getRows(), 1);
-        for (int32_t _i = 0; _i < InpSigma.getRows(); _i++) {
-            _AuxSigma1[_i][0] = InpSigma[_i][_j];
+        for (int32_t _i = 0; _i < inpSigma.getRows(); _i++) {
+            _AuxSigma1[_i][0] = inpSigma[_i][_j];
         }
-        (this->*(_vFuncNonLinear))(_AuxSigma2, _AuxSigma1, InpVector);      /* Welp... */
+        (this->*(funcNonLinear))(_AuxSigma2, _AuxSigma1, inpVector);      /* Welp... */
 
         /* Combine the transformed vector to construct sigma-points output matrix (OutSigma) */
         OutSigma = OutSigma.insertVector(_AuxSigma2, _j);
@@ -329,7 +332,7 @@ void UnscentedKalmanFilter::unscentedTransform(Matrix &Out, Matrix &OutSigma, Ma
         }
     }
 
-    P = (_AuxSigma1 * (DSig.Transpose())) + _CovNoise;
+    P = (_AuxSigma1 * (DSig.Transpose())) + covNoise;
 }
 
 void UnscentedKalmanFilter::updateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &U)

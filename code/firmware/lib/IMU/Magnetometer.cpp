@@ -9,6 +9,7 @@ void newDataAvailableInterrupt() {
 
 bool Magnetometer::setup(dataRate_t freq, range_t dataRange) {
 
+    Serial.println("MAG: setup");
     pinMode(3, INPUT);
     attachInterrupt(digitalPinToInterrupt(3), newDataAvailableInterrupt, RISING);
 
@@ -18,7 +19,6 @@ bool Magnetometer::setup(dataRate_t freq, range_t dataRange) {
         return false;
     dataRequestTime_us = 0;
     initialised = true;
-    Serial.println("MAG: setup");
     newDataIsAvailable = true; // first the first read
 
     // RLS
@@ -27,9 +27,6 @@ bool Magnetometer::setup(dataRate_t freq, range_t dataRange) {
     RLS_P = RLS_P * 1000;
 
     state = PROCESSING;
-
-    startHardIronCalibration();
-
     return true;
 };
 
@@ -65,7 +62,7 @@ bool Magnetometer::loop() {
                 dataRequested = false;
                 device.readResponse(mag_x,mag_y,mag_z);
 
-                // read from sensor and do the hard iron compensation
+                // read raw data from sensor in [uT] and apply the hard iron compensation
                 double tmp_x = mag_x - hard_iron_base[0][0];
                 double tmp_y = mag_y - hard_iron_base[1][0];
                 double tmp_z = mag_z - hard_iron_base[2][0];
@@ -76,17 +73,16 @@ bool Magnetometer::loop() {
                 mag_z = tmp_z;
     
                  static TimePassedBy printTimer (1000);
-                if (printTimer.isDue()) {
-   
-                Serial.print("MAG");
-
-                Serial.print("x=");
-                Serial.print(mag_x);
-                Serial.print("y=");
-                Serial.print(mag_y);
-                Serial.print("z=");
-                Serial.println(mag_z);
-                Serial.println(dataStreamClock.getAvrFreq());
+                if (printTimer.isDue()) {   
+                    Serial.print("MAG");
+                    Serial.print("x=");
+                    Serial.print(mag_x);
+                    Serial.print("y=");
+                    Serial.print(mag_y);
+                    Serial.print("z=");
+                    Serial.print(mag_z);
+                    Serial.print(" f=");
+                    Serial.println(dataStreamClock.getAvrFreq());
                 }
                 dataIsAvailable = true;
                 return true;
@@ -107,10 +103,13 @@ void Magnetometer::startHardIronCalibration() {
     Serial.println("start moving the sensor in the shape of an 8");
     state = CALIBRATE_HARD_IRON;
     hardIronCalibStart_ms = millis();
+    calib_hard_iron_done = false;
 }
 
 void Magnetometer::startNorthCalibration() {
     state = CALIBRATE_NORTH_VECTOR;
+    calib_north_vector_done = false;
+
 }
 
 void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, double mag_x, double mag_y, double mag_z) {
@@ -136,9 +135,9 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, doubl
         Matrix P_check{RLS_P.getDiagonalEntries()};
         double error = (P_check.Transpose()*P_check)[0][0];
 
-        if (error < 1e-4) {
+        const float max_error = 1e-3;
+        if (error < max_error) {
             /* The data collection is finished, go back to state UKF running */
-            // state = STATE_NORTH_VECTOR_IDENTIFICATION;
             state = PROCESSING;
                     
             /* Reconstruct the matrix compensation solution */
@@ -153,7 +152,7 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, doubl
 
         static TimePassedBy printTimer (500);
         if (printTimer.isDue()) {
-                println( "Hard iron calibration %.3f %.3f %.3f (P = %f > 0.001!)", RLS_theta[0][0] / 2.0, RLS_theta[1][0] / 2.0, RLS_theta[2][0] / 2.0, error);
+                println( "Hard iron calibration %.3f %.3f %.3f (P = %f > %f)", RLS_theta[0][0] / 2.0, RLS_theta[1][0] / 2.0, RLS_theta[2][0] / 2.0, error, max_error);
         }
         if (millis() - hardIronCalibStart_ms > 10000) {
             /* We take the data too long but the error still large, terminate without updating the hard-iron bias */
@@ -203,7 +202,7 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, doubl
 }
 
 bool Magnetometer::newCalibDataAvailable() {
-    if (calib_north_vector_done && calib_hard_iron_done) {
+    if (calib_north_vector_done || calib_hard_iron_done) {
         calib_north_vector_done = false;
         calib_hard_iron_done = false;
         return true;

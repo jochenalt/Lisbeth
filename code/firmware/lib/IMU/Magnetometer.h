@@ -74,24 +74,25 @@ class Magnetometer {
         } state = PROCESSING;
 
         // RLS algorithm
-        double  RLS_lambda = 0.999; /* Forgetting factor */
-        Matrix RLS_theta{4,1};          /* The variables we want to indentify */
-        Matrix RLS_P{4,4};              /* Inverse of correction estimation */
-        Matrix RLS_in{4,1};             /* Input data */
-        Matrix RLS_out{1,1};            /* Output data */
-        Matrix RLS_gain{4,1};           /* RLS gain */
-        uint32_t hardIronCalibStart_ms = 0;       // time when the hard iron calibration started
+        double  RLS_lambda = 0.999;                 // forgetting factor
+        Matrix RLS_theta{4,1};                      // The variables we want to indentify 
+        Matrix RLS_P{4,4};                          // Inverse of correction estimation
+        Matrix RLS_in{4,1};                         // Input data 
+        Matrix RLS_out{1,1};                        // Output data 
+        Matrix RLS_gain{4,1};                       // RLS gain 
+        uint32_t hardIronCalibStart_ms = 0;         // time when the hard iron calibration started
 
-        /* Magnetic vector constant (align with local magnetic vector) */
+        // north vector, points to the navigational north 
+        // is adjusted during the north vector calibration
         double  north_vector_preset[3] = {cos(0), sin(0), 0.000000};
         Matrix north_vector{3, 1, north_vector_preset};
 
         /* The hard-magnet bias */
-        double  hard_iron_base_preset[3] = {-20.0, 2.0, -14.0};
+        double  hard_iron_base_preset[3] = {0,0,0};
         Matrix hard_iron_base{3, 1, hard_iron_base_preset};
 
         // true, if new calibration results are available
         bool calib_north_vector_done = false;
-        bool calib_hard_iron_done = true;
+        bool calib_hard_iron_done = false;
 };
 #endif

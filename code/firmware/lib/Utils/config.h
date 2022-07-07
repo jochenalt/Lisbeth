@@ -22,7 +22,8 @@ struct configuration_type {
 
 	// initialize all configuration values to factory settings
 	void setup() {
-		debugLevel = 0;		
+		debugLevel = 0;	
+		imu.setup();	
 	}
 	
 	void write() ;

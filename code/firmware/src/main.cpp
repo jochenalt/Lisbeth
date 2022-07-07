@@ -119,11 +119,11 @@ void setup() {
   blinker.setup(LED_BUILTIN, 50);
 
  	// read configuration from EEPROM (or initialize if EEPPROM is a virgin)
-	Serial.println("setting up eeprom");
+	Serial.println("EEPROM: setup");
   setupConfiguration();
 
   // setup the current/voltage sensor
-	Serial.println("setting up power management");
+	Serial.println("PMS: setup");
   Wire.begin();
   if (!INA.begin() )
   {
@@ -133,10 +133,9 @@ void setup() {
   INA.setMaxCurrentShunt(3, 0.1);
 
   // initialise IMU Manager 
-	Serial.println("setting up IMU management");
+	Serial.println("IMU: setup");
   imuMgr.setup(1000);
   imuMgr.setCalibrationData(config.imu);
-  config.imu.print();
 
   // the motor MOSFETs are controlled by this PIN
   pinMode(PIN_MOTOR_POWER, OUTPUT);
@@ -391,8 +390,7 @@ void loop() {
   // if calibration came to a result, store it in EPPROM
   if (imuMgr.newCalibrationData()) {
     Serial.println("Store calibration in EEPROM");
-    imuMgr.setCalibrationData(config.imu);
-    config.imu.print();
+    imuMgr.getCalibrationData(config.imu);
     config.write(); 
   }
 

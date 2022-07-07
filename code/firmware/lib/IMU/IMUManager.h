@@ -23,8 +23,16 @@ struct IMUConfigDataType {
   double hardIron[3] = { 0,0,0};
   double northVector[3]= { 1,0,0};
   void print() {
-    println("hardIron = (%.3,%.3,%.3)", hardIron[0],hardIron[1],hardIron[2]);
-    println("north    = (%.3,%.3,%.3)", northVector[0],northVector[1],northVector[2]);
+    println("hardIron = (%.3f,%.3f,%.3f)", hardIron[0],hardIron[1],hardIron[2]);
+    println("north    = (%.3f,%.3f,%.3f)", northVector[0],northVector[1],northVector[2]);
+  }
+  void setup() {
+     hardIron[0] =0;
+     hardIron[1] =0;
+     hardIron[2] =0;
+     northVector[0] = 1;
+     northVector[1] = 0;
+     northVector[2] = 0;
   }
 }  ; 
 
@@ -43,7 +51,15 @@ class IMUManager {
 
     void setup(uint16_t sampleFreq);
 
+    // to be called as often as possible, fetches sensor data and filters it
     void loop();
+
+    // get the latest RPY
+    void getPoseRPY(double &r, double &p, double &y);
+    void getPoseQuat(double &w, double &x, double &y, double &z);
+    void getAngualarRate(double &x, double &y, double &z);
+    void getLinearAcceleration(double &x, double &y, double &z);
+
     void powerUp() { cmdPowerUp = true;}
     void powerDown() { cmdPowerDown = true;}
 
@@ -55,11 +71,15 @@ class IMUManager {
     float getAvrFrequency();
     void startHardIronCalibration();
     void startNorthCalibration();  
+    bool hardIronCalibrationDone();
 
+    // get the current calibration data in a format convinient for storing in EEPROM
     void getCalibrationData(IMUConfigDataType& calib);
+
+    // set calibration data coming from EEPROM  
     void setCalibrationData(IMUConfigDataType& calib);
 
-    // returns true if new calibration data is available
+    // returns true if new calibration is available
     bool newCalibrationData();
   private:
     void updatePowerState();
@@ -73,12 +93,18 @@ class IMUManager {
 
     double RPY[3] = {0,0,0};                // result of Kalman filter [rad]
     double RPY_deg[3] = {0,0,0};            // same but in degrees
-    double quaternion[4] = {0,0,0,0};       // same but in quats
-    uint16_t sampleFreq;                    // frequency of the IMU data stream 
+    double ang_rate[3] = {0,0,0};           // angular rate
+    double lin_acc[3] = {0,0,0};           // linear acceleration, i.e. acceleration without gravity vector in the sensor frame
+
+    double RPY_prev[3] = {0,0,0};           // last result to compute dRPY
+
+    double pose_quat[4] = {0,0,0,0};        // original outcome from Kalman is in quatssame but in quats
+    double sampleFreq;                      // frequency of the IMU data stream 
 
     MicrostrainIMU  device;                 // communication interface to any Parker Lord Microstrain IMU
+    Magnetometer mag;                       // communication to LIS3MDL magnetometer
     UnscentedKalmanFilter filter;           // magic filter
-    Magnetometer mag;
+
 };
 
 #endif

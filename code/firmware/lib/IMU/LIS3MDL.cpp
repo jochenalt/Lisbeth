@@ -167,7 +167,7 @@ void LIS3MDL::readSync(double  &mag_x, double &mag_y, double &mag_z )
   readResponse (mag_x,mag_y,mag_z);
 }
 
-// Reads the 3 mag channels and stores them in vector m
+// request data, dont fetch it yet, this is done in readResponse
 void LIS3MDL::requestData()
 {
   Wire1.beginTransmission(address);
