@@ -6,7 +6,7 @@
 <setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
+<grid distance="0.05" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="no" active="no"/>
 <layer number="2" name="Route2" color="16" fill="1" visible="no" active="no"/>
@@ -24661,12 +24661,6 @@ Source: 8x ADG1408_1409.pdf</description>
 <junction x="-55.245" y="-64.77"/>
 </segment>
 <segment>
-<pinref part="P14" gate="G$1" pin="5"/>
-<wire x1="248.92" y1="44.45" x2="243.84" y2="44.45" width="0.1524" layer="91"/>
-<label x="243.84" y="44.45" size="1.778" layer="95"/>
-<label x="243.84" y="20.32" size="1.778" layer="95"/>
-</segment>
-<segment>
 <pinref part="U$4" gate="G$1" pin="GND"/>
 <pinref part="SUPPLY2" gate="GND" pin="GND"/>
 <wire x1="290.83" y1="69.85" x2="281.94" y2="69.85" width="0.1524" layer="91"/>
@@ -24687,21 +24681,10 @@ Source: 8x ADG1408_1409.pdf</description>
 <label x="243.84" y="20.32" size="1.778" layer="95"/>
 <pinref part="P17" gate="A" pin="6"/>
 </segment>
-</net>
-<net name="T_TX" class="0">
 <segment>
-<pinref part="U$1" gate="G$1" pin="29-TX7"/>
-<label x="151.13" y="36.83" size="1.778" layer="95"/>
 <pinref part="P14" gate="G$1" pin="2"/>
-<wire x1="149.86" y1="36.83" x2="248.92" y2="36.83" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="T_RX" class="0">
-<segment>
-<pinref part="U$1" gate="G$1" pin="28-RX7"/>
-<label x="151.13" y="39.37" size="1.778" layer="95"/>
-<pinref part="P14" gate="G$1" pin="3"/>
-<wire x1="149.86" y1="39.37" x2="248.92" y2="39.37" width="0.1524" layer="91"/>
+<wire x1="248.92" y1="36.83" x2="242.57" y2="36.83" width="0.1524" layer="91"/>
+<label x="242.57" y="36.83" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="IMU_ENABLE" class="0">
@@ -25469,7 +25452,7 @@ Source: 8x ADG1408_1409.pdf</description>
 </segment>
 <segment>
 <wire x1="248.92" y1="12.7" x2="228.6" y2="12.7" width="0.1524" layer="91"/>
-<label x="229.87" y="12.7" size="1.778" layer="95"/>
+<label x="234.95" y="12.7" size="1.778" layer="95"/>
 <pinref part="P17" gate="A" pin="3"/>
 </segment>
 </net>
@@ -25480,15 +25463,15 @@ Source: 8x ADG1408_1409.pdf</description>
 <label x="87.63" y="62.23" size="1.778" layer="95"/>
 </segment>
 <segment>
-<wire x1="248.92" y1="15.24" x2="228.6" y2="15.24" width="0.1524" layer="91"/>
-<label x="241.3" y="15.24" size="1.778" layer="95"/>
+<wire x1="248.92" y1="15.24" x2="227.33" y2="15.24" width="0.1524" layer="91"/>
+<label x="234.95" y="15.24" size="1.778" layer="95"/>
 <pinref part="P17" gate="A" pin="4"/>
 </segment>
 </net>
 <net name="MAG_EN" class="0">
 <segment>
 <wire x1="248.92" y1="10.16" x2="229.87" y2="10.16" width="0.1524" layer="91"/>
-<label x="241.3" y="10.16" size="1.778" layer="95"/>
+<label x="234.95" y="10.16" size="1.778" layer="95"/>
 <pinref part="P17" gate="A" pin="2"/>
 </segment>
 <segment>
@@ -25506,7 +25489,7 @@ Source: 8x ADG1408_1409.pdf</description>
 <segment>
 <pinref part="P17" gate="A" pin="1"/>
 <wire x1="248.92" y1="7.62" x2="229.87" y2="7.62" width="0.1524" layer="91"/>
-<label x="229.87" y="7.62" size="1.778" layer="95"/>
+<label x="234.95" y="7.62" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$7" class="0">
@@ -25517,12 +25500,8 @@ Source: 8x ADG1408_1409.pdf</description>
 </net>
 <net name="+3.3V" class="0">
 <segment>
-<pinref part="P14" gate="G$1" pin="4"/>
-<wire x1="232.41" y1="41.91" x2="248.92" y2="41.91" width="0.1524" layer="91"/>
 <wire x1="248.92" y1="17.78" x2="232.41" y2="17.78" width="0.1524" layer="91"/>
-<wire x1="232.41" y1="17.78" x2="232.41" y2="41.91" width="0.1524" layer="91"/>
 <pinref part="P17" gate="A" pin="5"/>
-<junction x="232.41" y="41.91"/>
 <label x="224.79" y="49.53" size="1.778" layer="95"/>
 <pinref part="U$6" gate="G$1" pin="OUT"/>
 <wire x1="41.91" y1="177.8" x2="50.8" y2="177.8" width="0.1524" layer="91"/>
@@ -25546,10 +25525,14 @@ Source: 8x ADG1408_1409.pdf</description>
 <label x="287.02" y="-91.44" size="1.778" layer="95"/>
 <junction x="238.76" y="-91.44"/>
 <pinref part="C4" gate="G$1" pin="1"/>
-<wire x1="232.41" y1="41.91" x2="232.41" y2="177.8" width="0.1524" layer="91"/>
+<wire x1="232.41" y1="17.78" x2="232.41" y2="44.45" width="0.1524" layer="91"/>
+<wire x1="232.41" y1="44.45" x2="232.41" y2="177.8" width="0.1524" layer="91"/>
 <wire x1="232.41" y1="17.78" x2="232.41" y2="-91.44" width="0.1524" layer="91"/>
 <wire x1="232.41" y1="-91.44" x2="238.76" y2="-91.44" width="0.1524" layer="91"/>
 <junction x="232.41" y="17.78"/>
+<pinref part="P14" gate="G$1" pin="5"/>
+<wire x1="248.92" y1="44.45" x2="232.41" y2="44.45" width="0.1524" layer="91"/>
+<junction x="232.41" y="44.45"/>
 </segment>
 </net>
 <net name="N$8" class="0">
@@ -25561,6 +25544,24 @@ Source: 8x ADG1408_1409.pdf</description>
 <pinref part="U$6" gate="G$1" pin="STBY"/>
 <wire x1="5.08" y1="129.54" x2="5.08" y2="167.64" width="0.1524" layer="91"/>
 <wire x1="5.08" y1="167.64" x2="13.97" y2="167.64" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="TXD" class="0">
+<segment>
+<pinref part="U$1" gate="G$1" pin="28-RX7"/>
+<wire x1="149.86" y1="39.37" x2="248.92" y2="39.37" width="0.1524" layer="91"/>
+<pinref part="P14" gate="G$1" pin="3"/>
+<label x="242.57" y="39.37" size="1.778" layer="95"/>
+</segment>
+</net>
+<net name="RXD" class="0">
+<segment>
+<pinref part="U$1" gate="G$1" pin="29-TX7"/>
+<wire x1="149.86" y1="36.83" x2="227.33" y2="36.83" width="0.1524" layer="91"/>
+<wire x1="227.33" y1="36.83" x2="227.33" y2="41.91" width="0.1524" layer="91"/>
+<pinref part="P14" gate="G$1" pin="4"/>
+<wire x1="227.33" y1="41.91" x2="248.92" y2="41.91" width="0.1524" layer="91"/>
+<label x="242.57" y="41.91" size="1.778" layer="95"/>
 </segment>
 </net>
 </nets>

@@ -87,7 +87,7 @@
 #define UNSCENTED_KALMAN_FILTER_H
 
 
-// #define WITH_MAG
+#define WITH_MAG
 
 
 #define SS_X_LEN    (4) // State: Quaternion 
@@ -115,6 +115,9 @@ public:
     // reset all internal date structures and start from scratch
     void reset();
 
+    // pass the calibration of the magnetometer. Filter is reset internally
+    void setNorthVector(Matrix& northCalibration);
+
     // do the filtering. Input is Gyro [rad/s] and Accel [g], output is a quat 
     void compute(double accX, double accY, double accZ, 
                  double gyroX, double gyroY, double gyroZ,
@@ -139,10 +142,7 @@ private:
 
     // return covariance 
     Matrix getP() { return P; }
-
-    // return difference between estimate and prediction
-    Matrix getErr() { return Err; }
-
+    
     // updateNonLinearX/Z is called from unscented Transform twice, a function pointer makes this convinient  
     typedef  void (UnscentedKalmanFilter::*UpdateNonLinear)(Matrix &X_dot, Matrix &X, Matrix &U);
     
@@ -154,11 +154,8 @@ private:
                               Matrix &_CovNoise);
     void updateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &U);
     void updateNonlinearY(Matrix &Z_est, Matrix &X, Matrix &U);
-
     
-    Matrix dataQuaternion{SS_X_LEN, 1};                 // output quat
-    
-    Matrix X_Est{SS_X_LEN, 1};                          // state variable, estimated
+    Matrix X_Est{SS_X_LEN, 1};                          // quaternion of the state variable, estimated 
     Matrix X_Sigma{SS_X_LEN, (2*SS_X_LEN + 1)};
     
     Matrix Y_Est{SS_Z_LEN, 1};
@@ -179,7 +176,6 @@ private:
     Matrix Rv{SS_X_LEN, SS_X_LEN};                      // covariance Matrix of process
     Matrix Rn{SS_Z_LEN, SS_Z_LEN};                      // covariance Matrix of measurement
 
-    Matrix Err{SS_Z_LEN, 1};                            // difference between X_Est and X
     Matrix Gain{SS_X_LEN, SS_Z_LEN};                    // Kalman Gain
     double Gamma;
 
@@ -189,7 +185,9 @@ private:
 
     double dT = 0;
 
-    const double Mag_B0[3] = {1,1,0};
+    /* Magnetic vector constant (align with local magnetic vector) */
+    double  north_vector_preset[3] = {cos(0), sin(0), 0.000000};
+    Matrix north_vector{3, 1, north_vector_preset};
 };
 
 

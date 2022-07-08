@@ -79,12 +79,12 @@
 
 #define P_INIT       (1.)
 #define Rv_INIT      (1e-7)
-#define Rn_INIT_ACC  (0.0015)
-#define Rn_INIT_MAG  (0.00015)
-#define IMU_ACC_Z0   (-11)
 
-double HARD_IRON_BIAS_data[3] = {0, 0, 0};
-Matrix HARD_IRON_BIAS(3, 1, HARD_IRON_BIAS_data);
+// from 3DM-CV5-x datasheet: noise of acceleromter is 100ug/sqrt(frequency) = 
+#define Rn_INIT_ACC  (0.00003)
+// from LIS3DM datasheet: noise in ultra performance mode is 3.5 milli gauss = 3.5 = 0.35 uT
+#define Rn_INIT_MAG  (0.35)
+#define IMU_ACC_Z0   (1)
 
 // setup the filter with the targetfrequency. The IMU is configured to deliver a datapoint in that
 // frequency, it is not measured in here.
@@ -100,8 +100,6 @@ void UnscentedKalmanFilter::setup(double targetFreq) {
      *                the noise as AWGN (and same value for every variable), this is set
      *                to Rv=diag(RvInit,...,RvInit) and Rn=diag(RnInit,...,RnInit).
      */
-
-    
     Pinit = P_INIT;
     Qinit = Rv_INIT;
     Rinit = Rn_INIT_ACC;
@@ -118,12 +116,10 @@ void UnscentedKalmanFilter::setup(double targetFreq) {
     double _k       = 0.0;
     double _beta    = 2.0;
 
-      /* lambda = (alpha^2)*(N+kappa)-N,         gamma = sqrt(N+alpha)            ...{UKF_1} */
+      /* lambda = (alpha^2)*(N+kappa)-N,         
+         gamma = sqrt(N+alpha)            ...{UKF_1} */
     double _lambda  = (_alpha*_alpha)*(SS_X_LEN+_k) - SS_X_LEN;
     Gamma = sqrt((SS_X_LEN + _lambda));
-
-    dataQuaternion.setZero();
-    dataQuaternion[0][0] = 1;
 
     P.setZero();
     Rv.setZero();
@@ -151,23 +147,27 @@ void UnscentedKalmanFilter::setup(double targetFreq) {
 
 }
 
+void UnscentedKalmanFilter::setNorthVector( Matrix& northCalibration)
+{
+    north_vector = northCalibration;
+    reset();
+}
+
 void UnscentedKalmanFilter::reset()
 {
     P.setDiag(Pinit);
     Rv.setDiag(Qinit);
     Rn.setDiag(Rinit);
-    dataQuaternion.setZero();
-    dataQuaternion[0][0] = 1.0;
     X_Est.setZero();
-    X_Est[0][0] = 1.0;       /* Quaternion(k = 0) = [1 0 0 0]' */
+    X_Est[0][0] = 1.0;          // Quaternion = [1 0 0 0]
 }
 
 void UnscentedKalmanFilter::compute(double accX, double accY, double accZ, 
-                                double gyroX, double gyroY, double gyroZ,
+                                    double gyroX, double gyroY, double gyroZ,
 #ifdef WITH_MAG       
-                                double magX, double magY, double magZ,
+                                    double magX, double magY, double magZ,
 #endif                                
-                                double &x, double &y, double &z, double &w) {
+                                    double &x, double &y, double &z, double &w) {
     Matrix Y{SS_Z_LEN, 1};          
 
     // set accel data in [g]
@@ -187,22 +187,20 @@ void UnscentedKalmanFilter::compute(double accX, double accY, double accZ,
     Y[4][0] = magY; 
     Y[5][0] = magZ;
 
+    /* Compensating Hard-Iron Bias for magnetometer */
+    Y[3][0] = Y[3][0];
+    Y[4][0] = Y[4][0];
+    Y[5][0] = Y[5][0];
+
     double _normM = sqrt(Y[3][0] * Y[3][0]) + (Y[4][0] * Y[4][0]) + (Y[5][0] * Y[5][0]);
     Y[3][0] = Y[3][0] / _normM;
     Y[4][0] = Y[4][0] / _normM;
     Y[5][0] = Y[5][0] / _normM;
-
-    /* Compensating Hard-Iron Bias for magnetometer */
-    Y[3][0] = Y[3][0]-HARD_IRON_BIAS[0][0];
-    Y[4][0] = Y[4][0]-HARD_IRON_BIAS[1][0];
-    Y[5][0] = Y[5][0]-HARD_IRON_BIAS[2][0];
 #endif
 
 
-    Matrix U{SS_U_LEN, 1};  
-
-
     // set gyro data in [rad/s]
+    Matrix U{SS_U_LEN, 1};  
     U[0][0] = gyroX;
     U[1][0] = gyroY;
     U[2][0] = gyroZ;
@@ -212,11 +210,11 @@ void UnscentedKalmanFilter::compute(double accX, double accY, double accZ,
     updateFilter(Y, U);
 
     // get result
-    dataQuaternion = getX();
-    w = dataQuaternion[0][0];
-    x = dataQuaternion[1][0];
-    y = dataQuaternion[2][0];
-    z = dataQuaternion[3][0];
+    Matrix result  = getX();
+    w = result[0][0];
+    x = result[1][0];
+    y = result[2][0];
+    z = result[3][0];
 }
 
 
@@ -253,8 +251,7 @@ void UnscentedKalmanFilter::updateFilter(Matrix &Y, Matrix &U)
     /* Update the Estimated State Variable:
      *  x(k|k)      = x(k|k-1) + K * (y(k) - y_est(k))                      ...{UKF_11}
      */
-    Err = Y - Y_Est;
-    X_Est = X_Est + (Gain*Err);
+    X_Est = X_Est + (Gain*(Y - Y_Est));
 
     /* Update the Covariance Matrix:
      *  P(k|k)      = P(k|k-1) - K*Py(k)*K'                                 ...{UKF_12}
@@ -294,21 +291,21 @@ void UnscentedKalmanFilter::calculateSigmaPoint()
 }
 
 void UnscentedKalmanFilter::unscentedTransform(Matrix &Out, Matrix &OutSigma, Matrix &P, Matrix &DSig,
-                                             UpdateNonLinear _vFuncNonLinear,
-                                             Matrix &InpSigma, Matrix &InpVector,
-                                             Matrix &_CovNoise)
+                                             UpdateNonLinear funcNonLinear,
+                                             Matrix &inpSigma, Matrix &inpVector,
+                                             Matrix &covNoise)
 {
     /* XSigma(k) = f(XSigma(k-1), u(k-1))                                  ...{UKF_5a}  */
     /* x(k|k-1) = sum(Wm(i) * XSigma(k)(i))    ; i = 1 ... (2N+1)          ...{UKF_6a}  */
     Out.setZero();
-    for (int32_t _j = 0; _j < InpSigma.getCols(); _j++) {
+    for (int32_t _j = 0; _j < inpSigma.getCols(); _j++) {
         /* Transformasi non-linear per kolom */
-        Matrix _AuxSigma1(InpSigma.getRows(), 1);
+        Matrix _AuxSigma1(inpSigma.getRows(), 1);
         Matrix _AuxSigma2(OutSigma.getRows(), 1);
-        for (int32_t _i = 0; _i < InpSigma.getRows(); _i++) {
-            _AuxSigma1[_i][0] = InpSigma[_i][_j];
+        for (int32_t _i = 0; _i < inpSigma.getRows(); _i++) {
+            _AuxSigma1[_i][0] = inpSigma[_i][_j];
         }
-        (this->*(_vFuncNonLinear))(_AuxSigma2, _AuxSigma1, InpVector);      /* Welp... */
+        (this->*(funcNonLinear))(_AuxSigma2, _AuxSigma1, inpVector);      /* Welp... */
 
         /* Combine the transformed vector to construct sigma-points output matrix (OutSigma) */
         OutSigma = OutSigma.insertVector(_AuxSigma2, _j);
@@ -335,7 +332,7 @@ void UnscentedKalmanFilter::unscentedTransform(Matrix &Out, Matrix &OutSigma, Ma
         }
     }
 
-    P = (_AuxSigma1 * (DSig.Transpose())) + _CovNoise;
+    P = (_AuxSigma1 * (DSig.Transpose())) + covNoise;
 }
 
 void UnscentedKalmanFilter::updateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &U)
@@ -398,16 +395,16 @@ void UnscentedKalmanFilter::updateNonlinearY(Matrix &Y, Matrix &X, Matrix &U)
     Y[2][0] = (+(q0_2) -(q1_2) -(q2_2) +(q3_2)) * IMU_ACC_Z0;
 
 #ifdef WITH_MAG
-    Y[3][0] = (+(q0_2)+(q1_2)-(q2_2)-(q3_2)) * Mag_B0[0]
-              +2*(q1*q2+q0*q3) * Mag_B0[1]
-              +2*(q1*q3-q0*q2) * Mag_B0[2];
+    Y[3][0] = (+(q0_2)+(q1_2)-(q2_2)-(q3_2))    * north_vector[0][0]
+              +2*(q1*q2+q0*q3)                  * north_vector[1][0]
+              +2*(q1*q3-q0*q2)                  * north_vector[2][0];
 
-    Y[4][0] = 2*(q1*q2-q0*q3) * Mag_B0[0]
-              +(+(q0_2)-(q1_2)+(q2_2)-(q3_2)) * Mag_B0[1]
-              +2*(q2*q3+q0*q1) * Mag_B0[2];
+    Y[4][0] = 2*(q1*q2-q0*q3)                   * north_vector[0][0]
+              +(+(q0_2)-(q1_2)+(q2_2)-(q3_2))   * north_vector[1][0]
+              +2*(q2*q3+q0*q1)                  * north_vector[2][0];
 
-    Y[5][0] = 2*(q1*q3+q0*q2) * Mag_B0[0]
-              +2*(q2*q3-q0*q1) * Mag_B0[1]
-              +(+(q0_2)-(q1_2)-(q2_2)+(q3_2)) * Mag_B0[2];
+    Y[5][0] =  2*(q1*q3+q0*q2)                  * north_vector[0][0]
+              +2*(q2*q3-q0*q1)                  * north_vector[1][0]
+              +(+(q0_2)-(q1_2)-(q2_2)+(q3_2))   * north_vector[2][0];
 #endif
 }

@@ -102,8 +102,7 @@ class LIS3MDL
     void setTimeout(uint16_t timeout);
     uint16_t getTimeout(void);
     bool timeoutOccurred(void);
-    void convertData(double &x, double &y, double &z);
-
+ 
   private:
     uint8_t address;
 

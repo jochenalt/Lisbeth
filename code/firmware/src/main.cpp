@@ -9,8 +9,6 @@
 #include <INA226.h>
 #include <IMUManager.h>
 #include <PowerManager.h>
-#include <Magnetometer.h>
-
 
 //  baud rate of Serial0 that is used for logging 
 #define LOG_BAUD_RATE 115200
@@ -43,7 +41,6 @@ uint32_t commandLastChar_us = 0;                             // time when the la
 // Power sensor is done via an INA226 sensor
 INA226 INA(0x40);
 
-Magnetometer mag;
 // Teensy LED blinker
 static uint8_t DefaultBlinkPattern[3] = { 0b11001000,0b00001100,0b10000000}; // nice pattern. Each digit represents 50ms
 static uint8_t BlockingBlinkPattern[1] = { 0b11111110};                      // blocking pattern, used for blocking actions like startup of motors 
@@ -122,11 +119,11 @@ void setup() {
   blinker.setup(LED_BUILTIN, 50);
 
  	// read configuration from EEPROM (or initialize if EEPPROM is a virgin)
-	Serial.println("setting up eeprom");
+	Serial.println("EEPROM: setup");
   setupConfiguration();
 
   // setup the current/voltage sensor
-	Serial.println("setting up power management");
+	Serial.println("PMS: setup");
   Wire.begin();
   if (!INA.begin() )
   {
@@ -135,9 +132,9 @@ void setup() {
   INA.reset();
   INA.setMaxCurrentShunt(3, 0.1);
 
-  // initialise IMU Manager (IMU is not yet setup)
-	Serial.println("setting up IMU management on 1000Hz");
-  imuMgr.setup(1000);
+  // initialise IMU Manager 
+	Serial.println("IMU: setup");
+  imuMgr.setup(1000,config.imu);
 
   // the motor MOSFETs are controlled by this PIN
   pinMode(PIN_MOTOR_POWER, OUTPUT);
@@ -223,10 +220,10 @@ void printHelp() {
   println("   s       - startup all");
   println("   S       - shutdown all");
   println("   i       - initialise IMU");
+  println("   c       - calibrate hard iron");
+  println("   C       - calibrate north");
   println("   l       - log on/off");
-
 };
-
 
 inline void addCmd(char ch) {
 	command += ch;
@@ -269,6 +266,17 @@ void executeCommand() {
           imuMgr.powerUp();
           break;
       }
+      case 'c': {
+          // calibrate IMU
+          imuMgr.startHardIronCalibration();
+          break;
+      }
+      case 'C': {
+          // calibrate IMU
+          imuMgr.startNorthCalibration();
+          break;
+      }
+
       case 'I': {
           // setup IMU
           println("power down of IMU.");
@@ -284,9 +292,7 @@ void executeCommand() {
           break;
       }
       case 'm' :{
-          mag.setup(DATARATE_1000_HZ, RANGE_4_GAUSS);
       }
-
       case 10:
 			case 13:
 				if (command.startsWith("c")) {
@@ -379,12 +385,17 @@ void loop() {
   // get feedback of all odrives
   // odrives.loop();
 
-  // imuMgr.loop();
+  imuMgr.loop();
+
+  // if calibration came to a result, store it in EPPROM
+  if (imuMgr.newCalibrationData()) {
+    Serial.println("Store calibration in EEPROM");
+    imuMgr.getCalibrationData(config.imu);
+    config.write(); 
+  }
 
   // wait for any pending commands to be executed
   powerManager.loop();
-
-  mag.loop();
 
   static Measurement m;
   m.tick();

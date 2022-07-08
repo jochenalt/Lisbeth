@@ -28,6 +28,7 @@ void slowWatchdog();
 // geometric calculations
 void quaternion2RPY(double x, double y, double z, double w , double rpy[]);
 void RPY2Quaternion(double RPY[], double &x, double &y, double &z, double &w);
+void rotate_by_quat(double value[3], double rotation[4], double result[3]);
 
 
 class Measurement {
