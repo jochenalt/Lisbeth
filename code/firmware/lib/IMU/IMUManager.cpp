@@ -4,7 +4,7 @@
 #include <ukf.h>
 #include <Magnetometer.h>
 
-void IMUManager::setup(uint16_t targetFreq) {
+void IMUManager::setup(uint16_t targetFreq, IMUConfigDataType& config) {
   // IMU's power is controlled by this PIN
   // Initially the IMU is down, start happens in main loop
   pinMode(PIN_IMU_ENABLE, OUTPUT);
@@ -19,6 +19,9 @@ void IMUManager::setup(uint16_t targetFreq) {
   // its power management is quite robust, does not need the 
   // fancy power management like the IMU
   mag.setup(DATARATE_155_HZ, RANGE_4_GAUSS);
+
+  // set the calibration data (hard iron and north)
+  setCalibrationData(config);
 }
 
 void IMUManager::loop() {
@@ -92,22 +95,24 @@ void IMUManager::loop() {
 
         quaternion2RPY(res_x, res_y,res_z,res_w, RPY);
 
+        // for logging output compute RPY in [degree] instead of [rad]
         RPY_deg[0] = RPY[0]/(2*M_PI)*360.0;
         RPY_deg[1] = RPY[1]/(2*M_PI)*360.0;
         RPY_deg[2] = RPY[2]/(2*M_PI)*360.0;
-      }
-  }
 
-  // if IMU is supposed to be verbose print out current values
-  if (logisOn && isUpAndRunning()) {
-    static TimePassedBy imuTimer (250);
-    if (imuTimer.isDue()) {
-      float freq = getAvrFrequency();
-      device.printData();
-      println("   avr freq : %.2f Hz",freq);
-      println("   RPY : %.1f / %.1f / %.1f",RPY_deg[0], RPY_deg[1], RPY_deg[2]);
-      println("   Quat : (%.3f, %.4f, %.3f, %.3f)",pose_quat[0],pose_quat[1], pose_quat[2], pose_quat[3]);
-    }
+        // if IMU is supposed to be verbose print out current values
+        if (logisOn && isUpAndRunning()) {
+          static TimePassedBy imuTimer (250);
+          if (imuTimer.isDue()) {
+            float freq = getAvrFrequency();
+            device.printData();
+            println("   avr freq : %.2f Hz",freq);
+            println("   RPY : %.1f / %.1f / %.1f",RPY_deg[0], RPY_deg[1], RPY_deg[2]);
+            println("   Quat : (%.3f, %.4f, %.3f, %.3f)",pose_quat[0],pose_quat[1], pose_quat[2], pose_quat[3]);
+            println("   Mag : (%.3f, %.4f, %.3f)",Bx, By, Bz);
+          }
+        }
+      }
   }
 }
 
@@ -177,7 +182,7 @@ void IMUManager::updatePowerState() {
           break;
         case IMU_POWERED_UP: {
             slowWatchdog();
-            
+
             bool ok = device.setup(&Serial7, sampleFreq);
             filter.reset();
 
@@ -226,6 +231,7 @@ void IMUManager::startHardIronCalibration() {
 }
 
 void IMUManager::startNorthCalibration(){
+  println("IMU: north calibration");
   mag.startNorthCalibration();
 }
 
@@ -240,6 +246,7 @@ void IMUManager::getCalibrationData(IMUConfigDataType& calib) {
 }
 
 void IMUManager::setCalibrationData(IMUConfigDataType& calib) {
+  calib.print();
   mag.getHardIronBase()[0][0] = calib.hardIron[0];
   mag.getHardIronBase()[1][0] = calib.hardIron[1];
   mag.getHardIronBase()[2][0] = calib.hardIron[2];
@@ -252,6 +259,11 @@ void IMUManager::setCalibrationData(IMUConfigDataType& calib) {
 }
 
 bool IMUManager::newCalibrationData() {
-  return mag.newCalibDataAvailable();
+  bool ok = mag.newCalibDataAvailable();
+  if (ok) {
+    filter.setNorthVector(mag.getNorthVector());
+    return true;
+  }
+  return false;
 }
 

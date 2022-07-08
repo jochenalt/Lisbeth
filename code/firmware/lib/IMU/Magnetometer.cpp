@@ -65,31 +65,17 @@ bool Magnetometer::loop() {
                 dataRequested = false;
                 device.readResponse(mag_x,mag_y,mag_z);
 
-                // read raw data from sensor in [uT] and apply the hard iron compensation
-                double tmp_x = mag_x - hard_iron_base[0][0];
-                double tmp_y = mag_y - hard_iron_base[1][0];
-                double tmp_z = mag_z - hard_iron_base[2][0];
+                // save  raw data from sensor in [uT]
+                double tmp_x = mag_x;
+                double tmp_y = mag_y;
+                double tmp_z = mag_z;
 
                 // Align the coordinate system of the magnetometer with the one from the IMU
-                mag_y = - tmp_x;
-                mag_x = tmp_y;
-                mag_z = tmp_z;
-    
-                
-                /*
-                 static TimePassedBy printTimer (1000);
-                if (printTimer.isDue()) {   
-                    Serial.print("MAG");
-                    Serial.print("x=");
-                    Serial.print(mag_x);
-                    Serial.print("y=");
-                    Serial.print(mag_y);
-                    Serial.print("z=");
-                    Serial.print(mag_z);
-                    Serial.print(" f=");
-                    Serial.println(dataStreamClock.getAvrFreq());
-                }
-                */
+                // z is going up
+                mag_x =  -tmp_y    - hard_iron_base[0][0];
+                mag_y =  tmp_x     - hard_iron_base[1][0];
+                mag_z =  -tmp_z     - hard_iron_base[2][0];
+
                 dataIsAvailable = true;
                 return true;
             } else {
@@ -141,7 +127,7 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, doubl
         Matrix P_check{RLS_P.getDiagonalEntries()};
         double error = (P_check.Transpose()*P_check)[0][0];
 
-        const float max_error = 1e-3;
+        const float max_error = 1e-1;
         if (error < max_error) {
             /* The data collection is finished, go back to state UKF running */
             state = PROCESSING;
@@ -188,20 +174,27 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, doubl
         Bz = Bz / _normG;
         
         /* Projecting the magnetic vector into plane orthogonal to the gravitational vector */
-        double pitch = asin(-Ax);
-        double roll = asin(Ay/cos(pitch));
+        // double roll = asin(Ay);
+        // double pitch = asin(Ax/cos(roll));
+
+        float pitch = asin(-Ax);
+        float roll = asin(Ay/cos(pitch));
         double m_tilt_x =  Bx*cos(pitch)             + By*sin(roll)*sin(pitch)   + Bz*cos(roll)*sin(pitch);
         double m_tilt_y =                            + By*cos(roll)              - Bz*sin(roll);
-        double m_tilt_z = -Bx*sin(pitch)             + By*sin(roll)*cos(pitch)   + Bz*cos(roll)*cos(pitch); 
+        // double m_tilt_z = -Bx*sin(pitch)             + By*sin(roll)*cos(pitch)   + Bz*cos(roll)*cos(pitch); 
 
         // ignore yaw
         double mag_dec = atan2(m_tilt_y, m_tilt_x);
         north_vector[0][0] = cos(mag_dec);
         north_vector[1][0] = sin(mag_dec);
-        north_vector[2][0] = m_tilt_z*0;
+        north_vector[2][0] = 0;
+        println("Acc =(%.3f,%.3f,%.3f)", Ax, Ay, Az);
+        println("B =(%.3f,%.3f,%.3f)", Bx, By, Bz);
+        
+        println("pitch %.3f roll %.3f m_tilt_x %.3f, m_tilt_y %.3f mag_dec %.3f", pitch/(2.0*3.1415)*360.0, roll/(2.0*3.1415)*360.0, m_tilt_x, m_tilt_y, mag_dec/(2.0*3.1415)*360.0);
                 
         println("Calibration finished: North vector =(%.3f,%.3f,%.3f)", north_vector[0][0], north_vector[1][0], north_vector[2][0]);
-                
+
         state  = PROCESSING;
         calib_north_vector_done = true;
     }

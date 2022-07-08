@@ -134,8 +134,7 @@ void setup() {
 
   // initialise IMU Manager 
 	Serial.println("IMU: setup");
-  imuMgr.setup(1000);
-  imuMgr.setCalibrationData(config.imu);
+  imuMgr.setup(1000,config.imu);
 
   // the motor MOSFETs are controlled by this PIN
   pinMode(PIN_MOTOR_POWER, OUTPUT);
@@ -221,7 +220,8 @@ void printHelp() {
   println("   s       - startup all");
   println("   S       - shutdown all");
   println("   i       - initialise IMU");
-  println("   c       - calibrate IMU");
+  println("   c       - calibrate hard iron");
+  println("   C       - calibrate north");
   println("   l       - log on/off");
 };
 
