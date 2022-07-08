@@ -10,7 +10,7 @@
 #ifndef TRAJGEN_H_INCLUDED
 #define TRAJGEN_H_INCLUDED
 
-#include "Gait.hpp"
+#include "GaitPlanner.hpp"
 #include "Params.hpp"
 
 class FootTrajectoryGenerator {
@@ -30,7 +30,7 @@ class FootTrajectoryGenerator {
   /// \param[in] gait Gait object to hold the gait informations
   ///
   ////////////////////////////////////////////////////////////////////////////////////////////////
-  void initialize(Params &params, Gait &gait);
+  void initialize(Params &params, GaitPlanner &gait);
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   ///
@@ -70,7 +70,7 @@ class FootTrajectoryGenerator {
 
  private:
   Params* params;
-  Gait *gait_;        // Target lock before the touchdown
+  GaitPlanner *gait_;        // Target lock before the touchdown
   double maxHeight_;  // Apex height of the swinging trajectory
   double lockTime_;   // Target lock before the touchdown
   double vertTime_;   // Duration during which feet move only along Z when taking off and landing

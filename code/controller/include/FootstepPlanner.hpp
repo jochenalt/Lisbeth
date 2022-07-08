@@ -4,15 +4,15 @@
  * position/velocity of the base
  */
 
-#ifndef FOOTSTEPPLANNER_H_INCLUDED
-#define FOOTSTEPPLANNER_H_INCLUDED
+#ifndef FOOTSTEPPLANNER_H_
+#define FOOTSTEPPLANNER_H_
 
 #include <vector>
+#include "GaitPlanner.hpp"
 
 #include "pinocchio/multibody/model.hpp"
 #include "pinocchio/multibody/data.hpp"
 
-#include "Gait.hpp"
 #include "Types.h"
 #include "Params.hpp"
 
@@ -25,7 +25,7 @@ class FootstepPlanner {
 
   //	params Object that stores parameters
   //	gaitIn Gait object to hold the gait informations
-  void initialize(Params& params, Gait& gaitIn);
+  void initialize(Params& params, GaitPlanner& gaitIn);
 
 
   // Refresh footsteps locations (computation and update of relevant matrices)
@@ -75,7 +75,7 @@ class FootstepPlanner {
   MatrixN12 vectorToMatrix(std::vector<Matrix34> const& array);
 
   Params* params;  							// Params object to store parameters
-  Gait* gait;      							// Gait object to hold the gait informations
+  GaitPlanner* gait;      							// Gait object to hold the gait informations
 
   double h_ref;   							// Reference height for the trunk
 
@@ -108,4 +108,4 @@ class FootstepPlanner {
   Vector19 q_FK;                   		// Estimated state of the base (height, roll, pitch, joints)
 };
 
-#endif  // FOOTSTEPPLANNER_H_INCLUDED
+#endif  // FOOTSTEPPLANNER_H_

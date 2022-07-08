@@ -20,7 +20,7 @@ FootTrajectoryGenerator::FootTrajectoryGenerator()
       velocity_base_(Matrix34::Zero()),
       acceleration_base_(Matrix34::Zero()) {}
 
-void FootTrajectoryGenerator::initialize(Params &params_in, Gait &gaitIn) {
+void FootTrajectoryGenerator::initialize(Params &params_in, GaitPlanner &gaitIn) {
   params = &params_in;
   maxHeight_ = params->max_height;
   lockTime_ = params->lock_time;

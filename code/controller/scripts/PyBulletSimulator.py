@@ -546,6 +546,7 @@ class PyBulletSimulator():
         self.torquesFromCurrentMeasurment = np.zeros(12)
         self.baseAngularVelocity = np.zeros(3)
         self.baseOrientation = np.zeros(3)
+        self.baseOrientationQuad = np.zeros(4)
 
         self.baseLinearAcceleration = np.zeros(3)
         self.baseAccelerometer = np.zeros(3)
@@ -615,6 +616,9 @@ class PyBulletSimulator():
 
         # Orientation of the base (quaternion)
         self.baseOrientation = quaternionToRPY(np.array(self.baseState[1]))
+        # quaternions from Pybullet have the format x,y,z,w, convert that to w,x,y,z as it is used in the Controller
+        self.baseOrientationQuad = np.array([[self.baseState[1][3]], [self.baseState[1][0]], [self.baseState[1][1]], [self.baseState[1][2]]])
+
         RPY = self.baseOrientation
 
         self.hardware.roll = RPY[0]

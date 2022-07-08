@@ -5,14 +5,14 @@
 #ifndef CONTROLLER_H_INCLUDED
 #define CONTROLLER_H_INCLUDED
 
+#include "BodyPlanner.hpp"
 #include "Params.hpp"
 #include "Estimator.hpp"
-#include "Gait.hpp"
 #include "FootstepPlanner.hpp"
-#include "StatePlanner.hpp"
 #include "FootTrajectoryGenerator.hpp"
 #include "WBCController.hpp"
 #include "Filter.hpp"
+#include "GaitPlanner.hpp"
 #include "MPCController.hpp"
 
 class Controller
@@ -22,7 +22,7 @@ public:
 	~Controller(){};
 
 	void initialize(Params &params);
-	void compute(Vector3 const &imuLinearAcceleration,Vector3 const &imuGyroscopse, Vector3 const &imuAttitudeEuler,
+	void compute(Vector3 const &imuLinearAcceleration,Vector3 const &imuGyroscopse, Vector3 const &imuAttitudeEuler, Vector4 const& imuAttitudeQuat,
 					 Vector12 const &jointsPositions, Vector12 const &jointsVelocities);
 	void security_check();
 
@@ -53,14 +53,12 @@ private:
 	Vector12 error_value;  						// Store data about the error
 
 	int k;          								// Number of wbc time steps since the start of the controller
-	int k_mpc;      								// Number of wbc time steps for each MPC time step
-	double h_ref_;  								// Reference height of the base
 
 	// Classes of the different control blocks
 	Estimator estimator;                   // Estimator control block
-	Gait gait;                             // Gait control block
+	GaitPlanner gait;                             // Gait control block
 	FootstepPlanner footstepPlanner;       // Footstep planner control block
-	StatePlanner statePlanner;             // State planner control block
+	BodyPlanner bodyPlanner;             // State planner control block
 	MPCController mpcController;           // MPC Wrapper control block
 	FootTrajectoryGenerator footTrajectoryGenerator; // Foot Trajectory Generator control block
 	WBCController wbcController;      		// Whole body control Wrapper control block

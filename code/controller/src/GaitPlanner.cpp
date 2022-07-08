@@ -1,6 +1,6 @@
-#include "Gait.hpp"
+#include "GaitPlanner.hpp"
 
-Gait::Gait() :
+GaitPlanner::GaitPlanner() :
 		pastGait_(),
 		currentGait_(),
 		desiredGait_(),
@@ -13,7 +13,7 @@ Gait::Gait() :
 {
 }
 
-void Gait::initialize(Params &params_in)
+void GaitPlanner::initialize(Params &params_in)
 {
 	params = &params_in;
 
@@ -27,7 +27,7 @@ void Gait::initialize(Params &params_in)
 	currentGait_ = desiredGait_;
 }
 
-void Gait::setGait(int i,int n_sequences, MatrixN4 & gait, std::string sequence) {
+void GaitPlanner::setGait(int i,int n_sequences, MatrixN4 & gait, std::string sequence) {
 	int repetition = params->get_N_steps() / (params->N_periods * n_sequences);
 
 	RowVector4 gaitSequence;
@@ -38,7 +38,7 @@ void Gait::setGait(int i,int n_sequences, MatrixN4 & gait, std::string sequence)
 	}
 }
 
-void Gait::createWalk()
+void GaitPlanner::createWalk()
 {
 	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 	setGait(0,4,desiredGait_, "0111");
@@ -47,7 +47,7 @@ void Gait::createWalk()
 	setGait(3,4,desiredGait_, "1110");
 }
 
-void Gait::createTrot()
+void GaitPlanner::createTrot()
 {
 	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
@@ -56,7 +56,7 @@ void Gait::createTrot()
 	}
 }
 
-void Gait::createPacing()
+void GaitPlanner::createPacing()
 {
 	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
@@ -65,7 +65,7 @@ void Gait::createPacing()
 	}
 }
 
-void Gait::createBounding()
+void GaitPlanner::createBounding()
 {
 	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
@@ -74,7 +74,7 @@ void Gait::createBounding()
 	}
 }
 
-void Gait::createWalkingTrot()
+void GaitPlanner::createWalkingTrot()
 {
 	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
@@ -85,7 +85,7 @@ void Gait::createWalkingTrot()
 	}
 }
 
-void Gait::createCustomGallop()
+void GaitPlanner::createCustomGallop()
 {
 	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
@@ -96,7 +96,7 @@ void Gait::createCustomGallop()
 	}
 }
 
-void Gait::createStatic()
+void GaitPlanner::createStatic()
 {
 	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
@@ -104,7 +104,7 @@ void Gait::createStatic()
 	}
 }
 
-double Gait::getPhaseDuration(int gaitPhaseIdx, int legNo, FootPhase footPhase)
+double GaitPlanner::getPhaseDuration(int gaitPhaseIdx, int legNo, FootPhase footPhase)
 {
 	double t_phase = 1;
 	int a = gaitPhaseIdx;
@@ -149,7 +149,7 @@ double Gait::getPhaseDuration(int gaitPhaseIdx, int legNo, FootPhase footPhase)
 	// We suppose that we found the beginning of the swing/stance phase either in currentGait_ or pastGait_
 	return t_phase * params->dt_mpc;  // Take into account time step value
 }
-double Gait::getElapsedTime(int i, int j)
+double GaitPlanner::getElapsedTime(int i, int j)
 {
 	double state = currentGait_(i, j);
 	double nPhase = 0;
@@ -174,12 +174,12 @@ double Gait::getElapsedTime(int i, int j)
 	return nPhase * params->dt_mpc;
 }
 
-double Gait::getPhaseDuration(int i, int j)
+double GaitPlanner::getPhaseDuration(int i, int j)
 {
 	return getElapsedTime(i, j) + getRemainingTime(i, j);
 }
 
-double Gait::getRemainingTime(int i, int j)
+double GaitPlanner::getRemainingTime(int i, int j)
 {
 	double state = currentGait_(i, j);
 	double nPhase = 1;
@@ -204,7 +204,7 @@ double Gait::getRemainingTime(int i, int j)
 	return nPhase * params->dt_mpc;
 }
 
-bool Gait::update(bool initiateNewGait, int targetGaitType)
+bool GaitPlanner::update(bool initiateNewGait, int targetGaitType)
 {
 	if ((targetGaitType != GaitType::NoGait)
 			&& (currentGaitType_ != targetGaitType))
@@ -221,7 +221,7 @@ bool Gait::update(bool initiateNewGait, int targetGaitType)
 	return false;
 }
 
-bool Gait::changeGait(int targetGait)
+bool GaitPlanner::changeGait(int targetGait)
 {
 	is_static_ = false;
 	if (targetGait == GaitType::Pacing)
@@ -289,7 +289,7 @@ bool Gait::changeGait(int targetGait)
 	return is_static_;
 }
 
-void Gait::rollGait()
+void GaitPlanner::rollGait()
 {
 	// Transfer current gait into past gait
 	// shift pastGait from [0..9] to [1..10]

@@ -99,7 +99,7 @@ def EulerToQuaternion(roll_pitch_yaw):
     qy = cr * sp * cy + sr * cp * sy
     qz = cr * cp * sy - sr * sp * cy
     qw = cr * cp * cy + sr * sp * sy
-    return [qx, qy, qz, qw]
+    return np.array([qx, qy, qz, qw])
 
 
 def EulerToRotation(roll, pitch, yaw):
