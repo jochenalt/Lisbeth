@@ -4,12 +4,13 @@
 #include <ukf.h>
 #include <Magnetometer.h>
 
-void IMUManager::setup(uint16_t targetFreq, IMUConfigDataType& config) {
+void IMUManager::setup(HardwareSerial* sn,uint16_t targetFreq, IMUConfigDataType& config) {
   // IMU's power is controlled by this PIN
   // Initially the IMU is down, start happens in main loop
   pinMode(PIN_IMU_ENABLE, OUTPUT);
   digitalWrite(PIN_IMU_ENABLE, HIGH); // turn off IMU
 
+  serial = sn;
   sampleFreq  = targetFreq; 
 
   // initialise unsenced kalman filter
@@ -22,10 +23,6 @@ void IMUManager::setup(uint16_t targetFreq, IMUConfigDataType& config) {
 
   // set the calibration data (hard iron and north)
   setCalibrationData(config);
-}
-
-void IMUManager::teardown() {
-  device.teardown();
 }
 
 void IMUManager::loop() {
@@ -191,7 +188,7 @@ void IMUManager::updatePowerState() {
         case IMU_POWERED_UP: {
             slowWatchdog();
 
-            bool ok = device.setup(&Serial7, sampleFreq);
+            bool ok = device.setup(serial, sampleFreq);
             filter.reset();
 
             fastWatchdog();
@@ -210,7 +207,6 @@ void IMUManager::updatePowerState() {
           case IMU_SETUP:
             device.loop();
             if (cmdPowerDown) {
-              teardown();
               digitalWrite(PIN_IMU_ENABLE, HIGH); // turn off IMU
               println("IMU:cool down");
               imuState = IMU_COOLING_DOWN;

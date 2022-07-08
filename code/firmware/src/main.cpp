@@ -134,7 +134,7 @@ void setup() {
 
   // initialise IMU Manager 
 	Serial.println("IMU: setup");
-  imuMgr.setup(1000,config.imu);
+  imuMgr.setup(&Serial7, 1000,config.imu);
 
   // the motor MOSFETs are controlled by this PIN
   pinMode(PIN_MOTOR_POWER, OUTPUT);

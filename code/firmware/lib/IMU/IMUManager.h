@@ -49,8 +49,7 @@ class IMUManager {
 
     IMUManager() {};
 
-    void setup(uint16_t sampleFreq, IMUConfigDataType& config);
-    void teardown();
+    void setup(HardwareSerial* serial,uint16_t sampleFreq, IMUConfigDataType& config);
 
     // to be called as often as possible, fetches sensor data and filters it
     void loop();
@@ -105,7 +104,7 @@ class IMUManager {
     MicrostrainIMU  device;                 // communication interface to any Parker Lord Microstrain IMU
     Magnetometer mag;                       // communication to LIS3MDL magnetometer
     UnscentedKalmanFilter filter;           // magic filter
-
+    HardwareSerial* serial = NULL;
 };
 
 #endif
