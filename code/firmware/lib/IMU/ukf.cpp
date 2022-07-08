@@ -164,40 +164,21 @@ void UnscentedKalmanFilter::reset()
 
 void UnscentedKalmanFilter::compute(double accX, double accY, double accZ, 
                                     double gyroX, double gyroY, double gyroZ,
-#ifdef WITH_MAG       
                                     double magX, double magY, double magZ,
-#endif                                
                                     double &x, double &y, double &z, double &w) {
     Matrix Y{SS_Z_LEN, 1};          
 
-    // set accel data in [g]
-    Y[0][0] = accX;
-    Y[1][0] = accY;
-    Y[2][0] = accZ;
+    // set normalised accel data in [g]
+    double _normG = sqrt((accX * accX) + (accY * accY) + (accZ * accZ));
+    Y[0][0] = accX / _normG;
+    Y[1][0] = accY / _normG;
+    Y[2][0] = accZ / _normG;
 
-    // normalise
-    double _normG = sqrt((Y[0][0] * Y[0][0]) + (Y[1][0] * Y[1][0]) + (Y[2][0] * Y[2][0]));
-    Y[0][0] = Y[0][0] / _normG;
-    Y[1][0] = Y[1][0] / _normG;
-    Y[2][0] = Y[2][0] / _normG;
-
-#ifdef WITH_MAG
     /* Output 4:6 = magnetometer */
-    Y[3][0] = magX; 
-    Y[4][0] = magY; 
-    Y[5][0] = magZ;
-
-    /* Compensating Hard-Iron Bias for magnetometer */
-    Y[3][0] = Y[3][0];
-    Y[4][0] = Y[4][0];
-    Y[5][0] = Y[5][0];
-
-    double _normM = sqrt(Y[3][0] * Y[3][0]) + (Y[4][0] * Y[4][0]) + (Y[5][0] * Y[5][0]);
-    Y[3][0] = Y[3][0] / _normM;
-    Y[4][0] = Y[4][0] / _normM;
-    Y[5][0] = Y[5][0] / _normM;
-#endif
-
+    double _normM = sqrt(magX * magX) + (magY * magY) + (magZ * magZ);
+    Y[3][0] = magX / _normM;
+    Y[4][0] = magY / _normM;
+    Y[5][0] = magZ / _normM;
 
     // set gyro data in [rad/s]
     Matrix U{SS_U_LEN, 1};  
@@ -394,7 +375,6 @@ void UnscentedKalmanFilter::updateNonlinearY(Matrix &Y, Matrix &X, Matrix &U)
     Y[1][0] = (2*q2*q3 +2*q0*q1) * IMU_ACC_Z0;
     Y[2][0] = (+(q0_2) -(q1_2) -(q2_2) +(q3_2)) * IMU_ACC_Z0;
 
-#ifdef WITH_MAG
     Y[3][0] = (+(q0_2)+(q1_2)-(q2_2)-(q3_2))    * north_vector[0][0]
               +2*(q1*q2+q0*q3)                  * north_vector[1][0]
               +2*(q1*q3-q0*q2)                  * north_vector[2][0];
@@ -406,5 +386,4 @@ void UnscentedKalmanFilter::updateNonlinearY(Matrix &Y, Matrix &X, Matrix &U)
     Y[5][0] =  2*(q1*q3+q0*q2)                  * north_vector[0][0]
               +2*(q2*q3-q0*q1)                  * north_vector[1][0]
               +(+(q0_2)-(q1_2)-(q2_2)+(q3_2))   * north_vector[2][0];
-#endif
 }

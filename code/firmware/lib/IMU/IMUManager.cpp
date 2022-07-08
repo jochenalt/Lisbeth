@@ -24,16 +24,18 @@ void IMUManager::setup(uint16_t targetFreq, IMUConfigDataType& config) {
   setCalibrationData(config);
 }
 
-void IMUManager::loop() {
+void IMUManager::teardown() {
+  device.teardown();
+}
 
-  // loop the magnetometer (it runs slower than the IMU, so new_mag_value indicates when a new data point is available)
-  bool new_mag_value = mag.loop();
+void IMUManager::loop() {
+  mag.loop();
 
   // take care that imu is correctly powered up or powered down
   updatePowerState();
 
-        // in the magnetometer calibration process we need 
-        // the acceleration data from the IMU to get the north
+  // in the magnetometer calibration process we need 
+  // the acceleration data from the IMU to get the north
 
   // if data streaming is on, pump accel and gyro into EKF
   if (isUpAndRunning()) {
@@ -50,21 +52,27 @@ void IMUManager::loop() {
         double r = sensorData.gyro_z;
 
         // read last data point from magnetometer (might be the same like last time, since magnetometer runs slower)
+        // loop the magnetometer (it runs slower than the IMU, so new_mag_value indicates when a new data point is available)
+        mag.loop();
+        // double normG = sqrt((Bx * Bx) + (By * By) + (Bz * Bz))/10.0;
+        // Bx = Bx / normG;
+        // By = By / normG;
+        // Bz = Bz / normG;
+
+        // read last results, regardless if it is new or not
         double Bx, By, Bz;
         mag.read(Bx, By, Bz);
 
         // in the magnetometer calibration process we need 
         // the acceleration data from the IMU to get the north
-        if (new_mag_value) {
-          mag.calibrateLoop(Ax, Ay, Az, Bx, By, Bz);
+        if (mag.isDataAvailable()) {
+          mag.calibrateLoop(Ax, Ay, Az);
         }
 
         // run unscented kalman filter
         double res_x,res_y,res_z,res_w;
         filter.compute(Ax,Ay,Az,p,q,r, 
-#ifdef WITH_MAG       
                        Bx,By,Bz,
-#endif                        
                        res_x,res_y, res_z,res_w);
 
         // convert into RPY
@@ -202,7 +210,8 @@ void IMUManager::updatePowerState() {
           case IMU_SETUP:
             device.loop();
             if (cmdPowerDown) {
-              digitalWrite(PIN_IMU_ENABLE, HIGH);
+              teardown();
+              digitalWrite(PIN_IMU_ENABLE, HIGH); // turn off IMU
               println("IMU:cool down");
               imuState = IMU_COOLING_DOWN;
               lastPhaseStart_ms = millis();

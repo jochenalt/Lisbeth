@@ -87,10 +87,13 @@ class CommandData {
 
 class MicrostrainIMU {
     public:
-        MicrostrainIMU(): is_initialised(false) ,
-                          baud_rate(460800) {}; 
+        MicrostrainIMU(): 
+          is_initialised(false) ,
+          baud_rate(460800) {}; 
         virtual ~MicrostrainIMU() { };
         bool setup(HardwareSerial* serial, uint16_t sampleFreq);
+        void teardown();
+
         bool isInitialised() { return is_initialised; };
         void loop();
 

@@ -567,12 +567,19 @@ bool MicrostrainIMU::setup(HardwareSerial* sn, uint16_t sampleFreq) {
   return true;
 }
 
+void MicrostrainIMU::teardown() {
+  is_initialised = false;
+  serial->end();
+  res.buffer_res_idx = 0;
+}
+
 bool isModified(IMUSensorData &imu_data) {
   return (imu_data.acc_modified || imu_data.gyro_modified || imu_data.delta_theta_modified || imu_data.quat_modified || imu_data.rpy_modified);
 }
 
 void MicrostrainIMU::loop() {
     if (!is_initialised) {
+      Serial.print("X");
       return;
     }
 

@@ -4,7 +4,6 @@
 static volatile bool newDataIsAvailable = false;
 void newDataAvailableInterrupt() {
   newDataIsAvailable = true;
-
 }
 
 bool Magnetometer::setup(dataRate_t freq, range_t dataRange) {
@@ -63,18 +62,21 @@ bool Magnetometer::loop() {
         if (dataRequested) {
             if (device.isDataAvailable()) {
                 dataRequested = false;
-                device.readResponse(mag_x,mag_y,mag_z);
 
-                // save  raw data from sensor in [uT]
-                double tmp_x = mag_x;
-                double tmp_y = mag_y;
-                double tmp_z = mag_z;
+                // save  raw data from sensor in [uT] and in sensor's frame
+                double sensor_x, sensor_y, sensor_z;
+                device.readResponse(sensor_x,sensor_y,sensor_z);
 
                 // Align the coordinate system of the magnetometer with the one from the IMU
                 // z is going up
-                mag_x =  -tmp_y    - hard_iron_base[0][0];
-                mag_y =  tmp_x     - hard_iron_base[1][0];
-                mag_z =  -tmp_z     - hard_iron_base[2][0];
+                raw_mag_x =  -sensor_y;
+                raw_mag_y =   sensor_x;
+                raw_mag_z =   sensor_z;
+
+                // compensate the hard iron
+                mag_x = raw_mag_x - hard_iron_base[0][0];
+                mag_y = raw_mag_y - hard_iron_base[1][0];
+                mag_z = raw_mag_z - hard_iron_base[2][0];
 
                 dataIsAvailable = true;
                 return true;
@@ -104,13 +106,10 @@ void Magnetometer::startNorthCalibration() {
 
 }
 
-void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, double mag_x, double mag_y, double mag_z) {
+void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z) {
 
     if (state == CALIBRATE_HARD_IRON) {
-        // remove the existing hard iron correction to get the raw sensor data
-        mag_x += hard_iron_base[0][0];
-        mag_y += hard_iron_base[1][0];
-        mag_z += hard_iron_base[2][0];
+
 
         // use recursive least squares filter to find the best hard iron compensation
         RLS_in[0][0] =  mag_x;
@@ -127,7 +126,7 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, doubl
         Matrix P_check{RLS_P.getDiagonalEntries()};
         double error = (P_check.Transpose()*P_check)[0][0];
 
-        const float max_error = 1e-1;
+        const float max_error = 1e-3;
         if (error < max_error) {
             /* The data collection is finished, go back to state UKF running */
             state = PROCESSING;
@@ -146,6 +145,7 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, doubl
         if (printTimer.isDue()) {
                 println( "Hard iron calibration %.3f %.3f %.3f (P = %f > %f)", RLS_theta[0][0] / 2.0, RLS_theta[1][0] / 2.0, RLS_theta[2][0] / 2.0, error, max_error);
         }
+
         if (millis() - hardIronCalibStart_ms > 10000) {
             /* We take the data too long but the error still large, terminate without updating the hard-iron bias */
             state = PROCESSING;
@@ -157,21 +157,21 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z, doubl
         float Ax = acc_x;
         float Ay = acc_y;
         float Az = acc_z;
-        float Bx = mag_x;
-        float By = mag_y;
-        float Bz = mag_z;
+        float Bx = mag_x - hard_iron_base[0][0];
+        float By = mag_y - hard_iron_base[1][0];
+        float Bz = mag_z - hard_iron_base[2][0];
                 
         /* Normalizing the acceleration vector & projecting the gravitational vector (gravity is negative acceleration) */
-        double _normG = sqrt((Ax * Ax) + (Ay * Ay) + (Az * Az));
-        Ax = Ax / _normG;
-        Ay = Ay / _normG;
-        Az = Az / _normG;
+        double normG = sqrt((Ax * Ax) + (Ay * Ay) + (Az * Az));
+        Ax = Ax / normG;
+        Ay = Ay / normG;
+        Az = Az / normG;
                 
         /* Normalizing the magnetic vector */
-        _normG = sqrt((Bx * Bx) + (By * By) + (Bz * Bz));
-        Bx = Bx / _normG;
-        By = By / _normG;
-        Bz = Bz / _normG;
+        normG = sqrt((Bx * Bx) + (By * By) + (Bz * Bz));
+        Bx = Bx / normG;
+        By = By / normG;
+        Bz = Bz / normG;
         
         /* Projecting the magnetic vector into plane orthogonal to the gravitational vector */
         // double roll = asin(Ay);

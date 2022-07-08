@@ -47,7 +47,7 @@ class Magnetometer {
 
         // loop this during the calibration process, and merge with acceleration data from IMU
         // Acceleration data is used to compute the angle between earth magnetic field and gravity
-        void calibrateLoop(double accX, double accY, double accZ, double max_x, double mag_y, double mag_z);
+        void calibrateLoop(double accX, double accY, double acc);
 
         // returns the result of the hard iron calibration
         Matrix& getHardIronBase() { return hard_iron_base; };
@@ -63,6 +63,9 @@ class Magnetometer {
         uint32_t dataRequestTime_us = 0;
         bool dataRequested = false;
         double mag_x,mag_y,mag_z = 0;
+        // last values without hard iron compensation
+        double raw_mag_x,raw_mag_y,raw_mag_z = 0;
+
         bool dataIsAvailable = false;
         bool initialised = false;
         Measurement dataStreamClock;

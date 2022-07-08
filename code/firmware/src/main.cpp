@@ -210,6 +210,10 @@ void printHelp() {
     println("   avr. send time q   : %dus ", odrives.loopSendAvrTime_us);
   }
 
+  println("IMU configuration:");
+  config.imu.print();
+
+
   println("\r\nUsage:");
   println("   h       - help");
   println("   d<no    - set debug level 0..2");
@@ -261,6 +265,10 @@ void executeCommand() {
         } else 
           addCmd(inputChar);
 				break;
+      case 's': {
+          setup();
+          break;
+      }
       case 'i': {
           // setup IMU
           imuMgr.powerUp();

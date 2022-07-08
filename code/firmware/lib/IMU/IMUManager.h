@@ -50,6 +50,7 @@ class IMUManager {
     IMUManager() {};
 
     void setup(uint16_t sampleFreq, IMUConfigDataType& config);
+    void teardown();
 
     // to be called as often as possible, fetches sensor data and filters it
     void loop();
