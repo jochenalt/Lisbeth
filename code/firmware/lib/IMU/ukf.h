@@ -120,12 +120,12 @@ public:
 
     // do the filtering. Input is Gyro [rad/s] and Accel [g], output is a quat 
     void compute(double accX, double accY, double accZ, 
-                 double gyroX, double gyroY, double gyroZ,
-#ifdef WITH_MAG       
+                 double gyroX, double gyroY, double gyroZ,   
                  double magX, double magY, double magZ,
-#endif                                
-
                  double &x, double &y, double &z, double &w);
+
+    // return covariance 
+    Matrix getY() { return Y_Est; }
 
 private:
     // intialise data structures of unscented Kalman filter
@@ -137,8 +137,6 @@ private:
     // return the estimated result of the filter
     Matrix getX() { return X_Est; }
 
-    // return covariance 
-    Matrix getY() { return Y_Est; }
 
     // return covariance 
     Matrix getP() { return P; }

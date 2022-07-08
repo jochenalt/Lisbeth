@@ -51,10 +51,6 @@ void IMUManager::loop() {
         // read last data point from magnetometer (might be the same like last time, since magnetometer runs slower)
         // loop the magnetometer (it runs slower than the IMU, so new_mag_value indicates when a new data point is available)
         mag.loop();
-        // double normG = sqrt((Bx * Bx) + (By * By) + (Bz * Bz))/10.0;
-        // Bx = Bx / normG;
-        // By = By / normG;
-        // Bz = Bz / normG;
 
         // read last results, regardless if it is new or not
         double Bx, By, Bz;
@@ -94,9 +90,9 @@ void IMUManager::loop() {
         double gravity[3] = {0,0,1};
         double rotated_gravity[3] = {0,0,0};
         rotate_by_quat(gravity, pose_quat, rotated_gravity);
-        lin_acc[0] -= rotated_gravity[0];
-        lin_acc[1] -= rotated_gravity[1];
-        lin_acc[2] -= rotated_gravity[2];
+        lin_acc[0] = filter.getY()[0][0] - rotated_gravity[0];
+        lin_acc[1] = filter.getY()[1][0] - rotated_gravity[1];
+        lin_acc[2] = filter.getY()[2][0] - rotated_gravity[2];
 
         quaternion2RPY(res_x, res_y,res_z,res_w, RPY);
 
@@ -111,6 +107,7 @@ void IMUManager::loop() {
           if (imuTimer.isDue()) {
             float freq = getAvrFrequency();
             device.printData();
+            println("   linAcc: %.1f / %.1f / %.1f",lin_acc[0], lin_acc[1], lin_acc[2]);
             println("   avr freq : %.2f Hz",freq);
             println("   RPY : %.1f / %.1f / %.1f",RPY_deg[0], RPY_deg[1], RPY_deg[2]);
             println("   Quat : (%.3f, %.4f, %.3f, %.3f)",pose_quat[0],pose_quat[1], pose_quat[2], pose_quat[3]);
