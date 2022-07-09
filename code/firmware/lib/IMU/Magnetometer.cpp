@@ -126,7 +126,7 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z) {
         Matrix P_check{RLS_P.getDiagonalEntries()};
         double error = (P_check.Transpose()*P_check)[0][0];
 
-        const float max_error = 1e-3;
+        const float max_error = 5e-4;
         if (error < max_error) {
             /* The data collection is finished, go back to state UKF running */
             state = PROCESSING;

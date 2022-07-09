@@ -136,6 +136,9 @@ void setup() {
 	Serial.println("IMU: setup");
   imuMgr.setup(&Serial7, 1000,config.imu);
 
+  // setup IMU for automated start (which will happen during the loop)
+  imuMgr.powerUp();
+
   // the motor MOSFETs are controlled by this PIN
   pinMode(PIN_MOTOR_POWER, OUTPUT);
   digitalWrite(PIN_MOTOR_POWER, LOW);
@@ -147,9 +150,6 @@ void setup() {
 
   // set default blink pattern
   blinker.set(DefaultBlinkPattern,sizeof(DefaultBlinkPattern));		// assign pattern
-
-  if (error == NO_ERROR) {
-   	println("OK");
 
    	// reset the board when wdt_reset() is not called every 100ms 
     fastWatchdog();
