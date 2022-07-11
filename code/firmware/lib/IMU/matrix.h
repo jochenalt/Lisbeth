@@ -437,7 +437,6 @@ inline const Matrix::Proxy Matrix::operator [] (const int16_t _row) const {
 
 
 /* -------------------------------------- Matrix checking function declaration -------------------------------------- */
-/* -------------------------------------- Matrix checking function declaration -------------------------------------- */
 
 inline bool Matrix::isValid(void) {
     /* Check whether the matrix is valid or not */

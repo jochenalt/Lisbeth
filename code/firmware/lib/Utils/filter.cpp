@@ -37,7 +37,7 @@
  * SUCH DAMAGE.
  */
 
-#include "filt.h"
+#include "filter.h"
 #define ECODE(x)          \
 	{                     \
 		m_error_flag = x; \

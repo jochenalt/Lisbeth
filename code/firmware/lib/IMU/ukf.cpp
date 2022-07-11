@@ -78,12 +78,12 @@
 #include "ukf.h"
 
 #define P_INIT       (1.)
-#define Rv_INIT      (1e-7)
+#define Rv_INIT      (0.0000001)
 
 // from 3DM-CV5-x datasheet: noise of acceleromter is 100ug/sqrt(frequency) = 
-#define Rn_INIT_ACC  (0.00003)
+#define Rn_INIT_ACC  (0.00000316)
 // from LIS3DM datasheet: noise in ultra performance mode is 3.5 milli gauss = 3.5 = 0.35 uT
-#define Rn_INIT_MAG  (0.35)
+#define Rn_INIT_MAG  (35)
 #define IMU_ACC_Z0   (1)
 
 // setup the filter with the targetfrequency. The IMU is configured to deliver a datapoint in that
@@ -112,14 +112,14 @@ void UnscentedKalmanFilter::setup(double targetFreq) {
      * 0 or 3−L (see [45] for details), and β is an extra degree of freedom scalar parameter used to incorporate any extra 
      * prior knowledge of the distribution of x (for Gaussian distributions, β = 2 is optimal).
      */
-    double _alpha   = 1e-2;
-    double _k       = 0.0;
-    double _beta    = 2.0;
+    double alpha   = 1e-2;
+    double kappa   = 0.0;
+    double beta    = 2.0;
 
       /* lambda = (alpha^2)*(N+kappa)-N,         
          gamma = sqrt(N+alpha)            ...{UKF_1} */
-    double _lambda  = (_alpha*_alpha)*(SS_X_LEN+_k) - SS_X_LEN;
-    Gamma = sqrt((SS_X_LEN + _lambda));
+    double lambda  = (alpha*alpha)*(SS_X_LEN+kappa) - SS_X_LEN;
+    Gamma = sqrt((SS_X_LEN + lambda));
 
     P.setZero();
     Rv.setZero();
@@ -130,20 +130,19 @@ void UnscentedKalmanFilter::setup(double targetFreq) {
     P.setDiag(Pinit);
     Rv.setDiag(Qinit);
     Rn.setDiag(Rinit);
- #ifdef USE_MAG   
     Rn[3][3] = Rn_INIT_MAG;
     Rn[4][4] = Rn_INIT_MAG;
     Rn[5][5] = Rn_INIT_MAG;
-#endif
+
     /* Wm = [lambda/(N+lambda)         1/(2(N+lambda)) ... 1/(2(N+lambda))]     ...{UKF_2} */
-    Wm[0][0] = _lambda/(SS_X_LEN + _lambda);
+    Wm[0][0] = lambda/(SS_X_LEN + lambda);
     for (int32_t _i = 1; _i < Wm.getCols(); _i++) {
-        Wm[0][_i] = 0.5/(SS_X_LEN + _lambda);
+        Wm[0][_i] = 0.5/(SS_X_LEN + lambda);
     }
 
    /* Wc = [Wm(0)+(1-alpha(^2)+beta)  1/(2(N+lambda)) ... 1/(2(N+lambda))]     ...{UKF_3} */
     Wc = Wm;
-    Wc[0][0] = Wc[0][0] + (1.0-(_alpha*_alpha)+_beta);
+    Wc[0][0] = Wc[0][0] + (1.0-(alpha*alpha)+beta);
 
 }
 
@@ -158,6 +157,10 @@ void UnscentedKalmanFilter::reset()
     P.setDiag(Pinit);
     Rv.setDiag(Qinit);
     Rn.setDiag(Rinit);
+    Rn[3][3] = Rn_INIT_MAG;
+    Rn[4][4] = Rn_INIT_MAG;
+    Rn[5][5] = Rn_INIT_MAG;
+
     X_Est.setZero();
     X_Est[0][0] = 1.0;          // Quaternion = [1 0 0 0]
 }
@@ -185,7 +188,6 @@ void UnscentedKalmanFilter::compute(double accX, double accY, double accZ,
     U[0][0] = gyroX;
     U[1][0] = gyroY;
     U[2][0] = gyroZ;
-
 
     // Update Kalman 
     updateFilter(Y, U);
@@ -243,7 +245,6 @@ void UnscentedKalmanFilter::updateFilter(Matrix &Y, Matrix &U)
         Serial.println("System error");
         /* System error, reset EKF */ 
         reset();
-
     }
 }
 
@@ -279,41 +280,41 @@ void UnscentedKalmanFilter::unscentedTransform(Matrix &Out, Matrix &OutSigma, Ma
     /* XSigma(k) = f(XSigma(k-1), u(k-1))                                  ...{UKF_5a}  */
     /* x(k|k-1) = sum(Wm(i) * XSigma(k)(i))    ; i = 1 ... (2N+1)          ...{UKF_6a}  */
     Out.setZero();
-    for (int32_t _j = 0; _j < inpSigma.getCols(); _j++) {
+    for (int32_t j = 0; j < inpSigma.getCols(); j++) {
         /* Transformasi non-linear per kolom */
         Matrix _AuxSigma1(inpSigma.getRows(), 1);
-        Matrix _AuxSigma2(OutSigma.getRows(), 1);
+        Matrix AuxSigma2(OutSigma.getRows(), 1);
         for (int32_t _i = 0; _i < inpSigma.getRows(); _i++) {
-            _AuxSigma1[_i][0] = inpSigma[_i][_j];
+            _AuxSigma1[_i][0] = inpSigma[_i][j];
         }
-        (this->*(funcNonLinear))(_AuxSigma2, _AuxSigma1, inpVector);      /* Welp... */
+        (this->*(funcNonLinear))(AuxSigma2, _AuxSigma1, inpVector);      /* Welp... */
 
         /* Combine the transformed vector to construct sigma-points output matrix (OutSigma) */
-        OutSigma = OutSigma.insertVector(_AuxSigma2, _j);
+        OutSigma = OutSigma.insertVector(AuxSigma2, j);
 
         /* Calculate x(k|k-1) as weighted mean of OutSigma */
-        _AuxSigma2 = _AuxSigma2 * Wm[0][_j];
-        Out = Out + _AuxSigma2;
+        AuxSigma2 = AuxSigma2 * Wm[0][j];
+        Out = Out + AuxSigma2;
     }
 
 
     /* DX = XSigma(k)(i) - Xs(k)   ; Xs(k) = [x(k|k-1) ... x(k|k-1)]
      *                             ; Xs(k) = Nx(2N+1)                      ...{UKF_7a}  */
-    Matrix _AuxSigma1(OutSigma.getRows(), OutSigma.getCols());
-    for (int32_t _j = 0; _j < OutSigma.getCols(); _j++) {
-        _AuxSigma1 = _AuxSigma1.insertVector(Out, _j);
+    Matrix AuxSigma1(OutSigma.getRows(), OutSigma.getCols());
+    for (int32_t j = 0; j < OutSigma.getCols(); j++) {
+        AuxSigma1 = AuxSigma1.insertVector(Out, j);
     }
-    DSig = OutSigma - _AuxSigma1;
+    DSig = OutSigma - AuxSigma1;
 
     /* P(k|k-1) = sum(Wc(i)*DX*DX') + Rv       ; i = 1 ... (2N+1)          ...{UKF_8a}  */
-    _AuxSigma1 = DSig;
-    for (int32_t _i = 0; _i < DSig.getRows(); _i++) {
+    AuxSigma1 = DSig;
+    for (int32_t i = 0; i < DSig.getRows(); i++) {
         for (int32_t _j = 0; _j < DSig.getCols(); _j++) {
-            _AuxSigma1[_i][_j] *= Wc[0][_j];
+            AuxSigma1[i][_j] *= Wc[0][_j];
         }
     }
 
-    P = (_AuxSigma1 * (DSig.Transpose())) + covNoise;
+    P = (AuxSigma1 * (DSig.Transpose())) + covNoise;
 }
 
 void UnscentedKalmanFilter::updateNonlinearX(Matrix &X_Next, Matrix &X, Matrix &U)

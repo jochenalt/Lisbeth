@@ -93,13 +93,8 @@
 #define SS_X_LEN    (4) // State: Quaternion 
 #define SS_U_LEN    (3) // Input:  Gyro
 
-#ifdef WITH_MAG   
-    #define SS_Z_LEN    (6) // Output: Accel & Mag
-    #define MATRIX_MAXIMUM_SIZE     (SS_Z_LEN*2+1) // needs to be set before including matrix.h
-#else
-    #define SS_Z_LEN    (3) // Output: Accel
-    #define MATRIX_MAXIMUM_SIZE     (SS_X_LEN*2+1) // needs to be set before including matrix.h
-#endif
+#define SS_Z_LEN    (6) // Output: Accel & Mag
+#define MATRIX_MAXIMUM_SIZE     (SS_Z_LEN*2+1) // needs to be set before including matrix.h
 
 #include "matrix.h"
 
@@ -136,7 +131,6 @@ private:
 
     // return the estimated result of the filter
     Matrix getX() { return X_Est; }
-
 
     // return covariance 
     Matrix getP() { return P; }
@@ -177,13 +171,14 @@ private:
     Matrix Gain{SS_X_LEN, SS_Z_LEN};                    // Kalman Gain
     double Gamma;
 
-    double Pinit = 1;
-    double Qinit = 1e-7;
-    double Rinit = 0.0015;
+    double Pinit = 0;
+    double Qinit = 0;                                
+    double Rinit = 0;
 
-    double dT = 0;
+    double dT = 0;                                      // [s] 1/target frequency                      
 
-    /* Magnetic vector constant (align with local magnetic vector) */
+    // Magnetic vector constant (align with local magnetic vector) 
+    // initially the x-axis points to north
     double  north_vector_preset[3] = {cos(0), sin(0), 0.000000};
     Matrix north_vector{3, 1, north_vector_preset};
 };
