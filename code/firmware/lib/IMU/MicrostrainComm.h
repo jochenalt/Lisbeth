@@ -60,9 +60,6 @@ class CommandData {
     }
     ~CommandData() {};
   String name;
-  // buffer for constructing a command
-  uint8_t buffer_cmd [BUFFER_SIZE];
-  uint8_t buffer_cmd_len ;
 
   uint16_t max_timestamp_ms = millis() + 100;
 
@@ -116,6 +113,10 @@ class MicrostrainIMU {
         bool sendSetHeading();
         bool sendResetDevice();
         bool sendEnableDataStream(bool ok);
+        bool sendChangeBaudRate(uint32_t baud);
+
+        void createCommand1(uint8_t descriptor_set,uint8_t field_descriptor_byte, uint8_t field_length, uint8_t field_data[]);
+        void createCommand2(uint8_t descriptor_set,uint8_t field_descriptor_byte1, uint8_t field_length1, uint8_t field_data1[],uint8_t field_descriptor_byte2, uint8_t field_length2, uint8_t field_data2[]);
 
         // log last measurement
         void printData();
@@ -124,10 +125,12 @@ class MicrostrainIMU {
         void clearBuffer();
         IMUSensorData imu_data;                           // struct of data returned by IMU
         CommandData res;
+
         bool is_initialised;
         uint32_t baud_rate;
         uint16_t targetFreq = 100;
         Measurement dataStreamClock;
+        uint32_t last_data_package = 0;
 }; 
 
 

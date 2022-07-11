@@ -7,6 +7,7 @@
 void IMUManager::setup(HardwareSerial* sn,uint16_t targetFreq, IMUConfigDataType& config) {
   // IMU's power is controlled by this PIN
   // Initially the IMU is down, start happens in main loop
+  imuState = IMU_UNPOWERED;
   pinMode(PIN_IMU_ENABLE, OUTPUT);
   digitalWrite(PIN_IMU_ENABLE, HIGH); // turn off IMU
 
@@ -179,6 +180,7 @@ void IMUManager::updatePowerState() {
         case IMU_WARMING_UP:
           if (millis() - lastPhaseStart_ms > warmup_duration_ms) {
             println("IMU:setup");
+            digitalWrite(PIN_IMU_ENABLE, LOW);
             imuState = IMU_POWERED_UP;
           }
           break;
@@ -203,21 +205,35 @@ void IMUManager::updatePowerState() {
           }
           case IMU_SETUP:
             device.loop();
-            if (cmdPowerDown) {
+
+            // the device is very sensitive to EMV, 
+            // if something is not right, communication 
+            // breaks and isInitialized becomes false
+            // in that case restart
+            if (!device.isInitialised()) {
+              println("IMU:recover ");
+              cmdPowerUp = true;
+              imuState = IMU_UNPOWERED;
               digitalWrite(PIN_IMU_ENABLE, HIGH); // turn off IMU
               println("IMU:cool down");
-              imuState = IMU_COOLING_DOWN;
-              lastPhaseStart_ms = millis();
-              cmdPowerDown = false;
-              filterWarmedUp = false;
             } else {
-              if (millis() - lastPhaseStart_ms >warmup_filter_ms)
-                filterWarmedUp = true;
+              if (cmdPowerDown) {
+                digitalWrite(PIN_IMU_ENABLE, HIGH); // turn off IMU
+                println("IMU:cool down");
+                imuState = IMU_COOLING_DOWN;
+                lastPhaseStart_ms = millis();
+                cmdPowerDown = false;
+                filterWarmedUp = false;
+              } else {
+                if (millis() - lastPhaseStart_ms >warmup_filter_ms)
+                  filterWarmedUp = true;
+              }
             }
             break;
           case IMU_COOLING_DOWN:
             if (millis() - lastPhaseStart_ms > warmup_duration_ms) {
               println("IMU:power turned off");
+              digitalWrite(PIN_IMU_ENABLE, HIGH); // turn off IMU
               imuState = IMU_UNPOWERED;
             }
             break;

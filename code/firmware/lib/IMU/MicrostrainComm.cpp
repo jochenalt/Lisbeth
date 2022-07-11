@@ -79,9 +79,6 @@ void printBuffer(String name, uint8_t buffer[], uint8_t buffer_len) {
   Serial.println();
 }
 
-void printCmdBuffer(CommandData& res) {
-  printBuffer(res.name, res.buffer_cmd, res.buffer_cmd_len);
-}
 
 void printResponseBuffer(CommandData& res) {
   printBuffer(res.name, res.buffer_res, res.buffer_res_len);
@@ -119,9 +116,9 @@ void  printErrorCode(uint8_t error_code) {
   }
 }
 
-void createCommand(uint8_t descriptor_set, 
-                   uint8_t field_descriptor_byte, uint8_t field_length, uint8_t field_data[],
-                   uint8_t buffer[], uint8_t &buffer_len) {
+void MicrostrainIMU::createCommand1(uint8_t descriptor_set, 
+                   uint8_t field_descriptor_byte, uint8_t field_length, uint8_t field_data[]) {
+  uint8_t buffer[BUFFER_SIZE];
   buffer[0] = 0x75;
   buffer[1] = 0x65;
   buffer[2] = descriptor_set;
@@ -136,17 +133,18 @@ void createCommand(uint8_t descriptor_set,
   buffer[6+field_length + 0] = checksum >> 8;
   buffer[6+field_length + 1] = checksum & 0xFF;
 
-  buffer_len = 8 + field_length;
+  uint16_t buffer_len = 8 + field_length;
+  assert(buffer_len < BUFFER_SIZE, "createCommand buffer overflow");
 
   for (int i = 0;i<buffer_len;i++)
     serial->write(buffer[i]);
-  // printBuffer("send:", buffer, buffer_len);
 }
 
-void createCommand(uint8_t descriptor_set, 
+void MicrostrainIMU::createCommand2(uint8_t descriptor_set, 
                    uint8_t field_descriptor_byte1, uint8_t field_length1, uint8_t field_data1[],
-                   uint8_t field_descriptor_byte2, uint8_t field_length2, uint8_t field_data2[],
-                   uint8_t buffer[], uint8_t &buffer_len) {
+                   uint8_t field_descriptor_byte2, uint8_t field_length2, uint8_t field_data2[]) {
+  uint8_t buffer[BUFFER_SIZE];
+
   uint8_t idx = 0;
   buffer[idx++] = 0x75;
   buffer[idx++] = 0x65;
@@ -168,7 +166,8 @@ void createCommand(uint8_t descriptor_set,
   buffer[idx++] = checksum >> 8;
   buffer[idx++] = checksum & 0xFF;
 
-  buffer_len = 8 + field_length1 + field_length2;
+  uint16_t buffer_len = 8 + field_length1 + field_length2;
+  assert(buffer_len < BUFFER_SIZE, "createCommand buffer overflow");
   for (int i = 0;i<buffer_len;i++)
     serial->write(buffer[i]);
 
@@ -191,7 +190,7 @@ bool readResponseChar(CommandData &res){
                 res.buffer_res[0] = res.buffer_res[1];
                 res.buffer_res[1] = res.buffer_res[2];
                 res.buffer_res[2] = res.buffer_res[3];
-                res.buffer_res_idx--;
+                res.buffer_res_idx = 3;
               } else {
                 // header is alright, get length and descriptor 
                 res.descriptor_set_byte = res.buffer_res[2];
@@ -204,6 +203,11 @@ bool readResponseChar(CommandData &res){
             }
           } else {
             res.buffer_res[res.buffer_res_idx++] = ch;
+            if ((res.buffer_res_idx > res.buffer_res_len) || (res.buffer_res_idx >= BUFFER_SIZE-1)) {
+                println("response buffer overflow.");
+                // reset current package and forget this package
+                res.buffer_res_idx = 0;
+            }
             if (res.buffer_res_idx == res.buffer_res_len) {
               // we have the complete package now.
               // Serial.print("response complete: ");
@@ -213,7 +217,8 @@ bool readResponseChar(CommandData &res){
               uint16_t chk_asis = (((uint16_t)res.buffer_res[4+res.payload_len]) << 8) + ((uint16_t)res.buffer_res[5+res.payload_len]);
               uint16_t chk_tobe = generateChecksum(res.buffer_res, 4+res.payload_len);
               if (chk_asis != chk_tobe) {
-                println("checksum is %d but should be %d",chk_asis, chk_tobe);
+                println("checksum error: is %d, but should be %d",chk_asis, chk_tobe);
+                res.buffer_res_idx = 0; // reset current package and forget this package
                 return false;
               }
               // Serial.println("checksum ok");
@@ -315,9 +320,8 @@ bool expectAckNackResponse(CommandData res) {
 bool MicrostrainIMU::sendPing() {
   CommandData res("ping");
   uint8_t field[] = { 0x01, 0x00};
-  createCommand(0x01, 
-                0x01, sizeof(field), field,
-                res.buffer_cmd, res.buffer_cmd_len);
+  createCommand1(0x01, 
+                0x01, sizeof(field), field);
   bool ok = expectAckNackResponse(res);
   return ok;
 }
@@ -325,9 +329,8 @@ bool MicrostrainIMU::sendPing() {
 bool MicrostrainIMU::sendSetToIdle() {
   CommandData res("SetToIdle");
   uint8_t field[] = {  };
-  createCommand(0x01, 
-                0x02, sizeof(field), field,
-                res.buffer_cmd, res.buffer_cmd_len);
+  createCommand1(0x01, 
+                0x02, sizeof(field), field);
   
   bool ok = expectAckNackResponse(res);
   
@@ -338,9 +341,8 @@ bool MicrostrainIMU::sendSetToIdle() {
 bool MicrostrainIMU::sendResumeDevice() {
   CommandData res("ResumeDevice");
   uint8_t field[] = { };
-  createCommand(0x01, 
-                0x06, sizeof(field), field,
-                res.buffer_cmd, res.buffer_cmd_len);
+  createCommand1(0x01, 
+                0x06, sizeof(field), field);
   bool ok = expectAckNackResponse(res);
   return ok;
 }
@@ -360,9 +362,8 @@ bool MicrostrainIMU::sendSetIMUMessageFormat() {
 
   };
 
-  createCommand(0x0C, 
-                0x08, sizeof(field), field,
-                res.buffer_cmd, res.buffer_cmd_len);
+  createCommand1(0x0C, 
+                0x08, sizeof(field), field);
   bool ok = expectAckNackResponse(res);
   return ok;
 }
@@ -374,9 +375,8 @@ bool MicrostrainIMU::sendSaveFormat() {
   CommandData res("saveFormat");
   uint8_t field[] = { 0x03,0x00}; //  Save Current IMU Message Format
 
-  createCommand(0x0C, 
-                0x08, sizeof(field), field,
-                res.buffer_cmd, res.buffer_cmd_len);
+  createCommand1(0x0C, 
+                0x08, sizeof(field), field);
   bool ok = expectAckNackResponse(res);
   return ok;
 }
@@ -388,9 +388,8 @@ bool MicrostrainIMU::sendEnableDataStream(bool enable) {
   CommandData res("EnableDataStream");
   uint8_t field[] = { 0x01,0x01, (uint8_t)(enable==true?0x01:0x00)};    // Enable Continuous IMU Message 
 
-  createCommand(0x0C, 
-                0x11, sizeof(field), field,
-                res.buffer_cmd, res.buffer_cmd_len);
+  createCommand1(0x0C, 
+                0x11, sizeof(field), field);
   bool ok = expectAckNackResponse(res);
   return ok;
 }
@@ -398,9 +397,8 @@ bool MicrostrainIMU::sendEnableDataStream(bool enable) {
 bool MicrostrainIMU::sendSetHeading() {
   CommandData res("SetHeading");
   uint8_t field[] = { 0x00,0x00, 0x00, 0x00};
-  createCommand(0x0D, 
-                0x03, sizeof(field), field,
-                res.buffer_cmd, res.buffer_cmd_len);
+  createCommand1(0x0D, 
+                0x03, sizeof(field), field);
   bool ok = expectAckNackResponse(res);
   return ok;
 }
@@ -412,9 +410,8 @@ bool MicrostrainIMU::sendResetDevice() {
   CommandData res("ResetHDevice");
   uint8_t field1[] = { };
 
-  createCommand(0x01, 
-                0x7E, sizeof(field1), field1,
-                res.buffer_cmd, res.buffer_cmd_len);
+  createCommand1(0x01, 
+                0x7E, sizeof(field1), field1);
   bool ok = expectAckNackResponse(res);
   return ok;
 }
@@ -426,9 +423,8 @@ void MicrostrainIMU::sendGetDeviceInformation() {
   CommandData res("GetDeviceInformation");
   uint8_t field[] = { };
 
-  createCommand(0x01, 
-                0x03, sizeof(field), field,
-                res.buffer_cmd, res.buffer_cmd_len);
+  createCommand1(0x01, 
+                0x03, sizeof(field), field);
   // printCmdBuffer(res);
 
   bool ok = readResponse(res);
@@ -471,17 +467,15 @@ void MicrostrainIMU::sendGetDeviceInformation() {
 // change the baud rate
 // according to 3dm-gx5-25_dcp_manual_8500-0065_reference_document.pdf
 // Pg 62 "4.2.15 UART Baud Rate (0x0C, 0x40)"
-bool sendChangeBaudRate(uint32_t baud) {
+bool MicrostrainIMU::sendChangeBaudRate(uint32_t baud) {
   CommandData res("ChangeBaudRate");
   uint8_t field[] = { 0x01,                    // 01 = change the baud rate!  
                        (uint8_t)(baud >> 24), (uint8_t)((baud >> 16) & 0xFF), (uint8_t)((baud >> 8) & 0xFF), (uint8_t)((baud >> 0) & 0xFF)   
                      };
 
-  createCommand(0x0C, 
-                0x40, sizeof(field), field,
-                res.buffer_cmd, res.buffer_cmd_len);
+  createCommand1(0x0C, 
+                0x40, sizeof(field), field);
 
-  printCmdBuffer(res);
   bool ok = readResponse( res);
   if (!assert(ok != 0, "response invalid")) return false;
   if (!assert((res.no_fields >= 0) && (res.fields[0].descr == 0xF1), "field descriptor wrong")) return false;
@@ -573,7 +567,6 @@ bool isModified(IMUSensorData &imu_data) {
 
 void MicrostrainIMU::loop() {
     if (!is_initialised) {
-      Serial.print("X");
       return;
     }
 
@@ -581,6 +574,7 @@ void MicrostrainIMU::loop() {
     bool fullPackageAvailable = readResponseChar(res);
     // a full package as been read 
     if (fullPackageAvailable) {
+        last_data_package = millis();
         // parse the package
         for (res.field_idx = 0;res.field_idx < res.no_fields;res.field_idx++) {
           res.parse_idx = 2;
@@ -627,6 +621,19 @@ void MicrostrainIMU::loop() {
           }
         }
         dataStreamClock.tick();
+    } else {
+      if ((last_data_package > 0) && (millis() - last_data_package > 2*1000/targetFreq)) {
+          println("missing data stream, reset");
+          last_data_package = 0;
+          println("IMU: enable data stream");
+          serial->begin(baud_rate);
+          bool ok = sendSetToIdle();
+          ok = ok && sendEnableDataStream(true);
+          if (!ok) {
+            println("recovery wasnt successfull");
+            is_initialised = false;
+          }
+      }
     }
 }
 
