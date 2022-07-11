@@ -149,7 +149,7 @@ private:
 
 	// double alpha;
 	double alphaSecurity;   				// Low pass coefficient for the outputted filtered velocity for security check
-	pinocchio::SE3 transBase2IMU;			// Transform between the base frame and the IMU frame
+	Vector3 transBase2IMU;			      // position of IMU in base frame
 
 	double IMUYawOffset;						// Yaw orientation of the IMU at startup
 	Vector3 IMULinearAcceleration;		// 	Linear acceleration of body (base frame) from IMU

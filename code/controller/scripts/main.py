@@ -189,13 +189,13 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     add = 0
     while ((not device.hardware.IsTimeout()) and (t < t_max) and (not controller.error)):
         for j in range(30000):
-            if (j == -1):
-                remoteControl.gp.speedX.value = 0.0
-                remoteControl.gp.speedY.value = 0.0
-                remoteControl.gp.speedZ.value = 0.12
-                remoteControl.gp.bodyX.value = 0.0
-                remoteControl.gp.bodyY.value = 0.0
-                remoteControl.gp.bodyZ.value = 0.0
+            if (j == 1):
+                remoteControl.gp.speedX.value = 0.5
+                remoteControl.gp.speedY.value = 0.2
+                remoteControl.gp.speedZ.value = 0.1
+                remoteControl.gp.bodyX.value = 0.2
+                remoteControl.gp.bodyY.value = 0.3
+                remoteControl.gp.bodyZ.value = 0.4
                 print ("-------- START MOVING -------------")
 
             # Update sensor data (IMU, encoders, Motion capture)

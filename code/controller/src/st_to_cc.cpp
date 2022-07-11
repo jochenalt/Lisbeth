@@ -3,7 +3,7 @@
 #include <time.h>
 #include <math.h>
 
-#include "st_to_cc.hpp"
+#include <st_to_cc.hpp>
 
 /******************************************************************************/
 

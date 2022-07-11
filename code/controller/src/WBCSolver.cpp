@@ -1,5 +1,6 @@
 #include <WBCSolver.hpp>
-#include "st_to_cc.hpp"
+
+#include "../include/st_to_cc.hpp"
 
 
 WBCSolver::WBCSolver() {
