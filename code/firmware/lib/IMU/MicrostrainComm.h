@@ -61,7 +61,7 @@ class CommandData {
     ~CommandData() {};
   String name;
 
-  uint16_t max_timestamp_ms = millis() + 100;
+  uint32_t max_timestamp_ms = millis() + 100;
 
   // buffer of response
   uint8_t buffer_res[BUFFER_SIZE];
@@ -117,6 +117,9 @@ class MicrostrainIMU {
 
         void createCommand1(uint8_t descriptor_set,uint8_t field_descriptor_byte, uint8_t field_length, uint8_t field_data[]);
         void createCommand2(uint8_t descriptor_set,uint8_t field_descriptor_byte1, uint8_t field_length1, uint8_t field_data1[],uint8_t field_descriptor_byte2, uint8_t field_length2, uint8_t field_data2[]);
+        bool expectResponse();
+        bool expectAckNackResponse();
+
 
         // log last measurement
         void printData();
@@ -130,7 +133,7 @@ class MicrostrainIMU {
         uint32_t baud_rate;
         uint16_t targetFreq = 100;
         Measurement dataStreamClock;
-        uint32_t last_data_package = 0;
+        uint32_t last_data_package_ts = 0;                   // time of the last data package arrived
 }; 
 
 

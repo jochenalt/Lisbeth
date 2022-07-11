@@ -269,6 +269,9 @@ bool readResponseChar(CommandData &res){
 }
 
 bool readResponse(CommandData &res){
+
+    // this timeout is for direct commands, not for the datastream
+    // these commands might actually take that long
     res.max_timestamp_ms = millis() + 100;
 
     res.payload_len = 0;
@@ -292,7 +295,7 @@ bool readResponse(CommandData &res){
     return false;
 }
 
-bool expectResponse(CommandData &res){
+bool MicrostrainIMU::expectResponse(){
     bool ok = readResponse(res);
     if (!ok) {
       println("missed expected response %s",res.name.c_str());
@@ -301,8 +304,8 @@ bool expectResponse(CommandData &res){
     return ok;
 }
 
-bool expectAckNackResponse(CommandData res) {
-  bool ok = expectResponse(res);
+bool MicrostrainIMU::expectAckNackResponse() {
+  bool ok = expectResponse();
 
   if (ok) {
     res.field_idx = 0;
@@ -322,7 +325,7 @@ bool MicrostrainIMU::sendPing() {
   uint8_t field[] = { 0x01, 0x00};
   createCommand1(0x01, 
                 0x01, sizeof(field), field);
-  bool ok = expectAckNackResponse(res);
+  bool ok = expectAckNackResponse();
   return ok;
 }
 
@@ -332,7 +335,7 @@ bool MicrostrainIMU::sendSetToIdle() {
   createCommand1(0x01, 
                 0x02, sizeof(field), field);
   
-  bool ok = expectAckNackResponse(res);
+  bool ok = expectAckNackResponse();
   
   return ok;
 }
@@ -343,7 +346,7 @@ bool MicrostrainIMU::sendResumeDevice() {
   uint8_t field[] = { };
   createCommand1(0x01, 
                 0x06, sizeof(field), field);
-  bool ok = expectAckNackResponse(res);
+  bool ok = expectAckNackResponse();
   return ok;
 }
 
@@ -364,7 +367,7 @@ bool MicrostrainIMU::sendSetIMUMessageFormat() {
 
   createCommand1(0x0C, 
                 0x08, sizeof(field), field);
-  bool ok = expectAckNackResponse(res);
+  bool ok = expectAckNackResponse();
   return ok;
 }
 
@@ -377,7 +380,7 @@ bool MicrostrainIMU::sendSaveFormat() {
 
   createCommand1(0x0C, 
                 0x08, sizeof(field), field);
-  bool ok = expectAckNackResponse(res);
+  bool ok = expectAckNackResponse();
   return ok;
 }
 
@@ -390,7 +393,7 @@ bool MicrostrainIMU::sendEnableDataStream(bool enable) {
 
   createCommand1(0x0C, 
                 0x11, sizeof(field), field);
-  bool ok = expectAckNackResponse(res);
+  bool ok = expectAckNackResponse();
   return ok;
 }
 
@@ -399,7 +402,7 @@ bool MicrostrainIMU::sendSetHeading() {
   uint8_t field[] = { 0x00,0x00, 0x00, 0x00};
   createCommand1(0x0D, 
                 0x03, sizeof(field), field);
-  bool ok = expectAckNackResponse(res);
+  bool ok = expectAckNackResponse();
   return ok;
 }
 
@@ -412,7 +415,7 @@ bool MicrostrainIMU::sendResetDevice() {
 
   createCommand1(0x01, 
                 0x7E, sizeof(field1), field1);
-  bool ok = expectAckNackResponse(res);
+  bool ok = expectAckNackResponse();
   return ok;
 }
 
@@ -574,7 +577,7 @@ void MicrostrainIMU::loop() {
     bool fullPackageAvailable = readResponseChar(res);
     // a full package as been read 
     if (fullPackageAvailable) {
-        last_data_package = millis();
+        last_data_package_ts = millis();
         // parse the package
         for (res.field_idx = 0;res.field_idx < res.no_fields;res.field_idx++) {
           res.parse_idx = 2;
@@ -622,9 +625,11 @@ void MicrostrainIMU::loop() {
         }
         dataStreamClock.tick();
     } else {
-      if ((last_data_package > 0) && (millis() - last_data_package > 2*1000/targetFreq)) {
-          println("missing data stream, reset");
-          last_data_package = 0;
+      // we only have 1 ms to receive an answer
+      // After 2ms we escalate 
+      if ((last_data_package_ts > 0) && (millis() - last_data_package_ts > 2*1000/targetFreq)) {
+          println("missing data stream, recovery procedure");
+          last_data_package_ts = 0;
           println("IMU: enable data stream");
           serial->begin(baud_rate);
           bool ok = sendSetToIdle();
