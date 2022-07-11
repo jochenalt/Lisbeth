@@ -151,6 +151,7 @@ void setup() {
   // set default blink pattern
   blinker.set(DefaultBlinkPattern,sizeof(DefaultBlinkPattern));		// assign pattern
 
+  if (error == NO_ERROR) {
    	// reset the board when wdt_reset() is not called every 100ms 
     fastWatchdog();
   } else {
