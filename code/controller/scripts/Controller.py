@@ -316,7 +316,7 @@ class Controller:
 
         # Solve MPC problem once every k_mpc iterations of the main loop
         if startNewGaitCycle:
-            self.mpcController.solve(reference_state,  self.footstepPlanner.getFootsteps(),self.gait.matrix)
+            self.mpcController.solve(reference_state,  self.footstepPlanner.getFootsteps(),self.gait.getCurrentGait())
             self.mpc_f_cmd = self.mpcController.get_latest_result() # solution should be there by now
 
         if (k % k_mpc) >= 2:
@@ -350,7 +350,7 @@ class Controller:
             
             # Run InvKin + WBC QP
             self.wbcController.compute(self.q_wbc, self.dq_wbc,
-                                    self.wbc_f_cmd, np.array([self.gait.matrix[0, :]]),
+                                    self.wbc_f_cmd, np.array([self.gait.getCurrentGait()[0, :]]),
                                     self.feet_p_cmd,
                                     self.feet_v_cmd,
                                     self.feet_a_cmd,

@@ -188,7 +188,7 @@ void Estimator::updateReferenceState(VectorN const& newvRef) {
 }
 
 void Estimator::updatFeetStatus(MatrixN const& feetTargets) {
-  this->feetStatus = gaitPlanner->getCurrentGait().row(0);
+  this->feetStatus = gaitPlanner->getCurrentGaitMatrix().row(0);
   this->feetTargets = feetTargets;
 
   // add another loop to the number of loops per foot in contact with the ground
@@ -199,7 +199,7 @@ void Estimator::updatFeetStatus(MatrixN const& feetTargets) {
   std::cout << "feetStancePhaseDuration" << feetStancePhaseDuration << std::endl;
 
   phaseRemainingDuration = 0;
-  while (this->feetStatus.isApprox((Vector4)gaitPlanner->getCurrentGait().row(phaseRemainingDuration+1))) {
+  while (this->feetStatus.isApprox((Vector4)gaitPlanner->getCurrentGaitMatrix().row(phaseRemainingDuration+1))) {
     phaseRemainingDuration++;
   }
 }

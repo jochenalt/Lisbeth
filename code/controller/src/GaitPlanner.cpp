@@ -5,9 +5,9 @@ GaitPlanner::GaitPlanner() :
 		currentGait(),
 		desiredGait(),
 		remainingTime_(0.0),
-		newPhase_(false),
-		is_static_(true),
-		currentGaitType_(GaitType::NoGait),
+		newPhase(false),
+		is_static(true),
+		currentGaitType(GaitType::NoGait),
 		prevGaitType_(GaitType::NoGait),
 		subGait(GaitType::Walking)
 {
@@ -22,7 +22,7 @@ void GaitPlanner::initialize(Params &params_in)
 	currentGait = MatrixN4::Zero(params->N_gait, 4);
 	desiredGait = MatrixN4::Zero(params->N_gait, 4);
 
-	is_static_ = false;
+	is_static = false;
 	createStatic();
 	currentGait = desiredGait;
 }
@@ -208,7 +208,7 @@ double GaitPlanner::getRemainingTime(int i, int j)
 bool GaitPlanner::update(bool initiateNewStep, int targetGaitType)
 {
 	if ((targetGaitType != GaitType::NoGait)
-			&& (currentGaitType_ != targetGaitType))
+			&& (currentGaitType != targetGaitType))
 	{
 		changeGait(targetGaitType);
 	}
@@ -224,56 +224,56 @@ bool GaitPlanner::update(bool initiateNewStep, int targetGaitType)
 
 bool GaitPlanner::changeGait(int targetGait)
 {
-	is_static_ = false;
+	is_static = false;
 	if (targetGait == GaitType::Pacing)
 	{
 		std::cout << "change to pacing gait" << std::endl;
 		createPacing();
-		prevGaitType_ = currentGaitType_;
-		currentGaitType_ = (GaitType) targetGait;
+		prevGaitType_ = currentGaitType;
+		currentGaitType = (GaitType) targetGait;
 	}
 	else if (targetGait == GaitType::Bounding)
 	{
 		std::cout << "change to bounding gait" << std::endl;
 
-		prevGaitType_ = currentGaitType_;
+		prevGaitType_ = currentGaitType;
 		createBounding();
-		prevGaitType_ = currentGaitType_;
-		currentGaitType_ = (GaitType) targetGait;
+		prevGaitType_ = currentGaitType;
+		currentGaitType = (GaitType) targetGait;
 	}
 	else if (targetGait == GaitType::Trot)
 	{
 		std::cout << "change to trot gait" << std::endl;
 		createTrot();
-		prevGaitType_ = currentGaitType_;
-		currentGaitType_ = (GaitType) targetGait;
+		prevGaitType_ = currentGaitType;
+		currentGaitType = (GaitType) targetGait;
 	}
 	else if (targetGait == GaitType::Walking)
 	{
 		std::cout << "change to walking gait" << std::endl;
 		createWalk();
-		prevGaitType_ = currentGaitType_;
-		currentGaitType_ = (GaitType) targetGait;
+		prevGaitType_ = currentGaitType;
+		currentGaitType = (GaitType) targetGait;
 	}
 	else if (targetGait == GaitType::WalkingTrot)
 	{
 		std::cout << "change to walking trot " << std::endl;
 		createWalkingTrot();
-		prevGaitType_ = currentGaitType_;
-		currentGaitType_ = (GaitType) targetGait;
+		prevGaitType_ = currentGaitType;
+		currentGaitType = (GaitType) targetGait;
 	}
 	else if (targetGait == GaitType::CustomGallop)
 	{
 		std::cout << "change to custom gallo" << std::endl;
 		createCustomGallop();
-		prevGaitType_ = currentGaitType_;
-		currentGaitType_ = (GaitType) targetGait;
+		prevGaitType_ = currentGaitType;
+		currentGaitType = (GaitType) targetGait;
 	}
 	else if (targetGait == GaitType::NoMovement)
 	{
 		createStatic();
-		prevGaitType_ = currentGaitType_;
-		currentGaitType_ = (GaitType) targetGait;
+		prevGaitType_ = currentGaitType;
+		currentGaitType = (GaitType) targetGait;
 	}
 
 	// if we change from static to any gait,
@@ -287,7 +287,7 @@ bool GaitPlanner::changeGait(int targetGait)
 			rollGait();
 	}
 
-	return is_static_;
+	return is_static;
 }
 
 void GaitPlanner::rollGait()
@@ -302,7 +302,7 @@ void GaitPlanner::rollGait()
 	pastGait.row(0) = currentGait.row(0);
 
 	// Entering new contact phase, store positions of feet that are now in contact
-	newPhase_ = !currentGait.row(0).isApprox(currentGait.row(1));
+	newPhase = !currentGait.row(0).isApprox(currentGait.row(1));
 
 	// Age current gait
 	int index = 1;

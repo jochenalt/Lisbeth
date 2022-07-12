@@ -279,7 +279,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	// Solve MPC problem once every params->get_k_mpc() iterations of the main loop
 	if (startNewGaitCycle) {
-		mpcController.solve(bodyPlanner.getBodyTrajectory(), footstepPlanner.getFootsteps(), gait.getCurrentGait());
+		mpcController.solve(bodyPlanner.getBodyTrajectory(), footstepPlanner.getFootsteps(), gait.getCurrentGaitMatrix());
 		f_mpc = mpcController.get_latest_result();
 	}
 	if ((k % params->get_k_mpc()) >= 2)
@@ -319,7 +319,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    dq_wbc.tail(12) = wbcController.get_vdes();            	// with reference angular velocities of previous loop
 
 	    // Run InvKin + WBC QP
-	    wbcController.compute(q_wbc, dq_wbc, f_mpc, gait.getCurrentGait().row(0),
+	    wbcController.compute(q_wbc, dq_wbc, f_mpc, gait.getCurrentGaitMatrix().row(0),
 	    					  feet_p_cmd,feet_v_cmd,feet_a_cmd,
 	    					  base_targets);
 

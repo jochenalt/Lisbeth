@@ -104,7 +104,7 @@ void FootstepPlanner::computeFootsteps(Vector6 const &b_v, Vector6 const &b_vref
 	{
 		footsteps[i] = Matrix34::Zero();
 	}
-	MatrixN current_gait = gait->getCurrentGait();
+	MatrixN current_gait = gait->getCurrentGaitMatrix();
 
 	// Set current position of feet for feet in stance phase
 	for (int j = 0; j < 4; j++)
