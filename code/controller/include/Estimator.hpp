@@ -59,16 +59,6 @@ public:
 	Vector3 getBasePositionFK() { return basePositionFK; }
 	Vector3 getFeetPositionBarycenter() { return feetPositionBarycenter; }
 	Vector3 getBBaseVelocity() { return b_baseVelocity; }
-
-	Vector3 getFilterVelX() { return velocityFilter.getX(); }
-	Vector3 getFilterVelDX() { return velocityFilter.getDx(); }
-	Vector3 getFilterVelAlpha() { return velocityFilter.getAlpha(); }
-    Vector3 getFilterVelFiltX() { return velocityFilter.getFilteredX(); }
-	Vector3 getFilterPosX() { return positionFilter.getX(); }
-	Vector3 getFilterPosDX() { return positionFilter.getDx(); }
-	Vector3 getFilterPosAlpha() { return positionFilter.getAlpha(); }
-	Vector3 getFilterPosFiltX() { return positionFilter.getFilteredX(); }
-
 	Vector18 getQReference() { return qRef; }
 	Vector18 getVReference() { return vRef; }
 	Vector6 getBaseVelRef() { return baseVelRef; }

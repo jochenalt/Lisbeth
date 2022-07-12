@@ -189,8 +189,8 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     add = 0
     while ((not device.hardware.IsTimeout()) and (t < t_max) and (not controller.error)):
         for j in range(30000):
-            if (j == 1):
-                remoteControl.gp.speedX.value = 0.5
+            if (j == -1):
+                remoteControl.gp.speedX.value = 0.2
                 remoteControl.gp.speedY.value = 0.2
                 remoteControl.gp.speedZ.value = 0.1
                 remoteControl.gp.bodyX.value = 0.2

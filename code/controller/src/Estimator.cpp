@@ -203,7 +203,7 @@ void Estimator::updatFeetStatus(MatrixN const& gait, MatrixN const& feetTargets)
 /** pass data from IMU */
 void Estimator::updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velocity, Vector3 base_orientation, Vector4 baseOrientationQuad) {
 
-	//  Linear acceleration of the trunk (base frame)
+	 //  Linear acceleration of the trunk (base frame)
     this->IMULinearAcceleration = base_linear_acc;
 
     // Angular velocity of the trunk (base frame)
@@ -221,7 +221,6 @@ void Estimator::updateIMUData(Vector3 base_linear_acc, Vector3 base_angular_velo
     IMURpy(2) -= IMUYawOffset; //  substract initial offset of IMU
 
     IMUQuat = Quaternion(baseOrientationQuad[0], baseOrientationQuad[1], baseOrientationQuad[2], baseOrientationQuad[3]);
-    std::cout << "linacc" << base_linear_acc  << std::endl;
 
 }
 
@@ -319,6 +318,8 @@ void Estimator::estimatePositionAndVelocity() {
   // At IMU location in world frame
   Vector3 oi_baseVelocityFK = oRb * (baseVelocityFK + bTi);
   Vector3 oi_baseVelocity = velocityFilter.compute(oi_baseVelocityFK, oRb * IMULinearAcceleration, alpha);
+  std::cout << "linacc" << IMULinearAcceleration  << ": base_velocity " << oi_baseVelocity << std::endl;
+
 
   // At base location in base frame
   b_baseVelocity = oRb.transpose() * oi_baseVelocity - bTi;

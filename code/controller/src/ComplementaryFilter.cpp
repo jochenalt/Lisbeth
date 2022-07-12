@@ -6,9 +6,8 @@ ComplementaryFilter::ComplementaryFilter()
       LowPass(Vector3::Zero()),
       alpha(Vector3::Zero()),
       x(Vector3::Zero()),
-      dx(Vector3::Zero()),
-      filteredX(Vector3::Zero()) {
-
+      dx(Vector3::Zero())
+{
 }
 
 ComplementaryFilter::ComplementaryFilter(double dt_in, Vector3 HighPass_in, Vector3 LowPass_in)
@@ -17,8 +16,7 @@ ComplementaryFilter::ComplementaryFilter(double dt_in, Vector3 HighPass_in, Vect
       LowPass(LowPass_in),
       alpha(Vector3::Zero()),
       x(Vector3::Zero()),
-      dx(Vector3::Zero()),
-      filteredX(Vector3::Zero()) {
+      dx(Vector3::Zero()) {
 }
 
 void ComplementaryFilter::initialize(double dt_in, Vector3 HighPass_in, Vector3 LowPass_in) {
@@ -34,7 +32,7 @@ Vector3 ComplementaryFilter::compute(Vector3 const& x_in, Vector3 const& dx_in, 
 
   HighPass = alpha.cwiseProduct(HighPass + dx * dt);
   LowPass = alpha.cwiseProduct(LowPass) + (Vector3::Ones() - alpha).cwiseProduct(x);
-  filteredX = HighPass + LowPass;
+  Vector3 filteredX = HighPass + LowPass;
 
   return filteredX;
 }
