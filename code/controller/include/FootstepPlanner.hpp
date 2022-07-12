@@ -29,22 +29,20 @@ class FootstepPlanner {
 
 
   // Refresh footsteps locations (computation and update of relevant matrices)
-  //		refresh True if we move one step further in the gait
   //		q Current position vector of the flying base in horizontal frame (linear and angular stacked) + actuators
   //		b_v Current velocity vector of the flying base in horizontal frame (linear and angular stacked)
   //		b_vref Desired velocity vector of the flying base in horizontal frame (linear and angular stacked)
-  Matrix34 updateFootsteps(bool refresh, Vector18 const& q, Vector6 const& b_v, Vector6 const& b_vref);
+  Matrix34 updateFootsteps(Vector18 const& q, Vector6 const& b_v, Vector6 const& b_vref);
 
   MatrixN12 getFootsteps();
   Matrix34 getTargetFootsteps();
 
  private:
   // Compute the desired location of footsteps and update relevant matrices
-  //		k Number of remaining wbc time step for the current mpc time step (wbc frequency is higher so there are inter-steps)
   //		q Current position vector of the flying base in horizontal frame (linear and angular stacked)
   //		b_v Current velocity vector of the flying base in horizontal frame (linear and angular stacked)
   //		b_vref Desired velocity vector of the flying base in horizontal frame (linear and angular stacked)
-  Matrix34 computeTargetFootstep(int k, Vector6 const& q, Vector6 const& b_v, Vector6 const& b_vref);
+  Matrix34 computeTargetFootstep(Vector6 const& q, Vector6 const& b_v, Vector6 const& b_vref);
 
   // Refresh feet position when entering a new contact phase
   //		q Current configuration vector
@@ -53,10 +51,9 @@ class FootstepPlanner {
   // Compute a X by 13 matrix containing the remaining number of steps of each phase of the gait (first column)
   // and the [x, y, z]^T desired position of each foot for each phase of the gait (12 other columns).
   // For feet currently touching the ground the desired position is where they currently are.
-  //		k Number of remaining wbc time step for the current mpc time step (wbc frequency is higher so there are inter-steps)
   //		b_v Current velocity vector of sthe flying base in horizontal frame (linear and angular stacked)
   //		b_vref Desired velocity vector of the flying base in horizontal frame (linear and angular stacked)
-  void computeFootsteps(int k, Vector6 const& b_v, Vector6 const& b_vref);
+  void computeFootsteps(Vector6 const& b_v, Vector6 const& b_vref);
 
   // Compute the target location on the ground of a given foot for an upcoming stance phase
   //		i Considered phase (row of the gait matrix)
@@ -74,12 +71,10 @@ class FootstepPlanner {
   MatrixN12 vectorToMatrix(std::vector<Matrix34> const& array);
 
   Params* params;  							// Params object to store parameters
-  GaitPlanner* gait;      							// Gait object to hold the gait informations
-
-  double h_ref;   							// Reference height for the trunk
+  GaitPlanner* gait;      					// Gait object to hold the gait informations
 
   // Predefined quantities
-  double g;  									// Value of the gravity acceleartion
+  double g;  									// Value of the gravity acceleration
   double L;  									// Value of the maximum allowed deviation due to leg length
 
   // Constant sized matrices

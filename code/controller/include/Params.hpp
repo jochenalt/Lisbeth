@@ -20,39 +20,29 @@
 
 class Params {
  public:
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  ///
-  /// \brief Empty constructor
-  ///
-  ////////////////////////////////////////////////////////////////////////////////////////////////
   Params();
-
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  ///
-  /// \brief Destructor.
-  ///
-  ////////////////////////////////////////////////////////////////////////////////////////////////
   ~Params() {}
 
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  ///
-  /// \brief Initializer
-  ///
-  /// \param[in] file_path File path to the yaml file
-  ///
-  ////////////////////////////////////////////////////////////////////////////////////////////////
-  void initialize(const std::string& file_path);
+  void initialize(const std::string& config_file_path);
 
 
-  // Number of wbc time steps for each MPC time step
+  // Number of wbc loops per mpc
   int get_k_mpc() { return (int)std::round(dt_mpc / dt_wbc); };
+
+  // number of loops/steps in the prediction horizon
   int get_N_steps() { return N_steps; };
+
+  // call this at the end of the loop
   void inc_k() { k++; };
-  // current loop number
+
+  // get current wbc loop number
   int get_k() { return k; };
+
   // loops left until next MPC resp. step change
   int get_k_left_in_gait() { return (get_k_mpc() - (k % get_k_mpc())); };
 
+  // true if this is the cycle with a new MPC round and a new step in the gait
+  bool is_new_mpc_cycle() { return (k % get_k_mpc()) == 0; };
 
   int N_steps; 		// number of steps in the prediction horizon
   int N_gait;			// Number of rows in the gait matrix. Arbitrary value that should be set high enough,so that there is always at least one empty line at the end of the gait matrix

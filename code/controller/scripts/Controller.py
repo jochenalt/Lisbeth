@@ -293,17 +293,12 @@ class Controller:
             
 
         # at a new gait cycle we need create the next gait round and start MPC
-        startNewGaitCycle = (k % k_mpc) == 0
-        
-        # number of cycles left 1..10
-        k_left_in_gait = k_mpc - k % k_mpc
-        k_left_in_gait = params.get_k_left_in_gait()
-        
+        startNewGaitCycle = params.is_new_mpc_cycle()
+                
         self.gait.update(startNewGaitCycle, gaitCode)
         
         # Compute target footstep based on current and reference velocities
-        o_targetFootstep = self.footstepPlanner.updateFootsteps(startNewGaitCycle and k != 0,
-                                                                self.q,
+        o_targetFootstep = self.footstepPlanner.updateFootsteps(self.q,
                                                                 self.h_v_windowed,
                                                                 self.v_ref)
 
