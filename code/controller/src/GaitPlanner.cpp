@@ -1,9 +1,9 @@
 #include "GaitPlanner.hpp"
 
 GaitPlanner::GaitPlanner() :
-		pastGait_(),
-		currentGait_(),
-		desiredGait_(),
+		pastGait(),
+		currentGait(),
+		desiredGait(),
 		remainingTime_(0.0),
 		newPhase_(false),
 		is_static_(true),
@@ -18,13 +18,13 @@ void GaitPlanner::initialize(Params &params_in)
 	params = &params_in;
 
 	// create the arrays big enough, during runtime we only need params->N_steps * params->N_periods
-	pastGait_ = MatrixN4::Zero(params->N_gait, 4);
-	currentGait_ = MatrixN4::Zero(params->N_gait, 4);
-	desiredGait_ = MatrixN4::Zero(params->N_gait, 4);
+	pastGait = MatrixN4::Zero(params->N_gait, 4);
+	currentGait = MatrixN4::Zero(params->N_gait, 4);
+	desiredGait = MatrixN4::Zero(params->N_gait, 4);
 
 	is_static_ = false;
 	createStatic();
-	currentGait_ = desiredGait_;
+	currentGait = desiredGait;
 }
 
 void GaitPlanner::setGait(int i,int n_sequences, MatrixN4 & gait, std::string sequence) {
@@ -40,67 +40,67 @@ void GaitPlanner::setGait(int i,int n_sequences, MatrixN4 & gait, std::string se
 
 void GaitPlanner::createWalk()
 {
-	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
-	setGait(0,4,desiredGait_, "0111");
-	setGait(1,4,desiredGait_, "1011");
-	setGait(2,4,desiredGait_, "1101");
-	setGait(3,4,desiredGait_, "1110");
+	desiredGait = MatrixN::Zero(currentGait.rows(), 4);
+	setGait(0,4,desiredGait, "0111");
+	setGait(1,4,desiredGait, "1011");
+	setGait(2,4,desiredGait, "1101");
+	setGait(3,4,desiredGait, "1110");
 }
 
 void GaitPlanner::createTrot()
 {
-	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
+	desiredGait = MatrixN::Zero(currentGait.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
-		setGait(0,2,desiredGait_, "1001");
-		setGait(1,2,desiredGait_, "0110");
+		setGait(0,2,desiredGait, "1001");
+		setGait(1,2,desiredGait, "0110");
 	}
 }
 
 void GaitPlanner::createPacing()
 {
-	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
+	desiredGait = MatrixN::Zero(currentGait.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
-		setGait(0,2,desiredGait_, "1010");
-		setGait(1,2,desiredGait_, "0101");
+		setGait(0,2,desiredGait, "1010");
+		setGait(1,2,desiredGait, "0101");
 	}
 }
 
 void GaitPlanner::createBounding()
 {
-	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
+	desiredGait = MatrixN::Zero(currentGait.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
-		setGait(0,2,desiredGait_, "1100");
-		setGait(1,2,desiredGait_, "0011");
+		setGait(0,2,desiredGait, "1100");
+		setGait(1,2,desiredGait, "0011");
 	}
 }
 
 void GaitPlanner::createWalkingTrot()
 {
-	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
+	desiredGait = MatrixN::Zero(currentGait.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
-		setGait(0,4,desiredGait_, "1001");
-		setGait(1,4,desiredGait_, "1111");
-		setGait(2,4,desiredGait_, "0110");
-		setGait(3,4,desiredGait_, "1111");
+		setGait(0,4,desiredGait, "1001");
+		setGait(1,4,desiredGait, "1111");
+		setGait(2,4,desiredGait, "0110");
+		setGait(3,4,desiredGait, "1111");
 	}
 }
 
 void GaitPlanner::createCustomGallop()
 {
-	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
+	desiredGait = MatrixN::Zero(currentGait.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
-		setGait(0,4,desiredGait_, "1010");
-		setGait(1,4,desiredGait_, "1001");
-		setGait(2,4,desiredGait_, "0101");
-		setGait(3,4,desiredGait_, "0110");
+		setGait(0,4,desiredGait, "1010");
+		setGait(1,4,desiredGait, "1001");
+		setGait(2,4,desiredGait, "0101");
+		setGait(3,4,desiredGait, "0110");
 	}
 }
 
 void GaitPlanner::createStatic()
 {
-	desiredGait_ = MatrixN::Zero(currentGait_.rows(), 4);
+	desiredGait = MatrixN::Zero(currentGait.rows(), 4);
 	for (int i = 0;i<params->N_periods;i++) {
-		setGait(0,1,desiredGait_, "1111");
+		setGait(0,1,desiredGait, "1111");
 	}
 }
 
@@ -110,18 +110,18 @@ double GaitPlanner::getPhaseDuration(int gaitPhaseIdx, int legNo, FootPhase foot
 	int a = gaitPhaseIdx;
 
 	// Looking for the end of the swing/stance phase in currentGait_
-	while ((!currentGait_.row(gaitPhaseIdx + 1).isZero())
-			&& (currentGait_(gaitPhaseIdx + 1, legNo) == (double) footPhase))
+	while ((!currentGait.row(gaitPhaseIdx + 1).isZero())
+			&& (currentGait(gaitPhaseIdx + 1, legNo) == (double) footPhase))
 	{
 		gaitPhaseIdx++;
 		t_phase++;
 	}
 	// If we reach the end of currentGait_ we continue looking for the end of the swing/stance phase in desiredGait_
-	if (currentGait_.row(gaitPhaseIdx + 1).isZero())
+	if (currentGait.row(gaitPhaseIdx + 1).isZero())
 	{
 		int k = 0;
-		while ((!desiredGait_.row(k).isZero())
-				&& (desiredGait_(k, legNo) == (double) footPhase))
+		while ((!desiredGait.row(k).isZero())
+				&& (desiredGait(k, legNo) == (double) footPhase))
 		{
 			k++;
 			t_phase++;
@@ -131,7 +131,7 @@ double GaitPlanner::getPhaseDuration(int gaitPhaseIdx, int legNo, FootPhase foot
 	remainingTime_ = t_phase;
 
 	// Looking for the beginning of the swing/stance phase in currentGait_
-	while ((a > 0) && (currentGait_(a - 1, legNo) == (double) footPhase))
+	while ((a > 0) && (currentGait(a - 1, legNo) == (double) footPhase))
 	{
 		a--;
 		t_phase++;
@@ -139,8 +139,8 @@ double GaitPlanner::getPhaseDuration(int gaitPhaseIdx, int legNo, FootPhase foot
 	// If we reach the end of currentGait_ we continue looking for the beginning of the swing/stance phase in pastGait_
 	if (a == 0)
 	{
-		while ((!pastGait_.row(a).isZero())
-				&& (pastGait_(a, legNo) == (double) footPhase))
+		while ((!pastGait.row(a).isZero())
+				&& (pastGait(a, legNo) == (double) footPhase))
 		{
 			a++;
 			t_phase++;
@@ -149,14 +149,15 @@ double GaitPlanner::getPhaseDuration(int gaitPhaseIdx, int legNo, FootPhase foot
 	// We suppose that we found the beginning of the swing/stance phase either in currentGait_ or pastGait_
 	return t_phase * params->dt_mpc;  // Take into account time step value
 }
+
 double GaitPlanner::getElapsedTime(int i, int j)
 {
-	double state = currentGait_(i, j);
+	double state = currentGait(i, j);
 	double nPhase = 0;
 	int row = i;
 
 	// Looking for the beginning of the swing/stance phase in currentGait_
-	while ((row > 0) && (currentGait_(row - 1, j) == state))
+	while ((row > 0) && (currentGait(row - 1, j) == state))
 	{
 		row--;
 		nPhase++;
@@ -165,7 +166,7 @@ double GaitPlanner::getElapsedTime(int i, int j)
 	// If we reach the end of currentGait_ we continue looking for the beginning of the swing/stance phase in pastGait_
 	if (row == 0)
 	{
-		while ((!pastGait_.row(row).isZero()) && (pastGait_(row, j) == state))
+		while ((!pastGait.row(row).isZero()) && (pastGait(row, j) == state))
 		{
 			row++;
 			nPhase++;
@@ -181,21 +182,21 @@ double GaitPlanner::getPhaseDuration(int i, int j)
 
 double GaitPlanner::getRemainingTime(int i, int j)
 {
-	double state = currentGait_(i, j);
+	double state = currentGait(i, j);
 	double nPhase = 1;
 	int row = i;
 	// Looking for the end of the swing/stance phase in currentGait_
-	while ((row < params->get_N_steps()  - 1) && (currentGait_(row + 1, j) == state))
+	while ((row < params->get_N_steps()  - 1) && (currentGait(row + 1, j) == state))
 	{
 		row++;
 		nPhase++;
 	}
 	// If we reach the end of currentGait_ we continue looking for the end of the swing/stance phase in desiredGait_
-	if (currentGait_.row(i + 1).isZero())
+	if (currentGait.row(i + 1).isZero())
 	{
 		// if (row == nRows_ - 1) {
 		row = 0;
-		while ((row < params->get_N_steps() ) && (desiredGait_(row, j) == state))
+		while ((row < params->get_N_steps() ) && (desiredGait(row, j) == state))
 		{
 			row++;
 			nPhase++;
@@ -204,7 +205,7 @@ double GaitPlanner::getRemainingTime(int i, int j)
 	return nPhase * params->dt_mpc;
 }
 
-bool GaitPlanner::update(bool initiateNewGait, int targetGaitType)
+bool GaitPlanner::update(bool initiateNewStep, int targetGaitType)
 {
 	if ((targetGaitType != GaitType::NoGait)
 			&& (currentGaitType_ != targetGaitType))
@@ -212,7 +213,7 @@ bool GaitPlanner::update(bool initiateNewGait, int targetGaitType)
 		changeGait(targetGaitType);
 	}
 
-	if (initiateNewGait)
+	if (initiateNewStep)
 	{
 		rollGait();
 		return true;
@@ -295,31 +296,51 @@ void GaitPlanner::rollGait()
 	// shift pastGait from [0..9] to [1..10]
 	for (int m = params->get_N_steps(); m > 0; m--)
 	{
-		pastGait_.row(m).swap(pastGait_.row(m - 1));
+		pastGait.row(m).swap(pastGait.row(m - 1));
 	}
 	// and assign current gait to [0]
-	pastGait_.row(0) = currentGait_.row(0);
+	pastGait.row(0) = currentGait.row(0);
 
 	// Entering new contact phase, store positions of feet that are now in contact
-	newPhase_ = !currentGait_.row(0).isApprox(currentGait_.row(1));
+	newPhase_ = !currentGait.row(0).isApprox(currentGait.row(1));
 
 	// Age current gait
 	int index = 1;
-	while (!currentGait_.row(index).isZero())
+	while (!currentGait.row(index).isZero())
 	{
-		currentGait_.row(index - 1).swap(currentGait_.row(index));
+		currentGait.row(index - 1).swap(currentGait.row(index));
 		index++;
 	}
 
 	// Insert a new line from desired gait into current gait
-	currentGait_.row(index - 1) = desiredGait_.row(0);
+	currentGait.row(index - 1) = desiredGait.row(0);
 
 	// Age desired gait
 	index = 1;
-	while (!desiredGait_.row(index).isZero())
+	while (!desiredGait.row(index).isZero())
 	{
-		desiredGait_.row(index - 1).swap(desiredGait_.row(index));
+		desiredGait.row(index - 1).swap(desiredGait.row(index));
 		index++;
+	}
+}
+
+
+
+void GaitPlanner::getLoopsInSteps(int &loops_passed, int & loops_to_go) {
+	// look forward how many loops we got
+	int index = 0;
+	loops_to_go = 0;
+	while (currentGait.row(0) == currentGait.row(index+1)) {
+		index++;
+		loops_to_go++;
+	}
+
+	// look backwards how many loops we passed
+	index = 0;
+	loops_passed = 0;
+	while (currentGait.row(0) == pastGait.row(index+1)) {
+		index++;
+		loops_passed++;
 	}
 }
 
