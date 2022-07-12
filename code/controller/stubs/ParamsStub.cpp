@@ -16,7 +16,8 @@ struct ParamsPythonVisitor : public bp::def_visitor<ParamsPythonVisitor<Params>>
 
         .def("inc_k", &Params::inc_k)
         .def("get_k", &Params::get_k)
-        .def("get_k_left_in_gait", &Params::get_k_left_in_gait)
+        .def("get_k_mpc", &Params::get_k_mpc)
+		  .def("get_k_left_in_gait", &Params::get_k_left_in_gait)
          .def_readwrite("interface", &Params::interface)
 			.def_readwrite("DEMONSTRATION", &Params::DEMONSTRATION)
 			.def_readwrite("SIMULATION", &Params::SIMULATION)
