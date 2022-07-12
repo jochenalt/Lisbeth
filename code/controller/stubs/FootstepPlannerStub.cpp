@@ -12,15 +12,9 @@ struct FootstepPlannerPythonVisitor : public bp::def_visitor<FootstepPlannerPyth
     void visit(PyClassFootstepPlanner& cl) const
     {
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
-
-            .def("getFootsteps", &FootstepPlanner::getFootsteps, "Get footsteps_ matrix.\n")
-
-            .def("initialize", &FootstepPlanner::initialize, bp::args("params", "gaitIn"),
-                 "Initialize FootstepPlanner from Python.\n")
-
-            // Compute target location of footsteps from Python
-            .def("updateFootsteps", &FootstepPlanner::updateFootsteps, bp::args("refresh", "k", "q", "b_v", "b_vref"),
-                 "Update and compute location of footsteps from Python.\n");
+            .def("getFootsteps", &FootstepPlanner::getFootsteps)
+            .def("initialize", &FootstepPlanner::initialize, bp::args("params", "gaitIn"))
+            .def("updateFootsteps", &FootstepPlanner::updateFootsteps, bp::args("refresh",  "q", "b_v", "b_vref"));
 
     }
 

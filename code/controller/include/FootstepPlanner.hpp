@@ -30,11 +30,10 @@ class FootstepPlanner {
 
   // Refresh footsteps locations (computation and update of relevant matrices)
   //		refresh True if we move one step further in the gait
-  //		k Number of remaining wbc time step for the current mpc time step (wbc frequency is higher so there are inter-steps)
   //		q Current position vector of the flying base in horizontal frame (linear and angular stacked) + actuators
   //		b_v Current velocity vector of the flying base in horizontal frame (linear and angular stacked)
   //		b_vref Desired velocity vector of the flying base in horizontal frame (linear and angular stacked)
-  Matrix34 updateFootsteps(bool refresh, int k, Vector18 const& q, Vector6 const& b_v, Vector6 const& b_vref);
+  Matrix34 updateFootsteps(bool refresh, Vector18 const& q, Vector6 const& b_v, Vector6 const& b_vref);
 
   MatrixN12 getFootsteps();
   Matrix34 getTargetFootsteps();

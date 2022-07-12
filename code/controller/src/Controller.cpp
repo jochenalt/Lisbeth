@@ -264,14 +264,12 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	// at a new gait cycle we need create the next gait round and start MPC
 	bool startNewGaitCycle = (k % params->get_k_mpc()) == 0;
 
-	// number of cycles left until next mpc 1..10
-	int k_left_in_gait = params->get_k_mpc() - (k % params->get_k_mpc());
 	gait.update(startNewGaitCycle, cmd_gait);
 	cmd_gait = GaitType::NoGait;
 
 	// Compute target footstep based on current and reference velocities
 	o_targetFootstep = footstepPlanner.updateFootsteps(
-										startNewGaitCycle && (k != 0), k_left_in_gait, estimator.getQReference(),
+										startNewGaitCycle && (k != 0), estimator.getQReference(),
 										estimator.getHVFiltered(), estimator.getBaseVelRef());
 
 	// Update pos, vel and acc references for feet

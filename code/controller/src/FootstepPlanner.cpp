@@ -68,9 +68,10 @@ void FootstepPlanner::initialize(Params &params_in, GaitPlanner &gait_in)
 	foot_ids_[3] = static_cast<int>(model.getFrameId("HR_FOOT"));
 }
 
-Matrix34 FootstepPlanner::updateFootsteps(bool refresh, int k, Vector18 const &q,
+Matrix34 FootstepPlanner::updateFootsteps(bool refresh, Vector18 const &q,
 		Vector6 const &b_v, Vector6 const &b_vref)
 {
+	int k = params->get_k_left_in_gait();
 	// Update location of feet in stance phase (for those which just entered stance phase)
 	if (refresh && gait->isNewPhase())
 	{
