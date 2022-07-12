@@ -184,7 +184,6 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     print("Start the motion.")
     # CONTROL LOOP ***************************************************
     t = 0.0
-    k = 0
     t_max = (params.N_SIMULATION-2) * params.dt_wbc
     add = 0
     while ((not device.hardware.IsTimeout()) and (t < t_max) and (not controller.error)):
@@ -203,7 +202,7 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
 
 
             # get command from remote control
-            remoteControl.update_v_ref(k, controller.velID)
+            remoteControl.update_v_ref(params.get_k(), controller.velID)
     
             # Desired torques
             # device.baseOrientation[2] = device.baseOrientation[2] + add
@@ -252,11 +251,10 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
             
             
             # Update position of PyBullet camera on the robot position to do as if it was attached to the robot
-            if k > 10 and params.enable_pyb_GUI:
+            if params.get_k() > 10 and params.enable_pyb_GUI:
                 pyb.resetDebugVisualizerCamera(cameraDistance=0.6, cameraYaw=45, cameraPitch=-39.9,
                                            cameraTargetPosition=[device.dummyHeight[0], device.dummyHeight[1], 0.0])
-            k += 1
-            
+            params.inc_k()
         quit()
 
     # ****************************************************************

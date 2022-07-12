@@ -52,8 +52,6 @@ private:
 	int error_flag;        						// Value depends on what set the error flag to true
 	Vector12 error_value;  						// Store data about the error
 
-	int k;          								// Number of wbc time steps since the start of the controller
-
 	// Classes of the different control blocks
 	Estimator estimator;                   // Estimator control block
 	GaitPlanner gait;                             // Gait control block

@@ -25,7 +25,6 @@ Controller::Controller()
       error(false),
       error_flag(0),
       error_value(Vector12::Zero()),
-      k(0),
       q_filt_mpc(Vector18::Zero()),
       h_v_filt_mpc(Vector6::Zero()),
       vref_filt_mpc(Vector6::Zero()),
@@ -230,6 +229,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 			 Vector12 const& jointsPositions,
 			 Vector12 const& jointsVelocities)
 {
+	int k = params->get_k();
 	std::cout << "--- C++ ---" << k << " " << k % params->get_k_mpc() << " " << params->get_k_mpc() - (k % params->get_k_mpc())<< std::endl;
 
 	estimator.run(footTrajectoryGenerator.getFootPosition(),
