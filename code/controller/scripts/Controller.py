@@ -172,10 +172,6 @@ class Controller:
         # Load robot model and data
         self.robot = self.init_robot(params)
 
-        # initialize Cpp state estimator
-        self.estimator = core.Estimator()
-        self.estimator.initialize(params)
-
         self.wbcController = core.WbcController()
         self.wbcController.initialize(params)
 
@@ -201,6 +197,11 @@ class Controller:
         self.gait = core.Gait()
         self.gait.initialize(params)
         self.gait.update(True,  Types.GaitType.NoMovement.value)
+
+        # initialize Cpp state estimator
+        self.estimator = core.Estimator()
+        self.estimator.initialize(params, self.gait)
+
 
         self.statePlanner = core.StatePlanner()
         self.statePlanner.initialize(params, self.gait)
@@ -426,7 +427,7 @@ class Controller:
         #print ("PY self.gait.matrix,", self.gait.matrix)
         #print ("PY self.footTrajectoryGenerator.get_foot_position().", self.footTrajectoryGenerator.get_foot_position())
 
-        self.estimator.run(self.gait.matrix,self.footTrajectoryGenerator.get_foot_position().copy(),
+        self.estimator.run(self.footTrajectoryGenerator.get_foot_position().copy(),
                            device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy(),device.baseOrientationQuad.copy(), # data from IMU
                            device.q_mes, device.v_mes) # data from joints
 

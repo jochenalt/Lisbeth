@@ -8,6 +8,7 @@
 #include "Types.h"
 #include "Utils.hpp"
 #include "Params.hpp"
+#include "GaitPlanner.hpp"
 
 #include <deque>
 
@@ -22,7 +23,7 @@ public:
 	Estimator ();
 	~Estimator() {};
 
-	void initialize(Params& params );
+	void initialize(Params& params, GaitPlanner& gait);
 
 	void updateForwardKinematics();
 	/*
@@ -37,7 +38,7 @@ public:
 	 * perfectPosition Position of the robot in world frame
 	 * b_perfectVelocity Velocity of the robot in base frame
 	 */
-	void run( MatrixN4 gait, Matrix34 feetTargets,
+	void run(Matrix34 feetTargets,
 			  Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector3 baseOrientation, Vector4 baseOrientationQuad,
 			  Vector12 const& q, Vector12 const &v);
 
@@ -58,7 +59,6 @@ public:
 	Vector3 getBaseVelocityFK() { return baseVelocityFK; }
 	Vector3 getBasePositionFK() { return basePositionFK; }
 	Vector3 getFeetPositionBarycenter() { return feetPositionBarycenter; }
-	Vector3 getBBaseVelocity() { return b_baseVelocity; }
 	Vector18 getQReference() { return qRef; }
 	Vector18 getVReference() { return vRef; }
 	Vector6 getBaseVelRef() { return baseVelRef; }
@@ -82,7 +82,7 @@ private:
 	// update feetStatus_, feetTargets_, feetStancePhaseDuration_ and phaseRemainingDuration_
 	// gait Gait 			matrix that stores current and future contact status of the feet
 	// feetTargets 			Target positions of the four feet
-	void updatFeetStatus(MatrixN const& gait, MatrixN const& feetTargets);
+	void updatFeetStatus(MatrixN const& feetTargets);
 
 	// Retrieve and update position and velocity of the 12 actuators
 	//
@@ -127,7 +127,7 @@ private:
 
 
 	Params* params;							// configuration parameters
-
+	GaitPlanner* gaitPlanner;
 	std::array<int, 4> feetFrames_ID;	// Frame indexes of the four feet
 	double footRadius;      				// radius of a foot
 
@@ -139,7 +139,7 @@ private:
 
 	// double alpha;
 	double alphaSecurity;   				// Low pass coefficient for the outputted filtered velocity for security check
-	Vector3 transBase2IMU;			      // position of IMU in base frame
+	Vector3 b_IMULocation;			      // position of IMU in base frame
 
 	double IMUYawOffset;						// Yaw orientation of the IMU at startup
 	Vector3 IMULinearAcceleration;		// 	Linear acceleration of body (base frame) from IMU
@@ -150,8 +150,8 @@ private:
 	Vector12 qActuators; 					// positions of feet in the order FL, FR, HL, HR, as returned by device measurement
 	Vector12 vActuators; 					// velocities of feet in the order FL, FR, HL, HR, as returned by device measurement
 
-	int phaseRemainingDuration;			// Number of iterations left for the current gait phase
-	Vector4 feetStancePhaseDuration;		// Number of loops during which each foot has been in contact
+	int phaseRemainingDuration;			// Number of loop left for the current gait phase
+	Vector4 feetStancePhaseDuration;		// Number of loops each foot has been in contact, starting at 0
 
 	Vector4 feetStatus;						// Contact status of the four feet, coming from gait
 	Matrix34 feetTargets;					// Target positions of the four feet
@@ -159,7 +159,6 @@ private:
 	Vector18 v_FK;								// Velocity vector for Forward Kinematics
 	Vector3 baseVelocityFK;					// Base linear velocity estimated by Forward Kinematics
 	Vector3 basePositionFK;					// Base position estimated by Forward Kinematics
-	Vector3 b_baseVelocity; 			 	// Filtered estimated velocity at center base (base frame)
 	Vector3 baseAcceleration; 				// filtered acceleration of base in world frame x',y',z'
 
 	Vector3 feetPositionBarycenter; 		// Barycenter of feet in contact

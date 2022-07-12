@@ -152,7 +152,7 @@ void Controller::initialize(Params& params_in) {
 	  footstepPlanner.initialize(params_in, gait);
 	  mpcController.initialize(params_in);
 	  footTrajectoryGenerator.initialize(params_in, gait);
-	  estimator.initialize(params_in);
+	  estimator.initialize(params_in, gait);
 	  wbcController.initialize(params_in);
 
 	  filter_mpc_q.initialize(params_in);
@@ -232,7 +232,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 {
 	std::cout << "--- C++ ---" << k << " " << k % params->get_k_mpc() << " " << params->get_k_mpc() - (k % params->get_k_mpc())<< std::endl;
 
-	estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(),
+	estimator.run(footTrajectoryGenerator.getFootPosition(),
 		  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,  imuAttitudeQuat,
 				jointsPositions,jointsVelocities);
 

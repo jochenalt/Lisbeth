@@ -34,7 +34,6 @@ Estimator::Estimator()
       v_FK(Vector18::Zero()),
       baseVelocityFK(Vector3::Zero()),
       basePositionFK(Vector3::Zero()),
-      b_baseVelocity(Vector3::Zero()),
 	   baseAcceleration(Vector3::Zero()),
       feetPositionBarycenter(Vector3::Zero()),
       qEstimate(Vector19::Zero()),
@@ -51,15 +50,18 @@ Estimator::Estimator()
       h_v(Vector6::Zero()),
 	   h_vFiltered(Vector6::Zero())
 {
-	transBase2IMU = Vector3(0.1163, 0.0, 0.02);
-  q_FK(6) = 1.0;
-  qEstimate(6) = 1.0;
+   q_FK(6) = 1.0;
+   qEstimate(6) = 1.0;
 }
 
 
-void Estimator::initialize(Params& params_in) {
+void Estimator::initialize(Params& params_in, GaitPlanner& gait_in) {
 
 	params = &params_in;
+	gaitPlanner = &gait_in;
+
+	// mounting position of IMU within base frame
+	b_IMULocation = Vector3(0.1163, 0.0, 0.02);
 
 	// Filtering estimated linear velocity
 	vx_queue.resize(get_windows_size(), 0.0);  // List full of 0.0
@@ -97,7 +99,7 @@ void Estimator::initialize(Params& params_in) {
  */
 bool Estimator::isSteady() {
 	double totalAcc = sqrt(baseAcceleration[0]*baseAcceleration[0]  + baseAcceleration[1]*baseAcceleration[1]);
-	double totalVel = sqrt(b_baseVelocity[0]*b_baseVelocity[0]  + b_baseVelocity[1]*b_baseVelocity[1]);
+	double totalVel = sqrt(vEstimate[0]*vEstimate[0]  + vEstimate[1]*vEstimate[1]);
 
 	const double maxAcc = 0.1;
 	const double maxVel = 0.02;
@@ -115,31 +117,31 @@ bool Estimator::isSteady() {
     device (object): Interface with the masterboard or the simulation
     goals (3x4 array): Target locations of feet on the ground
 */
-void Estimator::run(MatrixN4 gait, Matrix34 feetTargets,
+void Estimator::run(Matrix34 feetTargets,
 				 	Vector3 baseLinearAcceleration, Vector3 baseAngularVelocity, Vector3 baseOrientation,Vector4 baseOrientationQuad,
 					Vector12 const& q, Vector12 const &v) {
 
-			// store parameter coming from IMU
+	// store parameter coming from IMU
 	updateIMUData (baseLinearAcceleration, baseAngularVelocity, baseOrientation, baseOrientationQuad);
 
 	// update feet target positions according to gait
-	updatFeetStatus(gait, feetTargets);
+	updatFeetStatus(feetTargets);
 
 	// store positions and velocities
 	updateJointData(q, v);
 
-    //  Update forward kinematics data
-    updateForwardKinematics();
+	//  Update forward kinematics data
+	updateForwardKinematics();
 
-    // Update forward geometry data
-    computeFeetPositionBarycenter();
+	// Update forward geometry data
+	computeFeetPositionBarycenter();
 
-    estimatePositionAndVelocity ();
+	estimatePositionAndVelocity ();
 
-    filterVelocity();
+	filterVelocity();
 
-    // Output filtered actuators velocity for security checks
-    vSecurity = (1 - alphaSecurity) * vActuators + alphaSecurity * vSecurity;
+	// Output filtered actuators velocity for security checks
+	vSecurity = (1 - alphaSecurity) * vActuators + alphaSecurity * vSecurity;
 
 //     std::cout << "feetTargets" << feetTargets<< std::endl
 //			<< "gait" << gait << std::endl
@@ -153,7 +155,8 @@ void Estimator::run(MatrixN4 gait, Matrix34 feetTargets,
 }
 
 void Estimator::updateReferenceState(VectorN const& newvRef) {
-  // Update reference acceleration and velocities
+
+	// Update reference acceleration and velocities
   Matrix3 Rz = pinocchio::rpy::rpyToMatrix(0., 0., -baseVelRef[5] * params->dt_wbc);
   baseAccRef.head(3) = (newvRef.head(3) - Rz * baseVelRef.head(3)) / params->dt_wbc;
   baseAccRef.tail(3) = (newvRef.tail(3) - Rz * baseVelRef.tail(3)) / params->dt_wbc;
@@ -184,17 +187,19 @@ void Estimator::updateReferenceState(VectorN const& newvRef) {
 
 }
 
-
-
-void Estimator::updatFeetStatus(MatrixN const& gait, MatrixN const& feetTargets) {
-  this->feetStatus = gait.row(0);
+void Estimator::updatFeetStatus(MatrixN const& feetTargets) {
+  this->feetStatus = gaitPlanner->getCurrentGait().row(0);
   this->feetTargets = feetTargets;
 
+  // add another loop to the number of loops per foot in contact with the ground
   feetStancePhaseDuration += this->feetStatus;
-  feetStancePhaseDuration = feetStancePhaseDuration.cwiseProduct(this->feetStatus);
 
-  phaseRemainingDuration = 1;
-  while (this->feetStatus.isApprox((Vector4)gait.row(phaseRemainingDuration))) {
+  // null out feet that are not in contact anymore
+  feetStancePhaseDuration = feetStancePhaseDuration.cwiseProduct(this->feetStatus);
+  std::cout << "feetStancePhaseDuration" << feetStancePhaseDuration << std::endl;
+
+  phaseRemainingDuration = 0;
+  while (this->feetStatus.isApprox((Vector4)gaitPlanner->getCurrentGait().row(phaseRemainingDuration+1))) {
     phaseRemainingDuration++;
   }
 }
@@ -234,38 +239,38 @@ void Estimator::updateJointData(Vector12 const& q, Vector12 const &v) {
 // (linear velocity, angular velocity and position)
 //  feet_status : Current contact state of feet
 void Estimator::updateForwardKinematics() {
-  // Update estimator FK model
+	// Update estimator FK model
 	q_FK.bottomRows(12) = qActuators; //   Position of actuators
-  v_FK.bottomRows(12) = vActuators; //  Velocity of actuators
+	v_FK.bottomRows(12) = vActuators; //  Velocity of actuators
 
-  // Position and orientation of the base remain at 0
-  // Linear and angular velocities of the base remain at 0
-  // Update model used for the forward kinematics
-  q_FK.block<4,1>(3,0) = Vector4({0,0,0,1});
+	// Position and orientation of the base remain at 0
+	// Linear and angular velocities of the base remain at 0
+	// Update model used for the forward kinematics
+	q_FK.block<4,1>(3,0) = Vector4({0,0,0,1});
 
-  pinocchio::forwardKinematics(velocityModel,velocityData,q_FK, v_FK);
+	pinocchio::forwardKinematics(velocityModel,velocityData,q_FK, v_FK);
 
-  q_FK.block<4,1>(3,0) = Vector4({IMUQuat.x(),IMUQuat.y(),IMUQuat.z(),IMUQuat.w()});
+	q_FK.block<4,1>(3,0) = Vector4({IMUQuat.x(),IMUQuat.y(),IMUQuat.z(),IMUQuat.w()});
 
-  pinocchio::forwardKinematics(positionModel, positionData, q_FK);
+	pinocchio::forwardKinematics(positionModel, positionData, q_FK);
 
-  // Get estimated velocity from updated model
-  int nContactFeet = 0;
-  Vector3 baseVelocityEstimate = Vector3::Zero(3);
-  Vector3 basePositionEstimate = Vector3::Zero(3);
-  for (int foot = 0;foot<4;foot++) {
-  	if ((feetStatus[foot] == 1) && (feetStancePhaseDuration[foot] >= 16)) { //  Security margin after the contact switch
-        baseVelocityEstimate += computeBaseVelocityFromFoot(foot);
-        basePositionEstimate += computeBasePositionFromFoot(foot);
-        nContactFeet ++;
-  	}
-  }
+	// Get estimated velocity from updated model
+	int nContactFeet = 0;
+	Vector3 baseVelocityEstimate = Vector3::Zero(3);
+	Vector3 basePositionEstimate = Vector3::Zero(3);
+	for (int foot = 0;foot<4;foot++) {
+		if ((feetStatus[foot] == 1) && (feetStancePhaseDuration[foot] >= 16)) { //  Security margin after the contact switch
+			baseVelocityEstimate += computeBaseVelocityFromFoot(foot);
+			basePositionEstimate += computeBasePositionFromFoot(foot);
+			nContactFeet ++;
+		}
+	}
 
-  //  If at least one foot is in contact, we do the average of feet results
-  if (nContactFeet > 0) {
-    this->baseVelocityFK = baseVelocityEstimate / nContactFeet;
-    this->basePositionFK = basePositionEstimate / nContactFeet;
-  }
+	//  If at least one foot is in contact, we do the average of feet results
+	if (nContactFeet > 0) {
+		this->baseVelocityFK = baseVelocityEstimate / nContactFeet;
+		this->basePositionFK = basePositionEstimate / nContactFeet;
+	}
 }
 
 
@@ -299,40 +304,60 @@ void Estimator::computeFeetPositionBarycenter() {
     feetPositionBarycenter = xyz_feet / nContactFeet;
 }
 
+// alpha is the velocity filter factor.
+// it is computed in a way that in the middle of a step, alpha becomes alphaVelMin(0.97), at the beginning and the end it becomes alphaVelMax(1.0)
 double Estimator::computeAlphaVelocity() {
-  double a = std::ceil(feetStancePhaseDuration.maxCoeff() * 0.1) - 1;
-  double b = static_cast<double>(phaseRemainingDuration);
-  double c = ((a + b) - 2) * 0.5;
-  if (a <= 0 || b <= 1)
-    return alphaVelMax;
-  else
-    return alphaVelMin + (alphaVelMax - alphaVelMin) * std::abs(c - (a - 1)) / c;
+	int mpc_loops_passed, mpc_loops_to_go;
+	gaitPlanner->getLoopsInSteps(mpc_loops_passed, mpc_loops_to_go);
+	float wbc_loops_passed = (float)(mpc_loops_passed * params->get_k_mpc());
+	float wbc_loops_to_go = (float)(mpc_loops_to_go * params->get_k_mpc());
+	float loop_in_gait = (float)(params->get_k_mpc()-params->get_k_left_in_gait());
+	double cnew = (wbc_loops_passed + loop_in_gait)/(wbc_loops_passed + wbc_loops_to_go);
+	// a goes from 0 to feetStancePhaseDuration.maxCoeff()  counts up from
+	double a = std::ceil(feetStancePhaseDuration.maxCoeff() * 0.1) - 2;  // goes from r1 to n during a gait, the higher the speed the higher a
+	double b = static_cast<double>(phaseRemainingDuration);					// goes from 0 to #loops each foot has been in contact
+	double c = ((a + b)) * 0.5;													// goes from
+
+	double alpha = alphaVelMax;
+	double alpha_new = alphaVelMax;
+
+	if ((a > -1 ) && (b > 0)) {
+		alpha = alphaVelMin + (alphaVelMax - alphaVelMin) * std::abs(c - a) / c;
+		alpha_new = alphaVelMin + (alphaVelMax - alphaVelMin) * std::abs(1.0- 2.*cnew );
+	}
+
+	std::cout << "alpha: " << feetStancePhaseDuration.maxCoeff() << ", alpha =" << alpha << "alphanew " << alpha_new <<  std::endl;
+	return alpha;
 }
 
 
 void Estimator::estimatePositionAndVelocity() {
-  Vector3 alpha = Vector3::Ones() * computeAlphaVelocity();
-  Matrix3 oRb = IMUQuat.toRotationMatrix();
-  Vector3 bTi = transBase2IMU.cross(IMUAngularVelocity);
+	// alpha for complementary filter, varies depending on the phase within the gait
+	Vector3 alpha = Vector3::Ones() * computeAlphaVelocity();
+	Matrix3 oRb = IMUQuat.toRotationMatrix();
+	Vector3 bTi = b_IMULocation.cross(IMUAngularVelocity);
 
-  // At IMU location in world frame
-  Vector3 oi_baseVelocityFK = oRb * (baseVelocityFK + bTi);
-  Vector3 oi_baseVelocity = velocityFilter.compute(oi_baseVelocityFK, oRb * IMULinearAcceleration, alpha);
-  std::cout << "linacc" << IMULinearAcceleration  << ": base_velocity " << oi_baseVelocity << std::endl;
+	// base velocity of FK in world frame
+	Vector3 oi_baseVelocityFK = oRb * (baseVelocityFK + bTi);
 
+	// filter the velocity.
+	// In the middle of a step we trust the velocity coming from the FK (alpha = 0.97)
+	// at the beginning and the end of a step, the velocity from FK is not trusted since feet might slide.
+	// The IMU's acceleration is added as a high pass while being damped in the middle of the step
+	Vector3 oi_baseVelocity = velocityFilter.compute(oi_baseVelocityFK, oRb * IMULinearAcceleration, alpha);
 
-  // At base location in base frame
-  b_baseVelocity = oRb.transpose() * oi_baseVelocity - bTi;
+	// At base location in base frame
+	Vector3 b_baseVelocity = oRb.transpose() * oi_baseVelocity - bTi;
 
-  vEstimate.head(3) = b_baseVelocity;
-  vEstimate.segment(3, 3) = IMUAngularVelocity;
-  vEstimate.tail(12) = vActuators;
+	vEstimate.head(3) = b_baseVelocity;
+	vEstimate.segment(3, 3) = IMUAngularVelocity;
+	vEstimate.tail(12) = vActuators;
 
-  Vector3 basePosition = basePositionFK + feetPositionBarycenter;
-  qEstimate.head(3) = positionFilter.compute(basePosition, oRb * b_baseVelocity, alphaPos);
+	Vector3 basePosition = basePositionFK + feetPositionBarycenter;
+	qEstimate.head(3) = positionFilter.compute(basePosition, oRb * b_baseVelocity, alphaPos);
 
-  qEstimate.segment(3, 4) = IMUQuat.coeffs();
-  qEstimate.tail(12) = qActuators;
+	qEstimate.segment(3, 4) = IMUQuat.coeffs();
+	qEstimate.tail(12) = qActuators;
 }
 
 void Estimator::filterVelocity() {
