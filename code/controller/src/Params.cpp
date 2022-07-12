@@ -5,6 +5,7 @@ Params::Params()
     : N_steps (16), // Number of steps in the prediction horizon
       N_gait(40),
       velID(2),
+		k(0),
 
       config_file(""),
       interface(""),

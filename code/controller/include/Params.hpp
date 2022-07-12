@@ -47,12 +47,17 @@ class Params {
   // Number of wbc time steps for each MPC time step
   int get_k_mpc() { return (int)std::round(dt_mpc / dt_wbc); };
   int get_N_steps() { return N_steps; };
+  void inc_k() { k++; };
+  // current loop number
+  int get_k() { return k; };
+  // loops left until next MPC resp. step change
+  int get_k_left_in_gait() { return (get_k_mpc() - (k % get_k_mpc())); };
 
-  // legacy
-  int N_steps; 		// numebr fo steps in the prediction horizon
+
+  int N_steps; 		// number of steps in the prediction horizon
   int N_gait;			// Number of rows in the gait matrix. Arbitrary value that should be set high enough,so that there is always at least one empty line at the end of the gait matrix
   int velID;			//  Identifier of the reference velocity profile to choose which one will be sent to the robot
-
+  int k=0;					// counting wbc loops
   // See .yaml file for meaning of parameters
   // General parameters
   std::string config_file;      // Name of the yaml file containing hardware information
