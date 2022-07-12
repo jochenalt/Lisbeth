@@ -29,8 +29,6 @@ class ComplementaryFilter {
   Vector3 HighPass;   // Initial value for the high pass filter
   Vector3 LowPass;    // Initial value for the low pass filter
   Vector3 alpha;      // Filtering coefficient between x and dx quantities
-  Vector3 x;          // Quantity to filter
-  Vector3 dx;         // Quantity to filter derivative's
 };
 
 #endif  // COMPLEMENTARY_FILTER_H
