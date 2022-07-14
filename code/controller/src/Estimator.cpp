@@ -196,7 +196,6 @@ void Estimator::updatFeetStatus(MatrixN const& feetTargets) {
 
   // null out feet that are not in contact anymore
   feetStancePhaseDuration = feetStancePhaseDuration.cwiseProduct(this->feetStatus);
-  std::cout << "feetStancePhaseDuration" << feetStancePhaseDuration << std::endl;
 
   phaseRemainingDuration = 0;
   while (this->feetStatus.isApprox((Vector4)gaitPlanner->getCurrentGaitMatrix().row(phaseRemainingDuration+1))) {
@@ -307,27 +306,39 @@ void Estimator::computeFeetPositionBarycenter() {
 // alpha is the velocity filter factor.
 // it is computed in a way that in the middle of a step, alpha becomes alphaVelMin(0.97), at the beginning and the end it becomes alphaVelMax(1.0)
 double Estimator::computeAlphaVelocity() {
-	int mpc_loops_passed, mpc_loops_to_go;
-	gaitPlanner->getLoopsInSteps(mpc_loops_passed, mpc_loops_to_go);
-	float wbc_loops_passed = (float)(mpc_loops_passed * params->get_k_mpc());
-	float wbc_loops_to_go = (float)(mpc_loops_to_go * params->get_k_mpc());
-	float loop_in_gait = (float)(params->get_k_mpc()-params->get_k_left_in_gait());
-	double cnew = (wbc_loops_passed + loop_in_gait)/(wbc_loops_passed + wbc_loops_to_go);
-	// a goes from 0 to feetStancePhaseDuration.maxCoeff()  counts up from
-	double a = std::ceil(feetStancePhaseDuration.maxCoeff() * 0.1) - 2;  // goes from r1 to n during a gait, the higher the speed the higher a
-	double b = static_cast<double>(phaseRemainingDuration);					// goes from 0 to #loops each foot has been in contact
-	double c = ((a + b)) * 0.5;													// goes from
+	// calculate the ratio 0..1 where we are within the same step. 0 = beginning, 1 = end, right before a step change.
+	double instep = gaitPlanner->getInStepPercentage();
 
-	double alpha = alphaVelMax;
+
+	// a goes from 0 to feetStancePhaseDuration.maxCoeff()  counts up from
+	//double a = std::ceil(feetStancePhaseDuration.maxCoeff() * 0.1) - 2;  // goes from r1 to n
+	//double b = static_cast<double>(phaseRemainingDuration);					// goes from 0 to #loops each foot has been in contact
+	//double c = ((a + b)) * 0.5;													// goes from
+
+	// double alpha = alphaVelMax;
 	double alpha_new = alphaVelMax;
 
-	if ((a > -1 ) && (b > 0)) {
-		alpha = alphaVelMin + (alphaVelMax - alphaVelMin) * std::abs(c - a) / c;
-		alpha_new = alphaVelMin + (alphaVelMax - alphaVelMin) * std::abs(1.0- 2.*cnew );
+	//if ((a > -1 ) && (b > 0)) {
+	//	alpha = alphaVelMin + (alphaVelMax - alphaVelMin) * std::abs(c - a) / c;
+	//}
+
+	// within 10% of the beginning and the end of a step we completely trust the IMU
+	const double trustIMUPercentage = 0.1;
+
+	// create a number from 0 ... 1 ... 0  representing the position within the same step
+	double cnew = 1.0 - std::abs(instep-0.5)*2.0;
+	if (cnew < (trustIMUPercentage*2.0))
+			alpha_new = 1.0;
+	else {
+		// c follows the current step and indicates the position within  by the value 0 .. 0.5 .. 1
+		// convert it to alpha = alphaVelMax ... alphaVelMin..alphaVelMax
+		alpha_new = alphaVelMax - (alphaVelMax - alphaVelMin) * std::abs(sqrt(cnew));
 	}
 
-	std::cout << "alpha: " << feetStancePhaseDuration.maxCoeff() << ", alpha =" << alpha << "alphanew " << alpha_new <<  std::endl;
-	return alpha;
+	// std::cout << "alpha=" << alpha << " alphanew:" << alpha_new << " ft:" << feetStancePhaseDuration.transpose()
+	//		<<  " cnew:" << cnew << std::endl;
+
+	return alpha_new;
 }
 
 

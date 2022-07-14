@@ -1,13 +1,9 @@
 #include <WBCSolver.hpp>
 
-#include "../include/st_to_cc.hpp"
+#include "st_to_cc.hpp"
 
 
 WBCSolver::WBCSolver() {
-  /*
-  Constructor of the QP solver. Initialization of matrices
-  */
-
   // Slipping constraints
   Eigen::Matrix<double, 5, 3> SC = Eigen::Matrix<double, 5, 3>::Zero();
   int a[9] = {0, 1, 2, 3, 0, 1, 2, 3, 4};

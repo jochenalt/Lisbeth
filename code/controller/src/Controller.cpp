@@ -282,8 +282,11 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 		mpcController.solve(bodyPlanner.getBodyTrajectory(), footstepPlanner.getFootsteps(), gait.getCurrentGaitMatrix());
 		f_mpc = mpcController.get_latest_result();
 	}
-	if ((k % params->get_k_mpc()) >= 2)
-		f_mpc = mpcController.get_latest_result();
+	//if (mpcController.is_ready() || (params->get_k() == 0)) {
+	//	std::cout << "mpc" << std::endl;
+	//	f_mpc = mpcController.get_latest_result();
+	//	mpcController.solve(bodyPlanner.getBodyTrajectory(), footstepPlanner.getFootsteps(), gait.getCurrentGaitMatrix());
+	//}
 
 	// Whole Body Control
 	// If nothing wrong happened yet in the WBC controller

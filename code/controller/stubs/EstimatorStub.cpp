@@ -18,8 +18,6 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
 			  .def("get_v_security", &Estimator::getVSecurity)
 	        .def("get_feet_status", &Estimator::getFeetStatus)
 	        .def("get_feet_targets", &Estimator::getFeetTargets)
-	        .def("get_base_velocity_FK", &Estimator::getBaseVelocityFK)
-	        .def("get_base_position_FK", &Estimator::getBasePositionFK)
 			  .def("get_q_reference", &Estimator::getQReference)
 			  .def("get_v_reference", &Estimator::getVReference)
 			  .def("get_base_vel_ref", &Estimator::getBaseVelRef)
@@ -32,13 +30,12 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
 	        .def("get_hRb", &Estimator::gethRb)
 	        .def("get_oTh", &Estimator::getoTh)
 
-		    .def("getImuRPY",&Estimator::getImuRPY)
-		    .def("isSteady",&Estimator::isSteady)
-
-			// run one loop of estimator
-			.def("run",&Estimator::run, bp::args("targets",
-												 "baseLinearAcceleration", "baseAngularVelocity", "baseOrientation","baseOrientationQuad",
-												 "q", "v"));
+		     .def("getImuRPY",&Estimator::getImuRPY)
+		     .def("isSteady",&Estimator::isSteady)
+			  .def("run",&Estimator::run,
+					   bp::args("targets",
+									"baseLinearAcceleration", "baseAngularVelocity", "baseOrientation","baseOrientationQuad",
+									"q", "v"));
     }
 
     static void expose()
