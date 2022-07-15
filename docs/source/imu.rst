@@ -122,7 +122,7 @@ Considering the acceleration data, the quaternion should represent the rotation 
 .. image:: /images/Quaternion_Acceleration_Fusion.png
 	:width: 600
 	:alt: Conventions
-	:label: eq:(2)
+	:label: eq:accelerationfusion
 
 
 Same thing happens to the data from the magnetic sensor. Again, the quaternion should represent the rotation relative to the magnetic vector |MagneticVector|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatMagnetic|. The same nice `DCM Article <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_  leads to 
@@ -134,7 +134,7 @@ Same thing happens to the data from the magnetic sensor. Again, the quaternion s
 .. image:: /images/Quaternion_MagneticField_Fusion.png
 	:width: 500
 	:alt: Conventions
-	:label: eq:(3)
+	:label: eq:magneticfusion
 
 
 Now we know how to change the state of our filter represented by a quaternion on the basis of incoming acceleration, gyro, and magnetometer data. 
@@ -146,7 +146,7 @@ The filter variables
 Lets continue with the space state description. It is approached as a descrete stochastic non-linear dynamic system:
 
 .. image:: /images/State_Space_Equation.png
-	:width: 600
+	:width: 700
 	:alt: Conventions
 
 
@@ -157,16 +157,16 @@ As indicated before, our state |StateVariableX| is a quaternion representing the
 	:alt: Conventions
 
 .. |StateVariableX| image:: /images/state_variable_x.png
-	:width: 15
+	:width: 35
 .. |StateVariableU| image:: /images/state_variable_u.png
-	:width: 15
+	:width: 35
 .. |StateVariableY| image:: /images/state_variable_y.png
-	:width: 15
+	:width: 35
 
 The Kalman filter predicts the next state by the current state and input vector (gyro). Therefore, equation (1) gives 
 
 .. image:: /images/next_state_prediction.png
-	:width: 250
+	:width: 150
 	:alt: Conventions
 
 The change of the output is also already done with eq (2) and eq (3):
@@ -180,7 +180,8 @@ And that's all we need to feed into the Unscented Kalman filter.
 The Unscented Kalman filter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Without further ado, first some definition:
+The description of the implementation has been borrowed from `here <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_:
+First some definition:
 
 .. image:: /images/UKF_Definition.png
 	:width: 700
