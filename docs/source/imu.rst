@@ -97,7 +97,7 @@ Sensor fusion means merging the drifty gyro data with the noisy acceleration dat
 `Quaternions <https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation>`_ avoid a  gimbal lock and are computational less intense(not really relevant actually). As usual we use the convention `roll, pitch, and yaw <https://en.wikipedia.org/wiki/Flight_dynamics_(fixed-wing_aircraft)>`_ to avoid breaking fingers when picturing vectors.
 
 .. image:: /images/RPY.png
-	:width: 400
+	:width: 200
 	:alt: Conventions
 
 The conventions used in the following are:
@@ -143,34 +143,52 @@ Now we know how to change the state of our filter represented by a quaternion on
 The filter variables
 ^^^^^^^^^^^^^^^^^^^^
 
-Lets continue with the space state description. It is approached as a descrete stochastic non-linear dynamic System:
+Lets continue with the space state description. It is approached as a descrete stochastic non-linear dynamic system:
 
 .. image:: /images/State_Space_Equation.png
-	:width: 300
+	:width: 600
 	:alt: Conventions
 
 
 As indicated before, our state |StateVariableX| is a quaternion representing the pose of the IMU in space. The input/control vector |StateVariableU| is the gyro data, since that is not noisy and most precise in the short term. Finally, the acceleration and magnetometer vectors represent the output vector |StateVariableY|.
 
 .. image:: /images/State_Space_Variables.png
-	:width: 300
+	:width: 500
 	:alt: Conventions
 
 .. |StateVariableX| image:: /images/state_variable_x.png
+	:width: 15
 .. |StateVariableU| image:: /images/state_variable_u.png
+	:width: 15
 .. |StateVariableY| image:: /images/state_variable_y.png
+	:width: 15
 
 The Kalman filter predicts the next state by the current state and input vector (gyro). Therefore, equation (1) gives 
 
 .. image:: /images/next_state_prediction.png
-	:width: 300
+	:width: 250
 	:alt: Conventions
 
 The change of the output is also already done with eq (2) and eq (3):
 
 .. image:: /images/output_equation.png
-	:width: 300
+	:width: 500
 	:alt: Conventions
 
-And that's all we need for the Unscented Kalman filter that maintains the noise and covariance for us and estimates the state.
+And that's all we need to feed into the Unscented Kalman filter.
+
+The Unscented Kalman filter
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Without further ado, first some definition:
+
+.. image:: /images/UKF_Definition.png
+	:width: 700
+	:alt: Conventions
+
+Then, the UKF algorithm works like this:
+
+.. image:: /images/UKF_Calculation.png
+	:width: 700
+	:alt: Conventions
 
