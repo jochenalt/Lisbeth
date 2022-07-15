@@ -112,7 +112,7 @@ The state of the filter will be represented by a quaternion. The gyro is deliver
 .. math::
      :label: EQquaternionderivative
 		
-	  |QuaternionDerivativ|  
+|QuaternionDerivativ|  
 
 
 .. |QuaternionDerivativ| image:: /images/Quaternion_derivative.png
@@ -145,6 +145,7 @@ Same thing happens to the data from the magnetic sensor. Again, the quaternion s
 .. image:: /images/Quaternion_MagneticField_Fusion.png
 	:width: 500
 	:alt: MagneticFusion
+	:class: float-left
 
 Eq(3)
 
