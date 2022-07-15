@@ -3,7 +3,11 @@ Inertial Measurement Unit (IMU)
 
 The IMU is the source of the entire pipeline, therefore it is needs to be very fast as the pipeline is supposed to work with a decent frequency. Most hobby IMUs go up to 100Hz, which is okay, but above that things quickly get expensive. Heavy hearted I went with the `Lord Microstrain 3DM-CV5 IMU <https://www.microstrain.com/inertial-sensors/3dm-cv5-10>`_. Don't even ask.
 
-Anyhow. To set it up, it makes sense to try out `SensorConnect <https://www.microstrain.com/software/sensorconnect>`_ first, that allows to set the baud rate, and to see the accel and gyro live. 460800 baud is also needed by the firmware to establish a connection to the IMU. This is a little show-off from the vendor site how sensor connect looks like:   
+
+Setting up the IMU
+------------------
+
+To set it up, it makes sense to try out `SensorConnect <https://www.microstrain.com/software/sensorconnect>`_ first, that allows to set the baud rate, and to see the accel and gyro live. 460800 baud is also needed by the firmware to establish a connection to the IMU. This is a little show-off from the vendor site how sensor connect looks like:   
 
 .. |pic1| image:: /images/Lord_Microstrain_3DMCV5-IMU.png
    :width: 20%
@@ -58,8 +62,27 @@ Finally, we need to define this as startup settings:
 	:alt: Save the settings
 
 And the data streaming should start right away after startup:
-Finally, we need to define this as startup settings:
 
 .. image:: /images/Sensorconnect_start_streaming.png
 	:width: 500
 	:alt: Start streaming after start
+
+Done.
+
+How is the filtering working
+----------------------------
+
+Filtering the data from an IMU is essential. Acceleration sensors are noise, and gyros drift over time. 
+
+The easiest way to solve this is complementary filter, that only takes the changes in the gyro into account, but uses the accelertion sensor as source for the angle. 
+
+The implementation integrates the gyro data over time resulting in a drifting but non-noise angle, then sends the result through a high pass filter to get rid of the drift, and fuses it with low passed acceleration data to get rid of its noise.
+
+.. image:: /images/Complementary_Filter.png
+	:width: 500
+	:alt:  Complementary Filter
+
+That looks too easy to be true, and it isn't. In reality the cut off frequency (in the code above that is dertemining the :math:`{\alpha}` = 0.98) is hard to state, and even worse, if the sensor has some dynamic behaviour like not being linear or changes its noise, drift or behaviour, a static value is just arbitrary.
+
+
+This is solved by Rudolf E. Kálmán's famous `Kalman Filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf>'. A digestable description can be found `here <https://www.kalmanfilter.net/default.aspx>`.
