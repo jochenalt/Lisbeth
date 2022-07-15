@@ -117,9 +117,8 @@ The state of the filter will be represented by a quaternion. The gyro is deliver
 	:class: float-left
 
 Eq(1)
+|br||br|
 
-|br|
-<br>
 Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector |Gravity|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatGravity|. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
 
 .. |Gravity| image:: /images/Gravity_vector.png
@@ -132,9 +131,7 @@ Considering the acceleration data, the quaternion should represent the rotation 
 	:alt: accelerationfusion
 	:class: float-left
 
-Eq(2)
-
-|br|
+Eq(2)|br||br|
 
 Same thing happens to the data from the magnetic sensor. Again, the quaternion should represent the rotation relative to the magnetic vector |MagneticVector|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatMagnetic|. The same nice `DCM Article <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_  leads to 
 
@@ -150,7 +147,8 @@ Same thing happens to the data from the magnetic sensor. Again, the quaternion s
 Eq(3)
 
 |br|
-<br>
+|br|
+
 Now we know how to change the state of our filter represented by a quaternion on the basis of incoming acceleration, gyro, and magnetometer data. 
 
 
