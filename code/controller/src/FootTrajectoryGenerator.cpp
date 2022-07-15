@@ -222,7 +222,7 @@ void FootTrajectoryGenerator::updateFootPosition(int const j, Vector3 const &tar
 void FootTrajectoryGenerator::update(bool startNewCycle, MatrixN const &targetFootstep) {
   if (startNewCycle) {
     // Status of feet
-    feet = gait_->getCurrentGait().row(0).cast<int>();
+    feet = gait_->getCurrentGaitMatrix().row(0).cast<int>();
 
     // If no foot in swing phase
     if (feet.sum() == 4) return;

@@ -172,10 +172,6 @@ class Controller:
         # Load robot model and data
         self.robot = self.init_robot(params)
 
-        # initialize Cpp state estimator
-        self.estimator = core.Estimator()
-        self.estimator.initialize(params)
-
         self.wbcController = core.WbcController()
         self.wbcController.initialize(params)
 
@@ -188,8 +184,6 @@ class Controller:
 
         self.DEMONSTRATION = params.DEMONSTRATION
         self.SIMULATION = params.SIMULATION
-        self.k_mpc = int(params.dt_mpc / params.dt_wbc)
-        self.k = 0
         self.enable_pyb_GUI = params.enable_pyb_GUI
 
         self.h_ref = params.h_ref
@@ -201,6 +195,11 @@ class Controller:
         self.gait = core.Gait()
         self.gait.initialize(params)
         self.gait.update(True,  Types.GaitType.NoMovement.value)
+
+        # initialize Cpp state estimator
+        self.estimator = core.Estimator()
+        self.estimator.initialize(params, self.gait)
+
 
         self.statePlanner = core.StatePlanner()
         self.statePlanner.initialize(params, self.gait)
@@ -215,7 +214,6 @@ class Controller:
 
         # Wrapper that makes the link with the solver that you want to use for the MPC
         # First argument to True to have PA's MPC, to False to have Thomas's MPC
-        self.k = 0
         self.velID = params.velID
         self.base_targets = np.zeros(12)
 
@@ -261,8 +259,10 @@ class Controller:
         Args:
             device (object): Interface with the masterboard or the simulation
         """
-
-        print("---- PY---", self.k, self.k % self.k_mpc, self.k_mpc - self.k % self.k_mpc)
+        
+        k = params.get_k()
+        k_mpc = params.get_k_mpc()
+        print("---- PY---", k, k % k_mpc, k_mpc - k % k_mpc)
         t_start = time.time()
 
         # Update the reference velocity coming from the gamepad
@@ -293,17 +293,12 @@ class Controller:
             
 
         # at a new gait cycle we need create the next gait round and start MPC
-        startNewGaitCycle = (self.k % self.k_mpc) == 0
-        
-        # number of cycles left 1..10
-        k_left_in_gait = self.k_mpc - self.k % self.k_mpc
-        
+        startNewGaitCycle = params.is_new_mpc_cycle()
+                
         self.gait.update(startNewGaitCycle, gaitCode)
         
         # Compute target footstep based on current and reference velocities
-        o_targetFootstep = self.footstepPlanner.updateFootsteps(startNewGaitCycle and self.k != 0,
-                                                                k_left_in_gait,
-                                                                self.q,
+        o_targetFootstep = self.footstepPlanner.updateFootsteps(self.q,
                                                                 self.h_v_windowed,
                                                                 self.v_ref)
 
@@ -321,10 +316,10 @@ class Controller:
 
         # Solve MPC problem once every k_mpc iterations of the main loop
         if startNewGaitCycle:
-            self.mpcController.solve(reference_state,  self.footstepPlanner.getFootsteps(),self.gait.matrix)
+            self.mpcController.solve(reference_state,  self.footstepPlanner.getFootsteps(),self.gait.getCurrentGait())
             self.mpc_f_cmd = self.mpcController.get_latest_result() # solution should be there by now
 
-        if (self.k % self.k_mpc) >= 2:
+        if (k % k_mpc) >= 2:
             self.mpc_f_cmd = self.mpcController.get_latest_result() # solution should be there by now
 
         t_mpc = time.time()
@@ -355,7 +350,7 @@ class Controller:
             
             # Run InvKin + WBC QP
             self.wbcController.compute(self.q_wbc, self.dq_wbc,
-                                    self.wbc_f_cmd, np.array([self.gait.matrix[0, :]]),
+                                    self.wbc_f_cmd, np.array([self.gait.getCurrentGait()[0, :]]),
                                     self.feet_p_cmd,
                                     self.feet_v_cmd,
                                     self.feet_a_cmd,
@@ -372,9 +367,6 @@ class Controller:
 
         # Security check
         self.security_check(remoteControl)
-
-        # Increment loop counter
-        self.k += 1
 
         return 0.0
 
@@ -426,7 +418,7 @@ class Controller:
         #print ("PY self.gait.matrix,", self.gait.matrix)
         #print ("PY self.footTrajectoryGenerator.get_foot_position().", self.footTrajectoryGenerator.get_foot_position())
 
-        self.estimator.run(self.gait.matrix,self.footTrajectoryGenerator.get_foot_position().copy(),
+        self.estimator.run(self.footTrajectoryGenerator.get_foot_position().copy(),
                            device.baseLinearAcceleration.copy(), device.baseAngularVelocity.copy(), device.baseOrientation.copy(),device.baseOrientationQuad.copy(), # data from IMU
                            device.q_mes, device.v_mes) # data from joints
 

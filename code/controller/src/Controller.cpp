@@ -25,7 +25,6 @@ Controller::Controller()
       error(false),
       error_flag(0),
       error_value(Vector12::Zero()),
-      k(0),
       q_filt_mpc(Vector18::Zero()),
       h_v_filt_mpc(Vector6::Zero()),
       vref_filt_mpc(Vector6::Zero()),
@@ -152,7 +151,7 @@ void Controller::initialize(Params& params_in) {
 	  footstepPlanner.initialize(params_in, gait);
 	  mpcController.initialize(params_in);
 	  footTrajectoryGenerator.initialize(params_in, gait);
-	  estimator.initialize(params_in);
+	  estimator.initialize(params_in, gait);
 	  wbcController.initialize(params_in);
 
 	  filter_mpc_q.initialize(params_in);
@@ -230,9 +229,10 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 			 Vector12 const& jointsPositions,
 			 Vector12 const& jointsVelocities)
 {
+	int k = params->get_k();
 	std::cout << "--- C++ ---" << k << " " << k % params->get_k_mpc() << " " << params->get_k_mpc() - (k % params->get_k_mpc())<< std::endl;
 
-	estimator.run(gait.getCurrentGait(), footTrajectoryGenerator.getFootPosition(),
+	estimator.run(footTrajectoryGenerator.getFootPosition(),
 		  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,  imuAttitudeQuat,
 				jointsPositions,jointsVelocities);
 
@@ -262,16 +262,13 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	}
 
 	// at a new gait cycle we need create the next gait round and start MPC
-	bool startNewGaitCycle = (k % params->get_k_mpc()) == 0;
+	bool startNewGaitCycle = params->is_new_mpc_cycle();
 
-	// number of cycles left until next mpc 1..10
-	int k_left_in_gait = params->get_k_mpc() - (k % params->get_k_mpc());
 	gait.update(startNewGaitCycle, cmd_gait);
 	cmd_gait = GaitType::NoGait;
 
 	// Compute target footstep based on current and reference velocities
-	o_targetFootstep = footstepPlanner.updateFootsteps(
-										startNewGaitCycle && (k != 0), k_left_in_gait, estimator.getQReference(),
+	o_targetFootstep = footstepPlanner.updateFootsteps(estimator.getQReference(),
 										estimator.getHVFiltered(), estimator.getBaseVelRef());
 
 	// Update pos, vel and acc references for feet
@@ -282,7 +279,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	// Solve MPC problem once every params->get_k_mpc() iterations of the main loop
 	if (startNewGaitCycle) {
-		mpcController.solve(bodyPlanner.getBodyTrajectory(), footstepPlanner.getFootsteps(), gait.getCurrentGait());
+		mpcController.solve(bodyPlanner.getBodyTrajectory(), footstepPlanner.getFootsteps(), gait.getCurrentGaitMatrix());
 		f_mpc = mpcController.get_latest_result();
 	}
 	if ((k % params->get_k_mpc()) >= 2)
@@ -322,7 +319,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    dq_wbc.tail(12) = wbcController.get_vdes();            	// with reference angular velocities of previous loop
 
 	    // Run InvKin + WBC QP
-	    wbcController.compute(q_wbc, dq_wbc, f_mpc, gait.getCurrentGait().row(0),
+	    wbcController.compute(q_wbc, dq_wbc, f_mpc, gait.getCurrentGaitMatrix().row(0),
 	    					  feet_p_cmd,feet_v_cmd,feet_a_cmd,
 	    					  base_targets);
 

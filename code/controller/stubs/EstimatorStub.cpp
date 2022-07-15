@@ -11,7 +11,7 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
     void visit(PyClassEstimator& cl) const
     {
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
-        	  .def("initialize",&Estimator::initialize, bp::args("params"))
+        	  .def("initialize",&Estimator::initialize, bp::args("params", "gait"))
            .def("update_reference_state", &Estimator::updateReferenceState, bp::args("v_ref"))
 			  .def("get_q_estimate", &Estimator::getQEstimate)
 			  .def("get_v_estimate", &Estimator::getVEstimate)
@@ -20,16 +20,6 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
 	        .def("get_feet_targets", &Estimator::getFeetTargets)
 	        .def("get_base_velocity_FK", &Estimator::getBaseVelocityFK)
 	        .def("get_base_position_FK", &Estimator::getBasePositionFK)
-	        .def("get_feet_position_barycenter", &Estimator::getFeetPositionBarycenter)
-	        .def("get_b_base_velocity", &Estimator::getBBaseVelocity)
-	        .def("get_filter_vel_X", &Estimator::getFilterVelX)
-	        .def("get_filter_vel_DX", &Estimator::getFilterVelDX)
-	        .def("get_filter_vel_Alpha", &Estimator::getFilterVelAlpha)
-	        .def("get_filter_vel_FiltX", &Estimator::getFilterVelFiltX)
-	        .def("get_filter_pos_X", &Estimator::getFilterPosX)
-	        .def("get_filter_pos_DX", &Estimator::getFilterPosDX)
-	        .def("get_filter_pos_Alpha", &Estimator::getFilterPosAlpha)
-	        .def("get_filter_pos_FiltX", &Estimator::getFilterPosFiltX)
 			  .def("get_q_reference", &Estimator::getQReference)
 			  .def("get_v_reference", &Estimator::getVReference)
 			  .def("get_base_vel_ref", &Estimator::getBaseVelRef)
@@ -46,7 +36,7 @@ struct EstimatorPythonVisitor : public bp::def_visitor<EstimatorPythonVisitor<Es
 		    .def("isSteady",&Estimator::isSteady)
 
 			// run one loop of estimator
-			.def("run",&Estimator::run, bp::args("gait", "targets",
+			.def("run",&Estimator::run, bp::args("targets",
 												 "baseLinearAcceleration", "baseAngularVelocity", "baseOrientation","baseOrientationQuad",
 												 "q", "v"));
     }

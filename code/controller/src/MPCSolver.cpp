@@ -1,5 +1,6 @@
 #include <MPCSolver.hpp>
-#include "st_to_cc.hpp"
+
+#include "../include/st_to_cc.hpp"
 
 MPCSolver::MPCSolver(Params& params_in) {
   params = &params_in;

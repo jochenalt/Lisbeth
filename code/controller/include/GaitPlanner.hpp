@@ -51,12 +51,12 @@ public:
 
     void rollGait();
 
-    MatrixN4 getCurrentGait() { return currentGait_; }
-    double getCurrentGait(int i, int j) { return currentGait_(i, j); }
-    bool getIsStatic() { return is_static_; }
-    bool isNewPhase() { return newPhase_; }
-    GaitType getCurrentGaitType() { return currentGaitType_; }
-    int getCurrentGaitTypeInt() { return currentGaitType_; }
+    MatrixN4 getCurrentGaitMatrix() { return currentGait; }
+    double getCurrentGait(int i, int j) { return currentGait(i, j); }
+    bool getIsStatic() { return is_static; }
+    bool isNewPhase() { return newPhase; }
+    GaitType getCurrentGaitType() { return currentGaitType; }
+    int getCurrentGaitTypeInt() { return currentGaitType; }
 
     GaitType getPrevGaitType() { return prevGaitType_; }
     int getPrevGaitTypeInt() { return prevGaitType_; }
@@ -65,6 +65,8 @@ public:
     double getRemainingTime(int i, int j);
     double getPhaseDuration(int i, int j);
 
+    // returns the loops (=MPC cycles) ahead until the gait changes and the loops behind us with the current gait
+    void getLoopsInSteps(int &loops_passed, int & loops_to_go);
 private:
     void createWalk();
     void createTrot();
@@ -77,25 +79,22 @@ private:
 
     void setGait(int pos, int sequences, MatrixN4 & gait, std::string sequence);
 
-    MatrixN4 pastGait_;     // Past gait
+    MatrixN4 pastGait;     // Past gait
 
-public:
-    MatrixN4 currentGait_;  // Current and future gait. needs to be public to be used from python
-private:
-    MatrixN4 desiredGait_;  // Future desired gait
+    MatrixN4 currentGait;  // Current and future gait. needs to be public to be used from python
+    MatrixN4 desiredGait;  // Future desired gait
 
     Params* params;
 
     double remainingTime_;
 
-    bool newPhase_;
-    bool is_static_;
+    bool newPhase;
+    bool is_static;
 
-    GaitType currentGaitType_;
+    GaitType currentGaitType;
     GaitType prevGaitType_;
 
     GaitType subGait;
-
 };
 
 #endif  // GAIT_H_INCLUDED

@@ -3,9 +3,8 @@
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <GaitPlanner.hpp>
 #include <MPCSolver.hpp>
-
+#include <st_to_cc.hpp>
 #include <Eigen/Core>
-#include "st_to_cc.hpp"
 #include "pinocchio/math/rpy.hpp"
 #include "Params.hpp"
 

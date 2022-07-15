@@ -18,7 +18,6 @@ FootstepPlanner::FootstepPlanner() :
 void FootstepPlanner::initialize(Params &params_in, GaitPlanner &gait_in)
 {
 	params = &params_in;
-	h_ref = params->h_ref;
 	footsteps_under_shoulders
 			<< Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(
 					params->footsteps_under_shoulders.data(),
@@ -68,11 +67,11 @@ void FootstepPlanner::initialize(Params &params_in, GaitPlanner &gait_in)
 	foot_ids_[3] = static_cast<int>(model.getFrameId("HR_FOOT"));
 }
 
-Matrix34 FootstepPlanner::updateFootsteps(bool refresh, int k, Vector18 const &q,
+Matrix34 FootstepPlanner::updateFootsteps(Vector18 const &q,
 		Vector6 const &b_v, Vector6 const &b_vref)
 {
 	// Update location of feet in stance phase (for those which just entered stance phase)
-	if (refresh && gait->isNewPhase())
+	if (params->is_new_mpc_cycle() && (params->get_k() != 0) && gait->isNewPhase())
 	{
 		updateNewContact(q);
 	}
@@ -93,17 +92,19 @@ Matrix34 FootstepPlanner::updateFootsteps(bool refresh, int k, Vector18 const &q
 	}
 
 	// Compute location of footsteps
-	Matrix34 result = computeTargetFootstep(k, q.head(6), b_v, b_vref);
+	Matrix34 result = computeTargetFootstep(q.head(6), b_v, b_vref);
 	return result;
 }
 
-void FootstepPlanner::computeFootsteps(int steps_left_in_gait, Vector6 const &b_v, Vector6 const &b_vref)
+void FootstepPlanner::computeFootsteps(Vector6 const &b_v, Vector6 const &b_vref)
 {
+	int steps_left_in_gait = params->get_k_left_in_gait();
+
 	for (uint i = 0; i < footsteps.size(); i++)
 	{
 		footsteps[i] = Matrix34::Zero();
 	}
-	MatrixN current_gait = gait->getCurrentGait();
+	MatrixN current_gait = gait->getCurrentGaitMatrix();
 
 	// Set current position of feet for feet in stance phase
 	for (int j = 0; j < 4; j++)
@@ -201,7 +202,7 @@ void FootstepPlanner::computeNextFootstep(int i, int j, Vector6 const &b_v, Vect
 		Vector3 cross;
 		cross << b_v(1) * b_vref(5) - b_v(2) * b_vref(4), b_v(2) * b_vref(3)
 				- b_v(0) * b_vref(5), 0.0;
-		nextFootstep.col(j) += 0.5 * std::sqrt(h_ref / g) * cross;
+		nextFootstep.col(j) += 0.5 * std::sqrt(params->h_ref / g) * cross;
 	}
 
 	// Legs have a limited length so the deviation has to be limited
@@ -231,11 +232,10 @@ void FootstepPlanner::updateTargetFootsteps()
 	}
 }
 
-Matrix34 FootstepPlanner::computeTargetFootstep(int steps_left_in_gait,
-		Vector6 const &q, Vector6 const &b_v, Vector6 const &b_vref)
+Matrix34 FootstepPlanner::computeTargetFootstep(Vector6 const &q, Vector6 const &b_v, Vector6 const &b_vref)
 {
 	// Compute the desired location of footsteps over the prediction horizon
-	computeFootsteps(steps_left_in_gait, b_v, b_vref);
+	computeFootsteps(b_v, b_vref);
 
 	// Update desired location of footsteps on the ground
 	updateTargetFootsteps();

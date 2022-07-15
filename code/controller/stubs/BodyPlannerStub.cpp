@@ -15,15 +15,9 @@ struct StatePlannerPythonVisitor : public bp::def_visitor<StatePlannerPythonVisi
     void visit(PyClassStatePlanner& cl) const
     {
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
-
-            .def("getReferenceStates", &BodyPlanner::getBodyTrajectory, "Get xref matrix.\n")
-
-            .def("initialize", &BodyPlanner::setup, bp::args("params", "gait"),
-                 "Initialize StatePlanner from Python.\n")
-
-            // Run StatePlanner from Python
-            .def("computeReferenceStates", &BodyPlanner::update, bp::args("q", "v", "b_vref"),
-                 "Run StatePlanner from Python.\n");
+            .def("getReferenceStates", &BodyPlanner::getBodyTrajectory)
+            .def("initialize", &BodyPlanner::setup, bp::args("params", "gait"))
+            .def("computeReferenceStates", &BodyPlanner::update, bp::args("q", "v", "b_vref"));
     }
 
     static void expose()
