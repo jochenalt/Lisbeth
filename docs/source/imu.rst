@@ -116,8 +116,8 @@ The state of the filter will be represented by a quaternion. The gyro is deliver
 	:width: 200
 	:class: float-left
 
-Eq(1)
-|br||br|
+Eq(1) |br| |br| |br|
+
 
 Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector |Gravity|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatGravity|. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
 
@@ -131,7 +131,7 @@ Considering the acceleration data, the quaternion should represent the rotation 
 	:alt: accelerationfusion
 	:class: float-left
 
-Eq(2)|br||br|
+Eq(2) |br| |br| |br|
 
 Same thing happens to the data from the magnetic sensor. Again, the quaternion should represent the rotation relative to the magnetic vector |MagneticVector|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatMagnetic|. The same nice `DCM Article <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_  leads to 
 
@@ -146,8 +146,7 @@ Same thing happens to the data from the magnetic sensor. Again, the quaternion s
 
 Eq(3)
 
-|br|
-|br|
+|br| |br| |br|
 
 Now we know how to change the state of our filter represented by a quaternion on the basis of incoming acceleration, gyro, and magnetometer data. 
 
@@ -175,13 +174,13 @@ As indicated before, our state |StateVariableX| is a quaternion representing the
 .. |StateVariableY| image:: /images/state_variable_y.png
 	:width: 35
 
-The Kalman filter predicts the next state by the current state and input vector (gyro). Therefore, equation :eq:`EQquaternionderivative` gives 
+The Kalman filter predicts the next state by the current state and input vector (gyro). Therefore, equation equation (1) gives 
 
 .. image:: /images/next_state_prediction.png
 	:width: 250
 	:alt: Conventions
 
-The change of the output is also already done with :eq:`MagneticFusion` and :eq:`accelerationfusion`:
+The change of the output is also already done with equation (2) and equation (3):
 
 .. image:: /images/output_equation.png
 	:width: 500
