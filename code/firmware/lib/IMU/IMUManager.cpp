@@ -49,6 +49,11 @@ void IMUManager::loop() {
         double q = sensorData.gyro_y;
         double r = sensorData.gyro_z;
 
+        // read delta velocity vector
+        double dvx = sensorData.delta_velocity_x;
+        double dvy = sensorData.delta_velocity_y;
+        double dvz = sensorData.delta_velocity_z;
+
         // read last data point from magnetometer (might be the same like last time, since magnetometer runs slower)
         // loop the magnetometer (it runs slower than the IMU, so new_mag_value indicates when a new data point is available)
         mag.loop();
@@ -63,22 +68,23 @@ void IMUManager::loop() {
           mag.calibrateLoop(Ax, Ay, Az);
         }
 
-        // run unscented kalman filter
+        // run unscented kalman filter, and get result in quaternion
         double res_x,res_y,res_z,res_w;
         filter.compute(Ax,Ay,Az,p,q,r, 
                        Bx,By,Bz,
                        res_x,res_y, res_z,res_w);
 
-        // convert into RPY
-        pose_quat[0] = res_w;
-        pose_quat[1] = res_x;
-        pose_quat[2] = res_y;
-        pose_quat[3] = res_z;
-
-        // save last result to compute dRPY
+        // convert it to RPY after saving the prev result
         RPY_prev[0] = RPY[0];
         RPY_prev[1] = RPY[1];
         RPY_prev[2] = RPY[2];
+        quaternion2RPY(res_x, res_y,res_z,res_w, RPY);
+
+        // store quaternion
+        pose_quat[1] = res_x;
+        pose_quat[2] = res_y;
+        pose_quat[3] = res_z;
+        pose_quat[0] = res_w;
 
         // compute angular rate
         // since he filter is running warm we do not have to take care of the very first sample, which will give a crazy angular rate
@@ -87,15 +93,27 @@ void IMUManager::loop() {
         ang_rate[1] = (RPY[1] - RPY_prev[1]) *dT;
         ang_rate[2] = (RPY[2] - RPY_prev[2]) *dT;
 
-        // compute linear acceleration by removing the gravity vector
-        double gravity[3] = {0,0,1};
-        double rotated_gravity[3] = {0,0,0};
-        rotate_by_quat(gravity, pose_quat, rotated_gravity);
-        lin_acc[0] = filter.getY()[0][0] - rotated_gravity[0];
-        lin_acc[1] = filter.getY()[1][0] - rotated_gravity[1];
-        lin_acc[2] = filter.getY()[2][0] - rotated_gravity[2];
+        // guess what this is
+        const double g = 9.80665;
 
-        quaternion2RPY(res_x, res_y,res_z,res_w, RPY);
+        // the IMU delivers delta velocity including the gravity vector, that needs to be removed
+        double lin_acc_with_gravity[3] = {dvx/dT,dvy/dT,dvz/dT};
+        double rotated_lin_acc[3];
+
+        // rotate the linear acceleration towards the gravity vector
+        rotate_by_quat(lin_acc_with_gravity, pose_quat, rotated_lin_acc);
+
+        // now we can substract gravity by this
+        rotated_lin_acc[2] -= 1.0;
+
+        // to rotate it back to the IMUs frame, the inverted quaternion is needed
+        double pose_quat_inverted[4] = { -pose_quat[0], -pose_quat[1], -pose_quat[2], pose_quat[3]};
+        rotate_by_quat(rotated_lin_acc, pose_quat_inverted, lin_acc);
+
+        // return the linear acceleration in [m/s]
+        lin_acc[0] *= g;
+        lin_acc[1] *= g;
+        lin_acc[2] *= g;
 
         // for logging output compute RPY in [degree] instead of [rad]
         RPY_deg[0] = RPY[0]/(2*M_PI)*360.0;
@@ -104,14 +122,16 @@ void IMUManager::loop() {
 
         // if IMU is supposed to be verbose print out current values
         if (logisOn && isUpAndRunning()) {
-          static TimePassedBy imuTimer (250);
+          static TimePassedBy imuTimer (100);
           if (imuTimer.isDue()) {
             float freq = getAvrFrequency();
             device.printData();
-            println("   linAcc: %.1f / %.1f / %.1f",lin_acc[0], lin_acc[1], lin_acc[2]);
+            println("   linAcc: %.3f / %.3f / %.3f",lin_acc_with_gravity[0], lin_acc_with_gravity[1], lin_acc_with_gravity[2]);
+            println("   lin_acc/g: %.2f / %.2f / %.2f",lin_acc[0], lin_acc[1], lin_acc[2]);
+
             println("   avr freq : %.2f Hz",freq);
             println("   RPY : %.1f / %.1f / %.1f",RPY_deg[0], RPY_deg[1], RPY_deg[2]);
-            println("   Quat : (%.3f, %.4f, %.3f, %.3f)",pose_quat[0],pose_quat[1], pose_quat[2], pose_quat[3]);
+            println("   Quat xyzw: (%.3f, %.4f, %.3f, %.3f)",pose_quat[0],pose_quat[1], pose_quat[2], pose_quat[3]);
             println("   Mag : (%.3f, %.4f, %.3f)",Bx, By, Bz);
           }
         }

@@ -177,15 +177,12 @@ bool readResponseChar(CommandData &res){
       if (serial->available()) {
           uint8_t ch = serial->read();
 
-          // print(" %#.2x", ch);
           if (res.buffer_res_idx < 4) {
             res.buffer_res[res.buffer_res_idx++] = ch;
             // wait until we have 4 bytes in the buffer, which is the header of the package
             if (res.buffer_res_idx == 4) {
               // header is complete, check the header and get the package length
               if ((res.buffer_res[0] != 0x75) || (res.buffer_res[1] != 0x65)) {
-                // Serial.print("X");
-                // println("unexpected %.2x. Shifting header", ch);
                 // forget the first character, shift the 4 bytes to the left and try again with the next character
                 res.buffer_res[0] = res.buffer_res[1];
                 res.buffer_res[1] = res.buffer_res[2];
@@ -197,8 +194,6 @@ bool readResponseChar(CommandData &res){
                 res.payload_len = res.buffer_res[3];
                 res.buffer_res_len = res.payload_len + 6; // 4 byte in header = 4 plus 2 byte checksum 
                 res.buffer_res_idx = 4;
-                // println("header complete");
-                // println("payload1 %d",res.payload_len);
               }
             }
           } else {
@@ -210,8 +205,6 @@ bool readResponseChar(CommandData &res){
             }
             if (res.buffer_res_idx == res.buffer_res_len) {
               // we have the complete package now.
-              // Serial.print("response complete: ");
-              // printResponseBuffer(res);
 
               // fetch checksum
               uint16_t chk_asis = (((uint16_t)res.buffer_res[4+res.payload_len]) << 8) + ((uint16_t)res.buffer_res[5+res.payload_len]);
@@ -221,44 +214,33 @@ bool readResponseChar(CommandData &res){
                 res.buffer_res_idx = 0; // reset current package and forget this package
                 return false;
               }
-              // Serial.println("checksum ok");
               // extract all the fields
               uint8_t field_idx = 0;
               uint8_t copy_idx = 4;
               res.no_fields = 0;
-              // println("payload %d",res.payload_len);
 
               while (copy_idx <= res.payload_len ) {
-                // println("cooy_idx%d",copy_idx);
                 assert(field_idx < MAX_FIELDS, "not enough fields");
                 assert(copy_idx+1 < BUFFER_SIZE, "response buffer too short");
                 res.fields[field_idx].len =   res.buffer_res[copy_idx];
                 res.fields[field_idx].descr = res.buffer_res[copy_idx+1];
-                // println("field[%d].len = %d",field_idx, res.fields[field_idx].len);
 
                 for (int i = 0;i<res.fields[field_idx].len;i++) {
                   assert(field_idx < MAX_FIELDS, "not enough fields");
                   assert(i < FIELD_BUFFER_SIZE, "field buffer too short");
                   res.fields[field_idx].payload[i] = res.buffer_res[copy_idx+i];
                 };
-                // print("FieldXX[%d].len=%d: ", field_idx, res.fields[field_idx].len);
-                // printBuffer("", res.fields[field_idx].payload, res.fields[field_idx].len);
 
                 copy_idx += res.fields[field_idx].len;
                 field_idx++;
               }
               res.no_fields = field_idx;
 
-              // for (uint8_t i = 0;i<res.no_fields;i++) {
-              //  print("Field[%d].len=%d: ", i, res.fields[i].len);
-              //  printBuffer("", res.fields[i].payload, res.fields[i].len);
-              //}
 
               // buffer has been completely transfered to buffer variables, r for the next package
               res.buffer_res_idx = 0;
 
               // indicate that a full package is available in ResponseParser
-              // Serial.println("response is ok");
               return true;
             }
           } 
@@ -324,7 +306,7 @@ bool MicrostrainIMU::sendPing() {
   CommandData res("ping");
   uint8_t field[] = { 0x01, 0x00};
   createCommand1(0x01, 
-                0x01, sizeof(field), field);
+                 0x01, sizeof(field), field);
   bool ok = expectAckNackResponse();
   return ok;
 }
@@ -333,7 +315,7 @@ bool MicrostrainIMU::sendSetToIdle() {
   CommandData res("SetToIdle");
   uint8_t field[] = {  };
   createCommand1(0x01, 
-                0x02, sizeof(field), field);
+                 0x02, sizeof(field), field);
   
   bool ok = expectAckNackResponse();
   
@@ -345,7 +327,7 @@ bool MicrostrainIMU::sendResumeDevice() {
   CommandData res("ResumeDevice");
   uint8_t field[] = { };
   createCommand1(0x01, 
-                0x06, sizeof(field), field);
+                 0x06, sizeof(field), field);
   bool ok = expectAckNackResponse();
   return ok;
 }
@@ -355,18 +337,20 @@ bool MicrostrainIMU::sendResumeDevice() {
 bool MicrostrainIMU::sendSetIMUMessageFormat() {
   CommandData res("SetIMUMessageFormat");
   uint16_t rate_decimation = 1000/targetFreq; // according to data sheet
+  const int no_fields = 3; 
   uint8_t field[] = { 0x01,         // function use new settings"
-                      0x02,         // 3 fields
+                      no_fields,    // 3 fields
                       0x04, uint8_t(rate_decimation >> 8) , (uint8_t)(rate_decimation & 0xFF) ,    // Scaled Acc, chapter 5.1.1 
                       0x05, uint8_t(rate_decimation >> 8) , (uint8_t)(rate_decimation & 0xFF) ,    // Scaled Gyro, chapter 5.1.2
+                      0x08, uint8_t(rate_decimation >> 8) , (uint8_t)(rate_decimation & 0xFF) ,    // Delta velocity, chapter 5.1.4
                       // 0x0C, uint8_t(rate >> 8) , (uint8_t)(rate & 0xFF),     // Euler Angles
                       // 0x07, uint8_t(rate >> 8) , (uint8_t)(rate & 0xFF),     // Delta Theta vector (integrated angular rate in x,y,z [RAD]
                       // 0x0A, uint8_t(rate >> 8) , (uint8_t)(rate & 0xFF),      // Quaternion*/
-
   };
 
+
   createCommand1(0x0C, 
-                0x08, sizeof(field), field);
+                 0x08, sizeof(field), field);
   bool ok = expectAckNackResponse();
   return ok;
 }
@@ -379,7 +363,7 @@ bool MicrostrainIMU::sendSaveFormat() {
   uint8_t field[] = { 0x03,0x00}; //  Save Current IMU Message Format
 
   createCommand1(0x0C, 
-                0x08, sizeof(field), field);
+                 0x08, sizeof(field), field);
   bool ok = expectAckNackResponse();
   return ok;
 }
@@ -493,6 +477,7 @@ bool MicrostrainIMU::sendChangeBaudRate(uint32_t baud) {
 
   // wait 250ms until the new baud rate takes place
   delay(300);
+
   // next call is gonne be with the new rate
   serial->flush();
   serial->end();
@@ -509,8 +494,6 @@ void MicrostrainIMU::clearBuffer() {
 
 
 bool MicrostrainIMU::setup(HardwareSerial* sn, uint16_t sampleFreq) {
-  println("IMU: initialise data protocol");
-
   serial = sn;
 
   // sample rate of the outgoing data stream
@@ -526,9 +509,10 @@ bool MicrostrainIMU::setup(HardwareSerial* sn, uint16_t sampleFreq) {
   // if IMU is data stream for any reasons (maybe it has been turned on beforehand)
   // then try to stop that first. Otherwise the stream messes up the responses of the configuration
   // We need to try that a couple of times until the call sneaks in the middle of the  data stream
-  baud_rate = 460800;
+  baud_rate = 912600;
   serial->begin(baud_rate);
   ok = false;
+  /*
   // setting idle disables the datastream
   ok = sendSetToIdle();
   if (!ok) {
@@ -546,26 +530,28 @@ bool MicrostrainIMU::setup(HardwareSerial* sn, uint16_t sampleFreq) {
   if (!ok)
     return false;
 
-  // println("save message format ");
-  // ok = sendSaveFormat();
-  // if (!ok)
-  // return false;
-
   println("IMU: enable data stream");
   ok = sendEnableDataStream(true);
    if (!ok)
     return false;
+  */
 
+  const int no_fields = 3;
+  println("baud rate   : %d baud", baud_rate);
+  println("frequency   : %d Hz", targetFreq);
+  println("packetsize  : %d Byte", 16*no_fields);
+  println("min baud    : %d baud", no_fields*16*targetFreq*10);
 
   // read response from scratch;
   res.buffer_res_idx = 0;
   is_initialised = true;
+  last_data_package_ts = 0;
 
   return true;
 }
 
 bool isModified(IMUSensorData &imu_data) {
-  return (imu_data.acc_modified || imu_data.gyro_modified || imu_data.delta_theta_modified || imu_data.quat_modified || imu_data.rpy_modified);
+  return (imu_data.acc_modified || imu_data.gyro_modified || imu_data.delta_theta_modified || imu_data.quat_modified || imu_data.rpy_modified || imu_data.delta_velocity_modified);
 }
 
 void MicrostrainIMU::loop() {
@@ -577,7 +563,7 @@ void MicrostrainIMU::loop() {
     bool fullPackageAvailable = readResponseChar(res);
     // a full package as been read 
     if (fullPackageAvailable) {
-        last_data_package_ts = millis();
+        last_data_package_ts = micros();
         // parse the package
         for (res.field_idx = 0;res.field_idx < res.no_fields;res.field_idx++) {
           res.parse_idx = 2;
@@ -596,6 +582,12 @@ void MicrostrainIMU::loop() {
                 imu_data.gyro_z = parseFloat(res);
                 imu_data.gyro_modified  = true;
                 break;
+              case 0x08:  // Delta Velocity Vector (0x80, 0x07) in [g/s2]
+                imu_data.delta_velocity_x = parseFloat(res) ; 
+                imu_data.delta_velocity_y = parseFloat(res) ;
+                imu_data.delta_velocity_z = parseFloat(res) ;
+                imu_data.delta_velocity_modified  = true;
+                break;
               case 0x0A:  // Quaternion w, q1, q2, q3
                 imu_data.quat_w   = parseFloat(res);
                 imu_data.quat_q1   = parseFloat(res);
@@ -609,12 +601,6 @@ void MicrostrainIMU::loop() {
                 imu_data.yaw    = parseFloat(res);
                 imu_data.rpy_modified  = true;
                 break;
-              case 0x07:  // Delta Theta Vector (0x80, 0x07)
-                imu_data.delta_theta_x = parseFloat(res);
-                imu_data.delta_theta_y = parseFloat(res);
-                imu_data.delta_theta_z = parseFloat(res);
-                imu_data.delta_theta_modified = true;
-                break;
               default:
                 println("unknown field 0x%.2x.", res.fields[res.field_idx].descr);
             }
@@ -627,17 +613,17 @@ void MicrostrainIMU::loop() {
     } else {
       // we only have 1 ms to receive an answer
       // After 2ms we escalate 
-      if ((last_data_package_ts > 0) && (millis() - last_data_package_ts > 2*1000/targetFreq)) {
-          println("missing data stream, recovery procedure");
-          last_data_package_ts = 0;
-          println("IMU: enable data stream");
+      uint32_t time_since_last_package_us = micros() - last_data_package_ts;  
+      if ((last_data_package_ts > 0) && (time_since_last_package_us > 5*1000000/targetFreq)) {
+          println("missing data stream for %dus, recovery procedure", time_since_last_package_us);
+          serial->flush();
           serial->begin(baud_rate);
-          bool ok = sendSetToIdle();
-          ok = ok && sendEnableDataStream(true);
-          if (!ok) {
-            println("recovery wasnt successfull");
-            is_initialised = false;
+          if (time_since_last_package_us > 100*1000000/targetFreq) {
+              // is_initialised = false leads to a new setup in IMUManager
+              is_initialised = false;
+              last_data_package_ts = 0;
           }
+          
       }
     }
 }
@@ -652,12 +638,25 @@ bool MicrostrainIMU::isNewPackageAvailable() {
   imu_data.gyro_modified = false;
   imu_data.quat_modified = false;
   imu_data.rpy_modified = false;
+  imu_data.delta_velocity_modified = false;
   
   return m;
 } 
 
 void MicrostrainIMU::printData() {
-  print("\r\nIMU \r\n   acc  :(%.4f %.4f %.4f)\n\r   Gyro :(%.4f %.4f %.4f)\r\n",
+  /*
+  print("\r\nIMU \r\n   acc  :(%.2f %.2f %.2f)\n\r   Gyro :(%.2f %.2f %.2f)\r\n   dVel  :(%.3f %.3f %.3f)\r\n",
+         imu_data.acc_x,
+         imu_data.acc_y,
+         imu_data.acc_z,
+         imu_data.gyro_x,
+         imu_data.gyro_y,
+         imu_data.gyro_z,
+         imu_data.delta_velocity_x,
+         imu_data.delta_velocity_y,
+         imu_data.delta_velocity_z);
+         */
+  print("\r\nIMU \r\n   acc  :(%.2f %.2f %.2f)\n\r   Gyro :(%.2f %.2f %.2f)\r\n",
          imu_data.acc_x,
          imu_data.acc_y,
          imu_data.acc_z,

@@ -83,7 +83,7 @@
 // from 3DM-CV5-x datasheet: noise of acceleromter is 100ug/sqrt(frequency) = 
 #define Rn_INIT_ACC  (0.00000316)
 // from LIS3DM datasheet: noise in ultra performance mode is 3.5 milli gauss = 3.5 = 0.35 uT
-#define Rn_INIT_MAG  (35)
+#define Rn_INIT_MAG  (0.350)
 #define IMU_ACC_Z0   (1)
 
 // setup the filter with the targetfrequency. The IMU is configured to deliver a datapoint in that

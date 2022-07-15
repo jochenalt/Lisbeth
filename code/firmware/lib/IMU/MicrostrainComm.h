@@ -29,6 +29,10 @@ struct IMUSensorData
   float delta_theta_y;
   float delta_theta_z;
 
+  float delta_velocity_x;
+  float delta_velocity_y;
+  float delta_velocity_z;
+
   float quat_w;
   float quat_q1;
   float quat_q2;
@@ -39,6 +43,8 @@ struct IMUSensorData
   bool gyro_modified = false;
   bool quat_modified = false;
   bool rpy_modified = false;
+  bool delta_velocity_modified = false;
+  bool imu_modified = false;
 };
 
 
@@ -61,7 +67,7 @@ class CommandData {
     ~CommandData() {};
   String name;
 
-  uint32_t max_timestamp_ms = millis() + 100;
+  uint32_t max_timestamp_ms = 0;
 
   // buffer of response
   uint8_t buffer_res[BUFFER_SIZE];
@@ -131,9 +137,10 @@ class MicrostrainIMU {
 
         bool is_initialised;
         uint32_t baud_rate;
-        uint16_t targetFreq = 100;
+        uint16_t targetFreq = 1000;
         Measurement dataStreamClock;
         uint32_t last_data_package_ts = 0;                   // time of the last data package arrived
+        uint32_t data_package_size = 0;
 }; 
 
 
