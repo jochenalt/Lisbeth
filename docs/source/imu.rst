@@ -108,10 +108,12 @@ The conventions used in the following are:
 
 The state of the filter will be represented by a quaternion. The gyro is delivering angular rate, so we will need to rotate the state by these angles
 
-|QuaternionDerivativ|  |QuaternionDerivativeNo|.
 
-.. |QuaternionDerivativeNo| math::
+.. math::
      :label: EQquaternionderivative
+		
+	  |QuaternionDerivativ|  
+
 
 .. |QuaternionDerivativ| image:: /images/Quaternion_derivative.png
 	:width: 200
@@ -128,6 +130,7 @@ Considering the acceleration data, the quaternion should represent the rotation 
 .. image:: /images/Quaternion_Acceleration_Fusion.png
 	:width: 600
 	:alt: accelerationfusion
+	:align: left
 
 
 Same thing happens to the data from the magnetic sensor. Again, the quaternion should represent the rotation relative to the magnetic vector |MagneticVector|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatMagnetic|. The same nice `DCM Article <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_  leads to 
