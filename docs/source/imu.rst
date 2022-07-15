@@ -109,12 +109,11 @@ The conventions used in the following are:
 The state of the filter will be represented by a quaternion. The gyro is delivering angular rate, so we will need to rotate the state by these angles
 
 .. math::
-     :label: quaternionderivative1
+     :label: quaternionderivative
 
 .. image:: /images/Quaternion_derivative.png
 	:width: 200
-	:alt: Conventions
-	:label: eq:quaternionderivative
+	:alt: quaternionderivative
 
 Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector |Gravity|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatGravity|. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
 
@@ -123,12 +122,11 @@ Considering the acceleration data, the quaternion should represent the rotation 
 .. |AccelerationTransformation| image:: /images/Acceleration_Transformation.png
 
 .. math::
-     :label: accelerationfusionA
+     :label: accelerationfusion
 
 .. image:: /images/Quaternion_Acceleration_Fusion.png
 	:width: 600
-	:alt: Conventions
-	:label: eq:accelerationfusion
+	:alt: accelerationfusion
 
 
 Same thing happens to the data from the magnetic sensor. Again, the quaternion should represent the rotation relative to the magnetic vector |MagneticVector|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatMagnetic|. The same nice `DCM Article <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_  leads to 
@@ -137,10 +135,12 @@ Same thing happens to the data from the magnetic sensor. Again, the quaternion s
 .. |QuatMagnetic| image:: /images/Quaternion_Magneticfield.png
 .. |AccelerationTransformation| image:: /images/MagneticField_Transformation.png
 
+.. math::
+     :label: MagneticFusion
+
 .. image:: /images/Quaternion_MagneticField_Fusion.png
 	:width: 500
-	:alt: Conventions
-	:label: eq:magneticfusion
+	:alt: MagneticFusion
 
 
 Now we know how to change the state of our filter represented by a quaternion on the basis of incoming acceleration, gyro, and magnetometer data. 
@@ -169,13 +169,13 @@ As indicated before, our state |StateVariableX| is a quaternion representing the
 .. |StateVariableY| image:: /images/state_variable_y.png
 	:width: 35
 
-The Kalman filter predicts the next state by the current state and input vector (gyro). Therefore, equation (1) gives 
+The Kalman filter predicts the next state by the current state and input vector (gyro). Therefore, equation :eq:`quaternionderivative` gives 
 
 .. image:: /images/next_state_prediction.png
 	:width: 150
 	:alt: Conventions
 
-The change of the output is also already done with eq (2) and eq (3):
+The change of the output is also already done with :eq:`MagneticFusion` and :eq:`accelerationfusion`:
 
 .. image:: /images/output_equation.png
 	:width: 500
