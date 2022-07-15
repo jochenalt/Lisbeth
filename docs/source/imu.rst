@@ -146,6 +146,8 @@ Same thing happens to the data from the magnetic sensor. Again, the quaternion s
 	:width: 500
 	:alt: MagneticFusion
 
+Eq(3)
+
 
 Now we know how to change the state of our filter represented by a quaternion on the basis of incoming acceleration, gyro, and magnetometer data. 
 
