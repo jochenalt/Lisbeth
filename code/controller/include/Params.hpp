@@ -62,7 +62,6 @@ class Params {
   int N_SIMULATION;             // Number of simulated wbc time steps
   bool enable_pyb_GUI;          // Enable/disable PyBullet GUI
   bool enable_corba_viewer;     // Enable/disable Corba Viewer
-  bool enable_multiprocessing;  // Enable/disable running the MPC in another process in parallel of the main loop
   bool perfect_estimator;       // Enable/disable perfect estimator by using data directly from PyBullet
 
   // General control parameters

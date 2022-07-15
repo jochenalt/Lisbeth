@@ -4,7 +4,6 @@ robot:
     mass: 2.5             # [kg] 
     
     # General parameters
-    config_file: config_solo12.yaml  #  Name of the yaml file containing hardware information
     interface: enp2s0
     DEMONSTRATION: false  # Enable/disable demonstration functionalities
     SIMULATION: true      # Enable/disable PyBullet simulation or running on real robot
@@ -14,7 +13,6 @@ robot:
     envID: 0              # Identifier of the environment to choose in which one the simulation will happen
     N_SIMULATION: 30000   # Number of simulated wbc time steps
     enable_corba_viewer: false  # Enable/disable Corba Viewer
-    enable_multiprocessing: true  # Enable/disable running the MPC in another process in parallel of the main loop
     perfect_estimator: false  # Enable/disable perfect estimator by using data directly from PyBullet
     
     use_flat_plane: true  # If True the ground is flat, otherwise it has bumps
@@ -24,15 +22,15 @@ robot:
     # General control parameters
     q_init: [0.0, 0.7, -1.4, 0.0, 0.7, -1.4, 0.0, -0.7, 1.4, 0.0, -0.7, 1.4]  # Initial articular positions
            
-    dt_wbc: 0.001  # Time step of the whole body control
+    dt_wbc: 0.002  # Time step of the whole body control
     dt_mpc: 0.010  # Time step of the model predictive control
     Kp_main: [3.0, 3.0, 3.0]  # Proportional gains for the PD+
     Kd_main: [0.3, 0.3, 0.3]  # Derivative gains for the PD+
     Kff_main: 1.0  # Feedforward torques multiplier for the PD+
 
     # Parameters of Gait
-    N_periods: 1        # MPC considers two full gait periods
-    N_steps: 30         # in total we have that many steps in the prediction horizon (i.e. 2x16 )
+    N_periods: 1        # MPC considers one full gait period
+    N_steps: 28         # in total we have that many steps in the prediction horizon (i.e. 1x32 )
            
     # Parameters of Joystick
     gp_alpha_vel: 0.003  # Coefficient of the low pass filter applied to gamepad velocity

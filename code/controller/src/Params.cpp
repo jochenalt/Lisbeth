@@ -3,11 +3,10 @@
 using namespace yaml_control_interface;
 Params::Params()
     : N_steps (16), // Number of steps in the prediction horizon
-      N_gait(60),
+      N_gait(68),
       velID(2),
 		k(0),
 
-      config_file(""),
       interface(""),
       DEMONSTRATION(false),
       SIMULATION(false),
@@ -19,7 +18,6 @@ Params::Params()
       N_SIMULATION(0),
       enable_pyb_GUI(false),
       enable_corba_viewer(false),
-      enable_multiprocessing(false),
       perfect_estimator(false),
 
       q_init(12, 0.0),  // Fill with zeros, will be filled with values later
@@ -89,9 +87,6 @@ void Params::initialize(const std::string& file_path)
    assert_yaml_parsing(robot_node, "robot", "mass");
    mass = robot_node["mass"].as<double>();
 
-  assert_yaml_parsing(robot_node, "robot", "config_file");
-  config_file = robot_node["config_file"].as<std::string>();
-
   assert_yaml_parsing(robot_node, "robot", "interface");
   interface = robot_node["interface"].as<std::string>();
 
@@ -136,9 +131,6 @@ void Params::initialize(const std::string& file_path)
 
   assert_yaml_parsing(robot_node, "robot", "enable_corba_viewer");
   enable_corba_viewer = robot_node["enable_corba_viewer"].as<bool>();
-
-  assert_yaml_parsing(robot_node, "robot", "enable_multiprocessing");
-  enable_multiprocessing = robot_node["enable_multiprocessing"].as<bool>();
 
   assert_yaml_parsing(robot_node, "robot", "perfect_estimator");
   perfect_estimator = robot_node["perfect_estimator"].as<bool>();

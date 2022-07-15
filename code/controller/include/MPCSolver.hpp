@@ -83,7 +83,7 @@ class MPCSolver {
   Eigen::MatrixXd x_f_applied;
 
   // Matrix ML
-  const static int max_N_steps = 52;
+  const static int max_N_steps = 64;
   const static int size_per_step = 127;
   const static int size_nz_ML = size_per_step*max_N_steps;
 
