@@ -96,6 +96,10 @@ Fusing the sensor data
 Sensor fusion means merging the drifty gyro data with the noisy acceleration data. Spoiler alert, as if the IMU above is not yet expensive enough, we also need a magnetometer that is not only noisy, but also needs to be corrected because of the earth's tilted magnetic field. 
 `Quaternions <https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation>`_ avoid a  gimbal lock and are computational less intense(not really relevant actually). As usual we use the convention `roll, pitch, and yaw <https://en.wikipedia.org/wiki/Flight_dynamics_(fixed-wing_aircraft)>`_ to avoid breaking fingers when picturing vectors.
 
+.. image:: /images/RPY.png
+	:width: 400
+	:alt: Conventions
+
 The conventions used in the following are:
 
 .. image:: /images/Quaternion_nomenklatur.png
