@@ -1,5 +1,7 @@
 .. |br| raw:: html
 
+  <br/>
+
 Inertial Measurement Unit (IMU)
 ===============================
 
