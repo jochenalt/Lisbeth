@@ -85,7 +85,7 @@ That looks too easy to be true, and it isn't. In reality the cut off frequency (
 
 All this solved by Rudolf E. Kálmán's famous `Kalman Filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf>`_. A digestable description can be found `here <https://www.kalmanfilter.net/default.aspx>`_.
 
-Multiple version of the filter are available, and the most common one is probably the Extended Kalman filter. However a rather new variant came up a while ago, which is the `Unscented Kalman filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Julier1997_SPIE_KF.pdf>`_, that is supposed to 'provide a slightly better performance <https://www.gegi.usherbrooke.ca/LIV/index_htm_files/IEEEivsV2.pdf>'_.
+Multiple version of the filter are available, and the most common one is probably the Extended Kalman filter. However a rather new variant came up a while ago, which is the `Unscented Kalman filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Julier1997_SPIE_KF.pdf>`_, that is supposed to `provide a slightly better performance <https://www.gegi.usherbrooke.ca/LIV/index_htm_files/IEEEivsV2.pdf>`_.
 
 Let's be honest, in the usecase of a quadruped the difference is neglectable. Anyhow, understanding that beast is a mental challenge, so I started it.
 
@@ -99,7 +99,7 @@ Sensor fusion means merging the drifty gyro data with the noisy acceleration dat
 The conventions used in the following are:
 
 .. image:: /images/Quaternion_nomenklatur.png
-	:width: 500
+	:width: 700
 	:alt: Conventions
 
 The state of the filter will be represented by a quaternion. The gyro is delivering angular rate, so we will need to rotate the state by these angles
@@ -108,7 +108,7 @@ The state of the filter will be represented by a quaternion. The gyro is deliver
 	:width: 200
 	:alt: Conventions
 
-Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector|Gravity|. So we need to find a transformation matrix|AccelerationTransformation|that rotates the gravity vector such that it becomes our acceleration vector|QuatGravity|. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
+Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector |Gravity|. So we need to find a transformation matrix|AccelerationTransformation|that rotates the gravity vector such that it becomes our acceleration vector|QuatGravity|. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
 
 .. |Gravity| image:: /images/Gravity_vector.png
 .. |QuatGravity| image:: /images/Quaternion_gravity.png
