@@ -67,21 +67,20 @@ And the data streaming should start right away after startup:
 	:width: 500
 	:alt: Start streaming after start
 
-Done.
 
 How is the filtering working
 ----------------------------
 
 Filtering the data from an IMU is essential. Acceleration sensors are noise, and gyros drift over time. 
 
-The easiest way to solve this is complementary filter, that only takes the changes in the gyro into account, but uses the accelertion sensor as source for the angle. 
+The easiest way to solve this is a complementary filter that only takes the changes of the gyro into account, but uses the acceleration data as source for the angle. 
 
-The implementation integrates the gyro data over time resulting in a drifting but non-noise angle, then sends the result through a high pass filter to get rid of the drift, and fuses it with low passed acceleration data to get rid of its noise.
+The implementation integrates the gyro data over time resulting in a drifting but non-noisy angle, then sends the result through a high pass filter to get rid of the drift, and fuses it with low passed acceleration data to get rid of its noise.
 
 .. image:: /images/Complementary_Filter.png
 	:width: 500
 	:alt:  Complementary Filter
 
-That looks too easy to be true, and it isn't. In reality the cut off frequency (in the code above that is determining the factor :math:`{\alpha}` = 0.98) is hard to state, and even worse, if the sensor has some dynamic behaviour like not being linear or changes its noise, drift or behaviour, a static value is just arbitrary.
+That looks too easy to be true, and it isn't. In reality the cut off frequency (in the code above that is determining the factor :math:`{\alpha}` = 0.98) is hard to calibrate, and even worse, if the sensor has some dynamic behaviour like not being linear or changes its noise, drift or behaviour, a static value is just arbitrary.
 
-This is solved by Rudolf E. Kálmán's famous `Kalman Filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf>'. A digestable description can be found `here <https://www.kalmanfilter.net/default.aspx>`.
+This is solved by Rudolf E. Kálmán's famous `Kalman Filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf>'_. A digestable description can be found `here <https://www.kalmanfilter.net/default.aspx>`_.
