@@ -112,10 +112,12 @@ The state of the filter will be represented by a quaternion. The gyro is deliver
 
 .. |QuaternionDerivativeNo| math::
      :label: quaternionderivative
+     :align: right
 
 .. |QuaternionDerivativ| image:: /images/Quaternion_derivative.png
 	:width: 200
 	:alt: quaternionderivative
+	:align: left
 
 Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector |Gravity|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatGravity|. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
 
@@ -174,7 +176,7 @@ As indicated before, our state |StateVariableX| is a quaternion representing the
 The Kalman filter predicts the next state by the current state and input vector (gyro). Therefore, equation :eq:`quaternionderivative` gives 
 
 .. image:: /images/next_state_prediction.png
-	:width: 300
+	:width: 250
 	:alt: Conventions
 
 The change of the output is also already done with :eq:`MagneticFusion` and :eq:`accelerationfusion`:
