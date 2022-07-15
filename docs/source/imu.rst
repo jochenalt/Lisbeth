@@ -107,24 +107,29 @@ The state of the filter will be represented by a quaternion. The gyro is deliver
 	:width: 200
 	:alt: Conventions
 
-Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector |Gravity|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatGravity|. This equation can be solved with something called the  `"Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
-
-.. image:: /images/Quaternion_Acceleration_Fusion.png
-	:width: 500
-	:alt: Conventions
-
-
-
-So we need to find a transformation matrix that This is done by compared with the gravity vector.
-
-The |Gravity| symbol must be used on containers used to
-dispose of medical waste.
+Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector|Gravity|. So we need to find a transformation matrix|AccelerationTransformation|that rotates the gravity vector such that it becomes our acceleration vector|QuatGravity|. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
 
 .. |Gravity| image:: /images/Gravity_vector.png
 .. |QuatGravity| image:: /images/Quaternion_gravity.png
 .. |AccelerationTransformation| image:: /images/Acceleration_Transformation.png
 
+.. image:: /images/Quaternion_Acceleration_Fusion.png
+	:width: 600
+	:alt: Conventions
 
+
+Same thing happens to the magnetic sensor, but with the magnetic vector. Again, the quaternion should represent the rotation relative to the magnetic vector|MagneticVector|. So we need to find a transformation matrix|AccelerationTransformation|that rotates the gravity vector such that it becomes our acceleration vector|QuatMagnetic|. The same nice `DCM Article <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_  leads to 
+
+.. |MagneticVector| image:: /images/Magnetic_vector.png
+.. |QuatMagnetic| image:: /images/Quaternion_Magneticfield.png
+.. |AccelerationTransformation| image:: /images/MagneticField_Transformation.png
+
+.. image:: /images/Quaternion_MagneticField_Fusion.png
+	:width: 500
+	:alt: Conventions
+
+
+Now we know how to change the state of our filter represented by a quaternion on the basis of incoming sensor data. 
 
 
 
