@@ -108,7 +108,7 @@ The state of the filter will be represented by a quaternion. The gyro is deliver
 	:width: 200
 	:alt: Conventions
 
-Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector |Gravity|. So we need to find a transformation matrix|AccelerationTransformation|that rotates the gravity vector such that it becomes our acceleration vector|QuatGravity|. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
+Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector |Gravity|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatGravity|. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
 
 .. |Gravity| image:: /images/Gravity_vector.png
 .. |QuatGravity| image:: /images/Quaternion_gravity.png
@@ -119,7 +119,7 @@ Considering the acceleration data, the quaternion should represent the rotation 
 	:alt: Conventions
 
 
-Same thing happens to the magnetic sensor, but with the magnetic vector. Again, the quaternion should represent the rotation relative to the magnetic vector|MagneticVector|. So we need to find a transformation matrix|AccelerationTransformation|that rotates the gravity vector such that it becomes our acceleration vector|QuatMagnetic|. The same nice `DCM Article <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_  leads to 
+Same thing happens to the data from the magnetic sensor. Again, the quaternion should represent the rotation relative to the magnetic vector |MagneticVector|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatMagnetic|. The same nice `DCM Article <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_  leads to 
 
 .. |MagneticVector| image:: /images/Magnetic_vector.png
 .. |QuatMagnetic| image:: /images/Quaternion_Magneticfield.png
