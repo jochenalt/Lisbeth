@@ -108,10 +108,12 @@ The conventions used in the following are:
 
 The state of the filter will be represented by a quaternion. The gyro is delivering angular rate, so we will need to rotate the state by these angles
 
-.. math::
+|QuaternionDerivativ|  |QuaternionDerivativeNo|
+
+.. |QuaternionDerivativeNo| math::
      :label: quaternionderivative
 
-.. image:: /images/Quaternion_derivative.png
+.. |QuaternionDerivativ| image:: /images/Quaternion_derivative.png
 	:width: 200
 	:alt: quaternionderivative
 
@@ -159,7 +161,7 @@ Lets continue with the space state description. It is approached as a descrete s
 As indicated before, our state |StateVariableX| is a quaternion representing the pose of the IMU in space. The input/control vector |StateVariableU| is the gyro data, since that is not noisy and most precise in the short term. Finally, the acceleration and magnetometer vectors represent the output vector |StateVariableY|.
 
 .. image:: /images/State_Space_Variables.png
-	:width: 500
+	:width: 400
 	:alt: Conventions
 
 .. |StateVariableX| image:: /images/state_variable_x.png
@@ -172,7 +174,7 @@ As indicated before, our state |StateVariableX| is a quaternion representing the
 The Kalman filter predicts the next state by the current state and input vector (gyro). Therefore, equation :eq:`quaternionderivative` gives 
 
 .. image:: /images/next_state_prediction.png
-	:width: 150
+	:width: 300
 	:alt: Conventions
 
 The change of the output is also already done with :eq:`MagneticFusion` and :eq:`accelerationfusion`:
@@ -183,11 +185,12 @@ The change of the output is also already done with :eq:`MagneticFusion` and :eq:
 
 And that's all we need to feed into the Unscented Kalman filter.
 
-The Unscented Kalman filter
+The unscented Kalman filter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The description of the implementation has been borrowed from `here <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_:
-First some definition:
+The description of the algorithm has been borrowed from `here <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_:
+
+First some definitions:
 
 .. image:: /images/UKF_Definition.png
 	:width: 700
