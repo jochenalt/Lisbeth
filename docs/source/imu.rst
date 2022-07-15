@@ -108,16 +108,22 @@ The conventions used in the following are:
 
 The state of the filter will be represented by a quaternion. The gyro is delivering angular rate, so we will need to rotate the state by these angles
 
+.. math::
+     :label: quaternionderivative1
+
 .. image:: /images/Quaternion_derivative.png
 	:width: 200
 	:alt: Conventions
-	:label: eq:(1)
+	:label: eq:quaternionderivative
 
 Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector |Gravity|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatGravity|. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
 
 .. |Gravity| image:: /images/Gravity_vector.png
 .. |QuatGravity| image:: /images/Quaternion_gravity.png
 .. |AccelerationTransformation| image:: /images/Acceleration_Transformation.png
+
+.. math::
+     :label: accelerationfusionA
 
 .. image:: /images/Quaternion_Acceleration_Fusion.png
 	:width: 600
