@@ -39,6 +39,25 @@ Coming back to the setup. This needs to be done only once, so it is perfectly ok
 	:alt: FTDI Adapter to USB
 
 
-After pluging in, Sensorconnect should be able to connect to the device with the default baud rate of 115200. I changed it to 460800 to be able to run the pipeline at 1000Hz.
+After pluging in, Sensorconnect should be able to connect to the device with the default baud rate of 115200. The following settings have to be done now:
 
+At 1000Hz we need 916200 baud having in mind that one data packet is 48 bytes:
+.. image:: /images/Sensorconnect_baudrate.png
+	:width: 500
+	:alt: Setting the baud rate
 
+As message format coming from the IMU we need ther acceleration, the gyro, and the delta velocity (for the linear acceleration):
+.. image:: /images/Sensorconnect_message_format.png
+	:width: 500
+	:alt: Set the message format
+
+Finally, we need to define this as startup settings:
+.. image:: /images/Sensorconnect_save_setting.png
+	:width: 500
+	:alt: Save the settings
+
+And the data streaming should start right away after startup:
+Finally, we need to define this as startup settings:
+.. image:: /images/Sensorconnect_start_streaming.png
+	:width: 500
+	:alt: Start streaming after start
