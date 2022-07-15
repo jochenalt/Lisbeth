@@ -82,7 +82,6 @@ The implementation integrates the gyro data over time resulting in a drifting bu
 	:width: 500
 	:alt:  Complementary Filter
 
-That looks too easy to be true, and it isn't. In reality the cut off frequency (in the code above that is dertemining the :math:`{\alpha}` = 0.98) is hard to state, and even worse, if the sensor has some dynamic behaviour like not being linear or changes its noise, drift or behaviour, a static value is just arbitrary.
-
+That looks too easy to be true, and it isn't. In reality the cut off frequency (in the code above that is determining the factor :math:`{\alpha}` = 0.98) is hard to state, and even worse, if the sensor has some dynamic behaviour like not being linear or changes its noise, drift or behaviour, a static value is just arbitrary.
 
 This is solved by Rudolf E. Kálmán's famous `Kalman Filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf>'. A digestable description can be found `here <https://www.kalmanfilter.net/default.aspx>`.
