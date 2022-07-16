@@ -161,7 +161,6 @@ Same thing happens to the data from the magnetic sensor. Again, the quaternion s
 
 
 .. math:: 
-	:label: quarternionmagnetometerfusion
 
 	\begin{bmatrix}
 	m_{x,N}\\ 
@@ -194,7 +193,6 @@ The filter variables
 Let's continue with the space state description. In general, we approach the problem as a descrete stochastic non-linear dynamic system:
 
 .. math:: 
-	:label: equation_state
 
 	x(k) &= f(x(k-1), u(k-1))+v_{k} \\
 	y(k) &= h(x(k))+n_{k}\\
@@ -204,7 +202,6 @@ where :math:`x\in R^{N}, u\in R^{M}, z\in R^{z}, v_{k}` is the process noise, an
 In our case the state :math:`x(k)` is a quaternion representing the pose of the IMU. The input/control vector :math:`u(k)` is the gyro data, since that is not noisy and most precise in the short term. Finally, the acceleration and magnetometer vectors represent the output vector :math:`y(k)`.
 
 .. math:: 
-	:label: eq:equation_yy
 
 	\\
 	x(k) &= f(x(k-1),u(k-1))+v_{k} \\
@@ -214,19 +211,30 @@ In our case the state :math:`x(k)` is a quaternion representing the pose of the 
 
 The Kalman filter predicts the next state by the current state and input vector (gyro). Therefore, equation (1) gives 
 
-.. image:: /images/next_state_prediction.png
-	:width: 250
-	:alt: Conventions
+.. math::
+	x(k) = x(k-1) + \frac{\Delta t}{2}\begin{bmatrix}
+	-p q_{1} - q q_{2} - r q_{3}\\ 
+	-p q_{0} + r q_{2} - q q_{3}\\ 
+	q q_{0} - r q_{1} + p q_{3}\\ 
+	r q_{0} - q q_{1} - p q_{2}
+	\end{bmatrix}
 
-The change of the output is also already done with equation (2) and equation (3):
+The modification of the output is done with equation (2) and equation (3):
 
-.. image:: /images/output_equation.png
-	:width: 500
-	:alt: Conventions
+.. math::
+
+	y(k) =\begin{bmatrix}
+	2(q_{1}q_{3} - q_{2}q_{2})\\ 
+	2(q_{2}q_{3} + q_{0}q_{1})\\ 
+	q_{0}^2 -q_{1}^2 -q_{2}^2 + q_{3}^2\\ 
+	B_{0x,N}(q_{0}^{2} + q_{1}^{2} - q_{2}^{2} - q_{3}^{2}) &+ B_{0y,N}(2(q_{1}q_{2} - q_{0}q_{3})) &+ B_{0z,N}(2(q_{1}q_{3} - q_{0}q_{2}))\\
+	B_{0x,N}(2(q_{1}q_{2} - q_{0}q_{3})) &+  B_{0y,N}(q_{0}^{2} - q_{1}^{2} + q_{2}^{2} - q_{3}^{2}) &+ B_{0z,N}(2(q_{2}q_{2} + q_{0}q_{3}))\\
+	B_{0x,N}(2(q_{1}q_{3} + q_{0}q_{2})) &+ B_{0y,N}(2(q_{2}q_{3} - q_{0}q_{1})) &+ B_{0z,N}(q_{0}^{2} - q_{1}^{2} - q_{2}^{2} + q_{3}^{2})
+	\end{bmatrix}
 
 And that's all we need to feed into the Unscented Kalman filter.
 
-The unscented Kalman filter
+The Unscented Kalman filter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The description of the algorithm has been borrowed from `here <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_:
