@@ -170,27 +170,20 @@ As indicated before, our state |StateVariableX| is a quaternion representing the
 .. math:: x(k) = f(x(k-1),u(k-1))+v_{k}
 	:label: equation_x
 	:align: left
-	
-	
+		
 .. math:: u(k) = \bar{\omega} =  \begin{bmatrix} p  & q & r \end{bmatrix}  ^{T}
 	:label: equation_u
-	:class: float-left
-	:number: 123
 
-
-	
 .. math:: y(k) = \begin{bmatrix}{\bar{A}_{N}^{T}} & \bar{M}_{N}^{T} \end{bmatrix}^{T} = \begin{bmatrix} a_{x,N} & a_{y,N} & a_{z,N} & m_{x,N} & m_{y,N} & m_{z,N} \end{bmatrix}
 	:label: equation_y
 	:class: align-left
 
 	
 
-.. |StateVariableX| image:: /images/state_variable_x.png
-	:width: 35
-.. |StateVariableU| image:: /images/state_variable_u.png
-	:width: 35
-.. |StateVariableY| image:: /images/state_variable_y.png
-	:width: 35
+.. |StateVariableX| math:: x(k)
+.. |StateVariableU| math:: u(k)
+.. |StateVariableY| math:: y(k)
+
 
 The Kalman filter predicts the next state by the current state and input vector (gyro). Therefore, equation (1) gives 
 
