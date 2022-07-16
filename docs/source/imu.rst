@@ -160,11 +160,7 @@ Lets continue with the space state description. It is approached as a descrete s
 	:alt: Conventions
 
 
-As indicated before, our state |StateVariableX| is a quaternion representing the pose of the IMU. The input/control vector :math:`u(k)` is the gyro data, since that is not noisy and most precise in the short term. Finally, the acceleration and magnetometer vectors represent the output vector |StateVariableY|.
-
-.. image:: /images/State_Space_Variables.png
-	:width: 400
-	:alt: Conventions
+As indicated before, our state :math:`x(k)` is a quaternion representing the pose of the IMU. The input/control vector :math:`u(k)` is the gyro data, since that is not noisy and most precise in the short term. Finally, the acceleration and magnetometer vectors represent the output vector :math:`y(k)`.
 
 
 .. math:: x(k) = f(x(k-1),u(k-1))+v_{k}
@@ -179,15 +175,11 @@ As indicated before, our state |StateVariableX| is a quaternion representing the
 	:label: equation_y
 	:class: align-left
 	:nowrap:
-
-	x(k) = f(x(k-1),u(k-1))+v_{k}
-	u(k) = \bar{\omega} =  \begin{bmatrix} p  & q & r \end{bmatrix}  ^{T}
-	y(k) = \begin{bmatrix}{\bar{A}_{N}^{T}} & \bar{M}_{N}^{T} \end{bmatrix}^{T} = \begin{bmatrix} a_{x,N} & a_{y,N} & a_{z,N} & m_{x,N} & m_{y,N} & m_{z,N} \end{bmatrix}
-
-.. |StateVariableX| math:: x(k)
-.. |StateVariableU| math:: u(k)
-.. |StateVariableY| math:: y(k)
-
+	\begin{eqstatevariables}
+		x(k) = f(x(k-1),u(k-1))+v_{k}
+		u(k) = \bar{\omega} =  \begin{bmatrix} p  & q & r \end{bmatrix}  ^{T}
+		y(k) = \begin{bmatrix}{\bar{A}_{N}^{T}} & \bar{M}_{N}^{T} \end{bmatrix}^{T} = \begin{bmatrix} a_{x,N} & a_{y,N} & a_{z,N} & m_{x,N} & m_{y,N} & m_{z,N} \end{bmatrix}
+	\end{eqstatevariables}
 
 The Kalman filter predicts the next state by the current state and input vector (gyro). Therefore, equation (1) gives 
 
