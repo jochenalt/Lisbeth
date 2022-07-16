@@ -160,36 +160,15 @@ Lets continue with the space state description. It is approached as a descrete s
 	:alt: Conventions
 
 
-As indicated before, our state :math:`x(k)` is a quaternion representing the pose of the IMU. The input/control vector :math:`u(k)` is the gyro data, since that is not noisy and most precise in the short term. Finally, the acceleration and magnetometer vectors represent the output vector :math:`y(k)`.
-
-
-.. math:: x(k) = f(x(k-1),u(k-1))+v_{k}
-	:label: equation_x
-		
-.. math:: u(k) = \bar{\omega} = \begin{bmatrix} p  & q & r \end{bmatrix}  ^{T}
-	:label: equation_u
-
-.. math:: 
-	:label: equation_y
-	:nowrap:
-
-	\begin{eqnarray}
-		x(k) &= f(x(k-1),u(k-1))+v_{k} \\
-		u(k) &= \bar{\omega} =  \begin{bmatrix} p  & q & r \end{bmatrix}  ^{T} \\
-		y(k) &= \begin{bmatrix}{\bar{A}_{N}^{T}} & \bar{M}_{N}^{T} \end{bmatrix}^{T} = \begin{bmatrix} a_{x,N} & a_{y,N} & a_{z,N} & m_{x,N} & m_{y,N} & m_{z,N} \end{bmatrix}
-	\end{eqnarray}
-
-textelorem ipsum
-
 .. math:: 
 	:label: equation_yy
-	:nowrap:
 
-	\\
-	x(k) &= f(x(k-1),u(k-1))+v_{k} \\
-	u(k) &= \bar{\omega} =  \begin{bmatrix} p  & q & r \end{bmatrix}  ^{T} \\
-	y(k) &= \begin{bmatrix}{\bar{A}_{N}^{T}} & \bar{M}_{N}^{T} \end{bmatrix}^{T} = \begin{bmatrix} a_{x,N} & a_{y,N} & a_{z,N} & m_{x,N} & m_{y,N} & m_{z,N} \end{bmatrix}
+	x(k) &= f(x(k-1), u(k-1))+v_{k} \\
+	y(k) &= h(x(k))+n_{k}\\
 
+where :math:`x\in R^{N}, u\in R^{M}, z\in R^{z}, v_{k}` is the process noise, :math:`n_{k}` is the observation noise, and :math:`h(x(k))` is the function that maps the state to the output, in our case the function transforming the pose to acceleration/magnetometer data.
+
+As indicated before, our state :math:`x(k)` is a quaternion representing the pose of the IMU. The input/control vector :math:`u(k)` is the gyro data, since that is not noisy and most precise in the short term. Finally, the acceleration and magnetometer vectors represent the output vector :math:`y(k)`.
 
 .. math:: 
 	:label: equation_yy
