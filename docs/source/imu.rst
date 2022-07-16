@@ -83,7 +83,7 @@ Luckily, it is easier to see in code:
 	alpha = 0.98;
 	angle = alpha * (angle + gyro * dT) + (1-alpha) * acceleration;
 
-That looks too easy to be true, and it isn't. The cut off frequency determining the factor :math:`{\alpha}` = 0.98) is hard to calibrate, and even worse, if the sensor has some dynamic behaviour like being non-linear , a static value is just wrong.
+That looks too easy to be true, and it isn't. The cut-off frequency determining the factor :math:`{\alpha}` = 0.98 is hard to calibrate, and even worse, if the sensor has some dynamic behaviour like being non-linear , a static value is just wrong.
 
 All this solved Rudolf E. Kálmán's famous `Kalman Filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf>`_. A digestable description can be found `here <https://www.kalmanfilter.net/default.aspx>`_.
 
@@ -145,7 +145,7 @@ Same thing happens to the data from the magnetic sensor. Again, the quaternion s
 	:alt: MagneticFusion
 	:class: float-left
 
-|br| |br| |br| Eq(3) |br| |br| |br|
+|br| |br| |br| Eq(3) |br| |br| |br| |br|
 
 Now we know how to change the state of our filter represented by a quaternion on the basis of incoming acceleration, gyro, and magnetometer data. 
 
@@ -165,6 +165,13 @@ As indicated before, our state |StateVariableX| is a quaternion representing the
 .. image:: /images/State_Space_Variables.png
 	:width: 400
 	:alt: Conventions
+
+
+.. math::
+	
+	x(k) = f(x(k-1),u(k-1))+v_{k}
+	u(k) = \bar{\omega} =  \begin{bmatrix} p  & q & r \end{bmatrix}  ^{T}
+	y(k) = \begin{bmatrix}{\bar{A}_{N}^{T}} & \bar{M}_{N}^{T} \end{bmatrix}^{T} = \begin{bmatrix} a_{x,N} & a_{y,N} & a_{z,N} & m_{x,N} & m_{y,N} & m_{z,N} \end{bmatrix}
 
 .. |StateVariableX| image:: /images/state_variable_x.png
 	:width: 35
@@ -208,14 +215,16 @@ Then, the UKF algorithm works like this:
 Implementation
 --------------
 
-The implementation is hosted on the mainboard's Teensy 4.1, and as you might see from the algorithm above that the Unscented Kalman filter is quite a lot of code. It is part of the entire main board, and the parts relevant for the IMU are `here <https://github.com/jochenalt/Lisbeth/tree/main/code/firmware/lib/IMU>`_. It contains 
+The implementation is hosted on the mainboard's Teensy 4.1, and as you might see from the algorithm above the Unscented Kalman filter is quite a lot of code. It is part of the entire main board, and the parts relevant for the IMU are `here <https://github.com/jochenalt/Lisbeth/tree/main/code/firmware/lib/IMU>`_. 
+
+Contents: 
 
 * `The Unscented Kalman filter <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/ukf.cpp>`_ 
    I used `this <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_ as a basis, but modified quite a lot to make it fast and robust
 * `A matrix library <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/matrix.h>`_ 
-	This is is coming from `here <https://github.com/pronenewbits>`
+	This is is coming from `here <https://github.com/pronenewbits>`_
 * `The communication to the IMU <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/MicrostrainComm.cpp>`_ 
-	This class implements the IMU's special communciation protocol.
+	This class implements Microstrains `data communciation protocol <https://github.com/jochenalt/Lisbeth/blob/main/datasheets/Microstrain%203DM-CV5-IMU/3DM-CV5-10%20IMU%20Data%20Communication%20Protocol%20Manualpdf.pdf>`_
 * `The communication to the magnetometer <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/LIS3MDL.cpp>`_ 
    The magnetometer LIS3MDL communicates via I\ :sup:`2`\C with the main board. 
 * `The integrating class IMUManager <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/IMUManager.cpp>`_ 
