@@ -114,25 +114,15 @@ The state of the filter will be represented by a quaternion. The gyro is deliver
 
 .. image:: /images/Quaternion_derivative.png
 	:width: 200
-	:class: float-left
-
- |br| |br| Eq(1) |br| |br|
 
 
 
-Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector |Gravity|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatGravity|. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
-
-.. |Gravity| image:: /images/Gravity_vector.png
-.. |QuatGravity| image:: /images/Quaternion_gravity.png
-.. |AccelerationTransformation| image:: /images/Acceleration_Transformation.png
-
+Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector :math: `\bar{G} = \begin{bmatrix} 0 & 0 & g\end{bmatrix}^{T}`. So we need to find a transformation matrix :math: `C_{n}^{b}` that rotates the gravity vector such that it becomes our acceleration vector :math: `\bar{A}_{N} = C_{n}^{b}\bar{G}_{N}`. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
 
 .. image:: /images/Quaternion_Acceleration_Fusion.png
 	:width: 600
 	:alt: accelerationfusion
-	:class: float-left
 
- |br| |br| Eq(2) |br| |br|
 
 Same thing happens to the data from the magnetic sensor. Again, the quaternion should represent the rotation relative to the magnetic vector |MagneticVector|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatMagnetic|. The same nice `DCM Article <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_  leads to 
 
@@ -143,9 +133,7 @@ Same thing happens to the data from the magnetic sensor. Again, the quaternion s
 .. image:: /images/Quaternion_MagneticField_Fusion.png
 	:width: 550
 	:alt: MagneticFusion
-	:class: float-left
 
-|br| |br| |br| Eq(3) |br| |br| |br| |br|
 
 Now we know how to change the state of our filter represented by a quaternion on the basis of incoming acceleration, gyro, and magnetometer data. 
 

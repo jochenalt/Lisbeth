@@ -34,6 +34,9 @@ html_theme = 'sphinx_rtd_theme'
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
 
+math_number_all = true
+
 # deal with equation numbering
 def setup(app):
     app.add_stylesheet('css/custom.css')
+
