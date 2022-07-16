@@ -1,11 +1,4 @@
-#ifndef MAGNETOMETER_H
-#define MAGNETOMETER_H
-
-#include "LIS3MDL.h"
-#include "ukf.h" // to include matrix.h, UKF defines MAX_MATRIX_SIZE
-#include "utils.h"
-
-/**
+/*************************************************************************************************************
  * Manage the magnetometer 
  * - power management 
  * - initialise sensor with frequency and sensitivity
@@ -14,7 +7,16 @@
  * - do north calibration on the basis of acceleration data coming from an IMU
  * - convert sensor data to [uT]
  * - turn the coord system to be aligned with the IMUs coord system
- */ 
+ * 
+ ************************************************************************************************************/
+
+
+#ifndef MAGNETOMETER_H
+#define MAGNETOMETER_H
+
+#include "LIS3MDL.h"
+#include "ukf.h" 
+#include "utils.h"
 
 class Magnetometer {
     public:

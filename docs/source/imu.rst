@@ -208,11 +208,20 @@ Then, the UKF algorithm works like this:
 Implementation
 --------------
 
-The implementation is hosted on the mainboard's Teensy 4.1, and as you might see from the algorithm above, the Unscented Kalman filter is quite a lot of code. Again I used `this <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_ as the basis for my code, and some parts can still be recognized, but in the end I touched most of it to make it fast and robust. It is part of the entire main board, and the parts relevant for the IMU are `here <https://github.com/jochenalt/Lisbeth/tree/main/code/firmware/lib/IMU>`_. It contains of 
+The implementation is hosted on the mainboard's Teensy 4.1, and as you might see from the algorithm above that the Unscented Kalman filter is quite a lot of code. It is part of the entire main board, and the parts relevant for the IMU are `here <https://github.com/jochenalt/Lisbeth/tree/main/code/firmware/lib/IMU>`_. It contains 
 
 * `The Unscented Kalman filter <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/ukf.cpp>`_ 
-* `Some helpful matrix operations <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/matrix.h>`_ 
+   I used `this <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_ as a basis, but modified quite a lot to make it fast and robust
+* `A matrix library <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/matrix.h>`_ 
+	This is is coming from `here <https://github.com/pronenewbits>`
 * `The communication to the IMU <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/MicrostrainComm.cpp>`_ 
+	This class implements the IMU's special communciation protocol.
 * `The communication to the magnetometer <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/LIS3MDL.cpp>`_ 
-* `The communication to the magnetometer <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/LIS3MDL.cpp>`_ 
-* `The integrating class glueing everything together <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/IMUManager.cpp>`_ 
+   The magnetometer LIS3MDL communicates via I\ :sup:`2`\C with the main board. 
+* `The integrating class IMUManager <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/IMUManager.cpp>`_ 
+	Everthing is glued together in this class. It tkes care of the power management, i.e. it turns on/off the IMU and the magnetometer, watches 
+	the incoming datastream, aligns the frames of the IMU and the magnetometer, converts the units into SI, and returns 
+		* the pose in RPY convention in [rad] and quaternion,
+		* the angular rate in[rad/s]
+		* the linear acceleration without gravity vector in m/s\ :sup:`2`\
+

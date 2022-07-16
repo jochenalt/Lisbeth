@@ -1,3 +1,15 @@
+/*************************************************************************************************************
+ * class for communicating with a LORD Parker Microstrain IMU.
+ *
+ * Implements the specific communication protocol as specificed in 
+ * https://github.com/jochenalt/Lisbeth/blob/main/datasheets/Microstrain%203DM-CV5-IMU/3DM-CV5-10%20IMU%20Data%20Communication%20Protocol%20Manualpdf.pdf
+ * 
+ * Uses serial communication with hardcoded 921600 baud (because the 1000Hz sample frequency requires that)
+ * Assumes that the IMU has a certain startup configuration, so no configuration is done during startup.
+ * 
+ ************************************************************************************************************/
+
+
 #ifndef MICROSTRAIN_H_
 #define MICROSTRAIN_H_
 
@@ -48,13 +60,15 @@ struct IMUSensorData
 };
 
 
-
+// Type that implements a field in the communication protocol, which is 
+// the basic data type in the Microstrain protocol.
 struct FieldType {
    uint8_t descr;
    uint8_t len;
    uint8_t payload[FIELD_BUFFER_SIZE];
 };  
 
+// data structure with buffers for outgoing commands and incoming data from the IMU
 class CommandData {
   public:
     CommandData() {

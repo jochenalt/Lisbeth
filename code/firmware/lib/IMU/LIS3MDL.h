@@ -1,3 +1,8 @@
+/*************************************************************************************************************
+ * Communicate to the LIS3MDL sensor via I2C.
+ ************************************************************************************************************/
+
+
 #ifndef LIS3MDL_h
 #define LIS3MDL_h
 
@@ -5,7 +10,7 @@
 
 
 
-/** The magnetometer ranges */
+// The magnetometer ranges 
 typedef enum {
   RANGE_4_GAUSS = 0b00,  ///< +/- 4g (default value)
   RANGE_8_GAUSS = 0b01,  ///< +/- 8g
@@ -13,7 +18,7 @@ typedef enum {
   RANGE_16_GAUSS = 0b11, ///< +/- 16g
 } range_t;
 
-/** The magnetometer data rate, includes FAST_ODR bit */
+// The magnetometer data rate, includes FAST_ODR bit 
 typedef enum {
   DATARATE_0_625_HZ = 0b0000, ///<  0.625 Hz
   DATARATE_1_25_HZ = 0b0010,  ///<  1.25 Hz
@@ -29,7 +34,7 @@ typedef enum {
   DATARATE_1000_HZ = 0b0111,  ///<  1000 Hz (FAST_ODR + LP)
 } dataRate_t;
 
-/** The magnetometer performance mode */
+// The magnetometer performance mode 
 typedef enum {
   LOWPOWERMODE = 0b00,  ///< Low power mode
   MEDIUMMODE = 0b01,    ///< Medium performance mode
@@ -37,7 +42,7 @@ typedef enum {
   ULTRAHIGHMODE = 0b11, ///< Ultra-high performance mode
 } performancemode_t;
 
-/** The magnetometer operation mode */
+// The magnetometer operation mode 
 typedef enum {
   CONTINUOUSMODE = 0b00, ///< Continuous conversion
   SINGLEMODE = 0b01,     ///< Single-shot conversion
@@ -78,40 +83,29 @@ class LIS3MDL
       INT_THS_H   = 0x33,
     };
 
-    vector<int16_t> m; // magnetometer readings
-
-    uint8_t last_status; // status of last I2C transmission
-
     LIS3MDL();
-
-    bool init();
 
     bool setup(dataRate_t dataRate,range_t dataRange);
 
-    void writeReg(uint8_t reg, uint8_t value);
-    uint8_t readReg(uint8_t reg);
-
+    // first half of a communication: request the data and call readResponse as soon as isDataAvailable indicates the incoming datat
+    void requestData();
     // true if the hardware buffer holds the next data point
     bool isDataAvailable();
-    void requestData();
-    void readSync(double &x, double &y, double &z);
-
-    // read data in [gauss]
+    // read in [gauss], after having requested the data
     void readResponse(double &x, double &y, double &z);
 
-    void setTimeout(uint16_t timeout);
-    uint16_t getTimeout(void);
-    bool timeoutOccurred(void);
- 
+    // request, wait and read the data 
+    void readSync(double &x, double &y, double &z);
   private:
-    uint8_t address;
-
-    uint16_t io_timeout;
-    bool did_timeout;
-    range_t range;
-    double rangeScale;
+    vector<int16_t> m;    // magnetometer readings
+    uint8_t last_status;  // status of last I2C transmission
+    uint8_t address;      // I2C adress is passed during setup
+    range_t range;        // outgoing range of the sensor, defined in setup 
+    double rangeScale;    // factor we use to convert the raw sensor data to the range defined in setup
 
     int16_t testReg(uint8_t address, regAddr reg);
+    void writeReg(uint8_t reg, uint8_t value);
+    uint8_t readReg(uint8_t reg);
 };
 
 #endif

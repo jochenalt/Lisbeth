@@ -9,49 +9,11 @@
 // and sets the last bit correctly based on reads and writes
 #define LIS3MDL_SA1_HIGH_ADDRESS  0x1C
 #define LIS3MDL_SA1_LOW_ADDRESS   0x1E
-
 #define TEST_REG_ERROR -1
-
 #define LIS3MDL_WHO_ID  0x3D
 
-LIS3MDL::LIS3MDL(void)
+LIS3MDL::LIS3MDL()
 {
-  io_timeout = 0;  // 0 = no timeout
-  did_timeout = false;
-}
-
-bool LIS3MDL::timeoutOccurred()
-{
-  bool tmp = did_timeout;
-  did_timeout = false;
-  return tmp;
-}
-
-void LIS3MDL::setTimeout(uint16_t timeout)
-{
-  io_timeout = timeout;
-}
-
-uint16_t LIS3MDL::getTimeout()
-{
-  return io_timeout;
-}
-
-bool LIS3MDL::init()
-{
-    if (testReg(LIS3MDL_SA1_HIGH_ADDRESS, WHO_AM_I) == LIS3MDL_WHO_ID)
-      {
-        address =  LIS3MDL_SA1_HIGH_ADDRESS ;
-      }
-      else {
-            if (testReg(LIS3MDL_SA1_LOW_ADDRESS, WHO_AM_I) == LIS3MDL_WHO_ID)
-                address =  LIS3MDL_SA1_LOW_ADDRESS ;
-            else {
-                Serial.println("LIS3MDL hasn't been found");
-                return false;
-            }
-    }
-  return true;
 }
 
 
@@ -59,9 +21,18 @@ bool  LIS3MDL::setup(dataRate_t dataRate, range_t dataRange)
 {
   Wire1.begin();
 
-  bool ok = init();
-  if (!ok )
-      return false;
+  if (testReg(LIS3MDL_SA1_HIGH_ADDRESS, WHO_AM_I) == LIS3MDL_WHO_ID)
+  {
+      address =  LIS3MDL_SA1_HIGH_ADDRESS ;
+  }
+  else {
+         if (testReg(LIS3MDL_SA1_LOW_ADDRESS, WHO_AM_I) == LIS3MDL_WHO_ID)
+             address =  LIS3MDL_SA1_LOW_ADDRESS ;
+         else {
+             Serial.println("LIS3MDL hasn't been found on I2C-1");
+             return false;
+         }
+  }
 
   range = dataRange;
   uint8_t temperature_enable = 0;
@@ -154,14 +125,9 @@ void LIS3MDL::readSync(double  &mag_x, double &mag_y, double &mag_z )
   Wire1.endTransmission();
   Wire1.requestFrom(address, (uint8_t)6);
 
-  uint16_t millis_start = millis();
   while (Wire1.available() < 6)
   {
-    if (io_timeout > 0 && ((uint16_t)millis() - millis_start) > io_timeout)
-    {
-      did_timeout = true;
-      return;
-    }
+    delay(1);
   }
 
   readResponse (mag_x,mag_y,mag_z);

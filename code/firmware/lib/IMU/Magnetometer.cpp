@@ -1,3 +1,16 @@
+/*************************************************************************************************************
+ * Manage the magnetometer 
+ * - power management 
+ * - initialise sensor with frequency and sensitivity
+ * - fetch data in the background in a non-blocking via via loop()
+ * - do hard iron calibration
+ * - do north calibration on the basis of acceleration data coming from an IMU
+ * - convert sensor data to [uT]
+ * - turn the coord system to be aligned with the IMUs coord system
+ * 
+ ************************************************************************************************************/
+
+
 #include "Magnetometer.h"
 #include "TimePassedBy.h"
 #include "MicrostrainComm.h"

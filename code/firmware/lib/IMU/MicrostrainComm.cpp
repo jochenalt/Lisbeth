@@ -1,14 +1,20 @@
+/*************************************************************************************************************
+ * class for communicating with a LORD Parker Microstrain IMU.
+ *
+ * Implements the specific communication protocol as specificed in 
+ * https://github.com/jochenalt/Lisbeth/blob/main/datasheets/Microstrain%203DM-CV5-IMU/3DM-CV5-10%20IMU%20Data%20Communication%20Protocol%20Manualpdf.pdf
+ * 
+ * Uses serial communication with hardcoded 921600 baud (because the 1000Hz sample frequency requires that)
+ * Assumes that the IMU has a certain startup configuration, so no configuration is done during startup.
+ * 
+ ************************************************************************************************************/
+
 #include <Arduino.h>
 #include "HardwareSerial.h"
 #include "MicrostrainComm.h"
 
 HardwareSerial* serial = &Serial8;
 
-
-union float_int {
-  float f;
-  unsigned long ul;
-};
 
 static bool assert(bool condition, String name) {
   if (!condition) {
@@ -18,6 +24,13 @@ static bool assert(bool condition, String name) {
   }
   return true;
 }
+
+
+union float_int {
+  float f;
+  unsigned long ul;
+};
+
 
 static float parseFloat(CommandData &res) {
   float_int fi;
@@ -343,9 +356,6 @@ bool MicrostrainIMU::sendSetIMUMessageFormat() {
                       0x04, uint8_t(rate_decimation >> 8) , (uint8_t)(rate_decimation & 0xFF) ,    // Scaled Acc, chapter 5.1.1 
                       0x05, uint8_t(rate_decimation >> 8) , (uint8_t)(rate_decimation & 0xFF) ,    // Scaled Gyro, chapter 5.1.2
                       0x08, uint8_t(rate_decimation >> 8) , (uint8_t)(rate_decimation & 0xFF) ,    // Delta velocity, chapter 5.1.4
-                      // 0x0C, uint8_t(rate >> 8) , (uint8_t)(rate & 0xFF),     // Euler Angles
-                      // 0x07, uint8_t(rate >> 8) , (uint8_t)(rate & 0xFF),     // Delta Theta vector (integrated angular rate in x,y,z [RAD]
-                      // 0x0A, uint8_t(rate >> 8) , (uint8_t)(rate & 0xFF),      // Quaternion*/
   };
 
 
@@ -602,11 +612,11 @@ void MicrostrainIMU::loop() {
                 imu_data.rpy_modified  = true;
                 break;
               default:
-                println("unknown field 0x%.2x.", res.fields[res.field_idx].descr);
+                println("received unknown field 0x%.2x.", res.fields[res.field_idx].descr);
             }
           }
           else {
-                println("unknown descriptor 0x%.2x.", res.descriptor_set_byte);
+                println("received unknown descriptor 0x%.2x.", res.descriptor_set_byte);
           }
         }
         dataStreamClock.tick();
@@ -619,7 +629,7 @@ void MicrostrainIMU::loop() {
           serial->flush();
           serial->begin(baud_rate);
           if (time_since_last_package_us > 100*1000000/targetFreq) {
-              // is_initialised = false leads to a new setup in IMUManager
+              // is_initialised = false forces IMUManager to re-establishing the communication including power down 
               is_initialised = false;
               last_data_package_ts = 0;
           }
@@ -644,18 +654,6 @@ bool MicrostrainIMU::isNewPackageAvailable() {
 } 
 
 void MicrostrainIMU::printData() {
-  /*
-  print("\r\nIMU \r\n   acc  :(%.2f %.2f %.2f)\n\r   Gyro :(%.2f %.2f %.2f)\r\n   dVel  :(%.3f %.3f %.3f)\r\n",
-         imu_data.acc_x,
-         imu_data.acc_y,
-         imu_data.acc_z,
-         imu_data.gyro_x,
-         imu_data.gyro_y,
-         imu_data.gyro_z,
-         imu_data.delta_velocity_x,
-         imu_data.delta_velocity_y,
-         imu_data.delta_velocity_z);
-         */
   print("\r\nIMU \r\n   acc  :(%.2f %.2f %.2f)\n\r   Gyro :(%.2f %.2f %.2f)\r\n",
          imu_data.acc_x,
          imu_data.acc_y,

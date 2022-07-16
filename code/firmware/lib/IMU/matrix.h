@@ -21,110 +21,6 @@
  *    See below at "Data structure of Matrix class" at private member class definition for more information!
  * 
  * 
- * Class Matrix Versioning:
- *    v0.10 (2020-04-29), {PNb}:
- *      - Add NoInitMatZero for _outp matrix initialization in ForwardSubtitution.
- *      - Fixing bug in HouseholderTransformQR function where _outp & _vectTemp need to be initialized
- *          with zero.
- *      - Change comparison with zero in these functions using EPSILON_ECO:
- *          -> operator ==
- *          -> operator /
- *          -> vRoundingElementToZero
- *          -> RoundingMatrixToZero
- *      - No need to check fabs(_normM) as non-zero in bNormVector().
- *      - Add operator != (checking with EPSILON_ECO).
- *      - Add MatIdentity() function.
- * 
- *    v0.9 (2020-04-28), {PNb}:
- *      - Set all function as inline function (insert oprah meme here).
- *      - Rework matrix library to increase readability.
- *      - Make every parameters and function as reference as much as possible.
- *      - Make every member function as a const function as possible.
- *      - Add () operator overload to access the matrix data, so we can do both:
- *         -> A[0][3] = access 1st row, 4th column of matrix data.
- *         -> A(2,0)  = access 3rd row, 1st column of matrix data. < this is the way.
- *       - Remove (bug) a remnant of ancient code where we haven't implemented NoInitMatZero:
- *          double floatData[MATRIX_MAXIMUM_SIZE][MATRIX_MAXIMUM_SIZE] = {{0}};
- *         Into:
- *          double floatData[MATRIX_MAXIMUM_SIZE][MATRIX_MAXIMUM_SIZE];
- *         We can get very nice speed up (MPC benchmark @2020-04-27) from 698 us to 414 us!
- *       - Implement copy constructor               (more sweet speed up, 414 us -> 382 us!).
- *       - Implement assignment operator       (more more sweet speed up, 382 us -> 327 us!).
- *       - Remove Copy() function, use assignment operator instead.
- *       - Change MATRIX_USE_BOUND_CHECKING -> MATRIX_USE_BOUNDS_CHECKING (see ...BOUND*S*_CH...).
- *  
- *    v0.8 (2020-03-26), {PNb}:
- *      - Change indexing from int32_t to int16_t.
- *      - Add way to initialize matrix with existing double array.
- *      - Add enum InitZero.
- *      - Make temporary matrix initialization inside almost all method with 
- *          NoInitMatZero argument.
- *      - Remove the 1 index buffer reserve in bMatrixIsValid function.
- *      - Add bMatrixIsPositiveDefinite method to check the positive 
- *          (semi)definiteness of a matrix.
- *      - Add GetDiagonalEntries method.
- *      - Change SYSTEM_IMPLEMENTATION_EMBEDDED_NO_PRINT into
- *          SYSTEM_IMPLEMENTATION_EMBEDDED_CUSTOM, and make vPrint and
- *          vPrintFull as function declaration (the user must define that
- *          function somewhere). 
- * 
- *    v0.7 (2020-02-23), {PNb}:
- *      - Make the matrix class interface in English (at long last, yay?).
- * 
- * 
- *** Documentation below is for tracking purpose *************************************
- * 
- *    v0.6 (2020-01-16), {PNb}:
- *      - Tambahkan sanity check saat pengecekan MATRIX_PAKAI_BOUND_CHECKING 
- *          dengan membandingkan baris & kolom dengan MATRIX_MAXIMUM_SIZE.
- *      - Menambahkan pengecekan matrix untuk operasi dasar antar matrix (*,+,-).
- * 
- *    v0.5 (2020-01-14), {PNb}:
- *      - Buat file matrix.cpp (akhirnya!) untuk definisi fungsi di luar class.
- *      - Tambahkan operator overloading untuk operasi negatif matrix (mis. a = -b).
- *      - Tambahkan operator overloading untuk operasi penjumlahan & pengurangan 
- *          dengan scalar.
- *      - Ubah evaluasi MATRIX_PAKAI_BOUND_CHECKING menggunakan ASSERT.
- *      - Tambahkan pengecekan index selalu positif di MATRIX_PAKAI_BOUND_CHECKING.
- * 
- *    v0.4 (2020-01-10), {PNb}:
- *      - Tambahkan rounding to zero sebelum operasi sqrt(x) untuk menghindari
- *          kasus x = 0-
- *      - Fungsi QRDec mengembalikan Q' dan R (user perlu melakukan transpose
- *          lagi setelah memanggil QRDec untuk mendapatkan Q).
- *      - Menambahkan pengecekan hasil HouseholderTransformQR di dalam QRDec.
- *      - Tambah warning jika MATRIX_PAKAI_BOUND_CHECKING dinonaktifkan.
- * 
- *    v0.3_engl (2019-12-31), {PNb}:
- *      - Modifikasi dokumentasi kode buat orang asing.
- * 
- *    v0.3 (2019-12-25), {PNb}:
- *      - Menambahkan fungsi back subtitution untuk menyelesaikan permasalahan 
- *          persamaan linear Ax = B. Dengan A matrix segitiga atas & B vektor.
- *      - Memperbaiki bug pengecekan MATRIX_PAKAI_BOUND_CHECKING pada indexing kolom.
- *      - Menambahkan fungsi QR Decomposition (via Householder Transformation).
- *      - Menambahkan fungsi Householder Transformation.
- *      - Menghilangkan warning 'implicit conversion' untuk operasi pembandingan
- *          dengan EPSILON.
- *      - Menambahkan function overloading operasi InsertSubMatrix, untuk
- *          operasi insert dari SubMatrix ke SubMatrix.
- *      - Saat inisialisasi, matrix diisi nol (melalui vIsiHomogen(0.0)).
- *      - Menambahkan function overloading operator '/' dengan scalar.
- * 
- *    v0.2 (2019-11-30), {PNb}:
- *      - Fungsi yang disupport:
- *          - Operator ==
- *          - Normalisasi matrix
- *          - Cholesky Decomposition
- *          - InsertSubMatrix
- *          - InsertVector
- * 
- *    v0.1 (2019-11-29), {PNb}: 
- *      - Fungsi yang disupport:
- *          - Operasi matrix dasar
- *          - Invers
- *          - Cetak
- * 
  * See https://github.com/pronenewbits for more!
  ************************************************************************************************************/
 #ifndef MATRIX_H
@@ -460,11 +356,6 @@ inline bool Matrix::bMatrixIsSquare(void) {
 
 
 /* ------------------------------------------ Matrix elementary operations ------------------------------------------ */
-/* ------------------------------------------ Matrix elementary operations ------------------------------------------ */
-/* TODO: We could do loop unrolling here for elementary, simple, and matrix insertion operations. It *might* speed up
- *        the computation time up to 20-30% for processor with FMAC and cached CPU (I still mull on this because
- *        the code will be awful).
- */
 
 inline bool Matrix::operator == (const Matrix& _compare) const {
     if ((this->i16row != _compare.i16row) || (this->i16col != _compare.i16col)) {
@@ -627,9 +518,6 @@ inline Matrix Matrix::operator * (const Matrix& _matMul) const {
     }
     return _outp;
 }
-
-
-/* -------------------------------------------- Simple Matrix operations -------------------------------------------- */
 
 
 inline void Matrix::roundElementToZero(const int16_t _i, const int16_t _j) {
@@ -860,7 +748,6 @@ inline Matrix Matrix::insertSubMatrix(const Matrix& _subMatrix, const int16_t _p
 }
 
 
-/* ------------------------------------------------- Big operations ------------------------------------------------- */
 /* ------------------------------------------------- Big operations ------------------------------------------------- */
 
 /* Invers operation using Gauss-Jordan algorithm */
@@ -1180,19 +1067,13 @@ inline bool Matrix::QRDec(Matrix& Qt, Matrix& R) const {
         Qt = Qn * Qt;
         R  = Qn * R;
     }
-#if (0)
-    Qt.RoundingMatrixToZero();
-    R.RoundingMatrixToZero();
-#else
     Qt.roundElementsToZero();
     for (int16_t _i = 1; ((_i < R.i16row) && (_i < R.i16col)); _i++) {
         for (int16_t _j = 0; _j < _i; _j++) {
             R(_i, _j) = 0.0;
         }
     }
-#endif
     
-    /* Q = Qt.Transpose */
     return true;
 }
 
