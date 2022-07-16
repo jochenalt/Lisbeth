@@ -160,7 +160,7 @@ Lets continue with the space state description. It is approached as a descrete s
 	:alt: Conventions
 
 
-As indicated before, our state |StateVariableX| is a quaternion representing the pose of the IMU. The input/control vector |StateVariableU| is the gyro data, since that is not noisy and most precise in the short term. Finally, the acceleration and magnetometer vectors represent the output vector |StateVariableY|.
+As indicated before, our state |StateVariableX| is a quaternion representing the pose of the IMU. The input/control vector :math:`u(k)` is the gyro data, since that is not noisy and most precise in the short term. Finally, the acceleration and magnetometer vectors represent the output vector |StateVariableY|.
 
 .. image:: /images/State_Space_Variables.png
 	:width: 400
@@ -169,16 +169,16 @@ As indicated before, our state |StateVariableX| is a quaternion representing the
 
 .. math:: x(k) = f(x(k-1),u(k-1))+v_{k}
 	:label: equation_x
-	:align: left
+	:class: align-left
 		
 .. math:: u(k) = \bar{\omega} =  \begin{bmatrix} p  & q & r \end{bmatrix}  ^{T}
 	:label: equation_u
+	:class: align-left
 
 .. math:: y(k) = \begin{bmatrix}{\bar{A}_{N}^{T}} & \bar{M}_{N}^{T} \end{bmatrix}^{T} = \begin{bmatrix} a_{x,N} & a_{y,N} & a_{z,N} & m_{x,N} & m_{y,N} & m_{z,N} \end{bmatrix}
 	:label: equation_y
 	:class: align-left
 
-	
 
 .. |StateVariableX| math:: x(k)
 .. |StateVariableU| math:: u(k)
