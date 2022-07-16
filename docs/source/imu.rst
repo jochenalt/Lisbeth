@@ -79,6 +79,7 @@ The implementation integrates the gyro data over time resulting in a drifting bu
 Luckily, it is easier to see in code:
 
 .. code-block:: C++
+
 	alpha = 0.98;
 	angle = alpha * (angle + gyro * dT) + (1-alpha) * acceleration;
 
