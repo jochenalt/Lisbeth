@@ -106,20 +106,20 @@ Sensor fusion means merging the drifty gyro data with the noisy acceleration dat
 
 The conventions used in the following are:
 
-.. list-table:: Title
+.. list-table:: Conventions
    :widths: 25 25 
    :header-rows: 1
 
    * - Symbol
      - Meaning
    * - :math:`\bar{q} = \begin{bmatrix}q_{0} & q_{1} & q_{2 } & q_{3} \end{bmatrix}^{T}`
-   * - Quaternion unit vector representing the pose of the IMU with :math:`R\left \| \bar{q} \right \| = 1`
+     - Quaternion unit vector representing the pose of the IMU with :math:`R\left \| \bar{q} \right \| = 1`
 
 .. image:: /images/Quaternion_nomenklatur.png
 	:width: 700
 	:alt: Conventions
 
-The state of the filter will be represented by a quaternion. The gyro is delivering angular rate, so we will need to rotate the state by these angles. That's done by  :math:`\frac{d\bar{q}(t)}{dt} = \frac{1}{2}\bar{q}(t) \otimes \bar{\omega }(t)`, so we get
+The state of the filter will be represented by a quaternion. The gyro is delivering angular rate, so we will need to rotate the state by these angles. That's done by :math:`\frac{d\bar{q}(t)}{dt} = \frac{1}{2}\bar{q}(t) \otimes \bar{\omega }(t)`, so we get
 
 .. math:: 
 	:label: quaternion_derivative
