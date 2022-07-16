@@ -129,7 +129,7 @@ The state of the filter will be represented by a quaternion. The gyro is deliver
 	\end{bmatrix}
 
 
-Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector :math: `\bar{G} = \begin{bmatrix} 0 & 0 & g\end{bmatrix}^{T}`. So we need to find a transformation matrix :math: `C_{n}^{b}` that rotates the gravity vector such that it becomes our acceleration vector :math: `\bar{A}_{N} = C_{n}^{b}\bar{G}_{N}`. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
+Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector :math:`\bar{G} = \begin{bmatrix} 0 & 0 & g\end{bmatrix}^{T}`. So we need to find a transformation matrix :math:`C_{n}^{b}` that rotates the gravity vector such that it becomes our acceleration vector :math:`\bar{A}_{N} = C_{n}^{b}\bar{G}_{N}`. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
 
 .. math:: 
 	:label: quarternionaccelerationfusion
@@ -159,13 +159,36 @@ Considering the acceleration data, the quaternion should represent the rotation 
 
 Same thing happens to the data from the magnetic sensor. Again, the quaternion should represent the rotation relative to the magnetic vector |MagneticVector|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatMagnetic|. The same nice `DCM Article <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_  leads to 
 
+
+.. math:: 
+	:label: quarternionmagnetometerfusion
+
+	\begin{bmatrix}
+	m_{x,N}\\ 
+	m_{y,N}\\ 
+	m_{z,N}
+	\end{bmatrix} 
+	= \begin{bmatrix}
+	 q_{0}^{2} + q_{1}^{2} - q_{2}^{2} - q_{3}^{2}& 2(q_{1}q_{1} + q_{0}q_{3}) & 2(q_{1}q_{3} - q_{0}q_{2})\\ 
+	 2(q_{1}q_{2} - q_{0}q_{3})&  q_{0}^{2} - q_{1}^{2} + q_{2}^{2} - q_{3}^{2} & 2(q_{2}q_{3} + q_{0}q_{1})\\ 
+	 2(q_{1}q_{3} + q_{0}q_{2}) & 2(q_{2}q_{3} - q_{0}q_{1}) &  q_{0}^{2} - q_{1}^{2} - q_{2}^{2} + q_{3}^{2}
+	\end{bmatrix}
+	\begin{bmatrix}
+	B_{0x,N}\\ 
+	B_{0y,N}\\ 
+	B_{0z,N}\\
+	\end{bmatrix}\\
+	= 
+	\begin{bmatrix}
+	B_{0x,N}(q_{0}^{2} + q_{1}^{2} - q_{2}^{2} - q_{3}^{2}) + B_{0y,N}(2(q_{1}q_{2} - q_{0}q_{3})) + B_{0z,N}(2(q_{1}q_{3} - q_{0}q_{2}))\\
+	 B_{0x,N}(2(q_{1}q_{2} - q_{0}q_{3})) +  B_{0y,N}(q_{0}^{2} - q_{1}^{2} + q_{2}^{2} - q_{3}^{2}) + B_{0z,N}(2(q_{2}q_{2} + q_{0}q_{3}))\\
+	 B_{0x,N}(2(q_{1}q_{3} + q_{0}q_{2})) + B_{0y,N}(2(q_{2}q_{3} - q_{0}q_{1})) + B_{0z,N}(q_{0}^{2} - q_{1}^{2} - q_{2}^{2} + q_{3}^{2})
+	\end{bmatrix}
+
 .. |MagneticVector| image:: /images/Magnetic_vector.png
 .. |QuatMagnetic| image:: /images/Quaternion_Magneticfield.png
 .. |AccelerationTransformation| image:: /images/MagneticField_Transformation.png
 
-.. image:: /images/Quaternion_MagneticField_Fusion.png
-	:width: 550
-	:alt: MagneticFusion
 
 
 Now we know how to change the state of our filter represented by a quaternion on the basis of incoming acceleration, gyro, and magnetometer data. 
