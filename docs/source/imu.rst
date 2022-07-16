@@ -153,22 +153,17 @@ Now we know how to change the state of our filter represented by a quaternion on
 The filter variables
 ^^^^^^^^^^^^^^^^^^^^
 
-Lets continue with the space state description. It is approached as a descrete stochastic non-linear dynamic system:
-
-.. image:: /images/State_Space_Equation.png
-	:width: 700
-	:alt: Conventions
-
+Let's continue with the space state description. In general, we approach the problem as a descrete stochastic non-linear dynamic system:
 
 .. math:: 
-	:label: equation_yy
+	:label: equation_state
 
 	x(k) &= f(x(k-1), u(k-1))+v_{k} \\
 	y(k) &= h(x(k))+n_{k}\\
 
 where :math:`x\in R^{N}, u\in R^{M}, z\in R^{z}, v_{k}` is the process noise, :math:`n_{k}` is the observation noise.
 
-As indicated before, our state :math:`x(k)` is a quaternion representing the pose of the IMU. The input/control vector :math:`u(k)` is the gyro data, since that is not noisy and most precise in the short term. Finally, the acceleration and magnetometer vectors represent the output vector :math:`y(k)`.
+In our case the state :math:`x(k)` is a quaternion representing the pose of the IMU. The input/control vector :math:`u(k)` is the gyro data, since that is not noisy and most precise in the short term. Finally, the acceleration and magnetometer vectors represent the output vector :math:`y(k)`.
 
 .. math:: 
 	:label: equation_yy
