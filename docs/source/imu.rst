@@ -113,7 +113,17 @@ The conventions used in the following are:
    * - Symbol
      - Meaning
    * - :math:`\bar{q} = \begin{bmatrix}q_{0} & q_{1} & q_{2 } & q_{3} \end{bmatrix}^{T}`
-     - Quaternion unit vector representing the pose of the IMU with :math:`R\left \| \bar{q} \right \| = 1`
+     - Quaternion unit vector representing the pose of the IMU with :math:`\left \| \bar{q} \right \| = 1` in the world frame
+   * - :math:`\overline{\omega } =\begin{bmatrix} p & q & r \end{bmatrix}^{T}`
+     - angualar rate of the gyro in [rad/s] in the IMUs frame
+   * - :math:`\overline{A} =\begin{bmatrix} a_{x} & a_{y} & a_{z} \end{bmatrix}^{T}`
+     - acceleration vector from acceleration sensor in [:math:`\frac{g}{s^{2}}g/s`] in the IMUs frame
+   * - :math:`\overline{M} =\begin{bmatrix} m_{x} & m_{y} & m_{z} \end{bmatrix}^{T}`
+     - magnetic vector from magnetometer in [uT] in the IMUs frame
+   * - :math:`\overline{G} =\begin{bmatrix} 0 & 0 & g \end{bmatrix}^{T}`
+     - gravity vector in [:math:`\frac{m}{s^{2}}g/s`] in the earths/world frame 
+   * - :math:`\overline{B} =\begin{bmatrix} B_{0x} & B_{0y} & B_{0z} \end{bmatrix}^{T}`
+     - earths magnetic vector in the earths/world frame
 
 .. image:: /images/Quaternion_nomenklatur.png
 	:width: 700
