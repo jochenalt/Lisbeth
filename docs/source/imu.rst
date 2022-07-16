@@ -83,24 +83,26 @@ Luckily, it is easier to see in code:
 	alpha = 0.98;
 	angle = alpha * (angle + gyro * dT) + (1-alpha) * acceleration;
 
-That looks too easy to be true, and it isn't. In reality the cut off frequency (in the code above that is determining the factor :math:`{\alpha}` = 0.98) is hard to calibrate, and even worse, if the sensor has some dynamic behaviour like not being linear or changes its noise, drift or behaviour, a static value is just arbitrary.
+That looks too easy to be true, and it isn't. The cut off frequency determining the factor :math:`{\alpha}` = 0.98) is hard to calibrate, and even worse, if the sensor has some dynamic behaviour like being non-linear , a static value is just wrong.
 
 All this solved Rudolf E. Kálmán's famous `Kalman Filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf>`_. A digestable description can be found `here <https://www.kalmanfilter.net/default.aspx>`_.
 
 Multiple version of the filter are available, and the most common one is probably the Extended Kalman filter. However a rather new variant came up a while ago, which is the `Unscented Kalman filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Julier1997_SPIE_KF.pdf>`_, that is supposed to `provide a slightly better performance <https://www.gegi.usherbrooke.ca/LIV/index_htm_files/IEEEivsV2.pdf>`_.
 
-Let's be honest, in the usecase of a quadruped the difference is neglectable. Anyhow, understanding that beast is a mental challenge, so I started it.
+Let's be honest, in the usecase of a quadruped the difference is neglectable. Anyhow, understanding that beast is a mental challenge, and who would not want that.
 
 
 Fusing the state of the filter with incoming sensor data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sensor fusion means merging the drifty gyro data with the noisy acceleration data. Spoiler alert, as if the IMU above is not yet expensive enough, we also need a magnetometer that is not only noisy, but also needs to be corrected because of the earth's tilted magnetic field. 
-`Quaternions <https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation>`_ avoid a  gimbal lock and are computational less intense(not really relevant actually). As usual we use the convention `roll, pitch, and yaw <https://en.wikipedia.org/wiki/Flight_dynamics_(fixed-wing_aircraft)>`_ to avoid breaking fingers when picturing vectors.
-
 .. image:: /images/RPY.png
 	:width: 200
 	:alt: Conventions
+ 	:class: float-left
+
+Sensor fusion means merging the drifty gyro data with the noisy acceleration data. Spoiler alert, as if the IMU above is not yet expensive enough, we also need a magnetometer that is not only noisy, but also needs to be corrected because of the earth's tilted magnetic field. 
+`Quaternions <https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation>`_ avoid a  gimbal lock and are computational less intense(not really relevant actually, but lovely to work with). As usual we use the convention `roll, pitch, and yaw <https://en.wikipedia.org/wiki/Flight_dynamics_(fixed-wing_aircraft)>`_ to avoid breaking fingers when picturing vectors.
+
 
 The conventions used in the following are:
 
@@ -114,7 +116,7 @@ The state of the filter will be represented by a quaternion. The gyro is deliver
 	:width: 200
 	:class: float-left
 
-Eq(1) |br| |br| |br| |br|
+ |br| |br| Eq(1) |br| |br|
 
 
 
@@ -130,7 +132,7 @@ Considering the acceleration data, the quaternion should represent the rotation 
 	:alt: accelerationfusion
 	:class: float-left
 
-Eq(2) |br| |br| |br| |br|
+ |br| |br| Eq(2) |br| |br|
 
 Same thing happens to the data from the magnetic sensor. Again, the quaternion should represent the rotation relative to the magnetic vector |MagneticVector|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatMagnetic|. The same nice `DCM Article <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_  leads to 
 
@@ -139,13 +141,11 @@ Same thing happens to the data from the magnetic sensor. Again, the quaternion s
 .. |AccelerationTransformation| image:: /images/MagneticField_Transformation.png
 
 .. image:: /images/Quaternion_MagneticField_Fusion.png
-	:width: 500
+	:width: 550
 	:alt: MagneticFusion
 	:class: float-left
 
-Eq(3)
-
-|br| |br| |br| |br| |br|
+|br| |br| |br| Eq(3) |br| |br| |br|
 
 Now we know how to change the state of our filter represented by a quaternion on the basis of incoming acceleration, gyro, and magnetometer data. 
 
@@ -160,7 +160,7 @@ Lets continue with the space state description. It is approached as a descrete s
 	:alt: Conventions
 
 
-As indicated before, our state |StateVariableX| is a quaternion representing the pose of the IMU in space. The input/control vector |StateVariableU| is the gyro data, since that is not noisy and most precise in the short term. Finally, the acceleration and magnetometer vectors represent the output vector |StateVariableY|.
+As indicated before, our state |StateVariableX| is a quaternion representing the pose of the IMU. The input/control vector |StateVariableU| is the gyro data, since that is not noisy and most precise in the short term. Finally, the acceleration and magnetometer vectors represent the output vector |StateVariableY|.
 
 .. image:: /images/State_Space_Variables.png
 	:width: 400
@@ -208,4 +208,11 @@ Then, the UKF algorithm works like this:
 Implementation
 --------------
 
-The implementation is hosted on the mainboard's Teensy 4.1. 
+The implementation is hosted on the mainboard's Teensy 4.1, and as you might see from the algorithm above, the Unscented Kalman filter is quite a lot of code. Again I used `this <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_ as the basis for my code, and some parts can still be recognized, but in the end I touched most of it to make it fast and robust. It is part of the entire main board, and the parts relevant for the IMU are `here <https://github.com/jochenalt/Lisbeth/tree/main/code/firmware/lib/IMU>`_. It contains of 
+
+* `The Unscented Kalman filter <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/ukf.cpp>`_ 
+* `Some helpful matrix operations <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/matrix.h>`_ 
+* `The communication to the IMU <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/MicrostrainComm.cpp>`_ 
+* `The communication to the magnetometer <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/LIS3MDL.cpp>`_ 
+* `The communication to the magnetometer <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/LIS3MDL.cpp>`_ 
+* `The integrating class glueing everything together <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/IMUManager.cpp>`_ 
