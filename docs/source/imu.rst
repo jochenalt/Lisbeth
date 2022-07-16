@@ -157,7 +157,7 @@ Considering the acceleration data, the quaternion should represent the rotation 
 	\end{bmatrix}
 
 
-Same thing happens to the data from the magnetic sensor. Again, the quaternion should represent the rotation relative to the magnetic vector |MagneticVector|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatMagnetic|. The same nice `DCM Article <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_  leads to 
+Same thing happens to the data from the magnetic sensor. Again, the quaternion should represent the rotation relative to the magnetic vector :math:`\bar{M} = \begin{bmatrix}m_{x}&m_{z}&m_{z}\end{bmatrix} ^{T}`. So we need to find a transformation matrix :math:`C_{n}^{b}` that rotates the gravity vector such that it becomes our acceleration vector :math:`\overline{M_{N}} = C_{n}^{b }\overline{B_{0,N}}`. The same nice `DCM Article <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_  leads to 
 
 
 .. math:: 
@@ -180,16 +180,10 @@ Same thing happens to the data from the magnetic sensor. Again, the quaternion s
 	\end{bmatrix}\\
 	= 
 	\begin{bmatrix}
-	B_{0x,N}(q_{0}^{2} + q_{1}^{2} - q_{2}^{2} - q_{3}^{2}) + B_{0y,N}(2(q_{1}q_{2} - q_{0}q_{3})) + B_{0z,N}(2(q_{1}q_{3} - q_{0}q_{2}))\\
-	 B_{0x,N}(2(q_{1}q_{2} - q_{0}q_{3})) +  B_{0y,N}(q_{0}^{2} - q_{1}^{2} + q_{2}^{2} - q_{3}^{2}) + B_{0z,N}(2(q_{2}q_{2} + q_{0}q_{3}))\\
-	 B_{0x,N}(2(q_{1}q_{3} + q_{0}q_{2})) + B_{0y,N}(2(q_{2}q_{3} - q_{0}q_{1})) + B_{0z,N}(q_{0}^{2} - q_{1}^{2} - q_{2}^{2} + q_{3}^{2})
+	B_{0x,N}(q_{0}^{2} + q_{1}^{2} - q_{2}^{2} - q_{3}^{2}) &+ B_{0y,N}(2(q_{1}q_{2} - q_{0}q_{3})) &+ B_{0z,N}(2(q_{1}q_{3} - q_{0}q_{2}))\\
+	 B_{0x,N}(2(q_{1}q_{2} - q_{0}q_{3})) &+  B_{0y,N}(q_{0}^{2} - q_{1}^{2} + q_{2}^{2} - q_{3}^{2}) &+ B_{0z,N}(2(q_{2}q_{2} + q_{0}q_{3}))\\
+	 B_{0x,N}(2(q_{1}q_{3} + q_{0}q_{2})) &+ B_{0y,N}(2(q_{2}q_{3} - q_{0}q_{1})) &+ B_{0z,N}(q_{0}^{2} - q_{1}^{2} - q_{2}^{2} + q_{3}^{2})
 	\end{bmatrix}
-
-.. |MagneticVector| image:: /images/Magnetic_vector.png
-.. |QuatMagnetic| image:: /images/Quaternion_Magneticfield.png
-.. |AccelerationTransformation| image:: /images/MagneticField_Transformation.png
-
-
 
 Now we know how to change the state of our filter represented by a quaternion on the basis of incoming acceleration, gyro, and magnetometer data. 
 
