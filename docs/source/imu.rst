@@ -167,16 +167,18 @@ As indicated before, our state |StateVariableX| is a quaternion representing the
 	:alt: Conventions
 
 
-.. math::
+.. math:: x(k) = f(x(k-1),u(k-1))+v_{k}
+	:label: equation_x
 	
-	x(k) = f(x(k-1),u(k-1))+v_{k}
-.. math::
+	
+.. math:: u(k) = \bar{\omega} =  \begin{bmatrix} p  & q & r \end{bmatrix}  ^{T}
+	:label: equation_u
 
-	u(k) = \bar{\omega} =  \begin{bmatrix} p  & q & r \end{bmatrix}  ^{T}
-.. math::
+	
+.. math:: y(k) = \begin{bmatrix}{\bar{A}_{N}^{T}} & \bar{M}_{N}^{T} \end{bmatrix}^{T} = \begin{bmatrix} a_{x,N} & a_{y,N} & a_{z,N} & m_{x,N} & m_{y,N} & m_{z,N} \end{bmatrix}
+	:label: equation_y
 
-
-	y(k) = \begin{bmatrix}{\bar{A}_{N}^{T}} & \bar{M}_{N}^{T} \end{bmatrix}^{T} = \begin{bmatrix} a_{x,N} & a_{y,N} & a_{z,N} & m_{x,N} & m_{y,N} & m_{z,N} \end{bmatrix}
+	
 
 .. |StateVariableX| image:: /images/state_variable_x.png
 	:width: 35
