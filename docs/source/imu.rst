@@ -166,7 +166,7 @@ Lets continue with the space state description. It is approached as a descrete s
 	x(k) &= f(x(k-1), u(k-1))+v_{k} \\
 	y(k) &= h(x(k))+n_{k}\\
 
-where :math:`x\in R^{N}, u\in R^{M}, z\in R^{z}, v_{k}` is the process noise, :math:`n_{k}` is the observation noise, and :math:`h(x(k))` is the function that maps the state to the output, in our case the function transforming the pose to acceleration/magnetometer data.
+where :math:`x\in R^{N}, u\in R^{M}, z\in R^{z}, v_{k}` is the process noise, :math:`n_{k}` is the observation noise.
 
 As indicated before, our state :math:`x(k)` is a quaternion representing the pose of the IMU. The input/control vector :math:`u(k)` is the gyro data, since that is not noisy and most precise in the short term. Finally, the acceleration and magnetometer vectors represent the output vector :math:`y(k)`.
 
