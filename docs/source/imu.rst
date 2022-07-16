@@ -5,26 +5,17 @@
 Inertial Measurement Unit (IMU)
 ===============================
 
-The IMU is the source of the entire pipeline, therefore it is needs to be very fast as the pipeline is supposed to work with a decent frequency. Most hobby IMUs go up to 100Hz, which is okay, but above that things quickly get expensive. Heavy hearted I went with the `Lord Microstrain 3DM-CV5 IMU <https://www.microstrain.com/inertial-sensors/3dm-cv5-10>`_. Don't even ask.
-
-
-Setting up the IMU
-------------------
-
-To set it up, it makes sense to try out `SensorConnect <https://www.microstrain.com/software/sensorconnect>`_ first, that allows to set the baud rate, and to see the accel and gyro live. 460800 baud is also needed by the firmware to establish a connection to the IMU. This is a little show-off from the vendor site how sensor connect looks like:   
-
-.. |pic1| image:: /images/Lord_Microstrain_3DMCV5-IMU.png
+..  image:: /images/Lord_Microstrain_3DMCV5-IMU.png
    :width: 20%
    :alt: Lord Microstrain 3DM-CV5-10
    :target: https://www.microstrain.com/inertial-sensors/3dm-cv5-10
+ 	:class: float-left
 
-.. |pic2| image:: /videos/SensorConnect.gif
-   :width: 50%
-   :alt: Microstrain SensorConnect Application
-   :target: https://www.microstrain.com/software/sensorconnect
+The IMU is the source of the entire pipeline, therefore it is needs to be very fast as the pipeline is supposed to work with a decent frequency. Most hobby IMUs go up to 100Hz, which is okay, but above that things quickly get expensive. Heavy hearted I went with the `Lord Microstrain 3DM-CV5 IMU <https://www.microstrain.com/inertial-sensors/3dm-cv5-10>`_. Don't even ask.
 
-|pic1| 			|pic2| 
 
+Wiring the IMU
+------------------
 
 All Microstrain IMUs have this annoying 1.27mm IDC socket, which is hard to source. I used a `IDC(SWT) cable <https://www.adafruit.com/product/1675>`_ from Adafruit, cut off one end and connected it to a regular 5-pin JST XH connector:
 
@@ -40,7 +31,7 @@ The pins in the column "IMU", are coming from the  `IMUs User Manual <https://ww
 	:alt: 3DM-CV5-10 User manual
 	:target: https://www.microstrain.com/sites/default/files/3dm-cv5-10_user_manual_8500-0074_1.pdf
 
-Coming back to the setup. This needs to be done only once, so it is perfectly okay to use flying wires like this
+Before the IMU can be used, baud rate, frequency, and message format have to be defined. The manufacturer provides a tool called `Sensor Connect  <https://www.microstrain.com/software/sensorconnect>` for this, and a regular UART to USB adapter is used to connect it. (It is done only once, so it is perfectly okay to use flying wires like this)
 
 .. image:: /images/IMU_to_USB.png
 	:width: 700
@@ -75,7 +66,7 @@ And the data streaming should start right away after startup:
 Filtering Sensor Data
 ---------------------
 
-Filtering the data from an IMU is essential. Acceleration sensors are noise, and gyros drift over time. 
+Filtering the data from an IMU is essential. Acceleration sensors are noisy, and gyros drift over time. 
 
 The easiest way to solve this is a complementary filter that only takes the changes of the gyro into account, but uses the acceleration data as source for the angle. 
 
@@ -85,9 +76,15 @@ The implementation integrates the gyro data over time resulting in a drifting bu
 	:width: 500
 	:alt:  Complementary Filter
 
+Luckily, it is easier to see in code:
+
+.. code-block:: C++
+	alpha = 0.98;
+	angle = alpha * (angle + gyro * dT) + (1-alpha) * acceleration;
+
 That looks too easy to be true, and it isn't. In reality the cut off frequency (in the code above that is determining the factor :math:`{\alpha}` = 0.98) is hard to calibrate, and even worse, if the sensor has some dynamic behaviour like not being linear or changes its noise, drift or behaviour, a static value is just arbitrary.
 
-All this solved by Rudolf E. Kálmán's famous `Kalman Filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf>`_. A digestable description can be found `here <https://www.kalmanfilter.net/default.aspx>`_.
+All this solved Rudolf E. Kálmán's famous `Kalman Filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Kalman1960.pdf>`_. A digestable description can be found `here <https://www.kalmanfilter.net/default.aspx>`_.
 
 Multiple version of the filter are available, and the most common one is probably the Extended Kalman filter. However a rather new variant came up a while ago, which is the `Unscented Kalman filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Julier1997_SPIE_KF.pdf>`_, that is supposed to `provide a slightly better performance <https://www.gegi.usherbrooke.ca/LIV/index_htm_files/IEEEivsV2.pdf>`_.
 
@@ -175,7 +172,7 @@ As indicated before, our state |StateVariableX| is a quaternion representing the
 .. |StateVariableY| image:: /images/state_variable_y.png
 	:width: 35
 
-The Kalman filter predicts the next state by the current state and input vector (gyro). Therefore, equation equation (1) gives 
+The Kalman filter predicts the next state by the current state and input vector (gyro). Therefore, equation (1) gives 
 
 .. image:: /images/next_state_prediction.png
 	:width: 250
@@ -206,3 +203,8 @@ Then, the UKF algorithm works like this:
 	:width: 700
 	:alt: Conventions
 
+
+Implementation
+--------------
+
+The implementation is hosted on the mainboard's Teensy 4.1. 
