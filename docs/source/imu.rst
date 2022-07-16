@@ -175,12 +175,22 @@ As indicated before, our state :math:`x(k)` is a quaternion representing the pos
 	:label: equation_y
 	:class: align-left
 	:nowrap:
-	
-	\begin{eqstatevariables}
+
+	\begin{eqarray}
 		x(k) = f(x(k-1),u(k-1))+v_{k} \\
 		u(k) = \bar{\omega} =  \begin{bmatrix} p  & q & r \end{bmatrix}  ^{T} \\
 		y(k) = \begin{bmatrix}{\bar{A}_{N}^{T}} & \bar{M}_{N}^{T} \end{bmatrix}^{T} = \begin{bmatrix} a_{x,N} & a_{y,N} & a_{z,N} & m_{x,N} & m_{y,N} & m_{z,N} \end{bmatrix}
-	\end{eqstatevariables}
+	\end{eqarray}
+
+
+.. math:: 
+	:label: equation_yy
+	:class: align-left
+	:nowrap:
+
+	x(k) &= f(x(k-1),u(k-1))+v_{k} \\
+	u(k) &= \bar{\omega} =  \begin{bmatrix} p  & q & r \end{bmatrix}  ^{T} \\
+	y(k) &= \begin{bmatrix}{\bar{A}_{N}^{T}} & \bar{M}_{N}^{T} \end{bmatrix}^{T} = \begin{bmatrix} a_{x,N} & a_{y,N} & a_{z,N} & m_{x,N} & m_{y,N} & m_{z,N} \end{bmatrix}
 
 The Kalman filter predicts the next state by the current state and input vector (gyro). Therefore, equation (1) gives 
 
