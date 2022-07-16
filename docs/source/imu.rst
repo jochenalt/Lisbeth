@@ -165,15 +165,12 @@ As indicated before, our state :math:`x(k)` is a quaternion representing the pos
 
 .. math:: x(k) = f(x(k-1),u(k-1))+v_{k}
 	:label: equation_x
-	:class: align-left
 		
-.. math:: u(k) = \bar{\omega} =  \begin{bmatrix} p  & q & r \end{bmatrix}  ^{T}
+.. math:: u(k) = \bar{\omega} = \begin{bmatrix} p  & q & r \end{bmatrix}  ^{T}
 	:label: equation_u
-	:class: align-left
 
 .. math:: 
 	:label: equation_y
-	:class: align-left
 	:nowrap:
 
 	\begin{eqnarray}
@@ -186,13 +183,22 @@ textelorem ipsum
 
 .. math:: 
 	:label: equation_yy
-	:class: align-left
 	:nowrap:
 
 	\\
 	x(k) &= f(x(k-1),u(k-1))+v_{k} \\
 	u(k) &= \bar{\omega} =  \begin{bmatrix} p  & q & r \end{bmatrix}  ^{T} \\
 	y(k) &= \begin{bmatrix}{\bar{A}_{N}^{T}} & \bar{M}_{N}^{T} \end{bmatrix}^{T} = \begin{bmatrix} a_{x,N} & a_{y,N} & a_{z,N} & m_{x,N} & m_{y,N} & m_{z,N} \end{bmatrix}
+
+
+.. math:: 
+	:label: equation_yy
+
+	\\
+	x(k) &= f(x(k-1),u(k-1))+v_{k} \\
+	u(k) &= \bar{\omega} =  \begin{bmatrix} p  & q & r \end{bmatrix}  ^{T} \\
+	y(k) &= \begin{bmatrix}{\bar{A}_{N}^{T}} & \bar{M}_{N}^{T} \end{bmatrix}^{T} = \begin{bmatrix} a_{x,N} & a_{y,N} & a_{z,N} & m_{x,N} & m_{y,N} & m_{z,N} \end{bmatrix}
+
 
 The Kalman filter predicts the next state by the current state and input vector (gyro). Therefore, equation (1) gives 
 
