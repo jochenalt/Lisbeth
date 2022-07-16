@@ -112,16 +112,49 @@ The conventions used in the following are:
 
 The state of the filter will be represented by a quaternion. The gyro is delivering angular rate, so we will need to rotate the state by these angles
 
-.. image:: /images/Quaternion_derivative.png
-	:width: 200
+.. math:: 
+	:label: quaternion_derivative
 
+	\frac{d\bar{q}(t)}{dt} = \frac{1}{2}\begin{bmatrix}
+	0 & -p &-q  &-r & \\ 
+	p & 0  & r  & -q& \\ 
+	q & -r & 0  & p & \\
+	r & q  & -p & 0 &
+	\end{bmatrix}
+	\begin{bmatrix}
+	 q_{0}  \\ 
+	 q_{1}  \\ 
+	 q_{2}  \\
+	  q_{3}
+	\end{bmatrix}
 
 
 Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector :math: `\bar{G} = \begin{bmatrix} 0 & 0 & g\end{bmatrix}^{T}`. So we need to find a transformation matrix :math: `C_{n}^{b}` that rotates the gravity vector such that it becomes our acceleration vector :math: `\bar{A}_{N} = C_{n}^{b}\bar{G}_{N}`. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
 
-.. image:: /images/Quaternion_Acceleration_Fusion.png
-	:width: 600
-	:alt: accelerationfusion
+.. math:: 
+	:label: quarternionaccelerationfusion
+
+	\begin{bmatrix}
+	a_{x,N}\\ 
+	a_{y,N}\\ 
+	a_{z,N}
+	\end{bmatrix} 
+	&= \begin{bmatrix}
+	 q_{0}^{2} + q_{1}^{2} - q_{2}^{2} - q_{3}^{2}& 2(q_{1}q_{1} + q_{0}q_{3}) & 2(q_{1}q_{3} - q_{0}q_{2})\\ 
+	 2(q_{1}q_{2} - q_{0}q_{3})&  q_{0}^{2} - q_{1}^{2} + q_{2}^{2} - q_{3}^{2} & 2(q_{2}q_{3} + q_{0}q_{1})\\ 
+	 2(q_{1}q_{3} + q_{0}q_{2}) & 2(q_{2}q_{3} - q_{0}q_{1}) &  q_{0}^{2} - q_{1}^{2} - q_{2}^{2} + q_{3}^{2}
+	\end{bmatrix}
+	\begin{bmatrix}
+	0\\ 
+	0\\ 
+	1\\
+	\end{bmatrix}\\
+	&= 
+	\begin{bmatrix}
+	2(q_{1}q_{3} - q_{0}q_{2})\\
+	2(q_{1}q_{3} - q_{0}q_{1})\\
+	q_{0}^{2} - q_{1}^{2} - q_{2}^{2} + q_{3}^{2}
+	\end{bmatrix}
 
 
 Same thing happens to the data from the magnetic sensor. Again, the quaternion should represent the rotation relative to the magnetic vector |MagneticVector|. So we need to find a transformation matrix |AccelerationTransformation| that rotates the gravity vector such that it becomes our acceleration vector |QuatMagnetic|. The same nice `DCM Article <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_  leads to 
