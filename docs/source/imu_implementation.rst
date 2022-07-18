@@ -19,6 +19,10 @@ The overall structure looks like this:
 
 *  The communication with a Microstrain device is implemented in the class `Microstrain <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/MicrostrainComm.cpp>`_ . This class assumes that the IMU is preconfigured, such that it only reads an incoming datastream. However, it has some ressilience built in, like constant checking of the timing, checksums, recovery of a a lost communcation, and resetting the  device with a separate power pin. It  implements Microstrains `data communciation protocol <https://github.com/jochenalt/Lisbeth/blob/main/datasheets/Microstrain%203DM-CV5-IMU/3DM-CV5-10%20IMU%20Data%20Communication%20Protocol%20Manualpdf.pdf>`_.
 
+*  The communication with a Microstrain device is implemented in the class `Microstrain <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/MicrostrainComm.cpp>`_ . This class assumes that the IMU is preconfigured, such that it only reads an incoming datastream. However, it has some ressilience built in, like constant checking of the timing, checksums, recovery of a a lost communcation, and resetting the  device with a separate power pin. It  implements Microstrains `data communciation protocol <https://github.com/jochenalt/Lisbeth/blob/main/datasheets/Microstrain%203DM-CV5-IMU/3DM-CV5-10%20IMU%20Data%20Communication%20Protocol%20Manualpdf.pdf>`_.
+
+*  The magnetometer is the popular LIS3MLD device. Communication over I\ :sup:`2`\C happens in the class `LIS3MLD  <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/LIS3MDL.cpp>`_.
+
 *  The magnetometer is the popular LIS3MLD device. Communication over I\ :sup:`2`\C happens in the class `LIS3MLD  <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/LIS3MDL.cpp>`_.
 
 *  Finally, all devices and filters are glued together in the class IMUManager  and the magnetometer, aligns the frames, filters the output and watches that everything is working correctly. The outcome is a datastream that returns
