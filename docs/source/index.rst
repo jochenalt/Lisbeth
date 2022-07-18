@@ -13,4 +13,6 @@ Welcome to Lisbeth's documentation
    mechanics
    imu
    imu_filter
+   imu_implementation
+
 
