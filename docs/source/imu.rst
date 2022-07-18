@@ -112,9 +112,9 @@ The conventions used in the following are:
    * - Symbol
      - Meaning
    * - :math:`\bar{q} = \begin{bmatrix}q_{0} & q_{1} & q_{2 } & q_{3} \end{bmatrix}^{T}`
-     - Quaternion representing the IMU's pose :math:`\left \| \bar{q} \right \| = 1` in world frame
+     - Quaternion representing the IMU's pose in the world frame. :math:`\left \| \bar{q} \right \| = 1`
    * - :math:`\overline{\omega } =\begin{bmatrix} p & q & r \end{bmatrix}^{T}`
-     - angualar rate of the gyro in [rad/s] in the IMUs frame
+     - angular rate of the gyro in [rad/s] in the IMUs frame
    * - :math:`\overline{A} =\begin{bmatrix} a_{x} & a_{y} & a_{z} \end{bmatrix}^{T}`
      - acceleration vector from acceleration sensor in [:math:`\frac{g}{s^{2}}g/s`] in the IMUs frame
    * - :math:`\overline{M} =\begin{bmatrix} m_{x} & m_{y} & m_{z} \end{bmatrix}^{T}`
@@ -124,7 +124,7 @@ The conventions used in the following are:
    * - :math:`\overline{B} =\begin{bmatrix} B_{0x} & B_{0y} & B_{0z} \end{bmatrix}^{T}`
      - earths magnetic vector in [uT] in the earths/world frame
 
-The state of the filter will be represented by a quaternion. The gyro is delivering angular rate, so we will need to rotate the state by these angles per dt. That's done by :math:`\frac{d\bar{q}(t)}{dt} = \frac{1}{2}\bar{q}(t) \otimes \bar{\omega }(t)`, so we get
+The state of the filter will be represented by a quaternion. When the gyro is delivering a datapoint of angular rate, we will need to rotate the state by these angles per dt. That's done by :math:`\frac{d\bar{q}(t)}{dt} = \frac{1}{2}\bar{q}(t) \otimes \bar{\omega }(t)`, so we get
 
 .. math:: 
 	:label: quaternion_derivative
@@ -143,7 +143,7 @@ The state of the filter will be represented by a quaternion. The gyro is deliver
 	\end{bmatrix}
 
 
-Considering the acceleration data, the quaternion should represent the rotation relative to the gravity vector :math:`\bar{G} = \begin{bmatrix} 0 & 0 & g\end{bmatrix}^{T}`. So we need to find a transformation matrix :math:`C_{n}^{b}` that rotates the gravity vector such that it becomes our acceleration vector :math:`\bar{A}_{N} = C_{n}^{b}\bar{G}_{N}`. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
+Now we do the same with the acceleration, i.e. a new datapoint needs to be fused with the state. The quaternion should represent the rotation relative to the gravity vector :math:`\bar{G} = \begin{bmatrix} 0 & 0 & g\end{bmatrix}^{T}`. So we need to find a transformation matrix :math:`C_{n}^{b}` that rotates the gravity vector in a way that it aligns with the acceleration vector :math:`\bar{A}_{N} = C_{n}^{b}\bar{G}_{N}`. This equation can be solved with something called the `Direct Cosine Matrix(DCM) <https://stevendumble.com/attitude-representations-understanding-direct-cosine-matrices-euler-angles-and-quaternions/>`_, leading to this equation
 
 .. math:: 
 	:label: quarternionaccelerationfusion
@@ -213,7 +213,7 @@ Let's continue with the space state description. In general, we approach the pro
 
 where :math:`x\in R^{N}, u\in R^{M}, z\in R^{z}, v_{k}` is the process noise, and :math:`n_{k}` is the observation noise.
 
-In our case the state :math:`x(k)` is a quaternion representing the pose of the IMU. The input/control vector :math:`u(k)` is the gyro data, since that is not noisy and most precise in the short term. Finally, the acceleration and magnetometer vectors represent the output vector :math:`y(k)`.
+In our case the state :math:`x(k)` is a quaternion representing the pose of the IMU. Our input/control vector :math:`u(k)` is the gyro data that is used for changes in the short term. Finally, the acceleration and magnetometer vectors represent the output vector :math:`y(k)` that is compensating the gyro's drift.
 
 .. math:: 
 
@@ -223,7 +223,7 @@ In our case the state :math:`x(k)` is a quaternion representing the pose of the 
 	y(k) &= \begin{bmatrix}{\bar{A}_{N}^{T}} & \bar{M}_{N}^{T} \end{bmatrix}^{T} = \begin{bmatrix} a_{x,N} & a_{y,N} & a_{z,N} & m_{x,N} & m_{y,N} & m_{z,N} \end{bmatrix}
 
 
-The Kalman filter predicts the next state by the current state and input vector (gyro). Therefore, equation (1) gives 
+The Kalman filter predicts the next state by fusing the current state with the input vector (gyro). Therefore, equation (1) gives 
 
 .. math::
 	x(k) = x(k-1) + \frac{\Delta t}{2}\begin{bmatrix}
@@ -251,7 +251,7 @@ And that's all we need to feed into the Unscented Kalman filter.
 The Unscented Kalman filter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The algorithm as described in `A new extension to the Kalman filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Julier1997_SPIE_KF.pdf>`_ is listed below, and I borrowed the description of the algorithm from `here <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_:
+The algorithm as described in `A new extension to the Kalman filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Julier1997_SPIE_KF.pdf>`_ is listed below,  I borrowed the description of the algorithm from `here <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_ .(Frustratingly, it is almost impossible to understand that without having the standard Kalman filter digested)
 
 First some definitions:
 
@@ -273,16 +273,14 @@ The implementation is hosted on the mainboard's Teensy 4.1, and as you might see
 
 Contents: 
 
-*  The unscented Kalmanfilter is implemeted in `ukf\.cpp/ukf\.h <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/ukf.cpp>`_ 
+*  The unscented Kalmanfilter is implemeted in `ukf``.cpp/ukf``.h <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/ukf.cpp>`_ 
    I used `this <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_ as a basis, but modified quite a lot to make it fast and robust
-*  matrix.h,  `a Matrix library <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/matrix.h>`_ , coming from `here <https://github.com/pronenewbits>`_
-* Microstrain.cpp, implementing the `communcation to the IMU <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/MicrostrainComm.cpp>`_ , communication with a Microstrain IMU via serial.
-	This class implements Microstrains `data communciation protocol <https://github.com/jochenalt/Lisbeth/blob/main/datasheets/Microstrain%203DM-CV5-IMU/3DM-CV5-10%20IMU%20Data%20Communication%20Protocol%20Manualpdf.pdf>`_
-* `LIS3MLD.cpp  <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/LIS3MDL.cpp>`_ , communcation with a LIS3MDL sensor via I\ :sup:`2`\C
-* `IMUManager``.``cpp <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/IMUManager.cpp>`_ , the manager that glues everything together.
-	It tkes care of the power management, i.e. it turns on/off the IMU and the magnetometer, watches 
-	the incoming datastream, aligns the frames of the IMU and the magnetometer, converts the units into SI, and returns 
-		* the pose in RPY convention in [rad] and quaternion,
-		* the angular rate in[rad/s]
-		* the linear acceleration without gravity vector in m/s\ :sup:`2`\
+*  As matrix library I used `matrix``.h`` <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/matrix.h>`_ , coming from `here <https://github.com/pronenewbits>`_
+* The communication with a Microstrain device is implemented in `Microstrain``.cpp <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/MicrostrainComm.cpp>`_ . This class assumes that the IMU is preconfigured, such that it only reads an incoming datastream. However, it has some ressilience built in, like constant checking of the timing, checksums, recovery of a a lost communcation, and resetting the  device with a separate power pin. 
+It  implements Microstrains `data communciation protocol <https://github.com/jochenalt/Lisbeth/blob/main/datasheets/Microstrain%203DM-CV5-IMU/3DM-CV5-10%20IMU%20Data%20Communication%20Protocol%20Manualpdf.pdf>`_
+* The magnetometer is the popular LIS3MLD device. Communication happens in `LIS3MLD``.cpp  <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/LIS3MDL.cpp>`_  based on  I\ :sup:`2`\C.
+* `Finally, all devices and filters are glued together in `IMUManager``.cpp <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/IMUManager.cpp>`_ . This class takes care of the power management of the IMU and the magnetometer, aligns the frames, filters the output and watches that everything is working correctly. The outcome is a datastream that returns
+      * the pose in RPY convention in [rad] and quaternion,
+		* the angular rate in [rad/s]
+		* the linear acceleration with the gravity vector removed in m/s\ :sup:`2`\
 
