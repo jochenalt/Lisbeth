@@ -1,11 +1,12 @@
 /**********************************************************************************************************************
- *  Class for Discrete Unscented Kalman Filter 
- *  Ref: Van der. Merwe, .. (2004). Sigma-Point Kalman Filters for Probabilistic Inference in Dynamic 
- *      State-Space Models (Ph.D. thesis). Oregon Health & Science University.
+ *  Fungsi Discrete Unscented-kalman-filter (dihitung secara diskrit), Ref:
+ *          Van der. Merwe, .. (2004). Sigma-Point Kalman Filters for Probabilistic
+ *          Inference in Dynamic State-Space Models (Ph.D. thesis). Oregon Health &
+ *          Science University.
  *
- *  The system to be estimated is defined as a discrete nonlinear dynamic dystem:
- *              x(k+1) = f[x(k), u(k)] + v(k)           ; x = Nx1,    u = Mx1
- *              y(k)   = h[x(k), u(k)] + n(k)           ; y = Zx1
+ *         Formulasi plant yang diestimasi:
+ *              x*(k) = f[x(k-1), u(k)] + w(k)          ; x=Nx1,    u=Mx1               ...{UKF_1}
+ *              z(k)  = h[x(k), u(k)] + v(k)            ; z=Zx1                         ...{UKF_2}
  *
  *        Where:
  *          x(k) : State Variable at time-k                          : Nx1
@@ -16,15 +17,16 @@
  *
  *          f(..), h(..) is a nonlinear transformation of the system to be estimated.
  *
+ *
  **********************************************************************************************************************
  *      Unscented Kalman Filter algorithm:
  *          Initialization:
- *              P (k=0|k=0) = Identitas * covariant(P(k=0)), typically initialized with some big number.
- *              x(k=0|k=0)  = Expected value of x at time-0 (i.e. x(k=0)), typically set to zero.
- *              Rv, Rn      = Covariance matrices of process & measurement. As this implementation 
- *                              the noise as AWGN (and same value for every variable), this is set
- *                              to Rv=diag(RvInit,...,RvInit) and Rn=diag(RnInit,...,RnInit).
- *              Wc, Wm      = First order & second order weight, respectively.
+ *              P(k=0|k=0) = Identity matrix * covariant(P(k=0)), typically initialized with some big number.
+ *              x(k=0|k=0) = Expected value of x at time-0 (i.e. x(k=0)), typically set to zero.
+ *              Rv, Rn     = Covariance matrices of process & measurement. As this implementation 
+ *                           the noise as AWGN (and same value for every variable), this is set
+ *                           to Rv=diag(RvInit,...,RvInit) and Rn=diag(RnInit,...,RnInit).
+ *              Wc, Wm     = First order & second order weight, respectively.
  *              alpha, beta, kappa, gamma = scalar constants.
  *              
  *              lambda = (alpha^2)*(N+kappa)-N,         gamma = sqrt(N+alpha)           ...{UKF_1}
@@ -75,6 +77,8 @@
  *              
  *              Update the Covariance Matrix:
  *                  P(k|k)      = P(k|k-1) - K*Py(k)*K'                                 ...{UKF_12}
+ *
+ *
  *        Variabel:
  *          X_kira(k)    : X~(k) = X_Estimasi(k) kalman filter   : Nx1
  *          P(k)         : P(k) = matrix kovarian kalman filter  : NxN
@@ -114,13 +118,11 @@ public:
     void setNorthVector(Matrix& northCalibration);
 
     // do the filtering. Input is Gyro [rad/s] and Accel [g], output is a quat 
+    // (linear acceleration is computed separately)
     void compute(double accX, double accY, double accZ, 
                  double gyroX, double gyroY, double gyroZ,   
                  double magX, double magY, double magZ,
                  double &x, double &y, double &z, double &w);
-
-    // return covariance 
-    Matrix getY() { return Y_Est; }
 
 private:
     // intialise data structures of unscented Kalman filter

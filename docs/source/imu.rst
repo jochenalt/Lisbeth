@@ -112,7 +112,7 @@ The conventions used in the following are:
    * - Symbol
      - Meaning
    * - :math:`\bar{q} = \begin{bmatrix}q_{0} & q_{1} & q_{2 } & q_{3} \end{bmatrix}^{T}`
-     - Quaternion  representing the pose of the IMU with :math:`\left \| \bar{q} \right \| = 1` in the world frame
+     - Quaternion representing the IMU's pose :math:`\left \| \bar{q} \right \| = 1` in the world frame
    * - :math:`\overline{\omega } =\begin{bmatrix} p & q & r \end{bmatrix}^{T}`
      - angualar rate of the gyro in [rad/s] in the IMUs frame
    * - :math:`\overline{A} =\begin{bmatrix} a_{x} & a_{y} & a_{z} \end{bmatrix}^{T}`
@@ -120,7 +120,7 @@ The conventions used in the following are:
    * - :math:`\overline{M} =\begin{bmatrix} m_{x} & m_{y} & m_{z} \end{bmatrix}^{T}`
      - magnetic vector from magnetometer in [uT] in the IMUs frame
    * - :math:`\overline{G} =\begin{bmatrix} 0 & 0 & g \end{bmatrix}^{T}`
-     - gravity vector in [:math:`\frac{m}{s^{2}`] in the earths/world frame 
+     - gravity vector in :math:`[\frac{m}{s^{2}]` in the earths/world frame 
    * - :math:`\overline{B} =\begin{bmatrix} B_{0x} & B_{0y} & B_{0z} \end{bmatrix}^{T}`
      - earths magnetic vector in [uT] in the earths/world frame
 
@@ -251,7 +251,7 @@ And that's all we need to feed into the Unscented Kalman filter.
 The Unscented Kalman filter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The description of the algorithm has been borrowed from `here <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_:
+The algorithm as described in `A new extensiont to the Kalman filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Julier1997_SPIE_KF.pdf>`_ is listed below, and I borrowed the description of the algorithm from `here <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_:
 
 First some definitions:
 
@@ -273,16 +273,14 @@ The implementation is hosted on the mainboard's Teensy 4.1, and as you might see
 
 Contents: 
 
-* `The Unscented Kalman filter <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/ukf.cpp>`_ 
+*  The unscented Kalman filter: ukf.cpp/ukf.h `ukf``.``cpp ``/`` ukf``.``h <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/ukf.cpp>`_ 
    I used `this <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_ as a basis, but modified quite a lot to make it fast and robust
-* `A matrix library <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/matrix.h>`_ 
-	This is is coming from `here <https://github.com/pronenewbits>`_
-* `The communication to the IMU <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/MicrostrainComm.cpp>`_ 
+* `matrix``.``h <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/matrix.h>`_ , a matrix library coming from `here <https://github.com/pronenewbits>`_
+* `Microstrain``.cpp  <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/MicrostrainComm.cpp>`_ , communication with a Microstrain IMU via serial.
 	This class implements Microstrains `data communciation protocol <https://github.com/jochenalt/Lisbeth/blob/main/datasheets/Microstrain%203DM-CV5-IMU/3DM-CV5-10%20IMU%20Data%20Communication%20Protocol%20Manualpdf.pdf>`_
-* `The communication to the magnetometer <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/LIS3MDL.cpp>`_ 
-   The magnetometer LIS3MDL communicates via I\ :sup:`2`\C with the main board. 
-* `The integrating class IMUManager <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/IMUManager.cpp>`_ 
-	Everthing is glued together in this class. It tkes care of the power management, i.e. it turns on/off the IMU and the magnetometer, watches 
+* `LIS3MLD``.``cpp  <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/LIS3MDL.cpp>`_ , communcation with a LIS3MDL sensor via I\ :sup:`2`\C
+* `IMUManager``.``cpp <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/IMUManager.cpp>`_ , the manager that glues everything together.
+	It tkes care of the power management, i.e. it turns on/off the IMU and the magnetometer, watches 
 	the incoming datastream, aligns the frames of the IMU and the magnetometer, converts the units into SI, and returns 
 		* the pose in RPY convention in [rad] and quaternion,
 		* the angular rate in[rad/s]
