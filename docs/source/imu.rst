@@ -15,7 +15,7 @@ The IMU is the source of the entire pipeline, therefore it is needs to be very f
 
 
 Wiring the IMU
-------------------
+--------------
 
 All Microstrain IMUs have this annoying 1.27mm IDC socket, which is hard to source. I used a `IDC(SWT) cable <https://www.adafruit.com/product/1675>`_ from Adafruit, cut off one end and connected it to a regular 5-pin JST XH connector:
 
@@ -31,7 +31,11 @@ The pins in the column "IMU", are coming from the  `IMUs User Manual <https://ww
 	:alt: 3DM-CV5-10 User manual
 	:target: https://www.microstrain.com/sites/default/files/3dm-cv5-10_user_manual_8500-0074_1.pdf
 
-Before the IMU can be used, baud rate, frequency, and message format have to be defined. The manufacturer provides a tool called `Sensor Connect  <https://www.microstrain.com/software/sensorconnect>` for this, and a regular UART to USB adapter is used to connect it. (It is done only once, so it is perfectly okay to use flying wires like this)
+
+Configuring the IMU
+--------------------
+
+Before the IMU can be used, baud rate, frequency, and message format have to be defined, since the software running in the mainboard assumes that the IMU starts streaming data when powered. The manufacturer provides a tool called `Sensor Connect  <https://www.microstrain.com/software/sensorconnect>` for this, and a regular UART to USB adapter is used to connect it. (It is done only once, so it is perfectly okay to use flying wires like this)
 
 .. image:: /images/IMU_to_USB.png
 	:width: 700
