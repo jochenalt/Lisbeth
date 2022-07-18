@@ -273,12 +273,12 @@ The implementation is hosted on the mainboard's Teensy 4.1, and as you might see
 
 Contents: 
 
-*  ukf.cpp/ukf.h. `The unscented Kalman filter <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/ukf.cpp>`_ 
+*  The unscented Kalmanfilter is implemeted in `ukf\.cpp/ukf\.h <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/ukf.cpp>`_ 
    I used `this <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_ as a basis, but modified quite a lot to make it fast and robust
 *  matrix.h,  `a Matrix library <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/matrix.h>`_ , coming from `here <https://github.com/pronenewbits>`_
 * Microstrain.cpp, implementing the `communcation to the IMU <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/MicrostrainComm.cpp>`_ , communication with a Microstrain IMU via serial.
 	This class implements Microstrains `data communciation protocol <https://github.com/jochenalt/Lisbeth/blob/main/datasheets/Microstrain%203DM-CV5-IMU/3DM-CV5-10%20IMU%20Data%20Communication%20Protocol%20Manualpdf.pdf>`_
-* `LIS3MLD``.``cpp  <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/LIS3MDL.cpp>`_ , communcation with a LIS3MDL sensor via I\ :sup:`2`\C
+* `LIS3MLD.cpp  <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/LIS3MDL.cpp>`_ , communcation with a LIS3MDL sensor via I\ :sup:`2`\C
 * `IMUManager``.``cpp <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/IMUManager.cpp>`_ , the manager that glues everything together.
 	It tkes care of the power management, i.e. it turns on/off the IMU and the magnetometer, watches 
 	the incoming datastream, aligns the frames of the IMU and the magnetometer, converts the units into SI, and returns 
