@@ -23,20 +23,4 @@ The overall structure looks like this:
 
 *  The magnetometer is the popular LIS3MLD device. Communication over I\ :sup:`2`\C happens in the class `LIS3MLD  <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/LIS3MDL.cpp>`_.
 
-*  The magnetometer is the popular LIS3MLD device. Communication over I\ :sup:`2`\C happens in the class `LIS3MLD  <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/LIS3MDL.cpp>`_.
-
-*  Finally, all devices and filters are glued together in the class IMUManager  and the magnetometer, aligns the frames, filters the output and watches that everything is working correctly. The outcome is a datastream that returns
-      * the pose in RPY convention in [rad] and quaternion,
-      * the angular rate in [rad/s]
-      * the linear acceleration with the gravity vector removed in [m/s\ :sup:`2`\]
-
-*  Finally, all devices and filters are glued together in the class IMUManager  `here <https://github.com/pronenewbits>`_ and the magnetometer, aligns the frames, filters the output and watches that everything is working correctly. The outcome is a datastream that returns
-      * the pose in RPY convention in [rad] and quaternion,
-      * the angular rate in [rad/s]
-      * the linear acceleration with the gravity vector removed in [m/s\ :sup:`2`\]
-
-*  Finally, all devices and filters are glued together in the class `IMUManager <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/IMUManager.cpp>`_. It takes care of the power management of the IMU and the magnetometer, aligns the frames, filters the output and watches that everything is working correctly. The outcome is a datastream that returns
-      * the pose in RPY convention in [rad] and quaternion,
-      * the angular rate in [rad/s]
-      * the linear acceleration with the gravity vector removed in [m/s\ :sup:`2`\]
-
+*  Finally, all devices and filters are glued together in the class IMUManager `IMUManager <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/IMUManager.cpp>`_ and the magnetometer, aligns the frames, filters the output and watches that everything is working correctly. The outcome is a datastream that returns the pose in RPY convention in [rad] and quaternion, the angular rate in [rad/s], and the linear acceleration with the gravity vector removed in [m/s\ :sup:`2`\]
