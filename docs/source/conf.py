@@ -3,7 +3,7 @@
 # -- Project information
 
 project = 'Lisbeth'
-copyright = 'Jochen'
+copyright = 'Jochen Alt'
 author = 'jochen.alt@gmx.net'
 
 release = '1.0'
@@ -11,8 +11,7 @@ version = '1.1.0'
 
 # -- General configuration
 
-html_static_path = ['_static',
-            ]
+html_static_path = ['_static']
 
 extensions = [
     'sphinx.ext.duration',
@@ -41,11 +40,9 @@ math_number_all = 'True'
 #def setup(app):
 #    app.add_stylesheet('css/custom.css')
 
-def setup(app):
-   app.add_stylesheet('custom.css')
 
 html_css_files = [
     'css/custom.css',
 ]
 
-html_theme = "haiku"
+html_theme = "alabaster"
