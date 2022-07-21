@@ -182,28 +182,27 @@ void Magnetometer::calibrateLoop(double acc_x, double acc_y, double acc_z) {
                 
         /* Normalizing the magnetic vector */
         normG = sqrt((Bx * Bx) + (By * By) + (Bz * Bz));
-        Bx = Bx / normG;
-        By = By / normG;
-        Bz = Bz / normG;
+        if (normG != 0) {
+            Bx = Bx / normG;
+            By = By / normG;
+            Bz = Bz / normG;
+        }
         
         /* Projecting the magnetic vector into plane orthogonal to the gravitational vector */
-        // double roll = asin(Ay);
-        // double pitch = asin(Ax/cos(roll));
-
         float pitch = asin(-Ax);
         float roll = asin(Ay/cos(pitch));
         double m_tilt_x =  Bx*cos(pitch)             + By*sin(roll)*sin(pitch)   + Bz*cos(roll)*sin(pitch);
         double m_tilt_y =                            + By*cos(roll)              - Bz*sin(roll);
+        // ignore yaw, use the projection to the xy plane 
         // double m_tilt_z = -Bx*sin(pitch)             + By*sin(roll)*cos(pitch)   + Bz*cos(roll)*cos(pitch); 
 
-        // ignore yaw
         double mag_dec = atan2(m_tilt_y, m_tilt_x);
         north_vector[0][0] = cos(mag_dec);
         north_vector[1][0] = sin(mag_dec);
         north_vector[2][0] = 0;
+
         println("Acc =(%.3f,%.3f,%.3f)", Ax, Ay, Az);
-        println("B =(%.3f,%.3f,%.3f)", Bx, By, Bz);
-        
+        println("Mag =(%.3f,%.3f,%.3f)", Bx, By, Bz);
         println("pitch %.3f roll %.3f m_tilt_x %.3f, m_tilt_y %.3f mag_dec %.3f", pitch/(2.0*3.1415)*360.0, roll/(2.0*3.1415)*360.0, m_tilt_x, m_tilt_y, mag_dec/(2.0*3.1415)*360.0);
                 
         println("Calibration finished: North vector =(%.3f,%.3f,%.3f)", north_vector[0][0], north_vector[1][0], north_vector[2][0]);

@@ -54,11 +54,11 @@ void IMUManager::loop() {
         double dvy = sensorData.delta_velocity_y;
         double dvz = sensorData.delta_velocity_z;
 
-        // read last data point from magnetometer (might be the same like last time, since magnetometer runs slower)
+        // fetch last data point from magnetometer via I2C (might be the same like last time, since magnetometer runs slower)
         // loop the magnetometer (it runs slower than the IMU, so new_mag_value indicates when a new data point is available)
         mag.loop();
 
-        // read last results, regardless if it is new or not
+        // read last results from memory, regardless if it is new or not
         double Bx, By, Bz;
         mag.read(Bx, By, Bz);
 

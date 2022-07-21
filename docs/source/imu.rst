@@ -2,8 +2,8 @@
 
   <br/>
 
-Inertial Measurement Unit (IMU)
-===============================
+Inertial Measurement Unit
+=========================
 
 ..  image:: /images/Lord_Microstrain_3DMCV5-IMU.png
    :width: 20%
@@ -69,7 +69,7 @@ And the data streaming should start right away after startup:
 Mounting the IMU
 ----------------
 
-The Microstrain IMU is bundled with the low-cost magnetometer LIS3DM, since the yaw angle is almost negleactable for a quadruped. Anyhow, I did not want that drift on the z-axis, and printed piggy packing part that holds both devices:
+The Microstrain IMU is bundled with the low-cost magnetometer LIS3DM. The yaw angle is not really relevant for a quadruped, almost neglectable actually. Anyhow, I found the drift in the z-axis annoying, so I added the magnetometer and printed a holder that clamps it on to of the IMU.   
 
 .. image:: /images/IMU_Holder.png
 	:width: 300

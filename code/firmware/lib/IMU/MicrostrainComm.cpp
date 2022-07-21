@@ -318,8 +318,7 @@ bool MicrostrainIMU::expectAckNackResponse() {
 bool MicrostrainIMU::sendPing() {
   CommandData res("ping");
   uint8_t field[] = { 0x01, 0x00};
-  createCommand1(0x01, 
-                 0x01, sizeof(field), field);
+  createCommand1(0x01, 0x01, sizeof(field), field);
   bool ok = expectAckNackResponse();
   return ok;
 }
@@ -327,8 +326,7 @@ bool MicrostrainIMU::sendPing() {
 bool MicrostrainIMU::sendSetToIdle() {
   CommandData res("SetToIdle");
   uint8_t field[] = {  };
-  createCommand1(0x01, 
-                 0x02, sizeof(field), field);
+  createCommand1(0x01, 0x02, sizeof(field), field);
   
   bool ok = expectAckNackResponse();
   
@@ -339,8 +337,7 @@ bool MicrostrainIMU::sendSetToIdle() {
 bool MicrostrainIMU::sendResumeDevice() {
   CommandData res("ResumeDevice");
   uint8_t field[] = { };
-  createCommand1(0x01, 
-                 0x06, sizeof(field), field);
+  createCommand1(0x01, 0x06, sizeof(field), field);
   bool ok = expectAckNackResponse();
   return ok;
 }
@@ -359,8 +356,7 @@ bool MicrostrainIMU::sendSetIMUMessageFormat() {
   };
 
 
-  createCommand1(0x0C, 
-                 0x08, sizeof(field), field);
+  createCommand1(0x0C, 0x08, sizeof(field), field);
   bool ok = expectAckNackResponse();
   return ok;
 }
@@ -372,8 +368,7 @@ bool MicrostrainIMU::sendSaveFormat() {
   CommandData res("saveFormat");
   uint8_t field[] = { 0x03,0x00}; //  Save Current IMU Message Format
 
-  createCommand1(0x0C, 
-                 0x08, sizeof(field), field);
+  createCommand1(0x0C, 0x08, sizeof(field), field);
   bool ok = expectAckNackResponse();
   return ok;
 }
@@ -385,8 +380,7 @@ bool MicrostrainIMU::sendEnableDataStream(bool enable) {
   CommandData res("EnableDataStream");
   uint8_t field[] = { 0x01,0x01, (uint8_t)(enable==true?0x01:0x00)};    // Enable Continuous IMU Message 
 
-  createCommand1(0x0C, 
-                0x11, sizeof(field), field);
+  createCommand1(0x0C, 0x11, sizeof(field), field);
   bool ok = expectAckNackResponse();
   return ok;
 }
@@ -394,8 +388,7 @@ bool MicrostrainIMU::sendEnableDataStream(bool enable) {
 bool MicrostrainIMU::sendSetHeading() {
   CommandData res("SetHeading");
   uint8_t field[] = { 0x00,0x00, 0x00, 0x00};
-  createCommand1(0x0D, 
-                0x03, sizeof(field), field);
+  createCommand1(0x0D, 0x03, sizeof(field), field);
   bool ok = expectAckNackResponse();
   return ok;
 }
@@ -407,8 +400,7 @@ bool MicrostrainIMU::sendResetDevice() {
   CommandData res("ResetHDevice");
   uint8_t field1[] = { };
 
-  createCommand1(0x01, 
-                0x7E, sizeof(field1), field1);
+  createCommand1(0x01, 0x7E, sizeof(field1), field1);
   bool ok = expectAckNackResponse();
   return ok;
 }
@@ -420,9 +412,7 @@ void MicrostrainIMU::sendGetDeviceInformation() {
   CommandData res("GetDeviceInformation");
   uint8_t field[] = { };
 
-  createCommand1(0x01, 
-                0x03, sizeof(field), field);
-  // printCmdBuffer(res);
+  createCommand1(0x01, 0x03, sizeof(field), field);
 
   bool ok = readResponse(res);
 
@@ -470,8 +460,7 @@ bool MicrostrainIMU::sendChangeBaudRate(uint32_t baud) {
                        (uint8_t)(baud >> 24), (uint8_t)((baud >> 16) & 0xFF), (uint8_t)((baud >> 8) & 0xFF), (uint8_t)((baud >> 0) & 0xFF)   
                      };
 
-  createCommand1(0x0C, 
-                0x40, sizeof(field), field);
+  createCommand1(0x0C, 0x40, sizeof(field), field);
 
   bool ok = readResponse( res);
   if (!assert(ok != 0, "response invalid")) return false;
@@ -509,42 +498,9 @@ bool MicrostrainIMU::setup(HardwareSerial* sn, uint16_t sampleFreq) {
   // sample rate of the outgoing data stream
   targetFreq = sampleFreq;
 
-  // check if device is responding
-  // println("ping");
-   bool ok = true;
-   // ok= sendPing();
-   if (!ok)
-    return false;
-
-  // if IMU is data stream for any reasons (maybe it has been turned on beforehand)
-  // then try to stop that first. Otherwise the stream messes up the responses of the configuration
-  // We need to try that a couple of times until the call sneaks in the middle of the  data stream
-  baud_rate = 912600;
+  // a data stream of three fields (gyro, acc, theta gyro) at 1000Hz require 921600 baud
+  baud_rate = 921600;
   serial->begin(baud_rate);
-  ok = false;
-  /*
-  // setting idle disables the datastream
-  ok = sendSetToIdle();
-  if (!ok) {
-    println("Could not set to idle");
-    return false;
-  }
- 
-  println("IMU: get device information");
-  sendGetDeviceInformation();
-  if (!ok)
-    return false;
-
-  println("IMU: set message format");
-  ok = sendSetIMUMessageFormat();
-  if (!ok)
-    return false;
-
-  println("IMU: enable data stream");
-  ok = sendEnableDataStream(true);
-   if (!ok)
-    return false;
-  */
 
   const int no_fields = 3;
   println("baud rate   : %d baud", baud_rate);
@@ -561,7 +517,8 @@ bool MicrostrainIMU::setup(HardwareSerial* sn, uint16_t sampleFreq) {
 }
 
 bool isModified(IMUSensorData &imu_data) {
-  return (imu_data.acc_modified || imu_data.gyro_modified || imu_data.delta_theta_modified || imu_data.quat_modified || imu_data.rpy_modified || imu_data.delta_velocity_modified);
+  return (imu_data.acc_modified  || imu_data.gyro_modified || imu_data.delta_theta_modified || 
+          imu_data.quat_modified || imu_data.rpy_modified  || imu_data.delta_velocity_modified);
 }
 
 void MicrostrainIMU::loop() {
@@ -624,16 +581,17 @@ void MicrostrainIMU::loop() {
       // we only have 1 ms to receive an answer
       // After 2ms we escalate 
       uint32_t time_since_last_package_us = micros() - last_data_package_ts;  
-      if ((last_data_package_ts > 0) && (time_since_last_package_us > 5*1000000/targetFreq)) {
+      const uint32?t typ_time_per_loop_us = 1000000/targetFreq;
+
+      if ((last_data_package_ts > 0) && (time_since_last_package_us > 5*typ_time_per_loop_us)) {
           println("missing data stream for %dus, recovery procedure", time_since_last_package_us);
           serial->flush();
           serial->begin(baud_rate);
-          if (time_since_last_package_us > 100*1000000/targetFreq) {
+          if (time_since_last_package_us > 100*typ_time_per_loop_us) {
               // is_initialised = false forces IMUManager to re-establishing the communication including power down 
               is_initialised = false;
               last_data_package_ts = 0;
-          }
-          
+          }   
       }
     }
 }
