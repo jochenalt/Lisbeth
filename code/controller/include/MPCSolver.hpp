@@ -16,27 +16,8 @@
 
 class MPCSolver {
  public:
- ////////////////////////////////////////////////////////////////////////////////////////////////
- ///
- /// \brief Constructor
- ///
- ////////////////////////////////////////////////////////////////////////////////////////////////
  MPCSolver();
-
- ////////////////////////////////////////////////////////////////////////////////////////////////
- ///
- /// \brief Constructor with parameters
- ///
- /// \param[in] params Object that stores parameters
- ///
- ////////////////////////////////////////////////////////////////////////////////////////////////
  MPCSolver(Params &params);
-
- ////////////////////////////////////////////////////////////////////////////////////////////////
- ///
- /// \brief Destructor
- ///
- ////////////////////////////////////////////////////////////////////////////////////////////////
  ~MPCSolver() {}  // Empty destructor
 
  ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +83,9 @@ class MPCSolver {
   Eigen::MatrixXd x_f_applied;
 
   // Matrix ML
-  const static int size_nz_ML = 5000;
+  const static int max_N_steps = 64;
+  const static int size_per_step = 127;
+  const static int size_nz_ML = size_per_step*max_N_steps;
 
   csc *ML;  // Compressed Sparse Column matrix
   inline void add_to_ML(int i, int j, double v, int *r_ML, int *c_ML,
@@ -115,17 +98,17 @@ class MPCSolver {
   int i_update_B[12 * 4] = {};
 
   // Matrix NK
-  const static int size_nz_NK = 5000;
+  const static int size_nz_NK = size_per_step*max_N_steps;
   double v_NK_up[size_nz_NK] = {};   // maxtrix NK (upper bound)
   double v_NK_low[size_nz_NK] = {};  // maxtrix NK (lower bound)
   double v_warmxf[size_nz_NK] = {};  // maxtrix NK (lower bound)
 
   // Matrix P
-  const static int size_nz_P = 5000;
+  const static int size_nz_P = size_per_step*max_N_steps;
   csc *P;  // Compressed Sparse Column matrix
 
   // Matrix Q
-  const static int size_nz_Q = 5000;
+  const static int size_nz_Q = size_per_step*max_N_steps;
   double Q[size_nz_Q] = {};  // Q is full of zeros
 
   // OSQP solver variables

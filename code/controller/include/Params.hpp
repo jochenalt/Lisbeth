@@ -62,7 +62,6 @@ class Params {
   int N_SIMULATION;             // Number of simulated wbc time steps
   bool enable_pyb_GUI;          // Enable/disable PyBullet GUI
   bool enable_corba_viewer;     // Enable/disable Corba Viewer
-  bool enable_multiprocessing;  // Enable/disable running the MPC in another process in parallel of the main loop
   bool perfect_estimator;       // Enable/disable perfect estimator by using data directly from PyBullet
 
   // General control parameters
@@ -78,9 +77,6 @@ class Params {
   // Parameters of Joystick
   double gp_alpha_vel;               // Coefficient of the low pass filter applied to gamepad velocity
   double gp_alpha_pos;               // Coefficient of the low pass filter applied to gamepad position
-
-  // Parameters of Estimator
-  double fc_v_esti;  // Cut frequency for the low pass that filters the estimated base velocity
 
   // Parameters of FootstepPlanner
   double k_feedback;  // Value of the gain for the feedback heuristic
@@ -112,20 +108,11 @@ class Params {
   bool enable_comp_forces;  // Enable the use of compensation forces in the QP problem
 
   // Parameters of MIP
-  bool enable_multiprocessing_mip;    // Enable/disable running the MIP in another process in parallel of the main loop
   std::string environment_URDF;       // URDF path for the 3D environment
   std::string environment_heightmap;  // Path to the heightmap
   double heightmap_fit_length;        // Size of the heightmap around the robot
   int heightmap_fit_size;             // Number of points used in the heightmap QP
   std::vector<double> max_velocity;   // Maximum velocity of the base
-  bool use_bezier;                    // Use Bezier to plan trajectories, otherwise use simple 6d polynomial curve.
-
-  float bezier_x_margin_max;  //  margin inside convex surfaces [m].
-  float bezier_t_margin;      //  100*t_margin_% of the curve around critical point. range: [0, 1]
-  float bezier_z_margin;      //  100*z_margin_% of the curve after the critical point. range: [0, 1]
-  int bezier_N_sample;        //  Number of sample in the least square optimisation for Bezier coeffs
-  int bezier_N_sample_ineq;   //  Number of sample while browsing the curve
-  int bezier_degree;          //  Degree of the Bezier curve
 
   // Not defined in yaml
   double mass;                                    // Mass of the robot

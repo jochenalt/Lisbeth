@@ -56,8 +56,6 @@ public:
 	Vector12 getVSecurity() { return vSecurity; }
 	Vector4 getFeetStatus() { return feetStatus; }
 	Matrix34 getFeetTargets() { return feetTargets; }
-	Vector3 getBaseVelocityFK() { return baseVelocityFK; }
-	Vector3 getBasePositionFK() { return basePositionFK; }
 	Vector3 getFeetPositionBarycenter() { return feetPositionBarycenter; }
 	Vector18 getQReference() { return qRef; }
 	Vector18 getVReference() { return vRef; }

@@ -28,13 +28,13 @@ void GaitPlanner::initialize(Params &params_in)
 }
 
 void GaitPlanner::setGait(int i,int n_sequences, MatrixN4 & gait, std::string sequence) {
-	int repetition = params->get_N_steps() / (params->N_periods * n_sequences);
+	int step_repetition = params->get_N_steps() / (params->N_periods * n_sequences);
 
 	RowVector4 gaitSequence;
 	gaitSequence << (sequence[0]-'0'), sequence[1]-'0', sequence[2]-'0',sequence[3]-'0';
 
 	for (int p = 0;p< params->N_periods;p++) {
-		gait.block(p*n_sequences*repetition + repetition*i, 0, repetition, 4) = gaitSequence.colwise().replicate(repetition);
+		gait.block(p*n_sequences*step_repetition + step_repetition*i, 0, step_repetition, 4) = gaitSequence.colwise().replicate(step_repetition);
 	}
 }
 
@@ -324,10 +324,12 @@ void GaitPlanner::rollGait()
 	}
 }
 
-
-
 void GaitPlanner::getLoopsInSteps(int &loops_passed, int & loops_to_go) {
-	// look forward how many loops we got
+	// this function is called before the gait is changed in the loop, so
+	// predict whats about to happen in rollgait
+	//int preview = params->is_new_mpc_cycle()?1:0;
+
+	// look forward how many mpc loops we got with the same step
 	int index = 0;
 	loops_to_go = 0;
 	while (currentGait.row(0) == currentGait.row(index+1)) {
@@ -335,12 +337,30 @@ void GaitPlanner::getLoopsInSteps(int &loops_passed, int & loops_to_go) {
 		loops_to_go++;
 	}
 
-	// look backwards how many loops we passed
+	// look backwards how many mpc loops we passed
 	index = 0;
 	loops_passed = 0;
-	while (currentGait.row(0) == pastGait.row(index+1)) {
+	while (currentGait.row(0) == pastGait.row(index)) {
 		index++;
 		loops_passed++;
 	}
 }
+
+double GaitPlanner::getInStepPercentage() {
+	int mpc_loops_passed, mpc_loops_to_go;
+	getLoopsInSteps(mpc_loops_passed, mpc_loops_to_go);
+
+	float wbc_loops_passed = (float)(mpc_loops_passed * params->get_k_mpc());
+	float wbc_loops_to_go = (float)(mpc_loops_to_go * params->get_k_mpc());
+
+	float loop_in_gait = (float)((params->get_k() + params->get_k_mpc() - 1)  % params->get_k_mpc());
+
+	// calculate the ratio 0..1 where we are within the same step. 0 = beginning, 1 = end, right before a step change.
+	double cnew = (wbc_loops_passed + loop_in_gait)/(wbc_loops_passed + wbc_loops_to_go + (float)params->get_k_mpc());
+
+	// std::cout << " wbc_loops_passed=" << wbc_loops_passed << "wbc_loops_to_go" << wbc_loops_to_go << " loopingait" << loop_in_gait << " c=" << cnew << std::endl;
+
+	return cnew;
+}
+
 

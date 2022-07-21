@@ -67,6 +67,10 @@ public:
 
     // returns the loops (=MPC cycles) ahead until the gait changes and the loops behind us with the current gait
     void getLoopsInSteps(int &loops_passed, int & loops_to_go);
+
+    // returns the percentage within the same step, i.e. a number
+    // between 0..1, 0 is the very beginning of a step, and 1 is right before a step change
+    double getInStepPercentage();
 private:
     void createWalk();
     void createTrot();

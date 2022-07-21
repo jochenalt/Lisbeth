@@ -282,8 +282,9 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 		mpcController.solve(bodyPlanner.getBodyTrajectory(), footstepPlanner.getFootsteps(), gait.getCurrentGaitMatrix());
 		f_mpc = mpcController.get_latest_result();
 	}
-	if ((k % params->get_k_mpc()) >= 2)
+	if (params->get_k() % params->get_k_mpc() >=2) {
 		f_mpc = mpcController.get_latest_result();
+	}
 
 	// Whole Body Control
 	// If nothing wrong happened yet in the WBC controller
@@ -327,8 +328,8 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    q_des = wbcController.get_qdes();
 	    v_des = wbcController.get_vdes();
 	    tau_ff = 0.8 * wbcController.get_tau_ff();
-	    P = 3.0 * Vector12::Ones();  // position
-	    D = 0.2 * Vector12::Ones();  // Damping
+	    // P = 3.0 * Vector12::Ones();  // position
+	    // D = 0.2 * Vector12::Ones();  // Damping
 	  }
 
 	  // Security check

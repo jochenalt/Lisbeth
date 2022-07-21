@@ -34,9 +34,7 @@ MPCSolver::MPCSolver(Params& params_in) {
   g(8, 0) = -9.81f * params->dt_mpc;
 
   osqp_set_default_settings(settings);
-
   create_matrices();
-
   init_solver();
 }
 
@@ -48,6 +46,7 @@ Create the weight matrices P and Q of the MPC solver (cost 1/2 x^T * P * X + X^T
 */
 int MPCSolver::create_matrices() {
   // Create the constraint matrices
+
   create_ML();
   create_NK();
 
@@ -65,6 +64,11 @@ inline void MPCSolver::add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, d
   c_ML[cpt_ML] = j;  // column index
   v_ML[cpt_ML] = v;  // value of coefficient
   cpt_ML++;          // increment the counter
+  if (cpt_ML > size_nz_ML) {
+	  	 std::cout << "MPCSolver::size_nz_ML is " << size_nz_ML << " but we need at least " << cpt_ML  << std::endl;
+	  	 exit(1);
+  }
+
 }
 
 /*
@@ -81,7 +85,8 @@ inline void MPCSolver::add_to_P(int i, int j, double v, int *r_P, int *c_P, doub
 Create the M and L matrices involved in the MPC constraint equations M.X = N and L.X <= K
 */
 int MPCSolver::create_ML() {
-  int *r_ML = new int[size_nz_ML];        // row indexes of non-zero values in matrix ML
+
+	int *r_ML = new int[size_nz_ML];        // row indexes of non-zero values in matrix ML
   int *c_ML = new int[size_nz_ML];        // col indexes of non-zero values in matrix ML
   double *v_ML = new double[size_nz_ML];  // non-zero values in matrix ML
 
@@ -90,6 +95,12 @@ int MPCSolver::create_ML() {
   std::fill_n(v_ML, size_nz_ML, 0.0);  // initialized to -1.0
 
   int n_steps = params->get_N_steps();
+  int max_size = n_steps * 127;
+  if (max_size > size_nz_ML) {
+	  	 std::cout << "MPCSolver::size_nz_ML is " << size_nz_ML << " but we need at least " << max_size  << std::endl;
+	  	 exit(1);
+  }
+
   // Put identity matrices in M
   for (int k = 0; k < (12 * n_steps); k++) {
     add_to_ML(k, k, -1.0, r_ML, c_ML, v_ML);
@@ -371,9 +382,6 @@ int MPCSolver::create_weight_matrices() {
 
   // Q is already created filled with zeros
   std::fill_n(Q, size_nz_Q, 0.0);
-
-  // char t_char[1] = {'P'};
-  // my_print_csc_matrix(P, t_char);
 
   return 0;
 }

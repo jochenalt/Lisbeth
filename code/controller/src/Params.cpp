@@ -3,11 +3,10 @@
 using namespace yaml_control_interface;
 Params::Params()
     : N_steps (16), // Number of steps in the prediction horizon
-      N_gait(40),
+      N_gait(68),
       velID(2),
 		k(0),
 
-      config_file(""),
       interface(""),
       DEMONSTRATION(false),
       SIMULATION(false),
@@ -19,7 +18,6 @@ Params::Params()
       N_SIMULATION(0),
       enable_pyb_GUI(false),
       enable_corba_viewer(false),
-      enable_multiprocessing(false),
       perfect_estimator(false),
 
       q_init(12, 0.0),  // Fill with zeros, will be filled with values later
@@ -33,8 +31,6 @@ Params::Params()
 
       gp_alpha_vel(0.0),
       gp_alpha_pos(0.0),
-
-      fc_v_esti(0.0),
 
       k_feedback(0.0),
 
@@ -91,9 +87,6 @@ void Params::initialize(const std::string& file_path)
    assert_yaml_parsing(robot_node, "robot", "mass");
    mass = robot_node["mass"].as<double>();
 
-  assert_yaml_parsing(robot_node, "robot", "config_file");
-  config_file = robot_node["config_file"].as<std::string>();
-
   assert_yaml_parsing(robot_node, "robot", "interface");
   interface = robot_node["interface"].as<std::string>();
 
@@ -139,9 +132,6 @@ void Params::initialize(const std::string& file_path)
   assert_yaml_parsing(robot_node, "robot", "enable_corba_viewer");
   enable_corba_viewer = robot_node["enable_corba_viewer"].as<bool>();
 
-  assert_yaml_parsing(robot_node, "robot", "enable_multiprocessing");
-  enable_multiprocessing = robot_node["enable_multiprocessing"].as<bool>();
-
   assert_yaml_parsing(robot_node, "robot", "perfect_estimator");
   perfect_estimator = robot_node["perfect_estimator"].as<bool>();
 
@@ -159,9 +149,6 @@ void Params::initialize(const std::string& file_path)
 
   assert_yaml_parsing(robot_node, "robot", "gp_alpha_pos");
   gp_alpha_pos = robot_node["gp_alpha_pos"].as<double>();
-
-  assert_yaml_parsing(robot_node, "robot", "fc_v_esti");
-  fc_v_esti = robot_node["fc_v_esti"].as<double>();
 
   assert_yaml_parsing(robot_node, "robot", "k_feedback");
   k_feedback = robot_node["k_feedback"].as<double>();
@@ -217,9 +204,6 @@ void Params::initialize(const std::string& file_path)
   assert_yaml_parsing(robot_node, "robot", "enable_comp_forces");
   enable_comp_forces = robot_node["enable_comp_forces"].as<bool>();
 
-  assert_yaml_parsing(robot_node, "robot", "enable_multiprocessing_mip");
-  enable_multiprocessing_mip = robot_node["enable_multiprocessing_mip"].as<bool>();
-
   assert_yaml_parsing(robot_node, "robot", "environment_URDF");
   environment_URDF = robot_node["environment_URDF"].as<std::string>();
 
@@ -234,26 +218,6 @@ void Params::initialize(const std::string& file_path)
 
   assert_yaml_parsing(robot_node, "robot", "max_velocity");
   max_velocity = robot_node["max_velocity"].as<std::vector<double> >();
-
-  assert_yaml_parsing(robot_node, "robot", "use_bezier");
-  use_bezier = robot_node["use_bezier"].as<bool>();
-
-  assert_yaml_parsing(robot_node, "robot", "bezier_x_margin_max");
-  bezier_x_margin_max = robot_node["bezier_x_margin_max"].as<float>();
-
-  assert_yaml_parsing(robot_node, "robot", "bezier_t_margin");
-  bezier_t_margin = robot_node["bezier_t_margin"].as<float>();
-
-  assert_yaml_parsing(robot_node, "robot", "bezier_z_margin");
-  bezier_z_margin = robot_node["bezier_z_margin"].as<float>();
-
-  assert_yaml_parsing(robot_node, "robot", "bezier_N_sample");
-  bezier_N_sample = robot_node["bezier_N_sample"].as<int>();
-  assert_yaml_parsing(robot_node, "robot", "bezier_N_sample_ineq");
-  bezier_N_sample_ineq = robot_node["bezier_N_sample_ineq"].as<int>();
-
-  assert_yaml_parsing(robot_node, "robot", "bezier_degree");
-  bezier_degree = robot_node["bezier_degree"].as<int>();
 
   if (!SIMULATION) perfect_estimator = false;
 }
