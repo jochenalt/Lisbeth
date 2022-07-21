@@ -45,4 +45,6 @@ html_css_files = [
     'css/custom.css',
 ]
 
-html_theme = "sphinxdoc"
+
+html_theme = "sphinx13"
+#html_theme = "sphinxdoc"
