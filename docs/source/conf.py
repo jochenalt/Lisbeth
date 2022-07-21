@@ -39,6 +39,10 @@ epub_show_urls = 'footnote'
 math_number_all = 'True'
 
 # deal with equation numbering
-def setup(app):
-    app.add_stylesheet('css/custom.css')
+#def setup(app):
+#    app.add_stylesheet('css/custom.css')
+
+html_css_files = [
+    'css/custom.css',
+]
 

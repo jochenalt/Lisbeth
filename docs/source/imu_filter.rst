@@ -192,7 +192,6 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
 
 First some more definitions:
 
-
 .. list-table:: Conventions
    :header-rows: 1
  
