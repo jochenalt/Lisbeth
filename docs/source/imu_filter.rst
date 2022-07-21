@@ -186,13 +186,17 @@ And that's all we need to feed into the Unscented Kalman filter.
 
 The Unscented Kalman filter
 ---------------------------
-a 
+
 
 The algorithm as described in `A new extension to the Kalman filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Julier1997_SPIE_KF.pdf>`_ is listed below,  I borrowed it from `here <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_ .(Frustratingly, it is almost impossible to understand that without having the standard Kalman filter digested)
 
 First some more definitions:
 
-  * - Symbol
+
+.. list-table:: Conventions
+   :header-rows: 1
+ 
+   * - Symbol
      - Meaning
    * - :math:`\hat{x}(x|x-1)`
      - prediction of the state variable :math:`x(k)` based on information we know from the previous sampling time (i.e. the observed variable value :math:`y(k)`). We'll get these  values t the correction step, calculated based on the Kalman gain. *Note: At the next sampling time,  :math:`\hat{x}(k|k)` will become :math:`\hat{x}(k-1)`*
