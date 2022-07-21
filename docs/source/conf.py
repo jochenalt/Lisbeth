@@ -51,3 +51,4 @@ html_css_files = [
     'https://github.com/jochenalt/Lisbeth/blob/main/docs/_static/css/custom.css'
 ]
 
+html_theme = "haiku"
