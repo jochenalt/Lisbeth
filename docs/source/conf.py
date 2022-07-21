@@ -6,8 +6,8 @@ project = 'Lisbeth'
 copyright = 'Jochen'
 author = 'jochen.alt@gmx.net'
 
-release = '0.1'
-version = '0.1.0'
+release = '1.0'
+version = '1.1.0'
 
 # -- General configuration
 
@@ -32,8 +32,6 @@ templates_path = ['_templates']
 
 # -- Options for HTML output
 
-html_theme = 'sphinx_rtd_theme'
-
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
 
@@ -48,7 +46,6 @@ def setup(app):
 
 html_css_files = [
     'css/custom.css',
-    'https://github.com/jochenalt/Lisbeth/blob/main/docs/_static/css/custom.css'
 ]
 
 html_theme = "haiku"

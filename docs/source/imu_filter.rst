@@ -210,7 +210,7 @@ Then, the UKF algorithm works like this:
 	:width: 700
 	:alt: Conventions
 
-.. list-table:: Conventions
+.. list-table:: Unscented Kalman Filter Conventions
    :header-rows: 1
    :widths: 25 75
  
