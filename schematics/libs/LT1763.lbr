@@ -1228,6 +1228,7 @@ Micropower Regulators, fixed</description>
 <pin name="GND" x="-10.16" y="-25.4" length="middle" rot="R90"/>
 <pin name="IN" x="-25.4" y="7.62" length="middle" direction="in"/>
 <pin name="SHDN" x="-25.4" y="-5.08" length="middle"/>
+<text x="-12.7" y="0" size="1.778" layer="94">LT1763</text>
 </symbol>
 </symbols>
 <devicesets>

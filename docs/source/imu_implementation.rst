@@ -13,7 +13,7 @@ The overall structure looks like this:
 
 **Contents**
 
-*  The unscented Kalmanfilter is implemented in the class `UKF <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/ukf.cpp>`_. I used `this <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_ as a basis, but modified quite a lot to make it fast and robust
+*  The unscented Kalmanfilter is implemented in the class `UKF <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/ukf.cpp>`_. I used `this <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_ as a basis, but modified some bits about robustness and speed.
 
 *  As matrix library I used `matrix <https://github.com/jochenalt/Lisbeth/blob/main/code/firmware/lib/IMU/matrix.h>`_ , originating from `here <https://github.com/pronenewbits/Arduino_AHRS_System/blob/master/ahrs_ekf/matrix.h>`_
 

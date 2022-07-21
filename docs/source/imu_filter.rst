@@ -52,9 +52,9 @@ The conventions used in the following are:
    * - :math:`\overline{\omega } =\begin{bmatrix} p & q & r \end{bmatrix}^{T}`
      - angular rate of the gyro in [rad/s] in the IMUs frame
    * - :math:`\overline{A} =\begin{bmatrix} a_{x} & a_{y} & a_{z} \end{bmatrix}^{T}`
-     - acceleration vector from sensor in [:math:`\frac{g}{s^{2}}g/s`] in the IMUs frame
+     - acceleration vector from sensor in [:math:`\frac{g}{s^{2}}`] in the IMUs frame
    * - :math:`\overline{M} =\begin{bmatrix} m_{x} & m_{y} & m_{z} \end{bmatrix}^{T}`
-     - magnetic vector from magnetometer in [uT] in the IMUs frame
+     - magnetic vector from magnetometer in [uT] (*micro Tesla*)in the IMUs frame
    * - :math:`\overline{G} =\begin{bmatrix} 0 & 0 & g \end{bmatrix}^{T}`
      - gravity vector in :math:`\begin{bmatrix}\frac{m}{s^{2}}\end{bmatrix}` in the earths/world frame 
    * - :math:`\overline{B} =\begin{bmatrix} B_{0x} & B_{0y} & B_{0z} \end{bmatrix}^{T}`
@@ -186,11 +186,16 @@ And that's all we need to feed into the Unscented Kalman filter.
 
 The Unscented Kalman filter
 ---------------------------
-
+a 
 
 The algorithm as described in `A new extension to the Kalman filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Julier1997_SPIE_KF.pdf>`_ is listed below,  I borrowed it from `here <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_ .(Frustratingly, it is almost impossible to understand that without having the standard Kalman filter digested)
 
-First some definitions:
+First some more definitions:
+
+  * - Symbol
+     - Meaning
+   * - :math:`\hat{x}(x|x-1)`
+     - prediction of the state variable :math:`x(k)` based on information we know from the previous sampling time (i.e. the observed variable value :math:`y(k)`). We'll get these  values t the correction step, calculated based on the Kalman gain. *Note: At the next sampling time,  :math:`\hat{x}(k|k)` will become :math:`\hat{x}(k-1)`*
 
 .. image:: /images/UKF_Definition.png
 	:width: 700

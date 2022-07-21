@@ -5,3 +5,7 @@
 .eqno {
     float: right;
 }
+
+.wy-table-responsive table td {
+white-space: normal;
+}
