@@ -11,7 +11,8 @@ version = '0.1.0'
 
 # -- General configuration
 
-html_static_path = ['_static']
+html_static_path = ['_static',
+            ]
 
 extensions = [
     'sphinx.ext.duration',
@@ -47,5 +48,6 @@ def setup(app):
 
 html_css_files = [
     'css/custom.css',
+    'https://github.com/jochenalt/Lisbeth/blob/main/docs/_static/css/custom.css'
 ]
 
