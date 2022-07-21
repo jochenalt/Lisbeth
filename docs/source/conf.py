@@ -42,6 +42,9 @@ math_number_all = 'True'
 #def setup(app):
 #    app.add_stylesheet('css/custom.css')
 
+def setup(app):
+   app.add_stylesheet('custom.css')
+
 html_css_files = [
     'css/custom.css',
 ]
