@@ -45,4 +45,4 @@ html_css_files = [
     'css/custom.css',
 ]
 
-html_theme = "alabaster"
+html_theme = "bizstyle"
