@@ -27,6 +27,8 @@ intersphinx_mapping = {
 }
 intersphinx_disabled_domains = ['std']
 
+html_sidebars = { '**': ['globaltoc.html', 'relations.html', 'sourcelink.html', 'searchbox.html'] }
+
 templates_path = ['_templates']
 
 # -- Options for HTML output

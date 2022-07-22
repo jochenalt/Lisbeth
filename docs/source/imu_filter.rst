@@ -192,13 +192,14 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
 
 First some more definitions:
 
-.. list-table:: Conventions
+.. list-table:: Unscented Kalman Filter Conventions
    :header-rows: 1
  
    * - Symbol
      - Meaning
    * - :math:`\hat{x}(x|x-1)`
      - prediction of the state variable :math:`x(k)` based on information we know from the previous sampling time (i.e. the observed variable value :math:`y(k)`). We'll get these  values t the correction step, calculated based on the Kalman gain. *Note: At the next sampling time,* :math:`\hat{x}(k|k)` *will become* :math:`\hat{x}(k-1)`
+
 
 .. image:: /images/UKF_Definition.png
 	:width: 700
@@ -210,11 +211,3 @@ Then, the UKF algorithm works like this:
 	:width: 700
 	:alt: Conventions
 
-.. list-table:: Unscented Kalman Filter Conventions
-   :header-rows: 1
-   :widths: 25 75
- 
-   * - Symbol
-     - Meaning
-   * - :math:`\hat{x}(x|x-1)`
-     - prediction of the state variable :math:`x(k)` based on information we know from the previous sampling time (i.e. the observed variable value :math:`y(k)`). We'll get these  values t the correction step, calculated based on the Kalman gain. *Note: At the next sampling time,* :math:`\hat{x}(k|k)` *will become* :math:`\hat{x}(k-1)`
