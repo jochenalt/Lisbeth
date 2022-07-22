@@ -46,5 +46,4 @@ html_css_files = [
 ]
 
 
-html_theme = "sphinx13"
-#html_theme = "sphinxdoc"
+html_theme = "pyramid"
