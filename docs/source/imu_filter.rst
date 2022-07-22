@@ -192,7 +192,7 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
 
 First some more definitions:
 
-.. list-table:: Classic Kalman variables
+.. list-table:: **Classic Kalman variables**
    :header-rows: 0
    :widths: 25 75
  
@@ -211,7 +211,7 @@ First some more definitions:
    * - :math:`R_{n}`
      - Measurement noise covariance matrix built as diagonal matrix around :math:`n_{k}`.
 
-.. list-table:: Sigma-point variables, in the implementation we use :math:`(2N+1)` points:
+.. list-table:: **Sigma-point variables, in the implementation we use** :math:`(2N+1)` **points**
    :header-rows: 0
    :widths: 25 75 
 
@@ -222,7 +222,7 @@ First some more definitions:
    * - :math:`Y(k)`
      - The sigma-points  :math:`X(k)` propagated by non-linear function :math:`h`
 
-.. list-table:: Supporting variables:
+.. list-table:: **Supporting variables**
    :header-rows: 0
    :widths: 25 75 
 
