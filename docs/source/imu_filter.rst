@@ -191,10 +191,8 @@ The Unscented Kalman filter
 The algorithm as described in `A new extension to the Kalman filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Julier1997_SPIE_KF.pdf>`_ is listed below,  I borrowed it from `here <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_ .(Frustratingly, it is almost impossible to understand that without having the standard Kalman filter digested)
 
 
-First some more definitions:
 
 .. list-table:: **Classic Kalman variables**
-   :header-rows: 0
    :widths: 25 75
  
    * - :math:`\hat{x}(k|k-1)`
@@ -213,9 +211,7 @@ First some more definitions:
      - Measurement noise covariance matrix built as diagonal matrix around :math:`n_{k}`.
 
 
-.. list-table:: **Sigma-point variables, in the implementation we use points**
-   :header-rows: 0
-   :widths: 25 75 
+.. list-table:: **Sigma-point variables, in the implementation we use (2N+1) points**
 
    * - :math:`X(k-1)`
      - The sigma-points constructed from :math:`\hat{x}(k-1)` and  :math:`P(k-1)`
@@ -226,7 +222,6 @@ First some more definitions:
 
 
 .. list-table:: **Supporting variables**
-   :header-rows: 0
    :widths: 25 75 
 
    * - :math:`P_{R}(k)`
