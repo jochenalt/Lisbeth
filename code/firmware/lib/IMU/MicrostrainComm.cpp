@@ -9,6 +9,9 @@
  * 
  ************************************************************************************************************/
 
+
+// make room for 3 data packets
+#define SERIAL7_RX_BUFFER_SIZE 160
 #include <Arduino.h>
 #include "HardwareSerial.h"
 #include "MicrostrainComm.h"
@@ -223,8 +226,14 @@ bool readResponseChar(CommandData &res){
               uint16_t chk_asis = (((uint16_t)res.buffer_res[4+res.payload_len]) << 8) + ((uint16_t)res.buffer_res[5+res.payload_len]);
               uint16_t chk_tobe = generateChecksum(res.buffer_res, 4+res.payload_len);
               if (chk_asis != chk_tobe) {
-                println("checksum error: is %d, but should be %d",chk_asis, chk_tobe);
+                static bool hint = false;
+                if (!hint)
+                  println("checksum error. Ensure that SERIAL7_RX_BUFFER_SIZE in HardwareSerial7.cpp is set to 160.");
+                else
+                  println("checksum error");
+                  
                 res.buffer_res_idx = 0; // reset current package and forget this package
+                hint = true;
                 return false;
               }
               // extract all the fields
@@ -500,6 +509,10 @@ bool MicrostrainIMU::setup(HardwareSerial* sn, uint16_t sampleFreq) {
 
   // a data stream of three fields (gyro, acc, theta gyro) at 1000Hz require 921600 baud
   baud_rate = 921600;
+  baud_rate = 923076;
+  // baud_rate = 920600;
+
+  	
   serial->begin(baud_rate);
 
   const int no_fields = 3;

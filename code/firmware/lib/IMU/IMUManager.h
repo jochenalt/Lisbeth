@@ -1,8 +1,13 @@
 #ifndef _IMU_MANAGER_H_
 #define _IMU_MANAGER_H_
+
+// make room for 3 data packets from IMU
+#define SERIAL7_RX_BUFFER_SIZE 160
+
 #include "utils.h"
 #include <Watchdog.h>
 #include <Arduino.h>
+
 // communication protocol to Microstrain IMU
 #include <MicrostrainComm.h>
 #include <ukf.h>
@@ -12,6 +17,14 @@
 // LOW = power on
 // HIGH = power off
 #define PIN_IMU_ENABLE 32
+#define IMU_ENABLE_PIN_LEVEL LOW
+#define IMU_DISABLE_PIN_LEVEL HIGH
+
+// Pin for turning on/off 3.3V power supply with Magnetometer and IMU
+// this pin is connected with the 3.3V voltage regulator SHUTDOWN pin
+#define PIN_IMU_POWER 6
+#define IMU_POWER_ON_PIN_LEVEL HIGH
+#define IMU_POWER_OFF_PIN_LEVEL LOW
 
 /** Manage everything round the IMU.
  *  o Take care of the power management with right timings

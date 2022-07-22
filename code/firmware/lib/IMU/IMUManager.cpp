@@ -1,15 +1,20 @@
 
+
 #include <IMUManager.h>
 #include <TimePassedBy.h>
 #include <ukf.h>
 #include <Magnetometer.h>
 
 void IMUManager::setup(HardwareSerial* sn,uint16_t targetFreq, IMUConfigDataType& config) {
-  // IMU's power is controlled by this PIN
+  // IMU's enable function is controlled by this PIN
+  pinMode(PIN_IMU_ENABLE, OUTPUT);
+  digitalWrite(PIN_IMU_ENABLE, IMU_DISABLE_PIN_LEVEL); // turn off IMU
+
+  pinMode(PIN_IMU_POWER, OUTPUT);
+  digitalWrite(PIN_IMU_POWER, IMU_POWER_ON_PIN_LEVEL); // SHTDN pin = high turns on power supply 3.3V
+  
   // Initially the IMU is down, start happens in main loop
   imuState = IMU_UNPOWERED;
-  pinMode(PIN_IMU_ENABLE, OUTPUT);
-  digitalWrite(PIN_IMU_ENABLE, HIGH); // turn off IMU
 
   serial = sn;
   sampleFreq  = targetFreq; 
@@ -17,13 +22,14 @@ void IMUManager::setup(HardwareSerial* sn,uint16_t targetFreq, IMUConfigDataType
   // initialise unsenced kalman filter
   filter.setup(targetFreq);
 
+  // set the calibration data (hard iron and north)
+  setCalibrationData(config);
+
   // the magnetometer works with maximum precision at 155Hz  
   // its power management is quite robust, does not need the 
   // fancy power management like the IMU
+  delay(10);
   mag.setup(DATARATE_155_HZ, RANGE_4_GAUSS);
-
-  // set the calibration data (hard iron and north)
-  setCalibrationData(config);
 }
 
 void IMUManager::loop() {
@@ -180,7 +186,8 @@ void IMUManager::updatePowerState() {
         case IMU_UNPOWERED:
           if (cmdPowerUp) {
             println("IMU:prepare for power up");
-            digitalWrite(PIN_IMU_ENABLE, HIGH);
+            digitalWrite(PIN_IMU_ENABLE, IMU_DISABLE_PIN_LEVEL); // disable IMU
+
             lastPhaseStart_ms = millis();
             imuState = IMU_PREPARE_POWER_UP;
             cmdPowerUp = false;
@@ -191,7 +198,7 @@ void IMUManager::updatePowerState() {
         case IMU_PREPARE_POWER_UP:
           if (millis() - lastPhaseStart_ms > prepare_power_up_ms) {
             println("IMU:turn on power");
-            digitalWrite(PIN_IMU_ENABLE, LOW);
+            digitalWrite(PIN_IMU_ENABLE, IMU_ENABLE_PIN_LEVEL);
             lastPhaseStart_ms = millis();
             imuState = IMU_WARMING_UP;
           }
@@ -200,7 +207,7 @@ void IMUManager::updatePowerState() {
         case IMU_WARMING_UP:
           if (millis() - lastPhaseStart_ms > warmup_duration_ms) {
             println("IMU:setup");
-            digitalWrite(PIN_IMU_ENABLE, LOW);
+            digitalWrite(PIN_IMU_ENABLE, IMU_ENABLE_PIN_LEVEL);
             imuState = IMU_POWERED_UP;
           }
           break;
@@ -217,7 +224,7 @@ void IMUManager::updatePowerState() {
               lastPhaseStart_ms = millis();
             }
             else {
-              digitalWrite(PIN_IMU_ENABLE, HIGH);
+              digitalWrite(PIN_IMU_ENABLE, IMU_DISABLE_PIN_LEVEL);
               imuState = IMU_COOLING_DOWN;
               lastPhaseStart_ms = millis();
             }
@@ -234,11 +241,11 @@ void IMUManager::updatePowerState() {
               println("IMU:recover ");
               cmdPowerUp = true;
               imuState = IMU_UNPOWERED;
-              digitalWrite(PIN_IMU_ENABLE, HIGH); // turn off IMU
+              digitalWrite(PIN_IMU_ENABLE, IMU_DISABLE_PIN_LEVEL); // turn off IMU
               println("IMU:cool down");
             } else {
               if (cmdPowerDown) {
-                digitalWrite(PIN_IMU_ENABLE, HIGH); // turn off IMU
+                digitalWrite(PIN_IMU_ENABLE, IMU_DISABLE_PIN_LEVEL); // turn off IMU
                 println("IMU:cool down");
                 imuState = IMU_COOLING_DOWN;
                 lastPhaseStart_ms = millis();
@@ -253,7 +260,7 @@ void IMUManager::updatePowerState() {
           case IMU_COOLING_DOWN:
             if (millis() - lastPhaseStart_ms > warmup_duration_ms) {
               println("IMU:power turned off");
-              digitalWrite(PIN_IMU_ENABLE, HIGH); // turn off IMU
+              digitalWrite(PIN_IMU_ENABLE, IMU_DISABLE_PIN_LEVEL); // turn off IMU
               imuState = IMU_UNPOWERED;
             }
             break;

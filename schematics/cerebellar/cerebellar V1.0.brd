@@ -3882,9 +3882,6 @@ design rules under a new name.</description>
 <wire x1="84.9376" y1="45.0088" x2="84.915" y2="45.085" width="0.254" layer="1"/>
 <via x="84.4296" y="18.3896" extent="1-16" drill="0.35"/>
 </signal>
-<signal name="MAG_EN">
-<contactref element="U$1" pad="9-OUT1C"/>
-</signal>
 <signal name="MAG_INT">
 <contactref element="U$1" pad="3-LRCLK2"/>
 <contactref element="P16" pad="1"/>

@@ -15,6 +15,8 @@
 // Pin for turning on/off the motor power
 #define PIN_MOTOR_POWER 30
 
+
+
 //--- configure ODrives and motors ---
 // ODrive pin 1 goes to Teensy RX
 // ODrive pin 2 goes to Teensy TX
@@ -128,7 +130,6 @@ void setup() {
 
   // setup IMU for automated start (which will happen during the loop)
   imuMgr.powerUp();
-
 
   // setup up all ODrives, motors and encoders
 	// Serial.println("setup.ODrives");
@@ -399,6 +400,9 @@ void loop() {
   // odrives.loop();
 
   imuMgr.loop();
+
+  // check power supply
+  powerManager.loop();
 
   // if calibration came to a result, store it in EPPROM
   if (imuMgr.newCalibrationData()) {

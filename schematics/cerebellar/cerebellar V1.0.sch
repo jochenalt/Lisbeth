@@ -25383,13 +25383,6 @@ Micropower Regulators, fixed</description>
 <pinref part="P16" gate="G$1" pin="5"/>
 </segment>
 </net>
-<net name="MAG_EN" class="0">
-<segment>
-<pinref part="U$1" gate="G$1" pin="9-OUT1C"/>
-<wire x1="149.86" y1="8.89" x2="163.83" y2="8.89" width="0.1524" layer="91"/>
-<label x="149.86" y="8.89" size="1.778" layer="95"/>
-</segment>
-</net>
 <net name="MAG_INT" class="0">
 <segment>
 <pinref part="U$1" gate="G$1" pin="3-LRCLK2"/>

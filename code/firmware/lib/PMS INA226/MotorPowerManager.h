@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <INA226.h>
 #include <Utils.h>
+#include <TimePassedBy.h>
 
 
 
@@ -53,7 +54,7 @@ class MotorPowerManager {
       return getCurrent() * getVoltage();
   }
 
-  void loop() {
+  void updatePowerState() {
     switch (motorPowerState) {
       case MOTOR_UNPOWERED:
         if (cmdPowerUp) {
@@ -93,6 +94,23 @@ class MotorPowerManager {
           break;
     }
   }
+
+  void loop() {
+      updatePowerState();
+
+      static TimePassedBy imuTimer (1000);
+      static bool voltageOrCurrent = false;
+
+      // every 2nd second we fetch voltage
+      // ever other second we fetch current
+      if (imuTimer.isDue()) {
+        if (voltageOrCurrent)
+          lastVoltage = getVoltage();
+        else
+          lastCurrent = getCurrent();
+        voltageOrCurrent = !voltageOrCurrent;
+      }
+  }
   void powerUp() { 
     cmdPowerUp = true;
     Serial.println("PMS: power up command");
@@ -104,11 +122,11 @@ class MotorPowerManager {
 
   void print() {
     Serial.println("Power Management");
-    float v = getVoltage();
+    float v = lastVoltage;
     println("   Voltage:  %0.2fV",v);
-    float a = getCurrent() * 1000.0;
+    float a = lastCurrent * 1000.0;
     println("   Current:  %0.2fmA",a);
-    float w = getPower();
+    float w = lastVoltage * lastCurrent / 1000.0;
     println("   Power:    %0.2fW",w);
   }
 
@@ -117,8 +135,11 @@ class MotorPowerManager {
     bool cmdPowerUp = false;                          // true, if the command to power up is active
     MotorPowerType motorPowerState = MOTOR_UNPOWERED; // current state of the motor power pin
     uint32_t warmingStart_ms = 0;     
-    uint8_t power_pin = 0;            // Teensy pin to turn off and on motor power via the enable pin of the driver LTC7001 
-    INA226 device = INA226(0x40);     // Power sensor INA226
+    uint8_t power_pin = 0;                            // Teensy pin to turn off and on motor power via the enable pin of the driver LTC7001 
+    INA226 device = INA226(0x40);                     // Power sensor INA226
+
+    float lastVoltage = 0;
+    float lastCurrent = 0;
 };
 
 #endif

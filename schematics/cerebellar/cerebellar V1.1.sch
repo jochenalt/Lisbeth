@@ -24680,13 +24680,13 @@ Micropower Regulators, fixed</description>
 </segment>
 <segment>
 <pinref part="P14" gate="G$1" pin="2"/>
-<wire x1="248.92" y1="36.83" x2="242.57" y2="36.83" width="0.1524" layer="91"/>
+<wire x1="248.92" y1="36.83" x2="238.76" y2="36.83" width="0.1524" layer="91"/>
 <label x="242.57" y="36.83" size="1.778" layer="95"/>
 </segment>
 <segment>
-<wire x1="248.92" y1="12.7" x2="234.95" y2="12.7" width="0.1524" layer="91"/>
-<label x="234.95" y="12.7" size="1.778" layer="95"/>
 <pinref part="P16" gate="G$1" pin="3"/>
+<wire x1="248.92" y1="12.7" x2="237.49" y2="12.7" width="0.1524" layer="91"/>
+<label x="237.49" y="12.7" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="IMU_ENABLE" class="0">
@@ -24694,9 +24694,10 @@ Micropower Regulators, fixed</description>
 <pinref part="U$1" gate="G$1" pin="32-OUT1B"/>
 <wire x1="163.83" y1="34.29" x2="163.83" y2="11.43" width="0.1524" layer="91"/>
 <wire x1="163.83" y1="11.43" x2="149.86" y2="11.43" width="0.1524" layer="91"/>
-<pinref part="P14" gate="G$1" pin="1"/>
-<wire x1="248.92" y1="34.29" x2="163.83" y2="34.29" width="0.1524" layer="91"/>
 <label x="149.86" y="11.43" size="1.778" layer="95"/>
+<wire x1="163.83" y1="34.29" x2="248.92" y2="34.29" width="0.1524" layer="91"/>
+<pinref part="P14" gate="G$1" pin="1"/>
+<label x="233.68" y="34.29" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="INP" class="0">
@@ -25461,9 +25462,9 @@ Micropower Regulators, fixed</description>
 <label x="87.63" y="64.77" size="1.778" layer="95"/>
 </segment>
 <segment>
-<wire x1="248.92" y1="15.24" x2="234.95" y2="15.24" width="0.1524" layer="91"/>
-<label x="234.95" y="15.24" size="1.778" layer="95"/>
 <pinref part="P16" gate="G$1" pin="4"/>
+<wire x1="248.92" y1="15.24" x2="237.49" y2="15.24" width="0.1524" layer="91"/>
+<label x="237.49" y="15.24" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="MAG_SDA" class="0">
@@ -25473,16 +25474,9 @@ Micropower Regulators, fixed</description>
 <label x="87.63" y="62.23" size="1.778" layer="95"/>
 </segment>
 <segment>
-<wire x1="248.92" y1="17.78" x2="234.95" y2="17.78" width="0.1524" layer="91"/>
-<label x="234.95" y="17.78" size="1.778" layer="95"/>
 <pinref part="P16" gate="G$1" pin="5"/>
-</segment>
-</net>
-<net name="MAG_EN" class="0">
-<segment>
-<pinref part="U$1" gate="G$1" pin="9-OUT1C"/>
-<wire x1="149.86" y1="8.89" x2="163.83" y2="8.89" width="0.1524" layer="91"/>
-<label x="149.86" y="8.89" size="1.778" layer="95"/>
+<wire x1="248.92" y1="17.78" x2="236.22" y2="17.78" width="0.1524" layer="91"/>
+<label x="237.49" y="17.78" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="MAG_INT" class="0">
@@ -25492,9 +25486,9 @@ Micropower Regulators, fixed</description>
 <label x="88.9" y="19.05" size="1.778" layer="95"/>
 </segment>
 <segment>
-<wire x1="248.92" y1="7.62" x2="229.87" y2="7.62" width="0.1524" layer="91"/>
-<label x="234.95" y="7.62" size="1.778" layer="95"/>
 <pinref part="P16" gate="G$1" pin="1"/>
+<wire x1="248.92" y1="7.62" x2="236.22" y2="7.62" width="0.1524" layer="91"/>
+<label x="236.22" y="7.62" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="+3.3V" class="0">
@@ -25535,11 +25529,11 @@ Micropower Regulators, fixed</description>
 <wire x1="52.07" y1="177.8" x2="62.23" y2="177.8" width="0.1524" layer="91"/>
 <junction x="52.07" y="177.8"/>
 <wire x1="52.07" y1="175.26" x2="52.07" y2="177.8" width="0.1524" layer="91"/>
-<wire x1="248.92" y1="10.16" x2="232.41" y2="10.16" width="0.1524" layer="91"/>
-<junction x="232.41" y="10.16"/>
-<pinref part="P16" gate="G$1" pin="2"/>
 <pinref part="C3" gate="G$1" pin="1"/>
 <pinref part="C4" gate="G$1" pin="+"/>
+<pinref part="P16" gate="G$1" pin="2"/>
+<wire x1="248.92" y1="10.16" x2="232.41" y2="10.16" width="0.1524" layer="91"/>
+<junction x="232.41" y="10.16"/>
 </segment>
 </net>
 <net name="TXD" class="0">
@@ -25584,7 +25578,7 @@ Micropower Regulators, fixed</description>
 <pinref part="C3" gate="G$1" pin="2"/>
 </segment>
 </net>
-<net name="N$9" class="0">
+<net name="T3.3V" class="0">
 <segment>
 <pinref part="P17" gate="A" pin="6"/>
 <wire x1="217.17" y1="1.27" x2="208.28" y2="1.27" width="0.1524" layer="91"/>
@@ -25598,6 +25592,7 @@ Micropower Regulators, fixed</description>
 <wire x1="184.15" y1="12.7" x2="184.15" y2="85.09" width="0.1524" layer="91"/>
 <wire x1="184.15" y1="85.09" x2="134.62" y2="85.09" width="0.1524" layer="91"/>
 <junction x="184.15" y="12.7"/>
+<label x="201.93" y="13.97" size="1.778" layer="95"/>
 </segment>
 </net>
 </nets>
