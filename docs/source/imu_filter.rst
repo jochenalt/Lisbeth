@@ -193,7 +193,7 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
 First some more definitions:
 
 .. list-table:: Classic Kalman variables
-   :header-rows: 1
+   :header-rows: 0
    :widths: 25 75
  
    * - :math:`\hat{x}(k|k-1)`
