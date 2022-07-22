@@ -190,6 +190,7 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
 
 .. list-table:: Variables
    :widths: 25 75
+   
    * - 
      - **Classic Kalman variables**
    * - :math:`\hat{x}(k|k-1)`
