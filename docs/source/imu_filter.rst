@@ -181,22 +181,22 @@ The modification of the output is done with equation (2) and equation (3):
 
 And that's all we need to feed into the Unscented Kalman filter.
 
-The Unscented Kalman filter
----------------------------
+The Unscented Kalman Algorithm
+------------------------------
 
 
 The algorithm as described in `A new extension to the Kalman filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Julier1997_SPIE_KF.pdf>`_ is listed below,  I borrowed it from `here <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_ .(Frustratingly, it is almost impossible to understand that without having the standard Kalman filter digested)
 
 
-.. list-table:: Variables
+.. list-table:: Variables used in the Unscented Kalman Filter
    :widths: 25 75
-   
+
    * - 
      - **Classic Kalman variables**
    * - :math:`\hat{x}(k|k-1)`
      - Prediction of the state variable :math:`x(k)` based on information we know from the previous sampling time (i.e. the estimated state variable  :math:`\hat{x}(k-1)` and :math:`u(k-1)`). We'll get these values at the predciction step, calculated based on the non-linear function :math:`f` defined above. 
    * - :math:`\hat{x}(k|k)`
-     - The updated prediction of the state variable :math:`x(k)` by adding information we know from this sampling time (i.e. the observed variable value :math:`y(k)`) We will get these values at correction step, calculated basied on the Kalman gain. *Note: In the next loop, * :math:`\hat{x}(k|k)` *will become* :math:`\hat{x}(k-1)`
+     - The updated prediction of the state variable :math:`x(k)` by adding information we know from this sampling time (i.e. the observed variable value :math:`y(k)`) We will get these values at correction step, calculated basied on the Kalman gain. *Note: In the next loop,* :math:`\hat{x}(k|k)` *will become* :math:`\hat{x}(k-1)`
    * - :math:`P(k|k-1)`
      - Covriance matrix of the predicted state variable :math:`x(k)`, defined like :math:`\hat{x}(k|k-1)` above
    * - :math:`P(k|k)`
@@ -208,7 +208,7 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
    * - :math:`R_{n}`
      - Measurement noise covariance matrix built as diagonal matrix around :math:`n_{k}`.
    * - 
-     - **Sigma-point variables, in the implementation we use (2N+1) points**
+     - **Sigma-point variables, in the implementation we use :math:`(2N+1)` points**
    * - :math:`X(k-1)`
      - The sigma-points constructed from :math:`\hat{x}(k-1)` and  :math:`P(k-1)`
    * - :math:`X(k)`
@@ -222,11 +222,41 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
    * - :math:`P_{XY}(k)`
      - Cross covariance matrix between predicted state variable :math:`x(k)` and predicted measurement :math:`x(k)`.
    * - :math:`W_{m}`
-     - First order weights mnatrix.
+     - First order weights matrix.
    * - :math:`W_{c}`
-     - Second order weights mnatrix.
+     - Second order weights matrix.
 
 Then, the UKF algorithm works like this:
+
+**Initialisation**
+
+
+1. Set :math:`\hat{x}(k=0) = E\left [x(k=0)  \right ]` 
+2. Set :math:`P(k=0) = E\left [(x(k=0) - \hat{x}(k=0))(x(k=0) - \hat{x}(k=0) )^{T} \right ]` 
+3. Set noice covariance matrices of the gyro :math:`R_{v} = diag(R_{v1}, R_{v2},..,R_{vM})`, with M=3, and the noise of our gyro being  :math:`10^{-7}`, according to the datasheet.
+4.  Set noice covariance matrices of accelerometer and magnetometer to :math:`R_{n} = diag(R_{acc1}, R_{acc2},R_{acc3}, R_{mag1}, R_{max2},R_{mag3})`, with :math:`R_{acc} = 0.00000316` and `:math:`R_{mag} = 0.00000316`, again these numbers are coming from the datasheet.
+5. Calculate :math:`\alpha, \kappa,\beta, \gamma` constants, first order weights :math:`W_{m}` and second order weights :math:`W_{c}`
+
+..math::
+
+ 	\lambda = \lambda = \alpha^{2} (N + \kappa) -N
+
+..math::
+
+ 	\gamma = \sqrt{N+\alpha}
+
+..math::
+
+ 	W_{m}= \gamma = \sqrt{N+\alpha}
+
+..math::
+
+	W_{m} = \begin{bmatrix}\frac{\lambda}{N+\lambda} & \frac{1}{2(N+\lambda)}  & ... & \frac{1}{2(N+\lambda)} \end{bmatrix} , DIM(W_{m}) = 2N+1 
+
+..math::
+
+	W_{c} = \begin{bmatrix}\frac{\lambda}{N+\lambda} + (1-\alpha^{2} + \beta) & \frac{1}{2(N+\lambda)}  & ... & \frac{1}{2(N+\lambda)} \end{bmatrix} , DIM(W_{c}) = 2N+1 
+
 
 .. image:: /images/UKF_Calculation.png
 	:width: 700
