@@ -40,9 +40,9 @@ Sensor fusion means merging the drifty gyro data with the noisy acceleration dat
 `Quaternions <https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation>`_ avoid a  gimbal lock and are computational less intense(not really relevant actually, but lovely to work with). As usual we use the convention `roll, pitch, and yaw <https://en.wikipedia.org/wiki/Flight_dynamics_(fixed-wing_aircraft)>`_ to avoid breaking fingers when picturing vectors.
 
 
-The conventions used in the following are:
 
-.. list-table:: Conventions
+
+.. list-table:: **Conventions**:
    :header-rows: 1
 
    * - Symbol
@@ -202,6 +202,39 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
      - The sigma-points  :math:`X(k)` propagated by non-linear function :math:`h`
 
 
+.. list-table:: **Sigma-point variables, in the implementation we use (2N+1) points**
+   :header-rows: 0
+   :widths: 25 75 
+
+   * - :math:`X(k-1)`
+     - The sigma-points constructed from :math:`\hat{x}(k-1)` and  :math:`P(k-1)`
+   * - :math:`X(k)`
+     - The sigma-points  :math:`X(k-1)` propagated by non-linear function :math:`f`
+   * - :math:`Y(k)`
+     - The sigma-points  :math:`X(k)` propagated by non-linear function :math:`h`
+
+
+.. list-table:: **Sigma-point variables, in the implementation we use (2N+1) points**
+   :widths: 25 75 
+
+   * - :math:`X(k-1)`
+     - The sigma-points constructed from :math:`\hat{x}(k-1)` and  :math:`P(k-1)`
+   * - :math:`X(k)`
+     - The sigma-points  :math:`X(k-1)` propagated by non-linear function :math:`f`
+   * - :math:`Y(k)`
+     - The sigma-points  :math:`X(k)` propagated by non-linear function :math:`h`
+
+.. list-table:: **Sigma-point variables, in the implementation we use (2N+1) points**
+
+   * - :math:`X(k-1)`
+     - The sigma-points constructed from :math:`\hat{x}(k-1)` and  :math:`P(k-1)`
+   * - :math:`X(k)`
+     - The sigma-points  :math:`X(k-1)` propagated by non-linear function :math:`f`
+   * - :math:`Y(k)`
+     - The sigma-points  :math:`X(k)` propagated by non-linear function :math:`h`
+
+
+The state of the filter will be represented by a quaternion. When the gyro is delivering a datapoint of angular rate, we will need to rotate the state by 
 
 First some more definitions:
 
