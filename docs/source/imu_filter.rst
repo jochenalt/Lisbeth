@@ -193,12 +193,11 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
 
 
 .. list-table:: **Classic Kalman variables**
-   :widths: 25 75
  
    * - :math:`\hat{x}(k|k-1)`
      - Prediction of the state variable :math:`x(k)` based on information we know from the previous sampling time (i.e. the estimated state variable  :math:`\hat{x}(k-1)` and :math:`u(k-1)`). We'll get these values at the predciction step, calculated based on the non-linear function :math:`f` defined above. 
    * - :math:`\hat{x}(k|k)`
-     - The updated prediction of the state variable :math:`x(k)` by adding information we know from this sampling time (i.e. the observed variable value :math:`y(k)`) We will get these values at correction step, calculated basied on the Kalman gain. *Note: At the next sampling time,* :math:`\hat{x}(k|k)` *will become* :math:`\hat{x}(k-1)`
+     - The updated prediction of the state variable :math:`x(k)` by adding information we know from this sampling time (i.e. the observed variable value :math:`y(k)`) We will get these values at correction step, calculated basied on the Kalman gain. *Note: In the next loop, * :math:`\hat{x}(k|k)` *will become* :math:`\hat{x}(k-1)`
    * - :math:`P(k|k-1)`
      - Covriance matrix of the predicted state variable :math:`x(k)`, defined like :math:`\hat{x}(k|k-1)` above
    * - :math:`P(k|k)`
@@ -212,7 +211,6 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
 
 
 .. list-table:: **Sigma-point variables, in the implementation we use (2N+1) points**
-   :widths: 25 75 
 
    * - :math:`X(k-1)`
      - The sigma-points constructed from :math:`\hat{x}(k-1)` and  :math:`P(k-1)`
@@ -223,7 +221,6 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
 
 
 .. list-table:: **Supporting variables**
-   :widths: 25 75 
 
    * - :math:`P_{R}(k)`
      - Covariance matrix of the predicted measurement  :math:`y(k)`
@@ -233,11 +230,6 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
      - First order weights mnatrix.
    * - :math:`W_{c}`
      - Second order weights mnatrix.
-
-
-.. image:: /images/UKF_Definition.png
-	:width: 700
-	:alt: Conventions
 
 Then, the UKF algorithm works like this:
 
