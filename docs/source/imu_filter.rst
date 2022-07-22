@@ -190,51 +190,6 @@ The Unscented Kalman filter
 
 The algorithm as described in `A new extension to the Kalman filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Julier1997_SPIE_KF.pdf>`_ is listed below,  I borrowed it from `here <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_ .(Frustratingly, it is almost impossible to understand that without having the standard Kalman filter digested)
 
-.. list-table:: **Sigma-point variables, in the implementation we use** :math:`(2N+1)` **points**
-   :header-rows: 0
-   :widths: 25 75 
-
-   * - :math:`X(k-1)`
-     - The sigma-points constructed from :math:`\hat{x}(k-1)` and  :math:`P(k-1)`
-   * - :math:`X(k)`
-     - The sigma-points  :math:`X(k-1)` propagated by non-linear function :math:`f`
-   * - :math:`Y(k)`
-     - The sigma-points  :math:`X(k)` propagated by non-linear function :math:`h`
-
-
-.. list-table:: **Sigma-point variables, in the implementation we use (2N+1) points**
-   :header-rows: 0
-   :widths: 25 75 
-
-   * - :math:`X(k-1)`
-     - The sigma-points constructed from :math:`\hat{x}(k-1)` and  :math:`P(k-1)`
-   * - :math:`X(k)`
-     - The sigma-points  :math:`X(k-1)` propagated by non-linear function :math:`f`
-   * - :math:`Y(k)`
-     - The sigma-points  :math:`X(k)` propagated by non-linear function :math:`h`
-
-
-.. list-table:: **Sigma-point variables, in the implementation we use (2N+1) points**
-   :widths: 25 75 
-
-   * - :math:`X(k-1)`
-     - The sigma-points constructed from :math:`\hat{x}(k-1)` and  :math:`P(k-1)`
-   * - :math:`X(k)`
-     - The sigma-points  :math:`X(k-1)` propagated by non-linear function :math:`f`
-   * - :math:`Y(k)`
-     - The sigma-points  :math:`X(k)` propagated by non-linear function :math:`h`
-
-.. list-table:: **Sigma-point variables, in the implementation we use (2N+1) points**
-
-   * - :math:`X(k-1)`
-     - The sigma-points constructed from :math:`\hat{x}(k-1)` and  :math:`P(k-1)`
-   * - :math:`X(k)`
-     - The sigma-points  :math:`X(k-1)` propagated by non-linear function :math:`f`
-   * - :math:`Y(k)`
-     - The sigma-points  :math:`X(k)` propagated by non-linear function :math:`h`
-
-
-The state of the filter will be represented by a quaternion. When the gyro is delivering a datapoint of angular rate, we will need to rotate the state by 
 
 First some more definitions:
 
@@ -258,7 +213,7 @@ First some more definitions:
      - Measurement noise covariance matrix built as diagonal matrix around :math:`n_{k}`.
 
 
-.. list-table:: **Sigma-point variables, in the implementation we use** :math:`(2N+1)` **points**
+.. list-table:: **Sigma-point variables, in the implementation we use points**
    :header-rows: 0
    :widths: 25 75 
 
