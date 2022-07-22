@@ -192,13 +192,10 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
 
 First some more definitions:
 
-**Classic Kalman variables:**
-
-.. list-table:: ""
+.. list-table:: Classic Kalman variables
    :header-rows: 1
    :widths: 25 75
  
-     - 
    * - :math:`\hat{x}(k|k-1)`
      - Prediction of the state variable :math:`x(k)` based on information we know from the previous sampling time (i.e. the estimated state variable  :math:`\hat{x}(k-1)` and :math:`u(k-1)`). We'll get these values at the predciction step, calculated based on the non-linear function :math:`f` defined above. 
    * - :math:`\hat{x}(k|k)`
@@ -214,8 +211,7 @@ First some more definitions:
    * - :math:`R_{n}`
      - Measurement noise covariance matrix built as diagonal matrix around :math:`n_{k}`.
 
-**Sigma-point variables, in the implementation we use :math:`(2N+1)` points:**
-.. list-table:: '' # test
+.. list-table:: Sigma-point variables, in the implementation we use :math:`(2N+1)` points:
    :header-rows: 0
    :widths: 25 75 
 
@@ -226,8 +222,7 @@ First some more definitions:
    * - :math:`Y(k)`
      - The sigma-points  :math:`X(k)` propagated by non-linear function :math:`h`
 
-**Supporting variables:**
-.. list-table:: :math:` `
+.. list-table:: Supporting variables:
    :header-rows: 0
    :widths: 25 75 
 
