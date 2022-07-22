@@ -14,9 +14,6 @@
 #include "Wire.h"
 
 
-#define INA226_LIB_VERSION              (F("0.2.0"))
-
-
 // set by setAlertRegister
 #define INA226_SHUNT_OVER_VOLTAGE        0x8000
 #define INA226_SHUNT_UNDER_VOLTAGE       0x4000

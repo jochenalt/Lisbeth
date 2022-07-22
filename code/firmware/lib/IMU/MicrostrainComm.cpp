@@ -581,7 +581,7 @@ void MicrostrainIMU::loop() {
       // we only have 1 ms to receive an answer
       // After 2ms we escalate 
       uint32_t time_since_last_package_us = micros() - last_data_package_ts;  
-      const uint32?t typ_time_per_loop_us = 1000000/targetFreq;
+      const uint32_t typ_time_per_loop_us = 1000000/targetFreq;
 
       if ((last_data_package_ts > 0) && (time_since_last_package_us > 5*typ_time_per_loop_us)) {
           println("missing data stream for %dus, recovery procedure", time_since_last_package_us);

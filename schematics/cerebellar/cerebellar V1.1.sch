@@ -20458,6 +20458,42 @@ Source: https://www.analog.com/en/products/ltc7001.html</description>
 <wire x1="-4.4196" y1="-1.1176" x2="-4.4196" y2="2.1844" width="0.1524" layer="21"/>
 <wire x1="-2.6924" y1="-1.1176" x2="-4.4196" y2="-1.1176" width="0.1524" layer="21"/>
 </package>
+<package name="JST-PH6">
+<wire x1="-6.95" y1="-1.7" x2="-3.95" y2="-1.7" width="0.127" layer="21"/>
+<wire x1="-3.95" y1="-1.7" x2="3.95" y2="-1.7" width="0.127" layer="21"/>
+<wire x1="3.95" y1="-1.7" x2="6.95" y2="-1.7" width="0.127" layer="21"/>
+<wire x1="-6.95" y1="2.8" x2="6.95" y2="2.8" width="0.127" layer="21"/>
+<wire x1="6.95" y1="2.8" x2="6.95" y2="0.6" width="0.127" layer="21"/>
+<wire x1="6.95" y1="0.6" x2="6.95" y2="-0.3" width="0.127" layer="21"/>
+<wire x1="6.95" y1="-0.3" x2="6.95" y2="-1.7" width="0.127" layer="21"/>
+<wire x1="-6.95" y1="2.8" x2="-6.95" y2="0.6" width="0.127" layer="21"/>
+<wire x1="-6.95" y1="0.6" x2="-6.95" y2="-0.3" width="0.127" layer="21"/>
+<wire x1="-6.95" y1="-0.3" x2="-6.95" y2="-1.7" width="0.127" layer="21"/>
+<wire x1="-6.35" y1="2.2" x2="6.35" y2="2.2" width="0.127" layer="21"/>
+<wire x1="-6.35" y1="2.2" x2="-6.35" y2="0.6" width="0.127" layer="21"/>
+<wire x1="-6.35" y1="0.6" x2="-6.35" y2="-0.3" width="0.127" layer="21"/>
+<wire x1="-6.35" y1="-0.3" x2="-6.35" y2="-1.1" width="0.127" layer="21"/>
+<wire x1="-6.35" y1="-1.1" x2="-3.95" y2="-1.1" width="0.127" layer="21"/>
+<wire x1="6.35" y1="2.2" x2="6.35" y2="0.6" width="0.127" layer="21"/>
+<wire x1="6.35" y1="0.6" x2="6.35" y2="-0.3" width="0.127" layer="21"/>
+<wire x1="6.35" y1="-0.3" x2="6.35" y2="-1.1" width="0.127" layer="21"/>
+<wire x1="-6.95" y1="-0.3" x2="-6.35" y2="-0.3" width="0.127" layer="21"/>
+<wire x1="-6.95" y1="0.6" x2="-6.35" y2="0.6" width="0.127" layer="21"/>
+<wire x1="6.35" y1="0.6" x2="6.95" y2="0.6" width="0.127" layer="21"/>
+<wire x1="6.35" y1="-0.3" x2="6.95" y2="-0.3" width="0.127" layer="21"/>
+<wire x1="-3.95" y1="-1.1" x2="-3.95" y2="-1.7" width="0.127" layer="21"/>
+<wire x1="3.95" y1="-1.1" x2="3.95" y2="-1.7" width="0.127" layer="21"/>
+<wire x1="3.95" y1="-1.1" x2="6.35" y2="-1.1" width="0.127" layer="21"/>
+<pad name="5" x="-3" y="0" drill="0.8128" diameter="1.6764" shape="octagon"/>
+<pad name="4" x="-1" y="0" drill="0.8128" diameter="1.6764" shape="octagon"/>
+<pad name="3" x="1" y="0" drill="0.8128" diameter="1.6764" shape="octagon"/>
+<pad name="2" x="3" y="0" drill="0.8128" diameter="1.6764" shape="octagon"/>
+<pad name="6" x="-5" y="0" drill="0.8128" diameter="1.6764" shape="octagon"/>
+<pad name="1" x="5" y="0" drill="0.8128" diameter="1.6764" shape="octagon"/>
+<text x="-7" y="3.5001" size="1.27" layer="25">&gt;NAME</text>
+<text x="4.9001" y="-3.4999" size="1.27" layer="21">1</text>
+<text x="-7" y="-4.1199" size="1.27" layer="27">&gt;VALUE</text>
+</package>
 </packages>
 <symbols>
 <symbol name="CON02">
@@ -20493,6 +20529,20 @@ Source: https://www.analog.com/en/products/ltc7001.html</description>
 <pin name="1" x="7.62" y="2.54" visible="pad" length="short" direction="pas" rot="R180"/>
 <pin name="4" x="7.62" y="-5.08" visible="pad" length="short" direction="pas" rot="R180"/>
 <pin name="5" x="7.62" y="-7.62" visible="pad" length="short" direction="pas" rot="R180"/>
+</symbol>
+<symbol name="CON06">
+<wire x1="-2.54" y1="7.62" x2="-2.54" y2="-10.16" width="0.1524" layer="94"/>
+<wire x1="-2.54" y1="-10.16" x2="5.08" y2="-10.16" width="0.1524" layer="94"/>
+<wire x1="5.08" y1="-10.16" x2="5.08" y2="7.62" width="0.1524" layer="94"/>
+<wire x1="5.08" y1="7.62" x2="-2.54" y2="7.62" width="0.1524" layer="94"/>
+<text x="-2.54" y="8.382" size="1.778" layer="95">&gt;NAME</text>
+<text x="-2.54" y="-12.446" size="1.778" layer="96">&gt;VALUE</text>
+<pin name="3" x="7.62" y="0" visible="pad" length="short" direction="pas" rot="R180"/>
+<pin name="2" x="7.62" y="2.54" visible="pad" length="short" direction="pas" rot="R180"/>
+<pin name="1" x="7.62" y="5.08" visible="pad" length="short" direction="pas" rot="R180"/>
+<pin name="4" x="7.62" y="-2.54" visible="pad" length="short" direction="pas" rot="R180"/>
+<pin name="5" x="7.62" y="-5.08" visible="pad" length="short" direction="pas" rot="R180"/>
+<pin name="6" x="7.62" y="-7.62" visible="pad" length="short" direction="pas" rot="R180"/>
 </symbol>
 </symbols>
 <devicesets>
@@ -20541,6 +20591,26 @@ Source: https://www.analog.com/en/products/ltc7001.html</description>
 <connect gate="G$1" pin="3" pad="3"/>
 <connect gate="G$1" pin="4" pad="4"/>
 <connect gate="G$1" pin="5" pad="5"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+<deviceset name="JST-PH6" prefix="P" uservalue="yes">
+<gates>
+<gate name="A" symbol="CON06" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="JST-PH6">
+<connects>
+<connect gate="A" pin="1" pad="1"/>
+<connect gate="A" pin="2" pad="2"/>
+<connect gate="A" pin="3" pad="3"/>
+<connect gate="A" pin="4" pad="4"/>
+<connect gate="A" pin="5" pad="5"/>
+<connect gate="A" pin="6" pad="6"/>
 </connects>
 <technologies>
 <technology name=""/>
@@ -24047,7 +24117,6 @@ Micropower Regulators, fixed</description>
 <part name="C11" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="050-024X044" package3d_urn="urn:adsk.eagle:package:23643/1" value="2.2uF"/>
 <part name="C12" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="050-024X044" package3d_urn="urn:adsk.eagle:package:23643/1" value="2.2uF"/>
 <part name="C13" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="050-024X044" package3d_urn="urn:adsk.eagle:package:23643/1" value="2.2uF"/>
-<part name="C19" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="025-025X050" package3d_urn="urn:adsk.eagle:package:23629/2" value="1uF, 63V"/>
 <part name="LED3" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="LED" device="3MM" package3d_urn="urn:adsk.eagle:package:6240537/1" value="Motor"/>
 <part name="R5" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:23498/2" value="10k"/>
 <part name="R2" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:23498/2" value="10k"/>
@@ -24072,13 +24141,11 @@ Micropower Regulators, fixed</description>
 <part name="R21" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:23498/2" value="100k"/>
 <part name="D3" library="diode" library_urn="urn:adsk.eagle:library:210" deviceset="ZENER-DIODE" device="DO41Z10" package3d_urn="urn:adsk.eagle:package:43341/1" value="Z 5.1V 1A"/>
 <part name="P10" library="jst-ph" deviceset="JST-PH5" device="" value="SPI2"/>
-<part name="P3" library="jst-ph" deviceset="JST-PH5" device="" value="SPI2"/>
 <part name="P+1" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="+5V" device=""/>
 <part name="U$3" library="IRF2804" deviceset="IRF2804" device=""/>
 <part name="U$2" library="IRF2804" deviceset="IRF2804" device=""/>
 <part name="U$5" library="IRF2804" deviceset="IRF2804" device=""/>
 <part name="R7" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:23498/2" value="10"/>
-<part name="C1" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="025-025X050" package3d_urn="urn:adsk.eagle:package:23629/2" value="47nF"/>
 <part name="SUPPLY5" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="P14" library="jst-ph" deviceset="JST-PH5" device="" value="IMU"/>
 <part name="U$4" library="MAX869" deviceset="MAX769L" device=""/>
@@ -24086,10 +24153,7 @@ Micropower Regulators, fixed</description>
 <part name="R1" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:23498/2" value="6.8k"/>
 <part name="P4" library="jst-ph" deviceset="JST-PH2" device="" value="LED"/>
 <part name="R8" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:23498/2" value="100"/>
-<part name="C2" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="025-025X050" package3d_urn="urn:adsk.eagle:package:23629/2" value="100nF"/>
-<part name="C4" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="025-025X050" package3d_urn="urn:adsk.eagle:package:23629/2" value="22uF"/>
 <part name="U$8" library="LT1763" deviceset="LT1763" device=""/>
-<part name="C3" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="025-025X050" package3d_urn="urn:adsk.eagle:package:23629/2" value="10nF"/>
 <part name="P16" library="jst-ph" deviceset="JST-PH5" device="" value="MAG"/>
 <part name="CON2" library="amass" deviceset="XT30" device="UPB-F" value="ODRV1"/>
 <part name="CON1" library="amass" deviceset="XT30" device="UPB-F" value="ODRV2"/>
@@ -24097,6 +24161,13 @@ Micropower Regulators, fixed</description>
 <part name="CON4" library="amass" deviceset="XT30" device="UPB-F" value="ODRV4"/>
 <part name="CON5" library="amass" deviceset="XT30" device="UPB-F" value="ODRV5"/>
 <part name="CON6" library="amass" deviceset="XT30" device="UPB-F" value="ODRV6"/>
+<part name="P3" library="jst-ph" deviceset="JST-PH6" device="" value="SPI1"/>
+<part name="C2" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="050-024X044" package3d_urn="urn:adsk.eagle:package:23643/1" value="100nF"/>
+<part name="C3" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="050-024X044" package3d_urn="urn:adsk.eagle:package:23643/1" value="10nF"/>
+<part name="C4" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="CPOL-EU" device="E2-4" package3d_urn="urn:adsk.eagle:package:23347/1" value="22uF"/>
+<part name="C1" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="050-024X044" package3d_urn="urn:adsk.eagle:package:23643/1" value="47nF"/>
+<part name="C19" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="050-024X044" package3d_urn="urn:adsk.eagle:package:23643/1" value="1uF, 63V"/>
+<part name="R6" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:23498/2" value="100k"/>
 </parts>
 <sheets>
 <sheet>
@@ -24123,8 +24194,8 @@ Micropower Regulators, fixed</description>
 <attribute name="VALUE" x="-215.9" y="93.98" size="1.778" layer="96"/>
 <attribute name="NAME" x="-215.9" y="109.982" size="1.778" layer="95"/>
 </instance>
-<instance part="SUPPLY4" gate="GND" x="-50.8" y="36.83" smashed="yes">
-<attribute name="VALUE" x="-48.895" y="41.275" size="1.778" layer="96"/>
+<instance part="SUPPLY4" gate="GND" x="-71.12" y="33.02" smashed="yes">
+<attribute name="VALUE" x="-69.215" y="37.465" size="1.778" layer="96"/>
 </instance>
 <instance part="SJ1" gate="1" x="-137.16" y="105.41" smashed="yes">
 <attribute name="NAME" x="-139.065" y="107.95" size="1.778" layer="95"/>
@@ -24216,10 +24287,6 @@ Micropower Regulators, fixed</description>
 <instance part="C13" gate="G$1" x="3.81" y="-46.99" smashed="yes">
 <attribute name="NAME" x="-0.127" y="-47.7774" size="1.778" layer="95"/>
 <attribute name="VALUE" x="4.953" y="-51.5874" size="1.778" layer="96"/>
-</instance>
-<instance part="C19" gate="G$1" x="-81.28" y="-35.56" smashed="yes">
-<attribute name="NAME" x="-81.026" y="-44.069" size="1.778" layer="95"/>
-<attribute name="VALUE" x="-79.756" y="-40.259" size="1.778" layer="96"/>
 </instance>
 <instance part="LED3" gate="G$1" x="-55.245" y="-45.085" smashed="yes">
 <attribute name="NAME" x="-51.689" y="-49.657" size="1.778" layer="95" rot="R90"/>
@@ -24317,10 +24384,6 @@ Micropower Regulators, fixed</description>
 <attribute name="NAME" x="223.52" y="-14.732" size="1.778" layer="95" rot="R180"/>
 <attribute name="VALUE" x="223.52" y="3.556" size="1.778" layer="96" rot="R180"/>
 </instance>
-<instance part="P3" gate="G$1" x="194.31" y="-8.89" smashed="yes" rot="R180">
-<attribute name="NAME" x="196.85" y="-14.732" size="1.778" layer="95" rot="R180"/>
-<attribute name="VALUE" x="196.85" y="3.556" size="1.778" layer="96" rot="R180"/>
-</instance>
 <instance part="P+1" gate="1" x="-17.78" y="97.155" smashed="yes">
 <attribute name="VALUE" x="-17.78" y="98.425" size="1.778" layer="96" rot="R90"/>
 </instance>
@@ -24330,10 +24393,6 @@ Micropower Regulators, fixed</description>
 <instance part="R7" gate="G$1" x="-66.04" y="-38.735" smashed="yes" rot="R270">
 <attribute name="NAME" x="-64.5414" y="-34.925" size="1.778" layer="95" rot="R270"/>
 <attribute name="VALUE" x="-69.342" y="-34.925" size="1.778" layer="96" rot="R270"/>
-</instance>
-<instance part="C1" gate="G$1" x="-66.04" y="-48.895" smashed="yes">
-<attribute name="NAME" x="-64.516" y="-48.514" size="1.778" layer="95"/>
-<attribute name="VALUE" x="-64.516" y="-53.594" size="1.778" layer="96"/>
 </instance>
 <instance part="SUPPLY5" gate="GND" x="-55.245" y="-67.31" smashed="yes">
 <attribute name="VALUE" x="-61.595" y="-71.12" size="1.778" layer="96"/>
@@ -24361,19 +24420,7 @@ Micropower Regulators, fixed</description>
 <attribute name="NAME" x="342.9" y="94.2086" size="1.778" layer="95"/>
 <attribute name="VALUE" x="342.9" y="89.408" size="1.778" layer="96"/>
 </instance>
-<instance part="C2" gate="G$1" x="11.43" y="151.765" smashed="yes">
-<attribute name="NAME" x="12.954" y="152.146" size="1.778" layer="95"/>
-<attribute name="VALUE" x="12.954" y="147.066" size="1.778" layer="96"/>
-</instance>
-<instance part="C4" gate="G$1" x="62.23" y="157.48" smashed="yes">
-<attribute name="NAME" x="62.484" y="148.971" size="1.778" layer="95"/>
-<attribute name="VALUE" x="63.754" y="152.781" size="1.778" layer="96"/>
-</instance>
 <instance part="U$8" gate="G$1" x="39.37" y="170.18" smashed="yes"/>
-<instance part="C3" gate="G$1" x="52.07" y="173.355" smashed="yes">
-<attribute name="NAME" x="53.594" y="173.736" size="1.778" layer="95"/>
-<attribute name="VALUE" x="53.594" y="168.656" size="1.778" layer="96"/>
-</instance>
 <instance part="P16" gate="G$1" x="256.54" y="10.16" smashed="yes" rot="R180">
 <attribute name="NAME" x="259.08" y="4.318" size="1.778" layer="95" rot="R180"/>
 <attribute name="VALUE" x="259.08" y="22.606" size="1.778" layer="96" rot="R180"/>
@@ -24402,6 +24449,34 @@ Micropower Regulators, fixed</description>
 <attribute name="VALUE" x="90.17" y="-57.15" size="1.778" layer="96"/>
 <attribute name="NAME" x="90.17" y="-41.148" size="1.778" layer="95"/>
 </instance>
+<instance part="P3" gate="A" x="194.31" y="-6.35" smashed="yes" rot="R180">
+<attribute name="NAME" x="196.85" y="-14.732" size="1.778" layer="95" rot="R180"/>
+<attribute name="VALUE" x="196.85" y="6.096" size="1.778" layer="96" rot="R180"/>
+</instance>
+<instance part="C2" gate="G$1" x="11.43" y="151.13" smashed="yes">
+<attribute name="NAME" x="12.954" y="151.511" size="1.778" layer="95"/>
+<attribute name="VALUE" x="14.224" y="154.051" size="1.778" layer="96"/>
+</instance>
+<instance part="C3" gate="G$1" x="52.07" y="172.72" smashed="yes">
+<attribute name="NAME" x="53.594" y="173.101" size="1.778" layer="95"/>
+<attribute name="VALUE" x="54.864" y="175.641" size="1.778" layer="96"/>
+</instance>
+<instance part="C4" gate="G$1" x="62.23" y="160.02" smashed="yes">
+<attribute name="NAME" x="63.373" y="160.5026" size="1.778" layer="95"/>
+<attribute name="VALUE" x="63.373" y="155.4226" size="1.778" layer="96"/>
+</instance>
+<instance part="C1" gate="G$1" x="-66.04" y="-53.34" smashed="yes">
+<attribute name="NAME" x="-64.516" y="-52.959" size="1.778" layer="95"/>
+<attribute name="VALUE" x="-63.246" y="-50.419" size="1.778" layer="96"/>
+</instance>
+<instance part="C19" gate="G$1" x="-81.28" y="-35.56" smashed="yes">
+<attribute name="NAME" x="-79.756" y="-35.179" size="1.778" layer="95"/>
+<attribute name="VALUE" x="-78.486" y="-32.639" size="1.778" layer="96"/>
+</instance>
+<instance part="R6" gate="G$1" x="1.27" y="151.13" smashed="yes" rot="R270">
+<attribute name="NAME" x="2.7686" y="154.94" size="1.778" layer="95" rot="R270"/>
+<attribute name="VALUE" x="-2.032" y="154.94" size="1.778" layer="96" rot="R270"/>
+</instance>
 </instances>
 <busses>
 </busses>
@@ -24429,29 +24504,28 @@ Micropower Regulators, fixed</description>
 <wire x1="127" y1="-11.43" x2="186.69" y2="-11.43" width="0.1524" layer="91"/>
 <junction x="127" y="-11.43"/>
 <label x="180.34" y="-11.43" size="1.778" layer="95"/>
-<pinref part="P3" gate="G$1" pin="1"/>
+<pinref part="P3" gate="A" pin="1"/>
 </segment>
 <segment>
 <pinref part="SUPPLY4" gate="GND" pin="GND"/>
-<wire x1="-50.8" y1="39.37" x2="-50.8" y2="63.5" width="0.1524" layer="91"/>
+<wire x1="-71.12" y1="35.56" x2="-71.12" y2="36.83" width="0.1524" layer="91"/>
 <pinref part="SJ2" gate="1" pin="2"/>
-<wire x1="-132.08" y1="100.33" x2="-50.8" y2="100.33" width="0.1524" layer="91"/>
-<wire x1="-50.8" y1="100.33" x2="-50.8" y2="63.5" width="0.1524" layer="91"/>
-<junction x="-50.8" y="63.5"/>
+<wire x1="-132.08" y1="100.33" x2="-71.12" y2="100.33" width="0.1524" layer="91"/>
+<wire x1="-71.12" y1="100.33" x2="-71.12" y2="36.83" width="0.1524" layer="91"/>
 <pinref part="U2" gate="G$1" pin="GND"/>
-<wire x1="-81.28" y1="44.45" x2="-78.74" y2="44.45" width="0.1524" layer="91"/>
-<wire x1="-78.74" y1="44.45" x2="-50.8" y2="44.45" width="0.1524" layer="91"/>
-<wire x1="-50.8" y1="44.45" x2="-50.8" y2="63.5" width="0.1524" layer="91"/>
 <pinref part="U2" gate="G$1" pin="A1"/>
 <wire x1="-116.84" y1="62.23" x2="-135.89" y2="62.23" width="0.1524" layer="91"/>
 <wire x1="-135.89" y1="62.23" x2="-135.89" y2="36.83" width="0.1524" layer="91"/>
 <wire x1="-135.89" y1="36.83" x2="-78.74" y2="36.83" width="0.1524" layer="91"/>
-<wire x1="-78.74" y1="36.83" x2="-78.74" y2="44.45" width="0.1524" layer="91"/>
-<junction x="-78.74" y="44.45"/>
+<junction x="-78.74" y="36.83"/>
 <pinref part="U2" gate="G$1" pin="A0"/>
 <wire x1="-116.84" y1="64.77" x2="-135.89" y2="64.77" width="0.1524" layer="91"/>
 <wire x1="-135.89" y1="64.77" x2="-135.89" y2="62.23" width="0.1524" layer="91"/>
 <junction x="-135.89" y="62.23"/>
+<wire x1="-78.74" y1="36.83" x2="-71.12" y2="36.83" width="0.1524" layer="91"/>
+<junction x="-71.12" y="36.83"/>
+<wire x1="-81.28" y1="44.45" x2="-78.74" y2="44.45" width="0.1524" layer="91"/>
+<wire x1="-78.74" y1="44.45" x2="-78.74" y2="36.83" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="P2" gate="G$1" pin="1"/>
@@ -24515,9 +24589,10 @@ Micropower Regulators, fixed</description>
 <wire x1="-36.83" y1="139.7" x2="-22.86" y2="139.7" width="0.1524" layer="91"/>
 <junction x="-36.83" y="139.7"/>
 <junction x="-22.86" y="139.7"/>
-<wire x1="64.77" y1="139.7" x2="62.23" y2="139.7" width="0.1524" layer="91"/>
-<wire x1="62.23" y1="139.7" x2="11.43" y2="139.7" width="0.1524" layer="91"/>
-<wire x1="11.43" y1="139.7" x2="-13.97" y2="139.7" width="0.1524" layer="91"/>
+<wire x1="62.23" y1="139.7" x2="29.21" y2="139.7" width="0.1524" layer="91"/>
+<wire x1="29.21" y1="139.7" x2="11.43" y2="139.7" width="0.1524" layer="91"/>
+<wire x1="11.43" y1="139.7" x2="1.27" y2="139.7" width="0.1524" layer="91"/>
+<wire x1="1.27" y1="139.7" x2="-13.97" y2="139.7" width="0.1524" layer="91"/>
 <wire x1="-13.97" y1="139.7" x2="-22.86" y2="139.7" width="0.1524" layer="91"/>
 <wire x1="-22.86" y1="148.59" x2="-22.86" y2="139.7" width="0.1524" layer="91"/>
 <pinref part="C6" gate="G$1" pin="-"/>
@@ -24546,12 +24621,17 @@ Micropower Regulators, fixed</description>
 <wire x1="-13.97" y1="154.94" x2="-13.97" y2="139.7" width="0.1524" layer="91"/>
 <junction x="-13.97" y="139.7"/>
 <pinref part="D3" gate="G$1" pin="A"/>
-<pinref part="C2" gate="G$1" pin="2"/>
-<wire x1="11.43" y1="146.685" x2="11.43" y2="139.7" width="0.1524" layer="91"/>
 <junction x="11.43" y="139.7"/>
-<wire x1="62.23" y1="152.4" x2="62.23" y2="139.7" width="0.1524" layer="91"/>
-<junction x="62.23" y="139.7"/>
-<pinref part="C4" gate="G$1" pin="2"/>
+<wire x1="11.43" y1="146.05" x2="11.43" y2="139.7" width="0.1524" layer="91"/>
+<wire x1="62.23" y1="154.94" x2="62.23" y2="139.7" width="0.1524" layer="91"/>
+<pinref part="C2" gate="G$1" pin="2"/>
+<pinref part="C4" gate="G$1" pin="-"/>
+<pinref part="U$8" gate="G$1" pin="GND"/>
+<wire x1="29.21" y1="144.78" x2="29.21" y2="139.7" width="0.1524" layer="91"/>
+<junction x="29.21" y="139.7"/>
+<pinref part="R6" gate="G$1" pin="2"/>
+<wire x1="1.27" y1="146.05" x2="1.27" y2="139.7" width="0.1524" layer="91"/>
+<junction x="1.27" y="139.7"/>
 </segment>
 <segment>
 <wire x1="-143.51" y1="-48.26" x2="-143.51" y2="-64.77" width="0.1524" layer="91"/>
@@ -24572,13 +24652,13 @@ Micropower Regulators, fixed</description>
 <pinref part="R15" gate="G$1" pin="2"/>
 <pinref part="R4" gate="G$1" pin="2"/>
 <label x="-88.9" y="-64.77" size="1.778" layer="95"/>
-<pinref part="C1" gate="G$1" pin="2"/>
-<wire x1="-66.04" y1="-53.975" x2="-66.04" y2="-64.77" width="0.1524" layer="91"/>
 <junction x="-66.04" y="-64.77"/>
+<wire x1="-66.04" y1="-58.42" x2="-66.04" y2="-64.77" width="0.1524" layer="91"/>
 <wire x1="-66.04" y1="-64.77" x2="-55.245" y2="-64.77" width="0.1524" layer="91"/>
 <wire x1="-55.245" y1="-64.135" x2="-55.245" y2="-64.77" width="0.1524" layer="91"/>
 <pinref part="SUPPLY5" gate="GND" pin="GND"/>
 <junction x="-55.245" y="-64.77"/>
+<pinref part="C1" gate="G$1" pin="2"/>
 </segment>
 <segment>
 <pinref part="U$4" gate="G$1" pin="GND"/>
@@ -24660,21 +24740,21 @@ Micropower Regulators, fixed</description>
 <wire x1="11.43" y1="177.8" x2="5.08" y2="177.8" width="0.1524" layer="91"/>
 <wire x1="11.43" y1="177.8" x2="13.97" y2="177.8" width="0.1524" layer="91"/>
 <junction x="11.43" y="177.8"/>
-<pinref part="C2" gate="G$1" pin="1"/>
-<wire x1="11.43" y1="177.8" x2="11.43" y2="154.305" width="0.1524" layer="91"/>
+<wire x1="11.43" y1="177.8" x2="11.43" y2="153.67" width="0.1524" layer="91"/>
 <pinref part="U$8" gate="G$1" pin="IN"/>
+<pinref part="C2" gate="G$1" pin="1"/>
 </segment>
 <segment>
 <pinref part="U2" gate="G$1" pin="VS"/>
-<wire x1="-81.28" y1="72.39" x2="-72.39" y2="72.39" width="0.1524" layer="91"/>
-<wire x1="-72.39" y1="72.39" x2="-72.39" y2="92.71" width="0.1524" layer="91"/>
-<wire x1="-72.39" y1="92.71" x2="-85.09" y2="92.71" width="0.1524" layer="91"/>
+<wire x1="-81.28" y1="72.39" x2="-66.04" y2="72.39" width="0.1524" layer="91"/>
+<wire x1="-66.04" y1="72.39" x2="-66.04" y2="92.71" width="0.1524" layer="91"/>
+<wire x1="-66.04" y1="92.71" x2="-85.09" y2="92.71" width="0.1524" layer="91"/>
 <pinref part="R2" gate="G$1" pin="1"/>
 <junction x="-85.09" y="92.71"/>
 <wire x1="-85.09" y1="92.71" x2="-92.71" y2="92.71" width="0.1524" layer="91"/>
 <pinref part="R5" gate="G$1" pin="1"/>
-<wire x1="-72.39" y1="92.71" x2="-17.78" y2="92.71" width="0.1524" layer="91"/>
-<junction x="-72.39" y="92.71"/>
+<wire x1="-66.04" y1="92.71" x2="-17.78" y2="92.71" width="0.1524" layer="91"/>
+<junction x="-66.04" y="92.71"/>
 <pinref part="P+1" gate="1" pin="+5V"/>
 <wire x1="-17.78" y1="92.71" x2="-17.78" y2="94.615" width="0.1524" layer="91"/>
 <pinref part="U$1" gate="G$1" pin="VIN"/>
@@ -24850,9 +24930,9 @@ Micropower Regulators, fixed</description>
 <wire x1="-81.28" y1="-40.64" x2="-87.63" y2="-40.64" width="0.1524" layer="91"/>
 <wire x1="-55.245" y1="-42.545" x2="-55.245" y2="-40.64" width="0.1524" layer="91"/>
 <junction x="-55.245" y="-40.64"/>
+<pinref part="LED3" gate="G$1" pin="A"/>
 <pinref part="C19" gate="G$1" pin="2"/>
 <junction x="-81.28" y="-40.64"/>
-<pinref part="LED3" gate="G$1" pin="A"/>
 </segment>
 </net>
 <net name="N$18" class="0">
@@ -24870,7 +24950,7 @@ Micropower Regulators, fixed</description>
 <wire x1="173.99" y1="19.05" x2="173.99" y2="-8.89" width="0.1524" layer="91"/>
 <wire x1="173.99" y1="-8.89" x2="186.69" y2="-8.89" width="0.1524" layer="91"/>
 <label x="180.34" y="-8.89" size="1.778" layer="95"/>
-<pinref part="P3" gate="G$1" pin="2"/>
+<pinref part="P3" gate="A" pin="2"/>
 </segment>
 </net>
 <net name="MOSI" class="0">
@@ -24880,7 +24960,7 @@ Micropower Regulators, fixed</description>
 <pinref part="U$1" gate="G$1" pin="11-MOSI/CTX1"/>
 <wire x1="176.53" y1="21.59" x2="149.86" y2="21.59" width="0.1524" layer="91"/>
 <label x="180.34" y="-6.35" size="1.778" layer="95"/>
-<pinref part="P3" gate="G$1" pin="3"/>
+<pinref part="P3" gate="A" pin="3"/>
 </segment>
 </net>
 <net name="CS" class="0">
@@ -24890,7 +24970,7 @@ Micropower Regulators, fixed</description>
 <wire x1="179.07" y1="24.13" x2="179.07" y2="-3.81" width="0.1524" layer="91"/>
 <wire x1="179.07" y1="-3.81" x2="186.69" y2="-3.81" width="0.1524" layer="91"/>
 <label x="180.975" y="-3.81" size="1.778" layer="95"/>
-<pinref part="P3" gate="G$1" pin="4"/>
+<pinref part="P3" gate="A" pin="4"/>
 </segment>
 </net>
 <net name="N$30" class="0">
@@ -25200,12 +25280,12 @@ Micropower Regulators, fixed</description>
 </net>
 <net name="SCK" class="0">
 <segment>
-<pinref part="P3" gate="G$1" pin="5"/>
 <wire x1="186.69" y1="-1.27" x2="180.975" y2="-1.27" width="0.1524" layer="91"/>
 <pinref part="U$1" gate="G$1" pin="13-SCK/LED"/>
 <wire x1="180.975" y1="-1.27" x2="180.975" y2="16.51" width="0.1524" layer="91"/>
 <wire x1="180.975" y1="16.51" x2="149.86" y2="16.51" width="0.1524" layer="91"/>
 <label x="180.975" y="-1.27" size="1.778" layer="95"/>
+<pinref part="P3" gate="A" pin="5"/>
 </segment>
 </net>
 <net name="BATT-" class="1">
@@ -25296,18 +25376,14 @@ Micropower Regulators, fixed</description>
 <pinref part="SUPPLY3" gate="1" pin="V+"/>
 <wire x1="-130.81" y1="105.41" x2="-125.73" y2="105.41" width="0.1524" layer="91"/>
 <wire x1="-125.73" y1="110.49" x2="-125.73" y2="105.41" width="0.1524" layer="91"/>
-<wire x1="-125.73" y1="105.41" x2="-39.37" y2="105.41" width="0.1524" layer="91"/>
+<wire x1="-125.73" y1="105.41" x2="-63.5" y2="105.41" width="0.1524" layer="91"/>
 <junction x="-125.73" y="105.41"/>
 <pinref part="U2" gate="G$1" pin="VBUS"/>
-<wire x1="-81.28" y1="69.85" x2="-69.85" y2="69.85" width="0.1524" layer="91"/>
-<wire x1="-69.85" y1="69.85" x2="-39.37" y2="69.85" width="0.1524" layer="91"/>
+<wire x1="-81.28" y1="69.85" x2="-63.5" y2="69.85" width="0.1524" layer="91"/>
 <pinref part="U2" gate="G$1" pin="IN+"/>
 <wire x1="-116.84" y1="59.69" x2="-125.73" y2="59.69" width="0.1524" layer="91"/>
-<wire x1="-125.73" y1="59.69" x2="-125.73" y2="96.52" width="0.1524" layer="91"/>
-<wire x1="-125.73" y1="96.52" x2="-69.85" y2="96.52" width="0.1524" layer="91"/>
-<wire x1="-69.85" y1="96.52" x2="-69.85" y2="69.85" width="0.1524" layer="91"/>
-<junction x="-69.85" y="69.85"/>
-<wire x1="-39.37" y1="69.85" x2="-39.37" y2="105.41" width="0.1524" layer="91"/>
+<wire x1="-125.73" y1="59.69" x2="-125.73" y2="105.41" width="0.1524" layer="91"/>
+<wire x1="-63.5" y1="69.85" x2="-63.5" y2="105.41" width="0.1524" layer="91"/>
 <wire x1="-130.81" y1="105.41" x2="-130.81" y2="123.19" width="0.1524" layer="91"/>
 <wire x1="-130.81" y1="123.19" x2="-180.34" y2="123.19" width="0.1524" layer="91"/>
 <junction x="-130.81" y="105.41"/>
@@ -25334,8 +25410,8 @@ Micropower Regulators, fixed</description>
 <net name="N$1" class="0">
 <segment>
 <pinref part="R7" gate="G$1" pin="2"/>
+<wire x1="-66.04" y1="-43.815" x2="-66.04" y2="-50.8" width="0.1524" layer="91"/>
 <pinref part="C1" gate="G$1" pin="1"/>
-<wire x1="-66.04" y1="-43.815" x2="-66.04" y2="-46.355" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$2" class="0">
@@ -25407,6 +25483,10 @@ Micropower Regulators, fixed</description>
 <segment>
 <pinref part="U$1" gate="G$1" pin="3V3-3"/>
 <wire x1="134.62" y1="80.01" x2="134.62" y2="85.09" width="0.1524" layer="91"/>
+<pinref part="P3" gate="A" pin="6"/>
+<wire x1="186.69" y1="1.27" x2="184.15" y2="1.27" width="0.1524" layer="91"/>
+<wire x1="184.15" y1="1.27" x2="184.15" y2="85.09" width="0.1524" layer="91"/>
+<wire x1="184.15" y1="85.09" x2="134.62" y2="85.09" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="+3.3V" class="0">
@@ -25414,7 +25494,7 @@ Micropower Regulators, fixed</description>
 <label x="224.79" y="49.53" size="1.778" layer="95"/>
 <label x="49.53" y="177.8" size="1.778" layer="95"/>
 <wire x1="62.23" y1="182.88" x2="62.23" y2="177.8" width="0.1524" layer="91"/>
-<wire x1="62.23" y1="177.8" x2="62.23" y2="160.02" width="0.1524" layer="91"/>
+<wire x1="62.23" y1="177.8" x2="62.23" y2="162.56" width="0.1524" layer="91"/>
 <wire x1="62.23" y1="182.88" x2="232.41" y2="182.88" width="0.1524" layer="91"/>
 <pinref part="P1" gate="G$1" pin="2"/>
 <wire x1="238.76" y1="-96.52" x2="238.76" y2="-91.44" width="0.1524" layer="91"/>
@@ -25431,7 +25511,6 @@ Micropower Regulators, fixed</description>
 <junction x="271.78" y="-91.44"/>
 <label x="287.02" y="-91.44" size="1.778" layer="95"/>
 <junction x="238.76" y="-91.44"/>
-<pinref part="C4" gate="G$1" pin="1"/>
 <wire x1="232.41" y1="44.45" x2="232.41" y2="182.88" width="0.1524" layer="91"/>
 <wire x1="232.41" y1="44.45" x2="232.41" y2="10.16" width="0.1524" layer="91"/>
 <wire x1="232.41" y1="10.16" x2="232.41" y2="-91.44" width="0.1524" layer="91"/>
@@ -25445,13 +25524,14 @@ Micropower Regulators, fixed</description>
 <pinref part="U$8" gate="G$1" pin="SENSE"/>
 <wire x1="46.99" y1="177.8" x2="52.07" y2="177.8" width="0.1524" layer="91"/>
 <junction x="62.23" y="177.8"/>
-<pinref part="C3" gate="G$1" pin="1"/>
 <wire x1="52.07" y1="177.8" x2="62.23" y2="177.8" width="0.1524" layer="91"/>
-<wire x1="52.07" y1="175.895" x2="52.07" y2="177.8" width="0.1524" layer="91"/>
 <junction x="52.07" y="177.8"/>
+<wire x1="52.07" y1="175.26" x2="52.07" y2="177.8" width="0.1524" layer="91"/>
 <wire x1="248.92" y1="10.16" x2="232.41" y2="10.16" width="0.1524" layer="91"/>
 <junction x="232.41" y="10.16"/>
 <pinref part="P16" gate="G$1" pin="2"/>
+<pinref part="C3" gate="G$1" pin="1"/>
+<pinref part="C4" gate="G$1" pin="+"/>
 </segment>
 </net>
 <net name="TXD" class="0">
@@ -25472,7 +25552,7 @@ Micropower Regulators, fixed</description>
 <label x="242.57" y="41.91" size="1.778" layer="95"/>
 </segment>
 </net>
-<net name="N$9" class="0">
+<net name="SHDN" class="0">
 <segment>
 <pinref part="U$1" gate="G$1" pin="6-OUT1D"/>
 <wire x1="149.86" y1="6.35" x2="167.64" y2="6.35" width="0.1524" layer="91"/>
@@ -25481,14 +25561,19 @@ Micropower Regulators, fixed</description>
 <wire x1="5.08" y1="129.54" x2="167.64" y2="129.54" width="0.1524" layer="91"/>
 <pinref part="U$8" gate="G$1" pin="SHDN"/>
 <wire x1="13.97" y1="165.1" x2="5.08" y2="165.1" width="0.1524" layer="91"/>
+<label x="5.08" y="166.37" size="1.778" layer="95"/>
+<pinref part="R6" gate="G$1" pin="1"/>
+<wire x1="5.08" y1="165.1" x2="1.27" y2="165.1" width="0.1524" layer="91"/>
+<wire x1="1.27" y1="165.1" x2="1.27" y2="156.21" width="0.1524" layer="91"/>
+<junction x="5.08" y="165.1"/>
 </segment>
 </net>
 <net name="N$8" class="0">
 <segment>
-<pinref part="C3" gate="G$1" pin="2"/>
-<wire x1="52.07" y1="168.275" x2="52.07" y2="165.1" width="0.1524" layer="91"/>
 <pinref part="U$8" gate="G$1" pin="BYP"/>
+<wire x1="52.07" y1="167.64" x2="52.07" y2="165.1" width="0.1524" layer="91"/>
 <wire x1="52.07" y1="165.1" x2="46.99" y2="165.1" width="0.1524" layer="91"/>
+<pinref part="C3" gate="G$1" pin="2"/>
 </segment>
 </net>
 </nets>

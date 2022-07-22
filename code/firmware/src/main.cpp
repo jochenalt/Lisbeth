@@ -6,9 +6,8 @@
 
 #include "PatternBlinker.h"
 #include <ODrive.h>
-#include <INA226.h>
 #include <IMUManager.h>
-#include <PowerManager.h>
+#include <MotorPowerManager.h>
 
 //  baud rate of Serial0 that is used for logging 
 #define LOG_BAUD_RATE 115200
@@ -38,8 +37,6 @@ bool commandPending = false;                                // true if command p
 String command;                                             // current command coming in
 uint32_t commandLastChar_us = 0;                             // time when the last character came in 
 
-// Power sensor is done via an INA226 sensor
-INA226 INA(0x40);
 
 // Teensy LED blinker
 static uint8_t DefaultBlinkPattern[3] = { 0b11001000,0b00001100,0b10000000}; // nice pattern. Each digit represents 50ms
@@ -57,7 +54,7 @@ uint8_t error = NO_ERROR;
 // manage the IMU
 IMUManager imuMgr;
 // manage the power MOSFETs giving power to the motors
-PowerManager powerManager(PIN_MOTOR_POWER);
+MotorPowerManager powerManager(PIN_MOTOR_POWER);
 
 // yield is called randomly by delay, approx. every ms
 // we only allow harmless things happening there (e.g. the blinker)
@@ -122,15 +119,9 @@ void setup() {
 	Serial.println("EEPROM: setup");
   setupConfiguration();
 
-  // setup the current/voltage sensor
-	Serial.println("PMS: setup");
-  Wire.begin();
-  if (!INA.begin() )
-  {
-    Serial.println("could not connect to power sensor.");
-  }
-  INA.reset();
-  INA.setMaxCurrentShunt(3, 0.1);
+  // setup power manager
+  powerManager.setup();
+
 
   // initialise IMU Manager 
 	Serial.println("IMU: setup");
@@ -285,7 +276,6 @@ void executeCommand() {
           imuMgr.startNorthCalibration();
           break;
       }
-
       case 'I': {
           // setup IMU
           println("power down of IMU.");
@@ -301,6 +291,9 @@ void executeCommand() {
           break;
       }
       case 'm' :{
+        // print power measurement
+        powerManager.print();
+        break;
       }
       case 10:
 			case 13:
@@ -405,40 +398,4 @@ void loop() {
 
   // wait for any pending commands to be executed
   powerManager.loop();
-
-  static Measurement m;
-  m.tick();
-  static TimePassedBy printTimer (1000);
-  if (printTimer.isDue()) {
-    /*
-    if (imu.isNewPackageAvailable()) {
-         float f = imu.getMeasuremt().getAvrFreq();
-         float d = imu.getMeasuremt().getAvrDeviation()*100.0;;
-         println("freq %.1f %.2f%%", f,d);
-         imu.printData();
-
-          f = m.getAvrFreq();
-          d = m.getAvrDeviation()*100.0;;
-         println("loop %.1f %.2f%%", f,d);
-
-         Serial.println("\nBUS\tSHUNT\tCURRENT\tPOWER");
-    }
-    */
-   /*
-    uint32_t start = micros(); 
-    Serial.print(INA.getShuntVoltage_mV(), 3);
-    Serial.print("mV\t ");
-    Serial.print(micros()-start);
-    Serial.println(" us");
-
-    Serial.print(INA.getBusVoltage(), 3);
-    Serial.print("V\t");
-    Serial.print(INA.getCurrent_mA(), 3);
-    Serial.print("mA\t");
-    Serial.print(INA.getPower_mW(), 3);
-    Serial.print("mW\t");
-    Serial.println();
-    */
-  }
-  
 }

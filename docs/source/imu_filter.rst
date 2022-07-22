@@ -41,8 +41,8 @@ Sensor fusion means merging the drifty gyro data with the noisy acceleration dat
 
 
 
-
 .. list-table:: **Conventions**:
+   :widths: 25 75
 
    * - :math:`\bar{q} = \begin{bmatrix}q_{0} & q_{1} & q_{2 } & q_{3} \end{bmatrix}^{T}`
      - Quaternion representing the IMU's pose in the world frame. :math:`\left \| \bar{q} \right \| = 1`
@@ -194,9 +194,9 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
    * - 
      - **Classic Kalman variables**
    * - :math:`\hat{x}(k|k-1)`
-     - Prediction of the state variable :math:`x(k)` based on information we know from the previous sampling time (i.e. the estimated state variable  :math:`\hat{x}(k-1)` and :math:`u(k-1)`). We'll get these values at the predciction step, calculated based on the non-linear function :math:`f` defined above. 
+     - Prediction of the state variable :math:`x(k)` based on information we know from the previous sampling time (i.e. the estimated state variable  :math:`\hat{x}(k-1)` and :math:`u(k-1)`). We'll get these values at the predciction step, calculated based on the non-linear function :math:`f` defined above. The state variable is a quaternion representing the pose of the IMU. 
    * - :math:`\hat{x}(k|k)`
-     - The updated prediction of the state variable :math:`x(k)` by adding information we know from this sampling time (i.e. the observed variable value :math:`y(k)`) We will get these values at correction step, calculated basied on the Kalman gain. *Note: In the next loop,* :math:`\hat{x}(k|k)` *will become* :math:`\hat{x}(k-1)`
+     - The updated prediction of the state variable :math:`x(k)` by adding information from  :math:`y(k)` which is the acceleration and magnetometer data. We will fetch these values at the correction step. *Note: In the next loop,* :math:`\hat{x}(k|k)` *will become* :math:`\hat{x}(k-1)`
    * - :math:`P(k|k-1)`
      - Covriance matrix of the predicted state variable :math:`x(k)`, defined like :math:`\hat{x}(k|k-1)` above
    * - :math:`P(k|k)`
@@ -208,7 +208,7 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
    * - :math:`R_{n}`
      - Measurement noise covariance matrix built as diagonal matrix around :math:`n_{k}`.
    * - 
-     - **Sigma-point variables, in the implementation we use :math:`(2N+1)` points**
+     - **Sigma-point variables, in the implementation we use** :math:`(2N+1)` **points**
    * - :math:`X(k-1)`
      - The sigma-points constructed from :math:`\hat{x}(k-1)` and  :math:`P(k-1)`
    * - :math:`X(k)`
@@ -235,7 +235,7 @@ Then, the UKF algorithm works like this:
 
 2. Set :math:`P(k=0) = E\left [(x(k=0) - \hat{x}(k=0))(x(k=0) - \hat{x}(k=0) )^{T} \right ]` 
 
-3. Set noice covariance matrices of the gyro :math:`R_{v} = diag(R_{v}, R_{v},R_{v})`, and the noise of our gyro being :math:`10^{-7}` according to the datasheet.
+3. Set noise covariance matrices of the gyro :math:`R_{v} = diag(R_{v}, R_{v},R_{v})`, and the noise of our gyro being :math:`10^{-7}` according to the datasheet.
 
 4.  Set noice covariance matrices of accelerometer and magnetometer to :math:`R_{n} = diag(R_{acc1}, R_{acc},R_{acc}, R_{mag}, R_{max},R_{mag})`, with :math:`R_{acc} = 0.00000316` and :math:`R_{mag} = 0.00000316`, again from the datasheet.
 
@@ -261,7 +261,7 @@ Then, the UKF algorithm works like this:
 
 	   W_{c} = \begin{bmatrix}\frac{\lambda}{N+\lambda} + (1-\alpha^{2} + \beta) & \frac{1}{2(N+\lambda)}  & ... & \frac{1}{2(N+\lambda)} \end{bmatrix} , dim(W_{c}) = 7
 
-**The following has to be done repeatedly whenver a new data pointis is sampled**
+**The following has to be done repeatedly whenever a new data point is sampled**
 
 #. Construct the sigma-points:
 
@@ -271,7 +271,7 @@ Then, the UKF algorithm works like this:
 
 #. Do the unscented Transformation of the sigma points :math:`X(k-1)`
 
-   Propagate :math:`X(k-1)` through non-linear function :math:`f`. :math:`f` is applied 7 times to the column submaterix of :math:`X(k-1)`
+   Propagate :math:`X(k-1)` through non-linear function :math:`f`. :math:`f` is applied 7 times to the column submatrix of :math:`X(k-1)`
 
    .. math::
 	
@@ -295,7 +295,7 @@ Then, the UKF algorithm works like this:
 
 #. Do the unscented Transformation of the sigma-points :math:`X(k)`
 
-   Propagate :math:`X(k)` through non-linear function :math:`h`. (:math:`h` is applied 7 times to the column submaterix of :math:`X(k)`)
+   Propagate :math:`X(k)` through non-linear function :math:`h`. (:math:`h` is applied 7 times to the column submatrix of :math:`X(k)`)
 
    .. math::
 	
