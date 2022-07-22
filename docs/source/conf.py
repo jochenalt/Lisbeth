@@ -48,4 +48,4 @@ html_css_files = [
 ]
 
 
-html_theme = "pyramid"
+html_theme = "alabaster"

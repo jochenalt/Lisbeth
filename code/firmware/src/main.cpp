@@ -122,7 +122,6 @@ void setup() {
   // setup power manager
   powerManager.setup();
 
-
   // initialise IMU Manager 
 	Serial.println("IMU: setup");
   imuMgr.setup(&Serial7, 1000,config.imu);
@@ -130,9 +129,6 @@ void setup() {
   // setup IMU for automated start (which will happen during the loop)
   imuMgr.powerUp();
 
-  // the motor MOSFETs are controlled by this PIN
-  pinMode(PIN_MOTOR_POWER, OUTPUT);
-  digitalWrite(PIN_MOTOR_POWER, LOW);
 
   // setup up all ODrives, motors and encoders
 	// Serial.println("setup.ODrives");
@@ -219,6 +215,10 @@ void printHelp() {
   println("   c       - calibrate hard iron");
   println("   C       - calibrate north");
   println("   l       - log on/off");
+  println("   m       - show voltage/current");
+  println("   p       - turn motorpower on");
+  println("   P       - turn motorpower off");
+
 };
 
 inline void addCmd(char ch) {
@@ -295,6 +295,17 @@ void executeCommand() {
         powerManager.print();
         break;
       }
+      case 'p' :{
+        // turn motor power on
+        powerManager.powerUp();
+        break;
+      }
+      case 'P' :{
+        // turn motor power off
+        powerManager.powerDown();
+        break;
+      }
+
       case 10:
 			case 13:
 				if (command.startsWith("c")) {

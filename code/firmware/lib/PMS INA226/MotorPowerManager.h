@@ -19,6 +19,10 @@ class MotorPowerManager {
   MotorPowerManager(uint8_t pin):power_pin(pin) {};
 
   bool setup() {
+    // the motor MOSFETs are controlled by this PIN
+    pinMode(power_pin, OUTPUT);
+    digitalWrite(power_pin, LOW);
+
 	  Serial.println("PMS: setup");
     Wire.begin();
     if (!device.begin() )
@@ -27,27 +31,57 @@ class MotorPowerManager {
       return false;
     }
     device.reset();
-    device.setMaxCurrentShunt(3, 0.1);
+    device.setMaxCurrentShunt(10, 0.01);
+
+
     return true;
+  }
+
+  float getVoltage() {
+      float v = device.getBusVoltage();
+      return v;
+  }
+
+  float getCurrent() {
+      float a = device.getCurrent();
+      if (a<0)
+        a = 0;
+      return a;
+  }
+
+  float getPower() {
+      return getCurrent() * getVoltage();
   }
 
   void loop() {
     switch (motorPowerState) {
       case MOTOR_UNPOWERED:
         if (cmdPowerUp) {
-          digitalWrite(power_pin, HIGH);
-          warmingStart_ms = millis();
-          motorPowerState = MOTOR_POWERED_UP;
-          cmdPowerUp = false;
+            println("PMS: turn motor power on");
+            digitalWrite(power_pin, HIGH);
+            warmingStart_ms = millis();
+            motorPowerState = MOTOR_POWERED_UP;
+            cmdPowerUp = false;
         } 
+        if ( cmdPowerDown) {
+          println("PMS: power is already off");
+          cmdPowerDown = false;
+        }
+
         break;
       case MOTOR_POWERED_UP:
           if (cmdPowerDown) {
-            digitalWrite(power_pin, LOW);
-            motorPowerState = MOTOR_COOLING_DOWN;
-            warmingStart_ms = millis();
-            cmdPowerDown = false;
+              println("PMS: turn motor power off");
+              digitalWrite(power_pin, LOW);
+              motorPowerState = MOTOR_COOLING_DOWN;
+              warmingStart_ms = millis();
+              cmdPowerDown = false;
           }
+          if ( cmdPowerUp) {
+            println("PMS: power is already on");
+            cmdPowerUp = false;
+          }
+
           break;
       case MOTOR_COOLING_DOWN:
           if (millis() - warmingStart_ms > necessary_break_ms) {
@@ -59,17 +93,23 @@ class MotorPowerManager {
           break;
     }
   }
-  void powerUp() { cmdPowerUp = true;}
-  void powerDown() { cmdPowerDown = true;}
+  void powerUp() { 
+    cmdPowerUp = true;
+    Serial.println("PMS: power up command");
+  }
+  void powerDown() { 
+    cmdPowerDown = true;
+    Serial.println("PMS: power down command");
+  }
 
   void print() {
     Serial.println("Power Management");
-    float v = device.getBusVoltage();
+    float v = getVoltage();
     println("   Voltage:  %0.2fV",v);
-    float a = device.getCurrent_mA();
+    float a = getCurrent() * 1000.0;
     println("   Current:  %0.2fmA",a);
-    float w = device.getPower_mW();
-    println("   Power:    %0.2fmW",w);
+    float w = getPower();
+    println("   Power:    %0.2fW",w);
   }
 
   private:

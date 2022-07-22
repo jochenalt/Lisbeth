@@ -60,7 +60,7 @@ bool INA226::isConnected()
 float INA226::getShuntVoltage()
 {
   int16_t val = _readRegister(INA226_SHUNT_VOLTAGE);
-  return val * 2.5e-6;   // fixed 2.50 uV
+   return val * 2.5e-6;   // fixed 2.50 uV
 }
 
 
