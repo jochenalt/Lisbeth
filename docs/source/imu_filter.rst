@@ -232,9 +232,13 @@ Then, the UKF algorithm works like this:
 
 
 1. Set :math:`\hat{x}(k=0) = E\left [x(k=0)  \right ]` 
+
 2. Set :math:`P(k=0) = E\left [(x(k=0) - \hat{x}(k=0))(x(k=0) - \hat{x}(k=0) )^{T} \right ]` 
+
 3. Set noice covariance matrices of the gyro :math:`R_{v} = diag(R_{v}, R_{v},R_{v})`, and the noise of our gyro being :math:`10^{-7}` according to the datasheet.
+
 4.  Set noice covariance matrices of accelerometer and magnetometer to :math:`R_{n} = diag(R_{acc1}, R_{acc},R_{acc}, R_{mag}, R_{max},R_{mag})`, with :math:`R_{acc} = 0.00000316` and :math:`R_{mag} = 0.00000316`, again from the datasheet.
+
 5. Calculate :math:`\alpha, \kappa,\beta, \gamma` constants, first order weights :math:`W_{m}` and second order weights :math:`W_{c}`
 
 .. math::
@@ -257,7 +261,7 @@ Then, the UKF algorithm works like this:
 
 	W_{c} = \begin{bmatrix}\frac{\lambda}{N+\lambda} + (1-\alpha^{2} + \beta) & \frac{1}{2(N+\lambda)}  & ... & \frac{1}{2(N+\lambda)} \end{bmatrix} , dim(W_{c}) = 7
 
-**Loop:**
+**The following has to be done repeatedly whenver new data comes in**
 
 1. Construct the sigma-points:
 
@@ -267,19 +271,19 @@ Then, the UKF algorithm works like this:
 
 2. Do the Unscented Transformation of the sigma points :math:`X(k-1)`
 
-   Propagate :math:`X(k-1)` through non-linear function :math:`f`. (:math:`f` is applied 7 times to the column submaterix of :math:`X(k-1)`)
+   Propagate :math:`X(k-1)` through non-linear function :math:`f`. :math:`f` is applied 7 times to the column submaterix of :math:`X(k-1)`
 
 .. math::
 	
 	 X(k) = f(X(k-1))
 
-	 Calculate :math:`\hat{x}(k|k-1)` as a weighted mean of :math:`X(k-1)`:
+Calculate :math:`\hat{x}(k|k-1)` as a weighted mean of :math:`X(k-1)`:
 
 .. math::
 	
 	 \hat{x}(k|k-1) = \sum_{i=1}^{2N+1=7} (W_{m,i} X_{i}(k))
 
-	Calculate the covariance matrix of the predicted state variable :math:`x(k)`. This operation is substracting the submatrix of :math:`X(k)` by :math:`\hat{x}(k)` repeated 2N+1=7 times 
+Calculate the covariance matrix of the predicted state variable :math:`x(k)`. This operation is substracting the submatrix of :math:`X(k)` by :math:`\hat{x}(k)` repeated 2N+1=7 times 
 
 .. math::
 	
@@ -292,19 +296,19 @@ Then, the UKF algorithm works like this:
 
 3. Do the Unscented Transformation of the sigma-points :math:`X(k)`
 
-	Propagate :math:`X(k)` through non-linear function :math:`h`. (:math:`h` is applied 7 times to the column submaterix of :math:`X(k)`)
+Propagate :math:`X(k)` through non-linear function :math:`h`. (:math:`h` is applied 7 times to the column submaterix of :math:`X(k)`)
 
 .. math::
 	
 	 Y(k) = h(X(k))
 
-	 Calculate :math:`\hat{y}(k|k-1)` as a weighted mean of :math:`Y(k)`:
+Calculate :math:`\hat{y}(k|k-1)` as a weighted mean of :math:`Y(k)`:
 
 .. math::
 	
 	 \hat{y}(k|k-1) = \sum_{i=1}^{2N+1=7} (W_{m,i} Y_{i}(k))
 
-	Calculate the covariance matrix of the predicted measurement :math:`y(k)`. This operation is substracting the submatrix of :math:`Y(k)` by :math:`\hat{y}(k)` repeated 2N+1=7 times 
+Calculate the covariance matrix of the predicted measurement :math:`y(k)`. This operation is substracting the submatrix of :math:`Y(k)` by :math:`\hat{y}(k)` repeated 2N+1=7 times 
 
 .. math::
 	
