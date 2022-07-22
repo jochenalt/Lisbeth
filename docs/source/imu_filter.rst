@@ -192,13 +192,13 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
 
 First some more definitions:
 
-**Typical Kalman variables**
+
 .. list-table:: 
    :header-rows: 1
    :widths: 25 75
  
-   * - Symbol
-     - Meaning
+   * - Classic Kalman variables
+     - 
    * - :math:`\hat{x}(k|k-1)`
      - Prediction of the state variable :math:`x(k)` based on information we know from the previous sampling time (i.e. the estimated state variable  :math:`\hat{x}(k-1)` and :math:`u(k-1)`). We'll get these values at the predciction step, calculated based on the non-linear function :math:`f` defined above. 
    * - :math:`\hat{x}(k|k)`
@@ -214,11 +214,13 @@ First some more definitions:
    * - :math:`\R_{n}`
      - Measurement noise covariance matrix built as diagonal matrix around :math:`n_{k}`.
 
-**Sigma-point variables, in the implementation we use :math:`(2N+1)` points**
+
 .. list-table:: 
-   :header-rows: 0
+   :header-rows: 1
    :widths: 25 75 
 
+   * - Sigma-point variables, in the implementation we use :math:`(2N+1)` points
+     -
    * - :math:`X(k-1)`
      - The sigma-points constructed from :math:`\hat{x}(k-1)` and  :math:`P(k-1)`
    * - :math:`X(k)`
@@ -226,11 +228,12 @@ First some more definitions:
    * - :math:`Y(k)`
      - The sigma-points  :math:`X(k)` propagated by non-linear function :math:`h`
 
-**Supporting variables:**
 .. list-table:: 
-   :header-rows: 0
+   :header-rows: 1
    :widths: 25 75 
 
+   * - Supporting variables:
+     - 
    * - :math:`P_{R}(k)`
      - Covariance matrix of the predicted measurement  :math:`y(k)`
    * - :math:`P_{XY}(k)`
