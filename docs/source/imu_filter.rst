@@ -289,64 +289,59 @@ Then, the UKF algorithm works like this:
 	
 	    \Delta X = \left [ X(k) - \hat{x}(k|k-1) \right ]
 
-
    .. math::
 	
 	    P(k|k-1) = \sum_{i=1}^{2N+1=7} (W_{c,i} \left [\Delta X  \right ] \left [ \Delta X \right ]^{T} + R_{v})
 
-3. Do the unscented Transformation of the sigma-points :math:`X(k)`
+#. Do the unscented Transformation of the sigma-points :math:`X(k)`
 
-Propagate :math:`X(k)` through non-linear function :math:`h`. (:math:`h` is applied 7 times to the column submaterix of :math:`X(k)`)
+   Propagate :math:`X(k)` through non-linear function :math:`h`. (:math:`h` is applied 7 times to the column submaterix of :math:`X(k)`)
 
-.. math::
+   .. math::
 	
-	 Y(k) = h(X(k))
+	    Y(k) = h(X(k))
 
-Calculate :math:`\hat{y}(k|k-1)` as a weighted mean of :math:`Y(k)`:
+   Calculate :math:`\hat{y}(k|k-1)` as a weighted mean of :math:`Y(k)`:
 
-.. math::
+   .. math::
 	
-	 \hat{y}(k|k-1) = \sum_{i=1}^{2N+1=7} (W_{m,i} Y_{i}(k))
+	    \hat{y}(k|k-1) = \sum_{i=1}^{2N+1=7} (W_{m,i} Y_{i}(k))
 
-Calculate the covariance matrix of the predicted measurement :math:`y(k)`. This operation is substracting the submatrix of :math:`Y(k)` by :math:`\hat{y}(k)` repeated 2N+1=7 times 
+   Calculate the covariance matrix of the predicted measurement :math:`y(k)`. This operation is substracting the submatrix of :math:`Y(k)` by :math:`\hat{y}(k)` repeated 2N+1=7 times 
 
-.. math::
+   .. math::
 	
-	 \Delta Y = \left [ Y(k) - \hat{y}(k|k-1) \right ]
+	    \Delta Y = \left [ Y(k) - \hat{y}(k|k-1) \right ]
 
 
-.. math::
+   .. math::
 	
-	 P_{y}(k) = \sum_{i=1}^{2N+1=7} (W_{c,i} \left [\Delta Y  \right ] \left [ \Delta Y \right ]^{T} + R_{n})
+	    P_{y}(k) = \sum_{i=1}^{2N+1=7} (W_{c,i} \left [\Delta Y  \right ] \left [ \Delta Y \right ]^{T} + R_{n})
 
-4. Calculate cross-covariance matrix:
+#. Calculate cross-covariance matrix:
 
-.. math::
+   .. math::
 	
-	 P_{XY}(k) = \sum_{i=1}^{2N+1=7} (W_{c,i} \left [\Delta X  \right ] \left [ \Delta Y \right ]^{T})
+	    P_{XY}(k) = \sum_{i=1}^{2N+1=7} (W_{c,i} \left [\Delta X  \right ] \left [ \Delta Y \right ]^{T})
 
 
-5. Calculate the Kalman gain:
+#. Calculate the Kalman gain:
 
-.. math::
+   .. math::
 	
-	 K = P_{XY}(k) (P_{Y}(k))^{-1}
+	    K = P_{XY}(k) (P_{Y}(k))^{-1}
 
-6. Update the estimated state variable
+#. Update the estimated state variable
 
-.. math::
+   .. math::
 	
-	 \hat{x}(k|k) = \hat{x}(k|k-1) + K(y(k)-\hat{y}(k))
+	    \hat{x}(k|k) = \hat{x}(k|k-1) + K(y(k)-\hat{y}(k))
 
 
-7. Update the covariance matrix:
+#. Update the covariance matrix:
 
-.. math::
+   .. math::
 
-	 P(k|k) = \hat{x}(k|k-1)  K(y(k) - \hat{y}(k))
+	    P(k|k) = \hat{x}(k|k-1)  K(y(k) - \hat{y}(k))
 
-
-.. image:: /images/UKF_Calculation.png
-	:width: 700
-	:alt: Conventions
 
