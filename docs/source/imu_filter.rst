@@ -233,27 +233,27 @@ Then, the UKF algorithm works like this:
 
 1. Set :math:`\hat{x}(k=0) = E\left [x(k=0)  \right ]` 
 2. Set :math:`P(k=0) = E\left [(x(k=0) - \hat{x}(k=0))(x(k=0) - \hat{x}(k=0) )^{T} \right ]` 
-3. Set noice covariance matrices of the gyro :math:`R_{v} = diag(R_{v1}, R_{v2},..,R_{vM})`, with M=3, and the noise of our gyro being  :math:`10^{-7}`, according to the datasheet.
-4.  Set noice covariance matrices of accelerometer and magnetometer to :math:`R_{n} = diag(R_{acc1}, R_{acc2},R_{acc3}, R_{mag1}, R_{max2},R_{mag3})`, with :math:`R_{acc} = 0.00000316` and `:math:`R_{mag} = 0.00000316`, again these numbers are coming from the datasheet.
+3. Set noice covariance matrices of the gyro :math:`R_{v} = diag(R_{v1}, R_{v2},R_{v3})`, and the noise of our gyro being :math:`10^{-7}` according to the datasheet.
+4.  Set noice covariance matrices of accelerometer and magnetometer to :math:`R_{n} = diag(R_{acc1}, R_{acc2},R_{acc3}, R_{mag1}, R_{max2},R_{mag3})`, with :math:`R_{acc} = 0.00000316` and :math:`R_{mag} = 0.00000316`, again from the datasheet.
 5. Calculate :math:`\alpha, \kappa,\beta, \gamma` constants, first order weights :math:`W_{m}` and second order weights :math:`W_{c}`
 
-..math::
+.. math::
 
  	\lambda = \lambda = \alpha^{2} (N + \kappa) -N
 
-..math::
+.. math::
 
  	\gamma = \sqrt{N+\alpha}
 
-..math::
+.. math::
 
  	W_{m}= \gamma = \sqrt{N+\alpha}
 
-..math::
+.. math::
 
 	W_{m} = \begin{bmatrix}\frac{\lambda}{N+\lambda} & \frac{1}{2(N+\lambda)}  & ... & \frac{1}{2(N+\lambda)} \end{bmatrix} , DIM(W_{m}) = 2N+1 
 
-..math::
+.. math::
 
 	W_{c} = \begin{bmatrix}\frac{\lambda}{N+\lambda} + (1-\alpha^{2} + \beta) & \frac{1}{2(N+\lambda)}  & ... & \frac{1}{2(N+\lambda)} \end{bmatrix} , DIM(W_{c}) = 2N+1 
 
