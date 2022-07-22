@@ -192,13 +192,53 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
 
 First some more definitions:
 
-.. list-table:: Unscented Kalman Filter Conventions
+**Typical Kalman variables**
+.. list-table:: 
    :header-rows: 1
+   :widths: 25 75
  
    * - Symbol
      - Meaning
-   * - :math:`\hat{x}(x|x-1)`
-     - prediction of the state variable :math:`x(k)` based on information we know from the previous sampling time (i.e. the observed variable value :math:`y(k)`). We'll get these  values t the correction step, calculated based on the Kalman gain. *Note: At the next sampling time,* :math:`\hat{x}(k|k)` *will become* :math:`\hat{x}(k-1)`
+   * - :math:`\hat{x}(k|k-1)`
+     - Prediction of the state variable :math:`x(k)` based on information we know from the previous sampling time (i.e. the estimated state variable  :math:`\hat{x}(k-1)` and :math:`u(k-1)`). We'll get these values at the predciction step, calculated based on the non-linear function :math:`f` defined above. 
+   * - :math:`\hat{x}(k|k)`
+     - The updated prediction of the state variable :math:`x(k)` by adding information we know from this sampling time (i.e. the observed variable value :math:`y(k)`) We will get these values at correction step, calculated basied on the Kalman gain. *Note: At the next sampling time,* :math:`\hat{x}(k|k)` *will become* :math:`\hat{x}(k-1)`
+   * - :math:`P(k|k-1)`
+     - Covriance matrix of the predicted state variable :math:`x(k)`, defined like :math:`\hat{x}(k|k-1)` above
+   * - :math:`P(k|k)`
+     - Covariance matrix of the updated state variable :math:`x(k)`, defined like :math:`\hat{x}(k|k)` above
+   * - :math:`\hat{y}(k)`
+     - Prediction of the output/measurement variable :math:`y(k)`.
+   * - :math:`\R_{v}`
+     - Process noise covariance matrix built as diagonal matrix round :math:`v_{k}` information.
+   * - :math:`\R_{n}`
+     - Measurement noise covariance matrix built as diagonal matrix around :math:`n_{k}`.
+
+**Sigma-point variables, in the implementation we use :math:`(2N+1)` points**
+.. list-table:: 
+   :header-rows: 0
+   :widths: 25 75 
+
+   * - :math:`X(k-1)`
+     - The sigma-points constructed from :math:`\hat{x}(k-1)` and  :math:`P(k-1)`
+   * - :math:`X(k)`
+     - The sigma-points  :math:`X(k-1)` propagated by non-linear function :math:`f`
+   * - :math:`Y(k)`
+     - The sigma-points  :math:`X(k)` propagated by non-linear function :math:`h`
+
+**Supporting variables:**
+.. list-table:: 
+   :header-rows: 0
+   :widths: 25 75 
+
+   * - :math:`P_{R}(k)`
+     - Covariance matrix of the predicted measurement  :math:`y(k)`
+   * - :math:`P_{XY}(k)`
+     - Cross covariance matrix between predicted state variable :math:`x(k)` and predicted measurement :math:`x(k)`.
+   * - :math:`W_{m}`
+     - First order weights mnatrix.
+   * - :math:`W_{c}`
+     - Second order weights mnatrix.
 
 
 .. image:: /images/UKF_Definition.png
