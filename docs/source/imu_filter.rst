@@ -193,7 +193,26 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
 First some more definitions:
 
 
-.. list-table:: 
+.. list-table:: Conventions
+   :header-rows: 1
+
+   * - Symbol
+     - Meaning
+   * - :math:`\bar{q} = \begin{bmatrix}q_{0} & q_{1} & q_{2 } & q_{3} \end{bmatrix}^{T}`
+     - Quaternion representing the IMU's pose in the world frame. :math:`\left \| \bar{q} \right \| = 1`
+   * - :math:`\overline{\omega } =\begin{bmatrix} p & q & r \end{bmatrix}^{T}`
+     - angular rate of the gyro in [rad/s] in the IMUs frame
+   * - :math:`\overline{A} =\begin{bmatrix} a_{x} & a_{y} & a_{z} \end{bmatrix}^{T}`
+     - acceleration vector from sensor in [:math:`\frac{g}{s^{2}}`] in the IMUs frame
+   * - :math:`\overline{M} =\begin{bmatrix} m_{x} & m_{y} & m_{z} \end{bmatrix}^{T}`
+     - magnetic vector from magnetometer in [uT] (*micro Tesla*)in the IMUs frame
+   * - :math:`\overline{G} =\begin{bmatrix} 0 & 0 & g \end{bmatrix}^{T}`
+     - gravity vector in :math:`\begin{bmatrix}\frac{m}{s^{2}}\end{bmatrix}` in the earths/world frame 
+   * - :math:`\overline{B} =\begin{bmatrix} B_{0x} & B_{0y} & B_{0z} \end{bmatrix}^{T}`
+     - earths magnetic vector in [uT] in the earths/world frame
+
+
+.. list-table:: ""
    :header-rows: 1
    :widths: 25 75
  
@@ -215,7 +234,7 @@ First some more definitions:
      - Measurement noise covariance matrix built as diagonal matrix around :math:`n_{k}`.
 
 
-.. list-table:: 
+.. list-table:: '' # test
    :header-rows: 1
    :widths: 25 75 
 
@@ -228,7 +247,7 @@ First some more definitions:
    * - :math:`Y(k)`
      - The sigma-points  :math:`X(k)` propagated by non-linear function :math:`h`
 
-.. list-table:: 
+.. list-table:: ` `
    :header-rows: 1
    :widths: 25 75 
 
