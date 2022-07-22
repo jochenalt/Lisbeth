@@ -212,6 +212,7 @@ The algorithm as described in `A new extension to the Kalman filter <https://www
 
 
 .. list-table:: **Sigma-point variables, in the implementation we use (2N+1) points**
+   :widths: 25 75 
 
    * - :math:`X(k-1)`
      - The sigma-points constructed from :math:`\hat{x}(k-1)` and  :math:`P(k-1)`
