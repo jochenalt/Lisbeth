@@ -241,60 +241,60 @@ Then, the UKF algorithm works like this:
 
 5. Calculate :math:`\alpha, \kappa,\beta, \gamma` constants, first order weights :math:`W_{m}` and second order weights :math:`W_{c}`
 
-.. math::
+   .. math::
 
- 	\lambda = \lambda = \alpha^{2} (N + \kappa) -N
+ 	   \lambda = \lambda = \alpha^{2} (N + \kappa) -N
 
-.. math::
+   .. math::
 
- 	\gamma = \sqrt{N+\alpha}
+ 	   \gamma = \sqrt{N+\alpha}
 
-.. math::
+   .. math::
 
- 	W_{m}= \gamma = \sqrt{N+\alpha}
+ 	   W_{m}= \gamma = \sqrt{N+\alpha}
 
-.. math::
+   .. math::
 
-	W_{m} = \begin{bmatrix}\frac{\lambda}{N+\lambda} & \frac{1}{2(N+\lambda)}  & ... & \frac{1}{2(N+\lambda)} \end{bmatrix} , dim(W_{m}) = 7 
+	   W_{m} = \begin{bmatrix}\frac{\lambda}{N+\lambda} & \frac{1}{2(N+\lambda)}  & ... & \frac{1}{2(N+\lambda)} \end{bmatrix} , dim(W_{m}) = 7 
 
-.. math::
+   .. math::
 
-	W_{c} = \begin{bmatrix}\frac{\lambda}{N+\lambda} + (1-\alpha^{2} + \beta) & \frac{1}{2(N+\lambda)}  & ... & \frac{1}{2(N+\lambda)} \end{bmatrix} , dim(W_{c}) = 7
+	   W_{c} = \begin{bmatrix}\frac{\lambda}{N+\lambda} + (1-\alpha^{2} + \beta) & \frac{1}{2(N+\lambda)}  & ... & \frac{1}{2(N+\lambda)} \end{bmatrix} , dim(W_{c}) = 7
 
-**The following has to be done repeatedly whenver new data comes in**
+**The following has to be done repeatedly whenver a new data pointis is sampled**
 
-1. Construct the sigma-points:
+#. Construct the sigma-points:
 
-.. math::
+   .. math::
 
-	X(k-1) = \begin{bmatrix} \hat{x}(k-1) & \hat{x}(k-1) + \gamma \sqrt{P(k-1)}& \hat{x}(k-1) - \gamma \sqrt{P(k-1)} \end{bmatrix}
+	   X(k-1) = \begin{bmatrix} \hat{x}(k-1) & \hat{x}(k-1) + \gamma \sqrt{P(k-1)}& \hat{x}(k-1) - \gamma \sqrt{P(k-1)} \end{bmatrix}
 
-2. Do the Unscented Transformation of the sigma points :math:`X(k-1)`
+#. Do the unscented Transformation of the sigma points :math:`X(k-1)`
 
    Propagate :math:`X(k-1)` through non-linear function :math:`f`. :math:`f` is applied 7 times to the column submaterix of :math:`X(k-1)`
 
-.. math::
+   .. math::
 	
-	 X(k) = f(X(k-1))
+	    X(k) = f(X(k-1))
 
-Calculate :math:`\hat{x}(k|k-1)` as a weighted mean of :math:`X(k-1)`:
+   Calculate :math:`\hat{x}(k|k-1)` as a weighted mean of :math:`X(k-1)`:
 
-.. math::
+   .. math::
 	
-	 \hat{x}(k|k-1) = \sum_{i=1}^{2N+1=7} (W_{m,i} X_{i}(k))
+	    \hat{x}(k|k-1) = \sum_{i=1}^{2N+1=7} (W_{m,i} X_{i}(k))
 
-Calculate the covariance matrix of the predicted state variable :math:`x(k)`. This operation is substracting the submatrix of :math:`X(k)` by :math:`\hat{x}(k)` repeated 2N+1=7 times 
+   Calculate the covariance matrix of the predicted state variable :math:`x(k)`. This operation is substracting the submatrix of :math:`X(k)` by :math:`\hat{x}(k)` repeated 2N+1=7 times 
 
-.. math::
+   .. math::
 	
-	 \Delta X = \left [ X(k) - \hat{x}(k|k-1) \right ]
+	    \Delta X = \left [ X(k) - \hat{x}(k|k-1) \right ]
 
 
-.. math::
+   .. math::
 	
-	 P(k|k-1) = \sum_{i=1}^{2N+1=7} (W_{c,i} \left [\Delta X  \right ] \left [ \Delta X \right ]^{T} + R_{v})
+	    P(k|k-1) = \sum_{i=1}^{2N+1=7} (W_{c,i} \left [\Delta X  \right ] \left [ \Delta X \right ]^{T} + R_{v})
 
-3. Do the Unscented Transformation of the sigma-points :math:`X(k)`
+3. Do the unscented Transformation of the sigma-points :math:`X(k)`
 
 Propagate :math:`X(k)` through non-linear function :math:`h`. (:math:`h` is applied 7 times to the column submaterix of :math:`X(k)`)
 
@@ -343,7 +343,7 @@ Calculate the covariance matrix of the predicted measurement :math:`y(k)`. This 
 
 .. math::
 
-	 P(k|k) = \hat{x}(k|k-1) * K(y(k) - \hat{y}(k))
+	 P(k|k) = \hat{x}(k|k-1)  K(y(k) - \hat{y}(k))
 
 
 .. image:: /images/UKF_Calculation.png
