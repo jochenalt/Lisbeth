@@ -42,7 +42,7 @@ Before the IMU can be used, baud rate, frequency, and message format have to be 
 	:alt: FTDI Adapter to USB
 
 
-After pluging in, Sensorconnect should be able to connect to the device with the default baud rate of 115200. Some settings need to be done, at 1000Hz we need 916200 baud having in mind that one data packet is 48 bytes:
+After pluging in, Sensorconnect should be able to connect to the device with the default baud rate of 115200. Some settings need to be done, at 1000Hz we need 921600 baud having in mind that one data packet is 48 bytes:
 
 .. image:: /images/Sensorconnect_baudrate.png
 	:width: 500
@@ -81,16 +81,15 @@ I bundled the Microstrain IMU with a low-cost magnetometer `LIS3DM <https://www.
 	:alt: Original
  	:class: float-right
 
- The useless Stemma QT  sockets of the magnetometer needed to be removed to fit in the holder. The final package became a bit bulky, but IMU and Magnetometer are nicely covered. 
+The useless Stemma QT sockets of the magnetometer needed to be removed to fit in the holder. The final package became a bit bulky, but IMU and Magnetometer are nicely covered. 
 
 
 Filtering IMU  Data
 -------------------
 
+Filtering IMU data is essential, since acceleration sensors are noisy, and gyros drift over time. 
 
-Filtering the data from an IMU is essential. Acceleration sensors are noisy, and gyros drift over time. 
-
-The easiest way to solve this is a complementary filter that only takes the changes of the gyro into account, but uses the acceleration data as source for the angle. 
+The easiest way to solve this is a complementary filter that only takes the changes of the gyro into account, but uses the acceleration data to compensate their drift.
 
 The implementation integrates the gyro data over time resulting in a drifting but non-noisy angle, then sends the result through a high pass filter to get rid of the drift, and fuses it with low passed acceleration data to get rid of its noise.
 
@@ -98,7 +97,7 @@ The implementation integrates the gyro data over time resulting in a drifting bu
 	:width: 500
 	:alt:  Complementary Filter
 
-Luckily, it is easier to see in code:
+Electrical Engineers love these kind of illustrations, for me it is easier to see in code:
 
 .. code-block:: C++
 
@@ -125,6 +124,7 @@ Sensor fusion means merging the drifty gyro data with the noisy acceleration dat
 	:width: 200
 	:alt: Conventions
  	:class: float-left
+
 
 .. list-table:: °
    :widths: 25 75
@@ -273,7 +273,7 @@ The Unscented Kalman Algorithm
 The algorithm as described in `A new extension to the Kalman filter <https://www.cs.unc.edu/~welch/kalman/media/pdf/Julier1997_SPIE_KF.pdf>`_ is listed below,  I borrowed it from `here <https://github.com/pronenewbits/Embedded_UKF_Library/blob/master/README.md>`_ .(Frustratingly, it is almost impossible to understand that without having the standard Kalman filter digested)
 
 
-.. list-table:: Variables used in the Unscented Kalman Filter
+.. list-table:: °
    :widths: 25 75
 
    * - 

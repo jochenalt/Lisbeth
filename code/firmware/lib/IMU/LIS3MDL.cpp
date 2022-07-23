@@ -16,7 +16,6 @@ LIS3MDL::LIS3MDL()
 {
 }
 
-
 bool  LIS3MDL::setup(dataRate_t dataRate, range_t dataRange)
 {
   Wire1.begin();
@@ -29,7 +28,7 @@ bool  LIS3MDL::setup(dataRate_t dataRate, range_t dataRange)
          if (testReg(LIS3MDL_SA1_LOW_ADDRESS, WHO_AM_I) == LIS3MDL_WHO_ID)
              address =  LIS3MDL_SA1_LOW_ADDRESS ;
          else {
-             Serial.println("LIS3MDL hasn't been found on I2C-1");
+             Serial.println("LIS3MDL sensor not found on I2C. Is the magnetometer connected?");
              return false;
          }
   }
