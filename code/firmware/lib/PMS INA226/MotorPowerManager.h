@@ -7,6 +7,8 @@
 #include <TimePassedBy.h>
 
 
+// pint for turning on/off the MOSFET driver
+#define PIN_MOTOR_POWER 30
 
 /** Manage the MOSFET power switch  of the motors.
  *  Takes care that after turning it off, there is enough 
@@ -17,7 +19,7 @@ class MotorPowerManager {
 
   enum MotorPowerType  { MOTOR_UNPOWERED = 0, MOTOR_POWERED_UP = 1, MOTOR_COOLING_DOWN = 2};
   const uint32_t necessary_break_ms = 5000;
-  MotorPowerManager(uint8_t pin):power_pin(pin) {};
+  MotorPowerManager():power_pin(PIN_MOTOR_POWER) {};
 
   bool setup() {
     // the motor MOSFETs are controlled by this PIN
@@ -33,7 +35,6 @@ class MotorPowerManager {
     }
     device.reset();
     device.setMaxCurrentShunt(10, 0.01);
-
 
     return true;
   }

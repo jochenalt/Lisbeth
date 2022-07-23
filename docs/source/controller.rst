@@ -3,7 +3,7 @@ Controller Architecture
 
 The controller is based on various papers, most important ones are
 
-[Highly Dynamic Quadruped Locomotion via Whole-Body Impulse Control and Model Predictive Control](https://arxiv.org/abs/1909.065860)
+[Highly Dynamic Quadruped Locomotion via Whole-Body Impulse Control and Model Predictive Control](https://arxiv.org/abs/1909.06586)
 This paper proposed the overall control architecture.
 
 Furthermore [Implementation of a Reactive Walking Controller for the Solo12](https://hal.laas.fr/hal-03591735/document) proposed a more computational efficient way of the whole body controller, that made is possible to run it on an [Up squared Pro](https://up-board.org/up-squared-pro/), a tiny  Intel-based board.

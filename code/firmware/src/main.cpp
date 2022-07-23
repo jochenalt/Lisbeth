@@ -8,14 +8,10 @@
 #include <ODrive.h>
 #include <IMUManager.h>
 #include <MotorPowerManager.h>
+#include <LEDPowerManager.h>
 
 //  baud rate of Serial0 that is used for logging 
 #define LOG_BAUD_RATE 115200
-
-// Pin for turning on/off the motor power
-#define PIN_MOTOR_POWER 30
-
-
 
 //--- configure ODrives and motors ---
 // ODrive pin 1 goes to Teensy RX
@@ -55,8 +51,12 @@ uint8_t error = NO_ERROR;
 
 // manage the IMU
 IMUManager imuMgr;
+
 // manage the power MOSFETs giving power to the motors
-MotorPowerManager powerManager(PIN_MOTOR_POWER);
+MotorPowerManager powerManager;
+
+// manage the power to the LED
+LEDPowerManager ledPowerManager;
 
 // yield is called randomly by delay, approx. every ms
 // we only allow harmless things happening there (e.g. the blinker)
@@ -123,6 +123,9 @@ void setup() {
 
   // setup power manager
   powerManager.setup();
+
+  // setup led power manager
+  ledPowerManager.setup();
 
   // initialise IMU Manager 
 	Serial.println("IMU: setup");
@@ -403,6 +406,9 @@ void loop() {
 
   // check power supply
   powerManager.loop();
+
+  // check led  
+  ledPowerManager.loop(now_us);
 
   // if calibration came to a result, store it in EPPROM
   if (imuMgr.newCalibrationData()) {

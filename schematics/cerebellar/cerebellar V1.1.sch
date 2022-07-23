@@ -24137,18 +24137,17 @@ Micropower Regulators, fixed</description>
 <part name="C26" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="050-024X044" package3d_urn="urn:adsk.eagle:package:23643/1" value="100nF"/>
 <part name="L2" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="L-EU" device="IRF-3" package3d_urn="urn:adsk.eagle:package:23536/1" value="10uH"/>
 <part name="U$7" library="TLF50211EL" deviceset="TLF50211EL" device=""/>
-<part name="R20" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:23498/2" value="25k"/>
+<part name="R20" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:23498/2" value="100k"/>
 <part name="R21" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:23498/2" value="100k"/>
 <part name="D3" library="diode" library_urn="urn:adsk.eagle:library:210" deviceset="ZENER-DIODE" device="DO41Z10" package3d_urn="urn:adsk.eagle:package:43341/1" value="Z 5.1V 1A"/>
 <part name="P+1" library="supply1" library_urn="urn:adsk.eagle:library:371" deviceset="+5V" device=""/>
 <part name="R7" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:23498/2" value="10"/>
 <part name="SUPPLY5" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="P14" library="jst-ph" deviceset="JST-PH5" device="" value="IMU"/>
-<part name="U$4" library="MAX869" deviceset="MAX769L" device=""/>
+<part name="U$4" library="MAX869" deviceset="MAX769L" device="" value="MAX869L"/>
 <part name="SUPPLY2" library="supply2" library_urn="urn:adsk.eagle:library:372" deviceset="GND" device=""/>
 <part name="R1" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:23498/2" value="6.8k"/>
 <part name="P4" library="jst-ph" deviceset="JST-PH2" device="" value="LED"/>
-<part name="R8" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:23498/2" value="100"/>
 <part name="U$8" library="LT1763" deviceset="LT1763" device=""/>
 <part name="P16" library="jst-ph" deviceset="JST-PH5" device="" value="MAG"/>
 <part name="CON2" library="amass" deviceset="XT30" device="UPB-F" value="ODRV1"/>
@@ -24408,10 +24407,6 @@ Micropower Regulators, fixed</description>
 <instance part="P4" gate="G$1" x="389.89" y="92.71" smashed="yes" rot="R180">
 <attribute name="NAME" x="392.43" y="89.408" size="1.778" layer="95" rot="R180"/>
 <attribute name="VALUE" x="392.43" y="100.076" size="1.778" layer="96" rot="R180"/>
-</instance>
-<instance part="R8" gate="G$1" x="346.71" y="92.71" smashed="yes">
-<attribute name="NAME" x="342.9" y="94.2086" size="1.778" layer="95"/>
-<attribute name="VALUE" x="342.9" y="89.408" size="1.778" layer="96"/>
 </instance>
 <instance part="U$8" gate="G$1" x="39.37" y="170.18" smashed="yes"/>
 <instance part="P16" gate="G$1" x="256.54" y="10.16" smashed="yes" rot="R180">
@@ -25308,7 +25303,7 @@ Micropower Regulators, fixed</description>
 <wire x1="-121.92" y1="182.88" x2="-102.87" y2="182.88" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$47" class="0">
+<net name="SWTCH" class="0">
 <segment>
 <pinref part="U$7" gate="G$1" pin="EN"/>
 <pinref part="P15" gate="G$1" pin="1"/>
@@ -25317,6 +25312,7 @@ Micropower Regulators, fixed</description>
 <wire x1="-156.21" y1="193.04" x2="-156.21" y2="196.85" width="0.1524" layer="91"/>
 <wire x1="-102.87" y1="193.04" x2="-156.21" y2="193.04" width="0.1524" layer="91"/>
 <junction x="-156.21" y="193.04"/>
+<label x="-156.21" y="149.86" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="SCK" class="0">
@@ -25441,18 +25437,13 @@ Micropower Regulators, fixed</description>
 <wire x1="340.36" y1="69.85" x2="340.36" y2="66.04" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$6" class="0">
+<net name="LED+" class="0">
 <segment>
 <pinref part="U$4" gate="G$1" pin="OUT"/>
 <wire x1="341.63" y1="92.71" x2="334.01" y2="92.71" width="0.1524" layer="91"/>
-<pinref part="R8" gate="G$1" pin="1"/>
-</segment>
-</net>
-<net name="N$3" class="0">
-<segment>
-<pinref part="R8" gate="G$1" pin="2"/>
 <pinref part="P4" gate="G$1" pin="1"/>
-<wire x1="351.79" y1="92.71" x2="382.27" y2="92.71" width="0.1524" layer="91"/>
+<wire x1="341.63" y1="92.71" x2="382.27" y2="92.71" width="0.1524" layer="91"/>
+<label x="375.92" y="92.71" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="MAG_SCL" class="0">
