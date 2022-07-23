@@ -69,22 +69,19 @@ And the data streaming should start right away after startup:
 Mounting the IMU
 ----------------
 
-
-
-
 I bundled the Microstrain IMU with a low-cost magnetometer `LIS3DM <https://www.adafruit.com/product/4022>`_. The yaw angle is not really relevant for a quadruped, almost neglectable actually. Anyhow, I found the drift in the z-axis annoying, so I added the magnetometer and printed a holder that clamps it on to of the IMU. 
 
 .. image:: /images/Magnetometer_sockets.png
 	:width: 400
 	:alt: Original
  	:class: float-left
- 	
+
 .. image:: /images/IMU_and_magnetometer_mounted.png
 	:width: 300
 	:alt: Original
  	:class: float-right
 
-To fit into the holder, the original sockets need to be removed. The final package became a bit bulky, but IMU and Magnetometer are nicely covered. 
+ The useless Stemma QT  sockets of the magnetometer needed to be removed to fit in the holder. The final package became a bit bulky, but IMU and Magnetometer are nicely covered. 
 
 
 Filtering IMU  Data
@@ -129,7 +126,7 @@ Sensor fusion means merging the drifty gyro data with the noisy acceleration dat
 	:alt: Conventions
  	:class: float-left
 
-.. list-table:: **Conventions**:
+.. list-table:: °
    :widths: 25 75
 
    * - :math:`\bar{q} = \begin{bmatrix}q_{0} & q_{1} & q_{2 } & q_{3} \end{bmatrix}^{T}`
