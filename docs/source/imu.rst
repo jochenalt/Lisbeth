@@ -69,14 +69,16 @@ And the data streaming should start right away after startup:
 Mounting the IMU
 ----------------
 
-.. image:: /images/Magnetometer_sockets.png
-	:width: 200
-	:alt: Original
- 	:class: float-left
+
 
 
 I bundled the Microstrain IMU with a low-cost magnetometer `LIS3DM <https://www.adafruit.com/product/4022>`_. The yaw angle is not really relevant for a quadruped, almost neglectable actually. Anyhow, I found the drift in the z-axis annoying, so I added the magnetometer and printed a holder that clamps it on to of the IMU. 
 
+.. image:: /images/Magnetometer_sockets.png
+	:width: 400
+	:alt: Original
+ 	:class: float-left
+ 	
 .. image:: /images/IMU_and_magnetometer_mounted.png
 	:width: 300
 	:alt: Original
@@ -118,15 +120,14 @@ Let's be honest, in the usecase of a quadruped the difference is neglectable. An
 Fusing the state of the filter with incoming sensor data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. image:: /images/RPY.png
-	:width: 200
-	:alt: Conventions
- 	:class: float-left
 
 Sensor fusion means merging the drifty gyro data with the noisy acceleration data. Spoiler alert, as if the IMU above is not yet expensive enough, we also need a magnetometer that is not only noisy, but also needs to be corrected because of the earth's tilted magnetic field. 
 `Quaternions <https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation>`_ avoid a  gimbal lock and are computational less intense(not really relevant actually, but lovely to work with). As usual we use the convention `roll, pitch, and yaw <https://en.wikipedia.org/wiki/Flight_dynamics_(fixed-wing_aircraft)>`_ to avoid breaking fingers when picturing vectors.
 
-
+.. image:: /images/RPY.png
+	:width: 200
+	:alt: Conventions
+ 	:class: float-left
 
 .. list-table:: **Conventions**:
    :widths: 25 75
@@ -434,7 +435,7 @@ Then, the UKF algorithm works like this:
 
 
 Implementation
-==============
+--------------
 
 The implementation is hosted on the mainboard's Teensy 4.1, and as you might see the unscented Kalman filter is quite a lot of code. The IMU management is only a part of the whole firmware of the board, source can be found `here  <https://github.com/jochenalt/Lisbeth/tree/main/code/firmware/lib/IMU>`_. 
 
