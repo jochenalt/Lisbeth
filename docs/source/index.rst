@@ -12,7 +12,5 @@ Welcome to Lisbeth's documentation
    controller
    mechanics
    imu
-   imu_filter
-   imu_implementation
 
 
