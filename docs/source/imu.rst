@@ -69,11 +69,24 @@ And the data streaming should start right away after startup:
 Mounting the IMU
 ----------------
 
+.. image:: /images/Magnetometer_without_sockets.png
+	:width: 200
+	:alt: Original
+ 	:class: float-left
+
 The Microstrain IMU is bundled with the low-cost magnetometer LIS3DM. The yaw angle is not really relevant for a quadruped, almost neglectable actually. Anyhow, I found the drift in the z-axis annoying, so I added the magnetometer and printed a holder that clamps it on to of the IMU.   
 
 .. image:: /images/IMU_Holder.png
-	:width: 300
+	:width: 200
 	:alt: IMU holder
+ 	:class: float-left
 
-	
+To fit into the holder, the original sockets need to be removed. The final package became a bit bulky, but IMU and Magnetometer are nicely covered. 
+
+.. image:: /images/IMU_and_magnetometer_mounted.png
+	:width: 300
+	:alt: Original
+ 	:class: float-left
+
+
 
