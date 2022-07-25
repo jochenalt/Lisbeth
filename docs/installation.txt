@@ -39,13 +39,6 @@ export LD_LIBRARY_PATH=/opt/openrobots/lib:$LD_LIBRARY_PATH
 export PYTHONPATH=/opt/openrobots/lib/python3.6/site-packages:$PYTHONPATH 
 export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH
 
-#install gepetto-viewer-corba
-sudo apt-get install  -y robotpkg-py36\*-qt5-gepetto-viewer-corba
-
-# install robot-data
-# obsolete
-# sudo apt install  -y robotpkg-py36-example-robot-data
-
 #install  matplotlib
 sudo apt-get -y install python3-pip
 sudo apt-get install  -y libjpeg-dev zlib1g-dev
@@ -397,11 +390,29 @@ sudo apt-get install libboost-all-dev
 
 
 
+
 -------------------------------------------------
------------- setup Up Suqared Board pro ---------
+------------ Raspberry PI  ---------
 -------------------------------------------------
 
-in /boot/firmware/usercfg.txt set :
+#Install https://downloads.raspberrypi.org/imager/imager_latest.exe
+#Create Image on SD card with UUbuntu 20 Server (without desktop)
+
+#Basic login is ubuntu, password has to be changed immediately 
+
+#set keyboard with
+sudo dpkg-reconfigure keyboard-configuration
+sudo setupcon
+
+#set timezone:
+sudo timedatectl set-timezone Europe/Berlin
+
+# desktop installieren
+sudo apt install ubuntu-desktop
+sudo apt upgrade
+
+# inistially display has only one resoution, fix that with 
+#in /boot/firmware/usercfg.txt add
 
 dtoverlay=vc4-fkms-v3d
 max_framebuffers=2
@@ -425,13 +436,36 @@ hdmi_group:1=2
 hdmi_mode:1=82
 hdmi_drive:1=2
 
+sudo reboot
 
-install urdfdom
+--------------- install software -------------------
+
+# install git
+sudo apt-get install -y git
+
+# clone repository into ~/lisbeth
+git clone https://github.com/jochenalt/Lisbeth lisbeth
+
+#install yaml-cpp
+sudo apt install -y libyaml-cpp-dev
+
+pip3 install --user inputs
+pip3 install pynput
+
+#install miniconda with python 3.8
+cd Downloads
+wget https://repo.anaconda.com/miniconda/Miniconda3-py38_4.12.0-Linux-aarch64.sh
+bash Miniconda3-py38_4.12.0-Linux-aarch64.sh
+
+
+# install pinoccio from source
+
+#install urdfdom
 sudo apt install liburdfdom-dev
 
 sudo apt install assimp-utils
 
-install miniconda with python 3.6
+
 
 cd Downloads
 wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-aarch64.sh
@@ -441,3 +475,4 @@ conda install eigenpy -c conda-forge
 
 install pinocchio
 
+PYTHONPATH=/home/jochen/lisbeth/code/controller/build/stubs/controller_core
