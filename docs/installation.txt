@@ -64,7 +64,7 @@ pip3 install pynput
 
 #install OSQP solver: [https://osqp.org/docs/get_started/sources.html#build-the-binaries]
 git clone --recursive https://github.com/oxfordcontrol/osqp
-cd osqp
+ops
 Edit CMakeLists.txt
     Add set(PRINTING OFF) just above message(STATUS "Printing is ${PRINTING}")
     Add set(PROFILING OFF) just above message(STATUS "Profiling is ${PROFILING}")
@@ -74,6 +74,7 @@ mkdir build
 cd build
 #cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/install -DPYTHON_EXECUTABLE=python3.6 -DPYTHON_STANDARD_LAYOUT=ON 
 cmake .. -DCMAKE_BUILD_TYPE=RELEASE  -DPYTHON_EXECUTABLE=python3.6 -DPYTHON_STANDARD_LAYOUT=ON 
+make
 sudo make install
 
 #install yaml-cpp
@@ -96,7 +97,10 @@ sudo apt-get install -y doxygen
 #build c++ parts
 cd ~/lisbeth/code/controller
 cmkdir build;cd build
-cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/lisbeth/code/controller/install -DPYTHON_EXECUTABLE=/usr/bin/python3.6 -DPYTHON_STANDARD_LAYOUT=ON 
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/lisbeth/code/controller/install -DPYTHON_EXECUTABLE=/usr/bin/python3.8 -DPYTHON_STANDARD_LAYOUT=ON 
+
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/lisbeth/code/controller/install 
+
 make -j4
 
 # depricated
@@ -389,4 +393,51 @@ sudo apt install ubuntu-desktop
 sudo reboot
 sudo apt install libeigen3.dev
 sudo apt-get install libboost-all-dev
+
+
+
+
+-------------------------------------------------
+------------ setup Up Suqared Board pro ---------
+-------------------------------------------------
+
+in /boot/firmware/usercfg.txt set :
+
+dtoverlay=vc4-fkms-v3d
+max_framebuffers=2
+gpu_mem=128
+#hdmi_enable_4kp60=1
+
+# [HDMI:0]
+hdmi_group:0=2
+hdmi_cvt:0=2560 1080 60 7
+hdmi_mode:0=87
+hdmi_drive:0=2
+disable_overscan:0=1
+
+max_framebuffer_width:0=4096
+max_framebuffer_height:0=2160
+framebuffer_width:0=2560
+framebuffer_height:0=1080
+
+# [HDMI:1]
+hdmi_group:1=2
+hdmi_mode:1=82
+hdmi_drive:1=2
+
+
+install urdfdom
+sudo apt install liburdfdom-dev
+
+sudo apt install assimp-utils
+
+install miniconda with python 3.6
+
+cd Downloads
+wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-aarch64.sh
+bash Miniforge3-Linux-aarch64.sh
+
+conda install eigenpy -c conda-forge
+
+install pinocchio
 
