@@ -92,11 +92,6 @@ class WBCSolver {
   Eigen::MatrixXd get_ddq_res();
   Eigen::MatrixXd get_H();
 
-  // Utils
-  void my_print_csc_matrix(csc *M, const char *name);
-  void save_csc_matrix(csc *M, std::string filename);
-  void save_dns_matrix(double *M, int size, std::string filename);
-
 };
 
 #endif  // QPWBC_H_INCLUDED

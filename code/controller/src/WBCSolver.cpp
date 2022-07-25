@@ -134,8 +134,8 @@ int WBCSolver::create_ML() {
   ML->nz = -1;
   ML->nzmax = ncc;
   ML->x = acc;
-  ML->i = icc;
-  ML->p = ccc;
+  ML->i = (c_int*)icc;
+  ML->p = (c_int*)ccc;
 
   // Free memory
   delete[] r_ML;
@@ -191,8 +191,8 @@ int WBCSolver::create_weight_matrices() {
   P->nz = -1;
   P->nzmax = ncc;
   P->x = acc;
-  P->i = icc;
-  P->p = ccc;
+  P->i = (c_int*)icc;
+  P->p = (c_int*)ccc;
 
   // Free memory
   delete[] r_P;
@@ -327,93 +327,6 @@ int WBCSolver::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Ei
   return 0;
 }
 
-void WBCSolver::my_print_csc_matrix(csc *M, const char *name) {
-  /*
-  Print positions and value of coefficients in a csc matrix
-
-  Args:
-    - M (csc*): pointer to the csc matrix you want to print
-    - name (char*): name that should be displayed for the matrix (one char)
-  */
-
-  c_int j, i, row_start, row_stop;
-  c_int k = 0;
-
-  // Print name
-  printf("%s :\n", name);
-
-  for (j = 0; j < M->n; j++) {
-    row_start = M->p[j];
-    row_stop = M->p[j + 1];
-
-    if (row_start == row_stop)
-      continue;
-    else {
-      for (i = row_start; i < row_stop; i++) {
-        int a = (int)M->i[i];
-        int b = (int)j;
-        double c = M->x[k++];
-        printf("\t%3u [%3u,%3u] = %.3g\n", k - 1, a, b, c);
-
-      }
-    }
-  }
-}
-
-void WBCSolver::save_csc_matrix(csc *M, std::string filename) {
-  /*
-  Save positions and value of coefficients of a csc matrix in a csc file
-
-  Args:
-    - M (csc*): pointer to the csc matrix you want to save
-    - filename (string): name of the generated csv file
-  */
-
-  c_int j, i, row_start, row_stop;
-  c_int k = 0;
-
-  // Open file
-  std::ofstream myfile;
-  myfile.open(filename + ".csv");
-
-  for (j = 0; j < M->n; j++) {
-    row_start = M->p[j];
-    row_stop = M->p[j + 1];
-
-    if (row_start == row_stop)
-      continue;
-    else {
-      for (i = row_start; i < row_stop; i++) {
-        int a = (int)M->i[i];
-        int b = (int)j;
-        double c = M->x[k++];
-        myfile << a << "," << b << "," << c << "\n";
-      }
-    }
-  }
-  myfile.close();
-}
-
-void WBCSolver::save_dns_matrix(double *M, int size, std::string filename) {
-  /*
-  Save positions and value of coefficients of a dense matrix in a csc file
-
-  Args:
-    - M (double*): pointer to the dense matrix you want to save
-    - size (int): size of the dense matrix
-    - filename (string): name of the generated csv file
-  */
-
-  // Open file
-  std::ofstream myfile;
-  myfile.open(filename + ".csv");
-
-  for (int j = 0; j < size; j++) {
-    myfile << j << "," << 0 << "," << M[j] << "\n";
-  }
-
-  myfile.close();
-}
 
 
 void WBCSolver::compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA) {
