@@ -93,11 +93,8 @@ add_project_dependency(pinocchio REQUIRED)
 # Link pinocchio library
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC pinocchio::pinocchio)
 
-# Find parametric curves library and headers
-# add_project_dependency(curves REQUIRED)
-
-# Link parametric curves library
-# target_link_libraries(${PROJECT_NAME} PUBLIC curves::curves)
+# Find eiquadprog library and headers
+add_project_dependency(eiquadprog REQUIRED)
 
 # Find OSQP library and headers
 find_package(osqp REQUIRED)
@@ -105,17 +102,12 @@ find_package(osqp REQUIRED)
 # Link the OSQP shared library
 target_link_libraries(${PROJECT_NAME} PUBLIC osqp::osqp)
 
-#find_package(yaml-cpp REQUIRED)
-#target_link_libraries(${PROJECT_NAME} PRIVATE yaml-cpp::yaml-cpp)
 add_project_dependency(yaml-cpp CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${YAML_CPP_LIBRARIES})
 
 if(SUFFIX_SO_VERSION)
   set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION ${PROJECT_VERSION})
 endif()
-
-# target_compile_options(${PROJECT_NAME} PUBLIC PRINTING)
-# target_compile_definitions(${PROJECT_NAME} PUBLIC PRINTING)
 
 #target_compile_options(${PROJECT_NAME} PUBLIC -DNDEBUG -O3 -ffast-math)
 target_compile_options(${PROJECT_NAME} PUBLIC -O3 -ffast-math)
