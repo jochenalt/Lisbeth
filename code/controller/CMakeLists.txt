@@ -93,9 +93,6 @@ add_project_dependency(pinocchio REQUIRED)
 # Link pinocchio library
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC pinocchio::pinocchio)
 
-# Find eiquadprog library and headers
-add_project_dependency(eiquadprog REQUIRED)
-
 # Find OSQP library and headers
 find_package(osqp REQUIRED)
 

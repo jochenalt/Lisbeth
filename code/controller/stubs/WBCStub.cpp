@@ -9,9 +9,6 @@
 
 namespace bp = boost::python;
 
-/////////////////////////////////
-/// Binding WbcWrapper class
-/////////////////////////////////
 template <typename WBCController>
 struct WbcControllerPythonVisitor : public bp::def_visitor<WbcControllerPythonVisitor<WBCController>>
 {

@@ -30,10 +30,8 @@ struct ControllerPythonVisitor : public bp::def_visitor<ControllerPythonVisitor<
     static void expose()
     {
         bp::class_<Controller>("Controller", bp::no_init).def(ControllerPythonVisitor<Controller>());
-        ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
         ENABLE_SPECIFIC_MATRIX_TYPE(VectorN);
         ENABLE_SPECIFIC_MATRIX_TYPE(Vector4);
-        ENABLE_SPECIFIC_MATRIX_TYPE(Matrix242);
     }
 };
 void exposeController() { ControllerPythonVisitor<Controller>::expose(); }
