@@ -97,3 +97,7 @@ uint64_t get_micros() {
 void delay_us(int us) {
 	std::this_thread::sleep_for(std::chrono::microseconds(us));
 }
+
+void delay_ms(int ms) {
+	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+}

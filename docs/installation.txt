@@ -39,13 +39,6 @@ export LD_LIBRARY_PATH=/opt/openrobots/lib:$LD_LIBRARY_PATH
 export PYTHONPATH=/opt/openrobots/lib/python3.6/site-packages:$PYTHONPATH 
 export CMAKE_PREFIX_PATH=/opt/openrobots:$CMAKE_PREFIX_PATH
 
-#install gepetto-viewer-corba
-sudo apt-get install  -y robotpkg-py36\*-qt5-gepetto-viewer-corba
-
-# install robot-data
-# obsolete
-# sudo apt install  -y robotpkg-py36-example-robot-data
-
 #install  matplotlib
 sudo apt-get -y install python3-pip
 sudo apt-get install  -y libjpeg-dev zlib1g-dev
@@ -64,7 +57,7 @@ pip3 install pynput
 
 #install OSQP solver: [https://osqp.org/docs/get_started/sources.html#build-the-binaries]
 git clone --recursive https://github.com/oxfordcontrol/osqp
-cd osqp
+ops
 Edit CMakeLists.txt
     Add set(PRINTING OFF) just above message(STATUS "Printing is ${PRINTING}")
     Add set(PROFILING OFF) just above message(STATUS "Profiling is ${PROFILING}")
@@ -74,6 +67,7 @@ mkdir build
 cd build
 #cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/install -DPYTHON_EXECUTABLE=python3.6 -DPYTHON_STANDARD_LAYOUT=ON 
 cmake .. -DCMAKE_BUILD_TYPE=RELEASE  -DPYTHON_EXECUTABLE=python3.6 -DPYTHON_STANDARD_LAYOUT=ON 
+make
 sudo make install
 
 #install yaml-cpp
@@ -82,9 +76,6 @@ sudo apt install -y libyaml-cpp-dev
 #install gamepad input
 pip3 install --user inputs
 
-#install eiquadprog
-sudo apt install robotpkg-eiquadprog=1.2.3
-
 #install TSID  [https://github.com/stack-of-tasks/tsid#installation]
 sudo apt-get install -y robotpkg-py3*-tsid
 
@@ -92,11 +83,14 @@ sudo apt-get install -y robotpkg-py3*-tsid
 sudo apt-get install robotpkg-py36-crocoddyl
 #install doxygen
 sudo apt-get install -y doxygen
-
+CMAKE_PREFIX
 #build c++ parts
 cd ~/lisbeth/code/controller
 cmkdir build;cd build
-cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/lisbeth/code/controller/install -DPYTHON_EXECUTABLE=/usr/bin/python3.6 
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/lisbeth/code/controller/install -DPYTHON_EXECUTABLE=/usr/bin/python3.8 -DPYTHON_STANDARD_LAYOUT=ON 
+
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/lisbeth/code/controller/install 
+
 make -j4
 
 # depricated
@@ -377,16 +371,182 @@ cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DPYTHON_EXECUTABLE=/usr/bin/python3.6 -DPYT
 ------------ Setup On raspberry Pro  ---------
 -------------------------------------------------
 
-
-Install Server Ubuntu 20.04 With Raspberry Pi Imager (pinoccho is not supported on Ubuntu 22 yet)
-
-on the console:
-sudo apt update
-sudo apt upgrade
-
-sudo apt install ubuntu-desktop
+#sudo apt install ubuntu-desktop
 
 sudo reboot
 sudo apt install libeigen3.dev
 sudo apt-get install libboost-all-dev
 
+
+
+
+
+-------------------------------------------------
+------------ Raspberry PI  ---------
+-------------------------------------------------
+
+#Install https://downloads.raspberrypi.org/imager/imager_latest.exe
+#Create Image on SD card with UUbuntu 20 Server (without desktop)
+
+#Basic login is ubuntu, password has to be changed immediately 
+
+#set keyboard with
+sudo dpkg-reconfigure keyboard-configuration
+sudo setupcon
+
+#set timezone:
+sudo timedatectl set-timezone Europe/Berlin
+
+# desktop installieren
+sudo apt install ubuntu-desktop
+sudo apt upgrade
+
+# install git
+sudo apt-get install -y git
+
+# clone repository into ~/lisbeth
+git clone https://github.com/jochenalt/Lisbeth lisbeth
+
+# add personal access token
+cd lisbeth
+git remote remove origin
+git remote add origin https://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@github.com/jochenalt/Lisbeth.git
+
+# install sublime and sibmerge
+sudo snap install sublime-text --classic
+sudo snap install sublime-merge --classic
+
+# install eclipse
+cd Downloads
+wget https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/2022-06/R/eclipse-cpp-2022-06-R-linux-gtk-aarch64.tar.gz
+
+# initially display has only one resoution, fix that with 
+#in /boot/firmware/usercfg.txt add
+
+dtoverlay=vc4-fkms-v3d
+max_framebuffers=2
+gpu_mem=128
+#hdmi_enable_4kp60=1
+
+# [HDMI:0]
+hdmi_group:0=2
+hdmi_cvt:0=2560 1080 60 7
+hdmi_mode:0=87
+hdmi_drive:0=2
+disable_overscan:0=1
+
+max_framebuffer_width:0=4096
+max_framebuffer_height:0=2160
+framebuffer_width:0=2560
+framebuffer_height:0=1080
+
+# [HDMI:1]
+hdmi_group:1=2
+hdmi_mode:1=82
+hdmi_drive:1=2
+
+sudo reboot
+
+# install miniconda
+cd Downloads
+wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-aarch64.sh
+bash Miniforge3-Linux-aarch64.sh
+source ~/.bashrc
+
+# create python 3.8 environment
+conda create -n lispy38 python=3.8
+conda activate lispy38
+
+# make conda persistent
+# add to your .bashrc
+conda activate lispy38
+export PYTHONPATH=/home/jochen/lisbeth/code/controller/build/stubs/controller_core
+
+# Take care that lispy38 is active in all terminals you are using
+
+# install Eigen3
+sudo apt-get update
+sudo apt-get install libeigen3-dev
+
+sudo apt-get install libboost-all-dev
+# install eigenpy
+conda install -c conda-forge eigenpy
+conda install -c conda-forge/label/cf202003 eigenpy 
+
+# create 4G swapfile (for pinocchio compilation)
+sudo fallocate -l 4G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+sudo swapon --show
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+# install cmake
+sudo apt install cmake
+
+# install essentials
+sudo apt-get update && sudo apt-get install build-essential
+
+# install urdfdom
+sudo apt-get install liburdfdom-headers-dev
+sudo apt install liburdfdom-dev
+sudo apt install assimp-utils
+
+# install pinocchio
+git clone --recursive https://github.com/stack-of-tasks/pinocchio
+cd pinocchio 
+git checkout master
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_PREFIX_PATH=$CONDA_PREFIX
+
+# install pinocchio on conda
+conda config --add channels conda-forge
+conda config --set channel_priority strict
+conda install pinocchio
+
+#compile (takes 6h)
+make 
+# install in /usr/local
+make install
+
+#install OSQP solver: [https://osqp.org/docs/get_started/sources.html#build-the-binaries]
+git clone --recursive https://github.com/oxfordcontrol/osqp
+ops
+Edit CMakeLists.txt:
+    Add set(PRINTING OFF) just above message(STATUS "Printing is ${PRINTING}")
+    Add set(PROFILING OFF) just above message(STATUS "Profiling is ${PROFILING}")
+    Turn DLONG off option (DLONG "Use long integers (64bit) for indexing" OFF)
+    
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DPYTHON_STANDARD_LAYOUT=ON 
+make
+# install in /usr/local
+sudo make install
+
+# instal doxygen
+sudo apt-get install -y doxygen
+
+#install yaml-cpp
+sudo apt install -y libyaml-cpp-dev
+
+pip3 install --user inputs
+pip3 install --user pynput
+pip3 install --user pybullet
+
+# compile lisbeth
+cd lisbeth/code/controller
+mkdir build & cd build
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/lisbeth/code/controller/install -DPYTHON_STANDARD_LAYOUT=ON -CMAKE_PREFIX_PATH=$CONDA_PREFIX
+
+# run lisbeth
+cd ~/lisbeth/code/controller/script
+python main.py -i test
+
+
+
+
+0228 4333112
+
+Ostendorf Platz 3
+Abholcode 2030752350655454

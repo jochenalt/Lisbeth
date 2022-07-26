@@ -14,5 +14,6 @@ bool array_equal(Vector4 a, Vector4 b);
 uint64_t get_micros();
 
 void delay_us(int us);
+void delay_ms(int ms);
 
 #endif

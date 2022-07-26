@@ -59,6 +59,7 @@ set(${PROJECT_NAME}_HEADERS
   include/WBCController.hpp
   include/MPCController.hpp
   include/Controller.hpp
+  include/KeyboardListener.hpp
   )
 
 set(${PROJECT_NAME}_SOURCES
@@ -78,6 +79,7 @@ set(${PROJECT_NAME}_SOURCES
   src/Params.cpp
   src/ComplementaryFilter.cpp
   src/Filter.cpp
+  src/KeyboardListener.cpp
   )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
