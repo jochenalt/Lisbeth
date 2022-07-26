@@ -407,6 +407,11 @@ sudo apt-get install -y git
 # clone repository into ~/lisbeth
 git clone https://github.com/jochenalt/Lisbeth lisbeth
 
+# add personal access token
+cd lisbeth
+git remote remove origin
+git remote add origin https://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@github.com/jochenalt/Lisbeth.git
+
 # install sublime and sibmerge
 sudo snap install sublime-text --classic
 sudo snap install sublime-merge --classic
