@@ -134,8 +134,8 @@ int WBCSolver::create_ML() {
   ML->nz = -1;
   ML->nzmax = ncc;
   ML->x = acc;
-  ML->i = (c_int*)icc;
-  ML->p = (c_int*)ccc;
+  ML->i = icc;
+  ML->p = ccc;
 
   // Free memory
   delete[] r_ML;
@@ -169,8 +169,8 @@ int WBCSolver::create_weight_matrices() {
   }
 
   // Creation of CSC matrix
-  int *icc;                                // row indices
-  int *ccc;                                // col indices
+  c_int *icc;                                // row indices
+  c_int *ccc;                                // col indices
   double *acc;                             // coeff values
   int nst = cpt_P;                         // number of non zero elements
   int ncc = st_to_cc_size(nst, r_P, c_P);  // number of CC values
@@ -191,8 +191,8 @@ int WBCSolver::create_weight_matrices() {
   P->nz = -1;
   P->nzmax = ncc;
   P->x = acc;
-  P->i = (c_int*)icc;
-  P->p = (c_int*)ccc;
+  P->i = icc;
+  P->p = ccc;
 
   // Free memory
   delete[] r_P;
@@ -233,10 +233,8 @@ void WBCSolver::init_solver() {
 }
 
 int WBCSolver::call_solver() {
-  /*
-  Initialize the solver (first iteration) or update it (next iterations)
-  then call the OSQP solver to solve the QP problem
-  */
+  // Initialize the solver (first iteration) or update it (next iterations)
+  // then call the OSQP solver to solve the QP problem
 
   // Update P matrix of the OSQP solver
   osqp_update_P(workspce, &P->x[0], OSQP_NULL, 0);

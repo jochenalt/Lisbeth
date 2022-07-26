@@ -190,8 +190,8 @@ int MPCSolver::create_ML() {
   ML->nz = -1;
   ML->nzmax = ncc;
   ML->x = acc;
-  ML->i = (c_int*)icc;
-  ML->p = (c_int*)ccc;
+  ML->i = icc;
+  ML->p = ccc;
 
   // Free memory
   delete[] r_ML;
@@ -372,8 +372,8 @@ int MPCSolver::create_weight_matrices() {
   P->nz = -1;
   P->nzmax = ncc;
   P->x = acc;
-  P->i = (c_int*)icc;
-  P->p = (c_int*)ccc;
+  P->i = icc;
+  P->p = ccc;
 
   // Free memory
   delete[] r_P;

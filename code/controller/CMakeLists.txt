@@ -99,12 +99,6 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC pinocchio::pinocchio)
 # Link parametric curves library
 # target_link_libraries(${PROJECT_NAME} PUBLIC curves::curves)
 
-# Find eiquadprog library and headers
-add_project_dependency(eiquadprog REQUIRED)
-
-# Link eiquadprog library
-target_link_libraries(${PROJECT_NAME} PUBLIC eiquadprog::eiquadprog)
-
 # Find OSQP library and headers
 find_package(osqp REQUIRED)
 

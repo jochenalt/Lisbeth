@@ -229,8 +229,10 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 			 Vector12 const& jointsPositions,
 			 Vector12 const& jointsVelocities)
 {
+	static uint64_t avr = 0;
+	uint64_t start = get_micros();
 	int k = params->get_k();
-	std::cout << "--- C++ ---" << k << " " << k % params->get_k_mpc() << " " << params->get_k_mpc() - (k % params->get_k_mpc())<< std::endl;
+	// std::cout << "--- C++ ---" << k << " " << k % params->get_k_mpc() << " " << params->get_k_mpc() - (k % params->get_k_mpc())<< std::endl;
 
 	estimator.run(footTrajectoryGenerator.getFootPosition(),
 		  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,  imuAttitudeQuat,
@@ -279,13 +281,14 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	// Solve MPC problem once every params->get_k_mpc() iterations of the main loop
 	if (startNewGaitCycle) {
-		mpcController.solve(bodyPlanner.getBodyTrajectory(), footstepPlanner.getFootsteps(), gait.getCurrentGaitMatrix());
-		f_mpc = mpcController.get_latest_result();
+		// mpcController.solve(bodyPlanner.getBodyTrajectory(), footstepPlanner.getFootsteps(), gait.getCurrentGaitMatrix());
+		// f_mpc = mpcController.get_latest_result();
 	}
 	if (params->get_k() % params->get_k_mpc() >=2) {
-		f_mpc = mpcController.get_latest_result();
+		// f_mpc = mpcController.get_latest_result();
 	}
-
+	uint64_t wbc_end = 0;
+	uint64_t wbc_start = 0;
 	// Whole Body Control
 	// If nothing wrong happened yet in the WBC controller
 	if (!error && !cmd_stop) {
@@ -320,9 +323,12 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	    dq_wbc.tail(12) = wbcController.get_vdes();            	// with reference angular velocities of previous loop
 
 	    // Run InvKin + WBC QP
+		wbc_start = get_micros();
+
 	    wbcController.compute(q_wbc, dq_wbc, f_mpc, gait.getCurrentGaitMatrix().row(0),
 	    					  feet_p_cmd,feet_v_cmd,feet_a_cmd,
 	    					  base_targets);
+		wbc_end = get_micros();
 
 	    // Quantities sent to the control board
 	    q_des = wbcController.get_qdes();
@@ -337,7 +343,14 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 
 	  // Increment loop counter
 	  k++;
+	uint64_t end = get_micros();
+	avr = (avr + (end - start)) / 2;
+	static uint64_t wbc_avr = 0;
+	wbc_avr = (wbc_avr + (wbc_end - wbc_start)) / 2;
 
+	if ((k % 1000) == 0) {
+		std::cout << "c::loop t=" << avr << "us wbc=" << wbc_avr << std::endl;
+	}
 }
 
 void Controller::command_speed(double vX, double vY, double heightZ, double rotX, double rotY, double angSpeedZ) {
