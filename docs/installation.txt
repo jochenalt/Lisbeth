@@ -368,20 +368,6 @@ cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DPYTHON_EXECUTABLE=/usr/bin/python3.6 -DPYT
 
 
 -------------------------------------------------
------------- Setup On raspberry Pro  ---------
--------------------------------------------------
-
-#sudo apt install ubuntu-desktop
-
-sudo reboot
-sudo apt install libeigen3.dev
-sudo apt-get install libboost-all-dev
-
-
-
-
-
--------------------------------------------------
 ------------ Raspberry PI  ---------
 -------------------------------------------------
 
@@ -473,7 +459,7 @@ sudo apt-get install libboost-all-dev
 conda install -c conda-forge eigenpy
 conda install -c conda-forge/label/cf202003 eigenpy 
 
-# create 4G swapfile (for pinocchio compilation)
+# create 4G swapfile (for compiling pinocchio, which does not fit in 4GB)
 sudo fallocate -l 4G /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
@@ -504,7 +490,7 @@ conda config --add channels conda-forge
 conda config --set channel_priority strict
 conda install pinocchio
 
-#compile (takes 6h)
+#compile, takes 6h, dont try parallel compilation, even -j2 will crash because of lack of main memory
 make 
 # install in /usr/local
 make install
@@ -537,12 +523,11 @@ pip3 install --user pybullet
 # compile lisbeth
 cd lisbeth/code/controller
 mkdir build & cd build
-cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/lisbeth/code/controller/install -DPYTHON_STANDARD_LAYOUT=ON -CMAKE_PREFIX_PATH=$CONDA_PREFIX
+cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/lisbeth/code/controller/install-CMAKE_PREFIX_PATH=$CONDA_PREFIX
 
 # run lisbeth
 cd ~/lisbeth/code/controller/script
 python main.py -i test
-
 
 
 

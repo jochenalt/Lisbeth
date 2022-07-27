@@ -19,7 +19,13 @@ class Controller
 {
 public:
 	Controller();
-	~Controller(){};
+	virtual ~Controller(){};
+
+	// there can be only one
+	static Controller& getInstance() {
+		static Controller singleton;
+		return singleton;
+	}
 
 	void initialize(Params &params);
 	void compute(Vector3 const &imuLinearAcceleration,Vector3 const &imuGyroscopse, Vector3 const &imuAttitudeEuler, Vector4 const& imuAttitudeQuat,

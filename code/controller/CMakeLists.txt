@@ -5,6 +5,7 @@ set (CMAKE_CXX_STANDARD 11)
 set(PROJECT_NAME controller-core)
 set(PROJECT_DESCRIPTION "control for lisbeth")
 set(PROJECT_URL https://github.com/jochenalt/lisbeth)
+set(PROJECT_EXEC_NAME walking)
 
 # Project options
 option(BUILD_PYTHON_INTERFACE "Build the python binding" ON)
@@ -121,8 +122,8 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC DESCRIPTION_PATH="${PROJECT_SO
 
 
 # Main Executable
-add_executable(${PROJECT_NAMESPACE}-${PROJECT_NAME} src/main.cpp)
-target_link_libraries(${PROJECT_NAMESPACE}-${PROJECT_NAME} ${PROJECT_NAME})
+add_executable(${PROJECT_EXEC_NAME} src/main.cpp)
+target_link_libraries(${PROJECT_EXEC_NAME} ${PROJECT_NAME})
 
 # Python Bindings
 if(BUILD_PYTHON_INTERFACE)
@@ -133,5 +134,5 @@ endif()
 # Installation
 if(NOT INSTALL_PYTHON_INTERFACE_ONLY)
   install(TARGETS ${PROJECT_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION lib)
-  install(TARGETS ${PROJECT_NAMESPACE}-${PROJECT_NAME} RUNTIME DESTINATION bin)
+  install(TARGETS ${PROJECT_EXEC_NAME} RUNTIME DESTINATION bin)
 endif()

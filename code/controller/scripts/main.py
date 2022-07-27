@@ -142,15 +142,12 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     if params.SIMULATION and (des_vel_analysis is not None):
         remoteControl.update_for_analysis(des_vel_analysis, N_analysis, N_steady)
 
-
-
     ####
 
     if params.SIMULATION:
         device = PyBulletSimulator()
     else:
         device = Solo12(name_interface, dt=params.dt_wbc)
-
 
     if name_interface_clone is not None:
         print("PASS")
@@ -200,7 +197,6 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
 
             # Update sensor data (IMU, encoders, Motion capture)
             device.UpdateMeasurment()
-
 
             # get command from remote control
             remoteControl.update_v_ref(params.get_k(), controller.velID)
