@@ -311,8 +311,6 @@ int WBCSolver::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Ei
   return 0;
 }
 
-
-
 /*
 Compute all matrices of the Box QP problem
 
