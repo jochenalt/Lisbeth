@@ -12,14 +12,9 @@ import numpy as np
 import argparse
 import libcontroller_core as core
 import RemoteControl
+import Types
 
 
-params = core.Params()  # Object that holds all controller parameters
-
-if params.SIMULATION:
-    from PyBulletSimulator import PyBulletSimulator
-else:
-    import HardwareInterface
 
 
 key_pressed = False
@@ -96,6 +91,15 @@ def control_loop(name_interface, name_interface_clone=None, des_vel_analysis=Non
     """
 
     # Check .yaml file for parameters of the controller
+
+    params = core.Params()  # Object that holds all controller parameters
+    params.initialize(Types.ConfigFilePath)
+
+    if params.SIMULATION:
+        from PyBulletSimulator import PyBulletSimulator
+    else:
+        import HardwareInterface
+
 
     # Enable or disable PyBullet GUI
     enable_pyb_GUI = params.enable_pyb_GUI

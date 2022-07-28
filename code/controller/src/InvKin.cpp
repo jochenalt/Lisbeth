@@ -13,9 +13,9 @@ InvKin::InvKin():
     vf_(Matrix43::Zero()),
     wf_(Matrix43::Zero()),
     af_(Matrix43::Zero()),
-	dJdq_(Matrix43::Zero()),
+	 dJdq_(Matrix43::Zero()),
     Jf_(Eigen::Matrix<double, 12, 12>::Zero()),
-	Jf_tmp_(Eigen::Matrix<double, 6, 12>::Zero()),
+	 Jf_tmp_(Eigen::Matrix<double, 6, 12>::Zero()),
     acc(Matrix112::Zero()),
     ddq_cmd_(Vector12::Zero()),
     dq_cmd_(Vector12::Zero()),
@@ -23,48 +23,34 @@ InvKin::InvKin():
 
 {}
 
-void InvKin::initialize(Params& params) {
-    // Params store parameters
-	params_ = &params;
-	dt = params_-> dt_wbc;
+void InvKin::initialize(Params& params_in) {
+	params = &params_in;
 
-	// Reference position of feet
-	feet_position_ref <<
-		  0.1946,    0.1946,   -0.1946,   -0.1946,		// x coord
-		  0.14695,  -0.14695,   0.14695,  -0.14695,		// y coord
-		  0.0191028, 0.0191028, 0.0191028, 0.0191028;   // z coord
-
-    // Path to the robot URDF
+   // Path to the robot URDF (defined in CMakeLists.txt
 	const std::string filename = std::string(URDF_MODEL);
 
-    // Build model from urdf (base is not free flyer)
-    pinocchio::urdf::buildModel(filename, model_, false);
-	// Create data required by the algorithms
-	// for estimation estimation (forward kinematics)
+   // Build model from urdf (base is not free flyer)
+   pinocchio::urdf::buildModel(filename, model_, false);
 
-	// Construct data from model
+    // Create data required by the algorithms
+	// for estimation estimation (forward kinematics)
 	data_ = pinocchio::Data(model_);
 
 	// Update all the quantities of the model
 	pinocchio::computeAllTerms(model_, data_, VectorN::Zero(model_.nq), VectorN::Zero(model_.nv));
 
 	// Get feet frame IDs
-	foot_ids_[0] = static_cast<int>(model_.getFrameId("FL_FOOT"));  // from long uint to int
+	foot_ids_[0] = static_cast<int>(model_.getFrameId("FL_FOOT"));
 	foot_ids_[1] = static_cast<int>(model_.getFrameId("FR_FOOT"));
 	foot_ids_[2] = static_cast<int>(model_.getFrameId("HL_FOOT"));
 	foot_ids_[3] = static_cast<int>(model_.getFrameId("HR_FOOT"));
 
 	// Get base ID
-	base_id_ = static_cast<int>(model_.getFrameId("base_link"));  // from long uint to int
+	base_id_ = static_cast<int>(model_.getFrameId("base_link"));
 
 	// Set task gains
-	Kp_base_position = Vector3(params_->Kp_base_position.data());
-	Kd_base_position = Vector3(params_->Kd_base_position.data());
-	Kp_base_orientation = Vector3(params_->Kp_base_orientation.data());
-	Kd_base_orientation = Vector3(params_->Kd_base_orientation.data());
-
-	Kp_flyingfeet = params_->Kp_flyingfeet;
-	Kd_flyingfeet = params_->Kd_flyingfeet;
+	Kp_flyingfeet = params->Kp_flyingfeet;
+	Kd_flyingfeet = params->Kd_flyingfeet;
 
 }
 Eigen::MatrixXd InvKin::refreshAndCompute(const Vector4 &contacts,
@@ -117,7 +103,6 @@ void InvKin::run(Vector12 const& q, Vector12 const& dq, Vector4 const& contacts,
   // Update model and data of the robot
   pinocchio::computeJointJacobians(model_, data_, q);
   pinocchio::forwardKinematics(model_, data_, q, dq, VectorN::Zero(model_.nv));
-  //pinocchio::computeJointJacobiansTimeVariation(model_, data_, q, dq);
   pinocchio::updateFramePlacements(model_, data_);
 
   for (int i = 0; i < 4; i++) {
@@ -132,7 +117,6 @@ void InvKin::run(Vector12 const& q, Vector12 const& dq, Vector4 const& contacts,
     // other coeffs keep their previous value instead of being set to 0
     pinocchio::getFrameJacobian(model_, data_, idx, pinocchio::LOCAL_WORLD_ALIGNED, Jf_tmp_);
     Jf_.block(3 * i, 0, 3, 12) = Jf_tmp_.block(0, 0, 3, 12);
-
   }
 
   // IK output for accelerations of actuators (stored in ddq_cmd_)

@@ -20,6 +20,9 @@ URDFFilePath = RobotModelPath + "/" + URDFFileName
 
 # absolute filepath of srdf file
 SRDFFilePath = RobotModelPath + "/" + SRDFFileName
+
+# absolute filepath of config file
+ConfigFilePath = HomePath + "/code/controller/config/" + "config.yaml"
                 
 # All possible Gait types 
 # NoMovement is still a Gait but does not move

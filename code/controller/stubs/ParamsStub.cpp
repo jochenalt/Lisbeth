@@ -20,8 +20,6 @@ struct ParamsPythonVisitor : public bp::def_visitor<ParamsPythonVisitor<Params>>
 		  .def("get_k_left_in_gait", &Params::get_k_left_in_gait)
 		  .def("is_new_mpc_cycle", &Params::is_new_mpc_cycle)
 
-        .def_readwrite("interface", &Params::interface)
-		  .def_readwrite("DEMONSTRATION", &Params::DEMONSTRATION)
 		  .def_readwrite("SIMULATION", &Params::SIMULATION)
         .def_readwrite("h_ref", &Params::h_ref)
 		  .def_readwrite("dt_wbc", &Params::dt_wbc)

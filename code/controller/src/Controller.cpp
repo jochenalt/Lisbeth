@@ -289,15 +289,15 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 		// this returns the result of the previous mpc run, this one just started
 		f_mpc = mpcController.get_latest_result();
 	}
-	if (mpcController.is_ready()) {
-		if (params->enable_early_mpc_result) {
-			f_mpc = mpcController.get_latest_result();
-		} else {
-			if (params->get_k() % params->get_k_mpc() >=2) {
-				f_mpc = mpcController.get_latest_result();
-			}
-		}
+
+	if (startNewGaitCycle) {
+		mpcController.solve(bodyPlanner.getBodyTrajectory(), footstepPlanner.getFootsteps(), gait.getCurrentGaitMatrix());
+		f_mpc = mpcController.get_latest_result();
 	}
+	if ((params->get_k() % params->get_k_mpc() >=2) || (mpcController.is_ready() && params->enable_early_mpc_result)) {
+		f_mpc = mpcController.get_latest_result();
+	}
+
 
 	// Whole Body Control
 	// If nothing wrong happened yet in the WBC controller

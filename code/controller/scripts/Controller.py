@@ -182,7 +182,6 @@ class Controller:
         self.q_init = np.hstack((np.zeros(6), q_init.copy()))
         self.q_init[2] = params.h_ref
 
-        self.DEMONSTRATION = params.DEMONSTRATION
         self.SIMULATION = params.SIMULATION
         self.enable_pyb_GUI = params.enable_pyb_GUI
 
@@ -450,8 +449,7 @@ class Controller:
         @params reference_state reference centroideal state trajectory
         @params hRb rotation between the horizontal and base frame
         """
-        if self.DEMONSTRATION and self.gait.is_static():
-            hRb = np.eye(3)
+        # hRb = np.eye(3)
 
         self.base_targets[:6] = np.zeros(6)
         self.base_targets[[3, 4]] = reference_state[[3, 4], 1]

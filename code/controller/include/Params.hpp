@@ -51,8 +51,6 @@ class Params {
   // See .yaml file for meaning of parameters
   // General parameters
   std::string config_file;      // Name of the yaml file containing hardware information
-  std::string interface;        // Name of the communication interface (check with ifconfig)
-  bool DEMONSTRATION;           // Enable/disable demonstration functionalities
   bool SIMULATION;              // Enable/disable PyBullet simulation or running on real robot
   bool LOGGING;                 // Enable/disable logging during the experiment
   int envID;                    // Identifier of the environment to choose in which one the simulation will happen
@@ -61,7 +59,6 @@ class Params {
   int N_SIMULATION;             // Number of simulated wbc time steps
   bool enable_pyb_GUI;          // Enable/disable PyBullet GUI
   bool enable_early_mpc_result; // Enable fetching MPC result as soon as it is available
-  bool perfect_estimator;       // Enable/disable perfect estimator by using data directly from PyBullet
 
   // General control parameters
   std::vector<double> q_init;   // Initial articular positions
@@ -93,10 +90,6 @@ class Params {
   //  Parameters of InvKin
   double Kp_flyingfeet;                     // Proportional gain for feet position tasks
   double Kd_flyingfeet;                     // Derivative gain for feet position tasks
-  std::vector<double> Kp_base_position;     // Proportional gains for the base position task
-  std::vector<double> Kd_base_position;     // Derivative gains for the base position task
-  std::vector<double> Kp_base_orientation;  // Proportional gains for the base orientation task
-  std::vector<double> Kd_base_orientation;  // Derivative gains for the base orientation task
   std::vector<double> w_tasks;  // Tasks weights: [feet/base, vx, vy, vz, roll+wroll, pitch+wpitch, wyaw, contacts]
 
   // Parameters of WBC QP problem

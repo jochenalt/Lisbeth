@@ -38,9 +38,7 @@ public:
 
 private:
 
-    Params* params_;
-    // Inputs of the constructor
-    double dt;  // Time step of the contact sequence (time step of the MPC)
+    Params* params;
 
 
     Matrix43 posf_;                        // Current feet positions
@@ -80,12 +78,6 @@ private:
     Vector12 dq_cmd_ = Vector12::Zero(12, 1);
     Vector12 q_cmd_;  										  // Actuator command positions
 
-
-    Vector3 Kp_base_position;     // Proportional gains for base position task
-    Vector3 Kd_base_position;     // Derivative gains for base position task
-    Vector3 Kp_base_orientation;  // Proportional gains for base orientation task
-    Vector3 Kd_base_orientation;  // Derivative gains for base orientation task
-
     Vector19 q_wbc_;           // Configuration vector for the whole body control
     Vector18 dq_wbc_;          // Velocity vector for the whole body control
 
@@ -101,11 +93,7 @@ private:
 
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-///
-/// \brief Compute the pseudo inverse of a matrix using the Jacobi SVD formula
-///
-////////////////////////////////////////////////////////////////////////////////////////////////
+// compute the pseudo inverse of a matrix using the Jacobi SVD formula
 template <typename _Matrix_Type_>
 MatrixN pseudoInverse(const _Matrix_Type_& a, double epsilon = std::numeric_limits<double>::epsilon()) {
   Eigen::JacobiSVD<MatrixN> svd(a, Eigen::ComputeThinU | Eigen::ComputeThinV);

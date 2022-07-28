@@ -7,8 +7,6 @@ Params::Params()
       velID(2),
 		k(0),
 
-      interface(""),
-      DEMONSTRATION(false),
       SIMULATION(false),
       LOGGING(false),
       envID(0),
@@ -17,9 +15,8 @@ Params::Params()
       N_SIMULATION(0),
       enable_pyb_GUI(false),
 		enable_early_mpc_result(false),
-      perfect_estimator(false),
 
-      q_init(12, 0.0),  // Fill with zeros, will be filled with values later
+      q_init(12, 0.0),
       dt_wbc(0.0),
       dt_mpc(0.0),
       N_periods(0),
@@ -37,32 +34,28 @@ Params::Params()
       lock_time(0.0),
       vert_time(0.0),
 
-      osqp_w_states(12, 0.0),  // Fill with zeros, will be filled with values later
-      osqp_w_forces(3, 0.0),   // Fill with zeros, will be filled with values later
+      osqp_w_states(12, 0.0),
+      osqp_w_forces(3, 0.0),
       osqp_Nz_lim(0.0),
 
       Kp_flyingfeet(0.0),
       Kd_flyingfeet(0.0),
-      Kp_base_position(3, 0.0),     // Fill with zeros, will be filled with values later
-      Kd_base_position(3, 0.0),     // Fill with zeros, will be filled with values later
-      Kp_base_orientation(3, 0.0),  // Fill with zeros, will be filled with values later
-      Kd_base_orientation(3, 0.0),  // Fill with zeros, will be filled with values later
 
-      Q1(0.0),
+		Q1(0.0),
       Q2(0.0),
       Fz_max(0.0),
       Fz_min(0.0),
       enable_comp_forces(false),
 
       mass(1.0),           // Mass of the robot
-      I_mat(9, 0.0),       // Fill with zeros, will be filled with values later
-      CoM_offset(3, 0.0),  // Fill with zeros, will be filled with values later
+      I_mat(9, 0.0),
+      CoM_offset(3, 0.0),
       h_ref(0.0),
-      shoulders(12, 0.0),                 // Fill with zeros, will be filled with values later
-      footsteps_init(12, 0.0),            // Fill with zeros, will be filled with values later
-      footsteps_under_shoulders(12, 0.0)  // Fill with zeros, will be filled with values later
+      shoulders(12, 0.0),
+      footsteps_init(12, 0.0),
+      footsteps_under_shoulders(12, 0.0)
 {
-  initialize(WALK_PARAMETERS_YAML);
+
 }
 
 void Params::initialize(const std::string& file_path)
@@ -85,12 +78,6 @@ void Params::initialize(const std::string& file_path)
    // Retrieve robot parameters
    assert_yaml_parsing(robot_node, "robot", "mass");
    mass = robot_node["mass"].as<double>();
-
-  assert_yaml_parsing(robot_node, "robot", "interface");
-  interface = robot_node["interface"].as<std::string>();
-
-  assert_yaml_parsing(robot_node, "robot", "DEMONSTRATION");
-  DEMONSTRATION = robot_node["DEMONSTRATION"].as<bool>();
 
   assert_yaml_parsing(robot_node, "robot", "SIMULATION");
   SIMULATION = robot_node["SIMULATION"].as<bool>();
@@ -127,9 +114,6 @@ void Params::initialize(const std::string& file_path)
 
   assert_yaml_parsing(robot_node, "robot", "enable_early_mpc_result");
   enable_early_mpc_result = robot_node["enable_early_mpc_result"].as<bool>();
-
-  assert_yaml_parsing(robot_node, "robot", "perfect_estimator");
-  perfect_estimator = robot_node["perfect_estimator"].as<bool>();
 
   assert_yaml_parsing(robot_node, "robot", "Kp_main");
   Kp_main = robot_node["Kp_main"].as<std::vector<double> >();
@@ -173,18 +157,6 @@ void Params::initialize(const std::string& file_path)
   assert_yaml_parsing(robot_node, "robot", "Kd_flyingfeet");
   Kd_flyingfeet = robot_node["Kd_flyingfeet"].as<double>();
 
-  assert_yaml_parsing(robot_node, "robot", "Kp_base_position");
-  Kp_base_position = robot_node["Kp_base_position"].as<std::vector<double> >();
-
-  assert_yaml_parsing(robot_node, "robot", "Kd_base_position");
-  Kd_base_position = robot_node["Kd_base_position"].as<std::vector<double> >();
-
-  assert_yaml_parsing(robot_node, "robot", "Kp_base_orientation");
-  Kp_base_orientation = robot_node["Kp_base_orientation"].as<std::vector<double> >();
-
-  assert_yaml_parsing(robot_node, "robot", "Kd_base_orientation");
-  Kd_base_orientation = robot_node["Kd_base_orientation"].as<std::vector<double> >();
-
   assert_yaml_parsing(robot_node, "robot", "Q1");
   Q1 = robot_node["Q1"].as<double>();
 
@@ -214,7 +186,5 @@ void Params::initialize(const std::string& file_path)
 
   assert_yaml_parsing(robot_node, "robot", "max_velocity");
   max_velocity = robot_node["max_velocity"].as<std::vector<double> >();
-
-  if (!SIMULATION) perfect_estimator = false;
 }
 

@@ -120,7 +120,7 @@ void WBCController::compute(Vector18 const &q, Vector18 const &dq,
 
 	// Compute the inverse dynamics, aka the joint torques according to the current state of the system,
 	// the desired joint accelerations and the external forces, using the Recursive Newton Euler Algorithm.
-	// Result is stored in data_.tau
+	// Result is stored in data.tau
 	Vector12 f_compensation;
 	if (!enable_comp_forces)
 	{
