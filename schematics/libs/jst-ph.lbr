@@ -7,7 +7,7 @@
 <setting keepoldvectorfont="yes"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="10" unitdist="mil" unit="mil" style="lines" multiple="1" display="yes" altdistance="5" altunitdist="mil" altunit="mil"/>
+<grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="yes" altdistance="0.01" altunitdist="inch" altunit="inch"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="yes" active="yes"/>
 <layer number="2" name="Route2" color="1" fill="3" visible="no" active="yes"/>
@@ -242,6 +242,43 @@
 <wire x1="-5.6896" y1="-1.1176" x2="-5.6896" y2="2.1844" width="0.1524" layer="21"/>
 <wire x1="-2.6924" y1="-1.1176" x2="-5.6896" y2="-1.1176" width="0.1524" layer="21"/>
 </package>
+<package name="JST-PH7">
+<wire x1="-9.236" y1="-1.7" x2="-5.22" y2="-1.7" width="0.127" layer="21"/>
+<wire x1="-5.22" y1="-1.7" x2="5.22" y2="-1.7" width="0.127" layer="21"/>
+<wire x1="5.22" y1="-1.7" x2="9.236" y2="-1.7" width="0.127" layer="21"/>
+<wire x1="-9.236" y1="2.8" x2="9.236" y2="2.8" width="0.127" layer="21"/>
+<wire x1="9.236" y1="2.8" x2="9.236" y2="0.6" width="0.127" layer="21"/>
+<wire x1="9.236" y1="0.6" x2="9.236" y2="-0.3" width="0.127" layer="21"/>
+<wire x1="9.236" y1="-0.3" x2="9.236" y2="-1.7" width="0.127" layer="21"/>
+<wire x1="-9.236" y1="2.8" x2="-9.236" y2="0.6" width="0.127" layer="21"/>
+<wire x1="-9.236" y1="0.6" x2="-9.236" y2="-0.3" width="0.127" layer="21"/>
+<wire x1="-9.236" y1="-0.3" x2="-9.236" y2="-1.7" width="0.127" layer="21"/>
+<wire x1="-8.636" y1="2.2" x2="8.636" y2="2.2" width="0.127" layer="21"/>
+<wire x1="-8.636" y1="2.2" x2="-8.636" y2="0.6" width="0.127" layer="21"/>
+<wire x1="-8.636" y1="0.6" x2="-8.636" y2="-0.3" width="0.127" layer="21"/>
+<wire x1="-8.636" y1="-0.3" x2="-8.636" y2="-1.1" width="0.127" layer="21"/>
+<wire x1="-8.636" y1="-1.1" x2="-5.22" y2="-1.1" width="0.127" layer="21"/>
+<wire x1="8.636" y1="2.2" x2="8.636" y2="0.6" width="0.127" layer="21"/>
+<wire x1="8.636" y1="0.6" x2="8.636" y2="-0.3" width="0.127" layer="21"/>
+<wire x1="8.636" y1="-0.3" x2="8.636" y2="-1.1" width="0.127" layer="21"/>
+<wire x1="-9.236" y1="-0.3" x2="-8.636" y2="-0.3" width="0.127" layer="21"/>
+<wire x1="-9.236" y1="0.6" x2="-8.636" y2="0.6" width="0.127" layer="21"/>
+<wire x1="8.636" y1="0.6" x2="9.236" y2="0.6" width="0.127" layer="21"/>
+<wire x1="8.636" y1="-0.3" x2="9.236" y2="-0.3" width="0.127" layer="21"/>
+<wire x1="-5.22" y1="-1.1" x2="-5.22" y2="-1.7" width="0.127" layer="21"/>
+<wire x1="5.22" y1="-1.1" x2="5.22" y2="-1.7" width="0.127" layer="21"/>
+<wire x1="5.22" y1="-1.1" x2="8.636" y2="-1.1" width="0.127" layer="21"/>
+<pad name="5" x="-2.492" y="0" drill="0.8128" diameter="1.6764" shape="octagon"/>
+<pad name="4" x="0.016" y="0" drill="0.8128" diameter="1.6764" shape="octagon"/>
+<pad name="3" x="2.524" y="0" drill="0.8128" diameter="1.6764" shape="octagon"/>
+<pad name="2" x="5.032" y="0" drill="0.8128" diameter="1.6764" shape="octagon"/>
+<pad name="6" x="-5" y="0" drill="0.8128" diameter="1.6764" shape="octagon"/>
+<pad name="1" x="7.54" y="0" drill="0.8128" diameter="1.6764" shape="octagon"/>
+<text x="-5.73" y="3.5001" size="1.27" layer="25">&gt;NAME</text>
+<text x="6.1701" y="-3.4999" size="1.27" layer="21">1</text>
+<text x="-5.73" y="-4.1199" size="1.27" layer="27">&gt;VALUE</text>
+<pad name="7" x="-7.54" y="0" drill="0.8128" diameter="1.6764" shape="octagon"/>
+</package>
 </packages>
 <symbols>
 <symbol name="CON06">
@@ -303,6 +340,21 @@
 <pin name="1" x="7.62" y="2.54" visible="pad" length="short" direction="pas" rot="R180"/>
 <pin name="4" x="7.62" y="-5.08" visible="pad" length="short" direction="pas" rot="R180"/>
 <pin name="5" x="7.62" y="-7.62" visible="pad" length="short" direction="pas" rot="R180"/>
+</symbol>
+<symbol name="CON07">
+<wire x1="-2.54" y1="7.62" x2="-2.54" y2="-12.7" width="0.1524" layer="94"/>
+<wire x1="-2.54" y1="-12.7" x2="5.08" y2="-12.7" width="0.1524" layer="94"/>
+<wire x1="5.08" y1="-12.7" x2="5.08" y2="7.62" width="0.1524" layer="94"/>
+<wire x1="5.08" y1="7.62" x2="-2.54" y2="7.62" width="0.1524" layer="94"/>
+<text x="-2.54" y="8.382" size="1.778" layer="95">&gt;NAME</text>
+<text x="-2.54" y="-14.986" size="1.778" layer="96">&gt;VALUE</text>
+<pin name="3" x="7.62" y="0" visible="pad" length="short" direction="pas" rot="R180"/>
+<pin name="2" x="7.62" y="2.54" visible="pad" length="short" direction="pas" rot="R180"/>
+<pin name="1" x="7.62" y="5.08" visible="pad" length="short" direction="pas" rot="R180"/>
+<pin name="4" x="7.62" y="-2.54" visible="pad" length="short" direction="pas" rot="R180"/>
+<pin name="5" x="7.62" y="-5.08" visible="pad" length="short" direction="pas" rot="R180"/>
+<pin name="6" x="7.62" y="-7.62" visible="pad" length="short" direction="pas" rot="R180"/>
+<pin name="7" x="7.62" y="-10.16" visible="pad" length="short" direction="pas" rot="R180"/>
 </symbol>
 </symbols>
 <devicesets>
@@ -389,6 +441,27 @@
 <connect gate="G$1" pin="3" pad="3"/>
 <connect gate="G$1" pin="4" pad="4"/>
 <connect gate="G$1" pin="5" pad="5"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+<deviceset name="JST-PH7">
+<gates>
+<gate name="G$1" symbol="CON07" x="-2.54" y="2.54"/>
+</gates>
+<devices>
+<device name="" package="JST-PH7">
+<connects>
+<connect gate="G$1" pin="1" pad="1"/>
+<connect gate="G$1" pin="2" pad="2"/>
+<connect gate="G$1" pin="3" pad="3"/>
+<connect gate="G$1" pin="4" pad="4"/>
+<connect gate="G$1" pin="5" pad="5"/>
+<connect gate="G$1" pin="6" pad="6"/>
+<connect gate="G$1" pin="7" pad="7"/>
 </connects>
 <technologies>
 <technology name=""/>
