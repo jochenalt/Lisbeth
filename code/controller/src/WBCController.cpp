@@ -73,11 +73,6 @@ void WBCController::compute(Vector18 const &q, Vector18 const &dq,
 		Vector12 const &f_cmd, RowVector4 const &contacts, Matrix34 const &pgoals,
 		Matrix34 const &vgoals, Matrix34 const &agoals, Vector12 const &xgoals)
 {
-	if (f_cmd.rows() != 12)
-	{
-		throw std::runtime_error("f_cmd should be a vector of size 12");
-	}
-
 	//  Update nb of iterations since contact
 	k_since_contact += contacts;  // Increment feet in stance phase
 	k_since_contact = k_since_contact.cwiseProduct(contacts); // Reset feet in swing phase
@@ -108,10 +103,6 @@ void WBCController::compute(Vector18 const &q, Vector18 const &dq,
 	// Result is stored in data_.M
 	pinocchio::crba(model, data, q_wbc);
 
-	// TODO: Adapt logging of feet_pos, feet_err, feet_vel
-	// TODO: Check if needed because crbaMinimal may allow to directly get the jacobian
-	// TODO: Check if possible to use the model of InvKin to avoid computations
-	// pinocchio::computeJointJacobians(model_, data_, q);
 
 	// Retrieve feet jacobian
 	Matrix43 posf_tmp_ = invkin.get_posf();
@@ -150,8 +141,6 @@ void WBCController::compute(Vector18 const &q, Vector18 const &dq,
 		f_compensation = pseudoInverse(Jc.transpose())
 				* (data.tau.head(6) - RNEA_without_joints + RNEA_NLE);
 	}
-
-	pinocchio::rnea(model, data, q_wbc, dq_wbc, ddq_cmd);
 
 	// Solve the QP problem
 	box_qp.run(data.M, Jc, f_cmd + f_compensation, data.tau.head(6),

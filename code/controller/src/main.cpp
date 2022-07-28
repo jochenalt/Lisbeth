@@ -40,9 +40,10 @@ int main(int argc, char** argv) {
 
 	while (!stop_main_loop) {
 
-		// fetch input from IMU
+		// wait until next loop
 		uint64_t now_us = get_micros();
 		delay_us((int)((last_call_us + 1000000/frequency) - now_us));
+		last_call_us = now_us;
 
 		// check input from the keyboard
 		// and set speed and gait
@@ -84,6 +85,7 @@ int main(int argc, char** argv) {
 						 imuAttitudeEuler, imuAttitudeQuat,
 						 jointsPositions, jointsVelocities);
 
+	   params.inc_k();
 	}
 
 	KeyboardListener::getInstance().teardown();

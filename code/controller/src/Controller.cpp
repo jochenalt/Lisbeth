@@ -235,7 +235,7 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	uint64_t start_wbc = 0;
 	uint64_t end_wbc = 0;
 	int k = params->get_k();
-	std::cout << "--- C++ ---" << k << " " << k % params->get_k_mpc() << " " << params->get_k_mpc() - (k % params->get_k_mpc())<< std::endl;
+	// std::cout << "--- C++ ---" << k << " " << k % params->get_k_mpc() << " " << params->get_k_mpc() - (k % params->get_k_mpc())<< std::endl;
 
 	estimator.run(footTrajectoryGenerator.getFootPosition(),
 		  	  	imuLinearAcceleration,imuGyroscopse, imuAttitudeEuler,  imuAttitudeQuat,
@@ -285,10 +285,18 @@ void Controller::compute(Vector3 const& imuLinearAcceleration,
 	// Solve MPC problem once every params->get_k_mpc() iterations of the main loop
 	if (startNewGaitCycle) {
 		mpcController.solve(bodyPlanner.getBodyTrajectory(), footstepPlanner.getFootsteps(), gait.getCurrentGaitMatrix());
+
+		// this returns the result of the previous mpc run, this one just started
 		f_mpc = mpcController.get_latest_result();
 	}
-	if (params->get_k() % params->get_k_mpc() >=2) {
-		f_mpc = mpcController.get_latest_result();
+	if (mpcController.is_ready()) {
+		if (params->enable_early_mpc_result) {
+			f_mpc = mpcController.get_latest_result();
+		} else {
+			if (params->get_k() % params->get_k_mpc() >=2) {
+				f_mpc = mpcController.get_latest_result();
+			}
+		}
 	}
 
 	// Whole Body Control

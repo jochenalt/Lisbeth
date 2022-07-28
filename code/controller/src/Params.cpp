@@ -11,13 +11,12 @@ Params::Params()
       DEMONSTRATION(false),
       SIMULATION(false),
       LOGGING(false),
-      PLOTTING(false),
       envID(0),
       use_flat_plane(false),
       predefined_vel(false),
       N_SIMULATION(0),
       enable_pyb_GUI(false),
-      enable_corba_viewer(false),
+		enable_early_mpc_result(false),
       perfect_estimator(false),
 
       q_init(12, 0.0),  // Fill with zeros, will be filled with values later
@@ -99,9 +98,6 @@ void Params::initialize(const std::string& file_path)
   assert_yaml_parsing(robot_node, "robot", "LOGGING");
   LOGGING = robot_node["LOGGING"].as<bool>();
 
-  assert_yaml_parsing(robot_node, "robot", "PLOTTING");
-  PLOTTING = robot_node["PLOTTING"].as<bool>();
-
   assert_yaml_parsing(robot_node, "robot", "dt_wbc");
   dt_wbc = robot_node["dt_wbc"].as<double>();
 
@@ -129,8 +125,8 @@ void Params::initialize(const std::string& file_path)
   assert_yaml_parsing(robot_node, "robot", "enable_pyb_GUI");
   enable_pyb_GUI = robot_node["enable_pyb_GUI"].as<bool>();
 
-  assert_yaml_parsing(robot_node, "robot", "enable_corba_viewer");
-  enable_corba_viewer = robot_node["enable_corba_viewer"].as<bool>();
+  assert_yaml_parsing(robot_node, "robot", "enable_early_mpc_result");
+  enable_early_mpc_result = robot_node["enable_early_mpc_result"].as<bool>();
 
   assert_yaml_parsing(robot_node, "robot", "perfect_estimator");
   perfect_estimator = robot_node["perfect_estimator"].as<bool>();

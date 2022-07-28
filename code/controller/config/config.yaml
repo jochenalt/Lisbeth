@@ -23,14 +23,14 @@ robot:
     q_init: [0.0, 0.7, -1.4, 0.0, 0.7, -1.4, 0.0, -0.7, 1.4, 0.0, -0.7, 1.4]  # Initial articular positions
            
     dt_wbc: 0.002  # Time step of the whole body control
-    dt_mpc: 0.010  # Time step of the model predictive control
+    dt_mpc: 0.016  # Time step of the model predictive control
     Kp_main: [3.0, 3.0, 3.0]  # Proportional gains for the PD+
     Kd_main: [0.3, 0.3, 0.3]  # Derivative gains for the PD+
     Kff_main: 1.0  # Feedforward torques multiplier for the PD+
 
     # Parameters of Gait
     N_periods: 1        # MPC considers one full gait period
-    N_steps: 28         # in total we have that many steps in the prediction horizon (i.e. 1x32 )
+    N_steps: 24         # in total we have that many steps in the prediction horizon (i.e. 1x32 )
            
     # Parameters of Joystick
     gp_alpha_vel: 0.003  # Coefficient of the low pass filter applied to gamepad velocity
@@ -48,6 +48,8 @@ robot:
     osqp_w_states: [2.0, 2.0, 10.0, 0.25, 0.25, 10.0, 0.2, 0.2, 0.2, 0.0, 0.0, 0.3]  # Weights for state tracking error
     osqp_w_forces: [0.00005, 0.00005, 0.00005]  # Weights for force regularisation
     osqp_Nz_lim: 35.0  # Maximum vertical force that can be applied at contact points
+    enable_early_mpc_result: true  # fetch result as soon as it is available (comparison with python code gets unpredictable)
+
 
     # Parameters of InvKin
     Kp_flyingfeet: 10   # Proportional gain for feet position tasks
