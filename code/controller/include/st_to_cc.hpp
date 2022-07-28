@@ -1,7 +1,8 @@
 #ifndef ST_TO_CC_H_INCLUDED
 #define ST_TO_CC_H_INCLUDED
 
-double *cc_mv ( int m, int n, int ncc, int icc[], int ccc[], double acc[], 
+/*
+double *cc_mv ( int m, int n, int ncc, int icc[], int ccc[], double acc[],
   double x[] );
 void cc_print ( int m, int n, int ncc, int icc[], int ccc[], double acc[], 
   char *title );
@@ -22,7 +23,6 @@ double r8_uniform_01 ( int *seed );
 double r8vec_diff_norm ( int n, double a[], double b[] );
 double *r8vec_uniform_01_new ( int n, int *seed );
 void r8vec_write ( char *output_filename, int n, double x[] );
-void sort_heap_external ( int n, int *indx, int *i, int *j, int isgn );
 void st_data_read ( char *input_filename, int m, int n, int nnzero, 
   int row[], int col[], double ast[] );
 void st_header_print ( int i_min, int i_max, int j_min, int j_max, int m, 
@@ -33,14 +33,18 @@ double *st_mv ( int m, int n, int nst, int ist[], int jst[], double ast[],
   double x[] );
 void st_print ( int m, int n, int nst, int ist[], int jst[], double ast[], 
   char *title );
+*/
+void sort_heap_external ( int n, int *indx, int *i, int *j, int isgn );
+
 int st_to_cc_size ( int nst, int ist[], int jst[] );
 void st_to_cc_index ( int nst, int ist[], int jst[], int ncc, int n, 
   int icc[], int ccc[] );
 double *st_to_cc_values ( int nst, int ist[], int jst[], double ast[], int ncc, 
   int n, int icc[], int ccc[] );
+/*
 void timestamp ( );
 double *wathen_st ( int nx, int ny, int nz_num, int *seed, int row[], 
   int col[] );
 int wathen_st_size ( int nx, int ny );
-
+*/
 #endif // ifndef ST_TO_CC_H

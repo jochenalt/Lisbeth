@@ -23,25 +23,23 @@ WBCSolver::WBCSolver() {
 
 }
 
-void WBCSolver::initialize(Params& params) {
-  params_ = &params;
-  Q1 = params.Q1 * Eigen::Matrix<double, 6, 6>::Identity();
-  Q2 = params.Q2 * Eigen::Matrix<double, 12, 12>::Identity();
+void WBCSolver::initialize(Params& params_in) {
+  params = &params_in;
+  Q1 = params->Q1 * Eigen::Matrix<double, 6, 6>::Identity();
+  Q2 = params->Q2 * Eigen::Matrix<double, 12, 12>::Identity();
 
   // Set the lower and upper limits of the box
-  std::fill_n(v_NK_up, size_nz_NK, params_->Fz_max);
-  std::fill_n(v_NK_low, size_nz_NK, params_->Fz_min);
+  std::fill_n(v_NK_up, size_nz_NK, params->Fz_max);
+  std::fill_n(v_NK_low, size_nz_NK, params->Fz_min);
 
   create_matrices();
 
   init_solver();
 }
 
+// Create the constraint matrices (M.X = N and L.X <= K)
+// Create the weight matrices P and Q (cost 1/2 x^T * P * X + X^T * Q)
 int WBCSolver::create_matrices() {
-  /*
-  Create the constraint matrices (M.X = N and L.X <= K)
-  Create the weight matrices P and Q (cost 1/2 x^T * P * X + X^T * Q)
-  */
 
   // Create the constraint matrices
   create_ML();
@@ -52,37 +50,37 @@ int WBCSolver::create_matrices() {
   return 0;
 }
 
+/*
+Add a new non-zero coefficient to the ML matrix by filling the triplet r_ML / c_ML / v_ML
+
+Args:
+  - i (int): row index of the new entry
+  - j (int): column index of the new entry
+  - v (double): value of the new entry
+  - r_ML (int*): table that contains row indexes
+  - c_ML (int*): table that contains column indexes
+  - v_ML (double*): table that contains values
+*/
 inline void WBCSolver::add_to_ML(int i, int j, double v, int *r_ML, int *c_ML, double *v_ML) {
-  /*
-  Add a new non-zero coefficient to the ML matrix by filling the triplet r_ML / c_ML / v_ML
-
-  Args:
-    - i (int): row index of the new entry
-    - j (int): column index of the new entry
-    - v (double): value of the new entry
-    - r_ML (int*): table that contains row indexes
-    - c_ML (int*): table that contains column indexes
-    - v_ML (double*): table that contains values
-  */
-
   r_ML[cpt_ML] = i;  // row index
   c_ML[cpt_ML] = j;  // column index
   v_ML[cpt_ML] = v;  // value of coefficient
   cpt_ML++;          // increment the counter
 }
 
-inline void WBCSolver::add_to_P(int i, int j, double v, int *r_P, int *c_P, double *v_P) {
-  /*
-  Add a new non-zero coefficient to the P matrix by filling the triplet r_P / c_P / v_P
+/*
+Add a new non-zero coefficient to the P matrix by filling the triplet r_P / c_P / v_P
 
-  Args:
-    - i (int): row index of the new entry
-    - j (int): column index of the new entry
-    - v (double): value of the new entry
-    - r_P (int*): table that contains row indexes
-    - c_P (int*): table that contains column indexes
-    - v_P (double*): table that contains values
-  */
+Args:
+  - i (int): row index of the new entry
+  - j (int): column index of the new entry
+  - v (double): value of the new entry
+  - r_P (int*): table that contains row indexes
+  - c_P (int*): table that contains column indexes
+  - v_P (double*): table that contains values
+*/
+inline void WBCSolver::add_to_P(int i, int j, double v, int *r_P, int *c_P, double *v_P) {
+
 
   r_P[cpt_P] = i;  // row index
   c_P[cpt_P] = j;  // column index
@@ -90,11 +88,10 @@ inline void WBCSolver::add_to_P(int i, int j, double v, int *r_P, int *c_P, doub
   cpt_P++;         // increment the counter
 }
 
+// Create the M and L matrices involved in the constraint equations
+// the solution has to respect: M.X = N and L.X <= K
 int WBCSolver::create_ML() {
-  /*
-  Create the M and L matrices involved in the constraint equations
-  the solution has to respect: M.X = N and L.X <= K
-  */
+
 
   int *r_ML = new int[size_nz_ML];        // row indexes of non-zero values in matrix ML
   int *c_ML = new int[size_nz_ML];        // col indexes of non-zero values in matrix ML
@@ -145,12 +142,11 @@ int WBCSolver::create_ML() {
   return 0;
 }
 
+// Create the weight matrices P and Q in the cost function
+// 1/2 x^T.P.x + x^T.q of the QP problem
 
 int WBCSolver::create_weight_matrices() {
-  /*
-  Create the weight matrices P and Q in the cost function 
-  1/2 x^T.P.x + x^T.q of the QP problem
-  */
+
 
   int *r_P = new int[size_nz_P];        // row indexes of non-zero values in matrix P
   int *c_P = new int[size_nz_P];        // col indexes of non-zero values in matrix P
@@ -169,12 +165,12 @@ int WBCSolver::create_weight_matrices() {
   }
 
   // Creation of CSC matrix
-  c_int *icc;                                // row indices
-  c_int *ccc;                                // col indices
+  c_int *icc;                              // row indices
+  c_int *ccc;                              // col indices
   double *acc;                             // coeff values
   int nst = cpt_P;                         // number of non zero elements
   int ncc = st_to_cc_size(nst, r_P, c_P);  // number of CC values
-  int n = 12;                // number of columns
+  int n = 12;                					 // number of columns
 
   // Get the CC indices.
   icc = (int *)malloc(ncc * sizeof(int));
@@ -205,12 +201,10 @@ int WBCSolver::create_weight_matrices() {
   return 0;
 }
 
-
+// Initialize the solver (first iteration) or update it (next iterations)
+// then call the OSQP solver to solve the QP problem
 void WBCSolver::init_solver() {
-  /*
-  Initialize the solver (first iteration) or update it (next iterations)
-  then call the OSQP solver to solve the QP problem
-  */
+
 
   // Setup the solver (first iteration) then just update it
   data = (OSQPData *)c_malloc(sizeof(OSQPData));
@@ -218,9 +212,9 @@ void WBCSolver::init_solver() {
   data->m = 20;            // number of constraints
   data->P = P;             // the upper triangular part of the quadratic cost matrix P in csc format (size n x n)
   data->A = ML;            // linear constraints matrix A in csc format (size m x n)
-  data->q = Q;         // dense array for linear part of cost function (size n)
-  data->l = v_NK_low;  // dense array for lower bound (size m)
-  data->u = v_NK_up;   // dense array for upper bound (size m)
+  data->q = Q;        		// dense array for linear part of cost function (size n)
+  data->l = v_NK_low;  		// dense array for lower bound (size m)
+  data->u = v_NK_up;   		// dense array for upper bound (size m)
 
   // Tuning parameters of the OSQP solver
   settings->eps_abs = (float)1e-5;
@@ -232,7 +226,7 @@ void WBCSolver::init_solver() {
   osqp_setup(&workspce, data, settings);
 }
 
-int WBCSolver::call_solver() {
+void WBCSolver::call_solver() {
   // Initialize the solver (first iteration) or update it (next iterations)
   // then call the OSQP solver to solve the QP problem
 
@@ -249,17 +243,11 @@ int WBCSolver::call_solver() {
   // Run the solver to solve the QP problem
   osqp_solve(workspce);
 
-  // solution in workspce->solution->x
-  return 0;
 }
 
+// Extract relevant information from the output of the QP solver
+//   - f_cmd (Eigen::MatrixXd): reference contact forces received from the MPC
 int WBCSolver::retrieve_result(const Eigen::MatrixXd &f_cmd) {
-  /*
-  Extract relevant information from the output of the QP solver
-
-  Args:
-    - f_cmd (Eigen::MatrixXd): reference contact forces received from the MPC
-  */
 
   // Retrieve the solution of the QP problem
   for (int k = 0; k < 12; k++) {
@@ -275,9 +263,6 @@ int WBCSolver::retrieve_result(const Eigen::MatrixXd &f_cmd) {
   return 0;
 }
 
-/*
-Getters
-*/
 Eigen::MatrixXd WBCSolver::get_f_res() { return f_res; }
 Eigen::MatrixXd WBCSolver::get_ddq_res() { return ddq_res; }
 Eigen::MatrixXd WBCSolver::get_H() {
@@ -286,19 +271,20 @@ Eigen::MatrixXd WBCSolver::get_H() {
   return Hxd; 
 }
 
+/*
+Run one iteration of the whole WBC QP problem by calling all the necessary functions (data retrieval,
+update of constraint matrices, update of the solver, running the solver, retrieving result)
+
+Args:
+  - M (Eigen::MatrixXd): joint space inertia matrix computed with crba
+  - Jc (Eigen::MatrixXd): Jacobian of contact points
+  - f_cmd (Eigen::MatrixXd): reference contact forces coming from the MPC
+  - RNEA (Eigen::MatrixXd): joint torques according to the current state of the system and the desired joint accelerations
+  - k_contact (Eigen::MatrixXd): nb of iterations since contact has been enabled for each foot
+*/
 int WBCSolver::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA,
                const Eigen::MatrixXd &k_contact) {
-  /*
-  Run one iteration of the whole WBC QP problem by calling all the necessary functions (data retrieval,
-  update of constraint matrices, update of the solver, running the solver, retrieving result)
 
-  Args:
-    - M (Eigen::MatrixXd): joint space inertia matrix computed with crba
-    - Jc (Eigen::MatrixXd): Jacobian of contact points
-    - f_cmd (Eigen::MatrixXd): reference contact forces coming from the MPC
-    - RNEA (Eigen::MatrixXd): joint torques according to the current state of the system and the desired joint accelerations
-    - k_contact (Eigen::MatrixXd): nb of iterations since contact has been enabled for each foot
-  */
 
   // Create the constraint and weight matrices used by the QP solver
   // Minimize x^T.P.x + 2 x^T.Q with constraints M.X == N and L.X <= K
@@ -312,8 +298,8 @@ int WBCSolver::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Ei
   Eigen::Matrix<double, 20, 1> Gf = G * f_cmd;
 
   for (int i = 0; i < G.rows(); i++) {
-    v_NK_low[i] = - Gf(i, 0) + params_->Fz_min;
-    v_NK_up[i] = - Gf(i, 0) + params_->Fz_max;
+    v_NK_low[i] = - Gf(i, 0) + params->Fz_min;
+    v_NK_up[i] = - Gf(i, 0) + params->Fz_max;
   }
 
   // Create an initial guess and call the solver to solve the QP problem
@@ -327,16 +313,17 @@ int WBCSolver::run(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Ei
 
 
 
-void WBCSolver::compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA) {
-  /*
-  Compute all matrices of the Box QP problem
+/*
+Compute all matrices of the Box QP problem
 
-  Args:
-    - M (Eigen::MatrixXd): joint space inertia matrix computed with crba
-    - Jc (Eigen::MatrixXd): Jacobian of contact points
-    - f_cmd (Eigen::MatrixXd): reference contact forces coming from the MPC
-    - RNEA (Eigen::MatrixXd): joint torques according to the current state of the system and the desired joint accelerations
-  */
+Args:
+  - M (Eigen::MatrixXd): joint space inertia matrix computed with crba
+  - Jc (Eigen::MatrixXd): Jacobian of contact points
+  - f_cmd (Eigen::MatrixXd): reference contact forces coming from the MPC
+  - RNEA (Eigen::MatrixXd): joint torques according to the current state of the system and the desired joint accelerations
+*/
+void WBCSolver::compute_matrices(const Eigen::MatrixXd &M, const Eigen::MatrixXd &Jc, const Eigen::MatrixXd &f_cmd, const Eigen::MatrixXd &RNEA) {
+
 
   Y = M.block(0, 0, 6, 6);
   X = Jc.block(0, 0, 12, 6).transpose();
