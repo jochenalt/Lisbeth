@@ -200,8 +200,8 @@ class Controller:
         self.estimator.initialize(params, self.gait)
 
 
-        self.statePlanner = core.StatePlanner()
-        self.statePlanner.initialize(params, self.gait)
+        self.bodyPlanner = core.BodyPlanner()
+        self.bodyPlanner.initialize(params)
 
         self.shoulders = np.zeros((3, 4))
         self.footstepPlanner = core.FootstepPlanner()
@@ -305,12 +305,8 @@ class Controller:
         self.footTrajectoryGenerator.update(startNewGaitCycle, o_targetFootstep)
 
         # Run state planner (outputs the reference trajectory of the base)
-        self.statePlanner.computeReferenceStates(self.q_filtered[:6], self.h_v_filtered,
-                                                 self.vref_filtered)
-
-        # Result can be retrieved with self.statePlanner.getReferenceStates()
-        reference_state = self.statePlanner.getReferenceStates()
-
+        self.bodyPlanner.update(self.q_filtered[:6], self.h_v_filtered,self.vref_filtered)
+        reference_state = self.bodyPlanner.getBodyTrajectory()
         t_planner = time.time()
 
         # Solve MPC problem once every k_mpc iterations of the main loop

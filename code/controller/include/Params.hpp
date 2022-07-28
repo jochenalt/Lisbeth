@@ -25,7 +25,6 @@ class Params {
 
   void initialize(const std::string& config_file_path);
 
-
   // Number of wbc loops per mpc
   int get_k_mpc() { return (int)std::round(dt_mpc / dt_wbc); };
 
@@ -50,7 +49,6 @@ class Params {
   int k=0;					// counting wbc loops
   // See .yaml file for meaning of parameters
   // General parameters
-  std::string config_file;      // Name of the yaml file containing hardware information
   bool SIMULATION;              // Enable/disable PyBullet simulation or running on real robot
   bool LOGGING;                 // Enable/disable logging during the experiment
   int envID;                    // Identifier of the environment to choose in which one the simulation will happen
@@ -71,16 +69,16 @@ class Params {
   double Kff_main;              // Feedforward torques multiplier for the PD+
 
   // Parameters of Joystick
-  double gp_alpha_vel;               // Coefficient of the low pass filter applied to gamepad velocity
-  double gp_alpha_pos;               // Coefficient of the low pass filter applied to gamepad position
+  double gp_alpha_vel;          // Coefficient of the low pass filter applied to gamepad velocity
+  double gp_alpha_pos;          // Coefficient of the low pass filter applied to gamepad position
 
   // Parameters of FootstepPlanner
-  double k_feedback;  // Value of the gain for the feedback heuristic
+  double k_feedback;  				// Value of the gain for the feedback heuristic, how strong does the footstepplanner reacts on disturbances
 
   // Parameters of FootTrajectoryGenerator
-  double max_height;  // Apex height of the swinging trajectory [m]
-  double lock_time;   // Target lock before the touchdown [s]
-  double vert_time;   // Duration during which feet move only along Z when taking off and landing
+  double max_height;  				// Apex height of the swinging trajectory [m]
+  double lock_time;   				// Target lock before the touchdown [s]
+  double vert_time;   				// Duration during which feet move only along Z when taking off and landing
 
   // Parameters of MPC with OSQP
   std::vector<double> osqp_w_states;  // Weights for state tracking error
@@ -113,7 +111,7 @@ class Params {
   double h_ref;                                   // Reference height for the base
   std::vector<double> shoulders;                  // Position of shoulders in base frame
   std::vector<double> footsteps_init;             // Initial 3D position of footsteps in base frame
-  std::vector<double> footsteps_under_shoulders;  // Positions of footsteps to be "under the shoulder"
+  std::vector<double> footsteps_under_shoulders;  // Positions of footsteps to be "under the shoulder" on the ground
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

@@ -15,14 +15,14 @@ struct StatePlannerPythonVisitor : public bp::def_visitor<StatePlannerPythonVisi
     void visit(PyClassStatePlanner& cl) const
     {
         cl.def(bp::init<>(bp::arg(""), "Default constructor."))
-            .def("getReferenceStates", &BodyPlanner::getBodyTrajectory)
+            .def("getBodyTrajectory", &BodyPlanner::getBodyTrajectory)
             .def("initialize", &BodyPlanner::setup, bp::args("params", "gait"))
-            .def("computeReferenceStates", &BodyPlanner::update, bp::args("q", "v", "b_vref"));
+            .def("update", &BodyPlanner::update, bp::args("q", "v", "b_vref"));
     }
 
     static void expose()
     {
-        bp::class_<BodyPlanner>("StatePlanner", bp::no_init).def(StatePlannerPythonVisitor<BodyPlanner>());
+        bp::class_<BodyPlanner>("BodyPlanner", bp::no_init).def(StatePlannerPythonVisitor<BodyPlanner>());
 
         ENABLE_SPECIFIC_MATRIX_TYPE(MatrixN);
         ENABLE_SPECIFIC_MATRIX_TYPE(Matrix12N);
