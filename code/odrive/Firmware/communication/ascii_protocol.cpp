@@ -142,18 +142,33 @@ void AsciiProtocol::cmd_set_position(char * pStr, bool use_checksum) {
 		Axis& axis0 = axes[0];
 		Axis& axis1 = axes[1];
 
+        // set axis 0
 		axis0.controller_.config_.control_mode = Controller::CONTROL_MODE_POSITION_CONTROL;
 		axis0.controller_.input_pos_ = pos_setpoint0;
 		axis0.controller_.input_vel_ = vel_feed_forward0;
 		axis0.controller_.input_torque_ = torque_feed_forward0;
 		axis0.controller_.input_pos_updated();
 		axis0.watchdog_feed();
+
+        // set axis 1
 		axis1.controller_.config_.control_mode = Controller::CONTROL_MODE_POSITION_CONTROL;
 		axis1.controller_.input_pos_ = pos_setpoint1;
 		axis1.controller_.input_vel_ = vel_feed_forward1;
 		axis1.controller_.input_torque_ = torque_feed_forward1;
 		axis1.controller_.input_pos_updated();
 		axis1.watchdog_feed();
+
+        // respond with current "<position0> <velocit0> <current0> <position0> <velocit1> <current1>"
+        float Iq_measured0 = axis0.motor_.current_control_.Iq_measured_;
+		float Iq_measured1 = axis1.motor_.current_control_.Iq_measured_;
+		 
+		respond(use_checksum, "%f %f %f %f %f %f",
+                (double)axis0.encoder_.pos_estimate_.any().value_or(0.0f),
+                (double)axis0.encoder_.vel_estimate_.any().value_or(0.0f),
+                (double)Iq_measured0,
+                (double)axis1.encoder_.pos_estimate_.any().value_or(0.0f),
+                (double)axis1.encoder_.vel_estimate_.any().value_or(0.0f),
+                (double)Iq_measured1);
 	} else {
 		// flexible variant for one axis with 2,3
 		float pos_setpoint, vel_feed_forward, torque_feed_forward;
@@ -172,7 +187,12 @@ void AsciiProtocol::cmd_set_position(char * pStr, bool use_checksum) {
 				axis.controller_.input_torque_ = torque_feed_forward;
 			axis.controller_.input_pos_updated();
 			axis.watchdog_feed();
-		}
+       		float Iq_measured = axis.motor_.current_control_.Iq_measured_;
+   		    respond(use_checksum, "%f %f %f",
+                (double)axis.encoder_.pos_estimate_.any().value_or(0.0f),
+                (double)axis.encoder_.vel_estimate_.any().value_or(0.0f),
+                (double)Iq_measured);
+   		}
 	}
 }
 
@@ -199,6 +219,15 @@ void AsciiProtocol::cmd_set_position_wl(char * pStr, bool use_checksum) {
             axis.motor_.config_.torque_lim = torque_lim;
         axis.controller_.input_pos_updated();
         axis.watchdog_feed();
+
+  		respond(use_checksum, "%f %f %f %f %f %f",
+                (double)axis0.encoder_.pos_estimate_.any().value_or(0.0f),
+                (double)axis0.encoder_.vel_estimate_.any().value_or(0.0f),
+                (double)Iq_measured0,
+                (double)axis1.encoder_.pos_estimate_.any().value_or(0.0f),
+                (double)axis1.encoder_.vel_estimate_.any().value_or(0.0f),
+                (double)Iq_measured1
+				);
     }
 }
 

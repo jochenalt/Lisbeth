@@ -2,6 +2,7 @@
 #include "Arduino.h"
 #include "ODrive.h"
 #include <cstdarg>
+#include <TimePassedBy.h>
 
 bool doCheckSums = true;        // use checksums for all communication to ODrive
 const uint32_t NO_ERROR = 0;
@@ -632,6 +633,8 @@ void ODrive::setBaudRate() {
     serial_->flush();    
     String s1 = getInfoDump();
     int idx = s1.indexOf("Hardware");
+    println("setzBaudrate %s", s1.c_str());
+
     if (idx >= 0) {
         return; // all good
     } else {
@@ -743,11 +746,19 @@ void ODrive::startup(int motor_number ) {
     bool isError = readError(motor_number, true /* print errors */);
     if (isError) {
         error = ERROR_POSITION_NOT_FOUND;
+        if (debugAPIOn) {
+            println("%s:startup %s / %d position not found", oname.c_str(), mname[motor_number].c_str(),motor_number);
+        }
+
         return;
     } 
     bool indexFound = getParamBool(axis + ".encoder.index_found");
     if (!indexFound) {
         error = ERROR_POSITION_NOT_FOUND;
+        if (debugAPIOn) {
+            println("%s:startup %s / %d position not found", oname.c_str(), mname[motor_number].c_str(),motor_number);
+        }
+
         return;
     }
 
@@ -755,8 +766,16 @@ void ODrive::startup(int motor_number ) {
     isError = readError(motor_number, true /* print errors */);
     if (isError) {
         error = ERROR_MOTOR_NOT_READY;
+        if (debugAPIOn) {
+            println("%s:startup %s / %d cancelled", oname.c_str(), mname[motor_number].c_str(),motor_number);
+        }
+
         return;
     } 
+
+    if (debugAPIOn) {
+        println("%s:startup %s / %d done.", oname.c_str(), mname[motor_number].c_str(),motor_number);
+    }
 
     // all ok
     return;
@@ -814,6 +833,7 @@ ODrive& ODrives::operator[](uint8_t i) {
 }
 
 void ODrives::setup() {
+    is_setup = false;
     for (int i = 0;i<num_odrives;i++) {
         odrive[i].setup(*odriveSerial[i]);
     }
@@ -821,6 +841,7 @@ void ODrives::setup() {
 
 
 void ODrives::loop() {
+    print("ODrive.loop");
     // To utilise all hardware serials in parallel, data is send to all ODrives first,
     // then we wait on all channels for a response.
     uint32_t start = micros();
@@ -829,17 +850,22 @@ void ODrives::loop() {
     for (int i = 0;i<num_odrives;i++) {
         odrive[i].sendRequestForFeedback();
     };
-    uint32_t afterSend = micros();
     for (int i = 0;i<num_odrives;i++) {
         Feedback& fb1 = feedback[i*2];
         Feedback& fb2 = feedback[i*2+1];
         uint32_t delay;
         odrive[i].receiveFeedback(delay, fb1.pos, fb1.vel, fb1.curr, fb2.pos, fb2.vel, fb2.curr);
         avrDelayTime_us = (avrDelayTime_us + delay)/2;
+
+        static TimePassedBy imuTimer (500);
+        if (imuTimer.isDue()) {
+            println("   ODrive[%i] (%0.2f, %.2f, %.2f)",  fb1.pos, fb1.vel, fb1.curr, fb2.pos, fb2.vel, fb2.curr);
+
+            println("   avr freq : %.2f Hz",loopAvrTime_us);
+        }
     }
     uint32_t end = micros();
     loopAvrTime_us = (loopAvrTime_us + (end-start)) / 2;
-    loopSendAvrTime_us = (loopAvrTime_us + (afterSend-start)) / 2; 
 }
 
 void ODrives::getFeedback(Feedback fb[]) {
@@ -968,14 +994,18 @@ void ODrives::startup() {
     }
     if (isError) {
         error = ERROR_MOTOR_NOT_READY;
+        if (debugAPIOn) {
+            println("Startup cancelled.");
+        }
         return;
     } 
-    if (debugAPIOn) {
-        println("Startup done.");
-    }
 
-    if (!error == NO_ERROR)
+    if (!error == NO_ERROR) {
         is_setup = true;
+        if (debugAPIOn) {
+            println("Startup done.");
+        }
+    }
 
 }
 

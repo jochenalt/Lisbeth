@@ -155,6 +155,7 @@ class MicrostrainIMU {
         Measurement dataStreamClock;
         uint32_t last_data_package_ts = 0;                   // time of the last data package arrived
         uint32_t data_package_size = 0;
+        uint32_t setup_time_ms = 0;
 }; 
 
 

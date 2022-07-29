@@ -526,6 +526,7 @@ bool MicrostrainIMU::setup(HardwareSerial* sn, uint16_t sampleFreq) {
   is_initialised = true;
   last_data_package_ts = 0;
 
+  setup_time_ms = millis();
   return true;
 }
 
@@ -605,6 +606,15 @@ void MicrostrainIMU::loop() {
               is_initialised = false;
               last_data_package_ts = 0;
           }   
+      }
+
+      // if no data package came and we waited a while, IMU is probably not connected
+      if ((last_data_package_ts == 0) && (millis() - setup_time_ms > 500)) {
+          static bool error_given = false;
+          if (!error_given) {
+            println("IMU:Did not receive data from IMU, is it really connected via UART7 ?");
+            error_given = true;
+          }
       }
     }
 }

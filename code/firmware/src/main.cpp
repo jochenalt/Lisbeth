@@ -65,11 +65,11 @@ void yield() {
 }
 
 void initODrives() {
-    for (int i = 0;i<NO_OF_ODRIVES;i++) {
-      odrives.addODrive(*odriveSerial[i], names[i*2],names[i*2+1], odriveNames[i]);
-      for (int mn = 0;mn < 2;mn++) {
-        if (motorActive[i][mn]) {
-          odrives[i].activate(mn);
+    for (int odno = 0;odno<NO_OF_ODRIVES;odno++) {
+      odrives.addODrive(*odriveSerial[odno], names[odno*2],names[odno*2+1], odriveNames[odno]);
+      for (int motno = 0;motno < 2;motno++) {
+        if (motorActive[odno][motno]) {
+          odrives[odno].activate(motno);
         }
       }
     };
@@ -81,18 +81,18 @@ void initODrives() {
     odrives.setup();
 
     // do  initial checks
-    for (int i = 0;i<NO_OF_ODRIVES;i++) {
+    for (int odno = 0;odno<NO_OF_ODRIVES;odno++) {
       // check baudrate first
-      odrives[i].setBaudRate();
+      odrives[odno].setBaudRate();
 
       // check sufficient voltage
-      float voltage = odrives[i].getVBusVoltage();
+      float voltage = odrives[odno].getVBusVoltage();
       if (voltage < 12) {
         if (voltage < 0.1) {
           println("\r\nODrive is not powered ");
           error = ODRIVE_SETUP_VOLTAGE_ERROR;
         } else {
-          println("\r\nVoltage of %.2fV too low.", voltage);
+          println("\r\nVoltage of %.2fV too low, needs to be 12V at least.", voltage);
           error = ODRIVE_SETUP_VOLTAGE_ERROR;
         }
       }
@@ -100,9 +100,9 @@ void initODrives() {
       // check correct firmware
       if (error == NO_ERROR) {
         uint16_t version_major, version_minor, version_revision;
-        odrives[i].getVersion(version_major, version_minor, version_revision);
+        odrives[odno].getVersion(version_major, version_minor, version_revision);
         if (version_major * 100 + version_minor*10 + version_revision != 155) {
-          println("\r\nFirmware of ODrive[%d]must be 1.5.5 but is %d.%d.%d.", i, version_major, version_minor, version_revision);
+          println("\r\nFirmware of ODrive[%d] must be the patched version 1.5.5 but is %d.%d.%d.", odno, version_major, version_minor, version_revision);
           error = ODRIVE_SETUP_FIRMWARE_ERROR; 
         }
       }
@@ -135,9 +135,7 @@ void setup() {
   imuMgr.powerUp();
 
   // setup up all ODrives, motors and encoders
-	// Serial.println("setup.ODrives");
-  // Serial4.begin(115200);
-  // initODrives();
+  initODrives();
 
   // set default blink pattern
   blinker.set(DefaultBlinkPattern,sizeof(DefaultBlinkPattern));		// assign pattern
@@ -210,10 +208,10 @@ void printHelp() {
   println("   h       - help");
   println("   d<no    - set debug level 0..2");
   println("   c<no>   - calibrate");
-  println("   s<no>   - startup");
-  println("   S<no>   - shutdown");
+  println("   o<no>   - startup");
+  println("   O<no>   - shutdown");
   println("   r       - reset");
-  println("   s       - startup all");
+  println("   s       - setup again");
   println("   S       - shutdown all");
   println("   i       - initialise IMU");
   println("   c       - calibrate hard iron");
@@ -324,7 +322,7 @@ void executeCommand() {
 						print("Motor number %lu is out of range", l);
 					}
 					emptyCmd();
-				} else if (command.startsWith("s")) {
+				} else if (command.startsWith("o")) {
           if (command.length() > 1) {
             unsigned long l = command.substring(1).toInt();
             if (((l >= 0) && (l < odrives.getNumberODrives()*2))) {
@@ -346,7 +344,7 @@ void executeCommand() {
               fastWatchdog();
           }
 					emptyCmd();
-				} else if (command.startsWith("S")) {
+				} else if (command.startsWith("O")) {
           if (command.length() > 1) {
             unsigned long l = command.substring(1).toInt();
             if (((l >= 0) && (l < odrives.getNumberODrives()*2))) {
@@ -402,21 +400,28 @@ void loop() {
   // get feedback of all odrives
   // odrives.loop();
 
+
+
+  static TimePassedBy imuTimer (1000);
+  if (imuTimer.isDue()) {
+    // float pos, vel,curr;
+    // odrives[0].getFeedback(0,pos,vel,curr);
+    // println("   ODrive[0] (%0.2f, %.2f, %.2f)",  pos, vel, curr);
+  }
+
+  // fetch orientation from IMU
   imuMgr.loop();
 
-  // check power supply
+  // check power supply, read voltage and current
   powerManager.loop();
 
   // check led  
   ledPowerManager.loop(now_us);
 
-  // if calibration came to a result, store it in EPPROM
+  // if IMU calibration came to a result, store it in EPPROM
   if (imuMgr.newCalibrationData()) {
     Serial.println("Store calibration in EEPROM");
     imuMgr.getCalibrationData(config.imu);
     config.write(); 
   }
-
-  // wait for any pending commands to be executed
-  powerManager.loop();
 }

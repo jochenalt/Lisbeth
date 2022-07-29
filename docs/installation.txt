@@ -172,8 +172,14 @@ pip install --upgrade odrive
 
 Start zadig and set the following drivers
 Zadig → options-> List all devices
-Odrive 3.6 CDC interface install USB Serial(CDC)
+Drop down menü "Odrive 3.6 CDC interface"   install USB Serial(CDC)
 ODrive 3.6 Native Interface install libusb-win32 (v1.2.6.0)
+
+# odrivetools is installed in C:\Users\Jochen Alt\AppData\Roaming\Python\Python39\Scripts
+#Start ODrivetool by 
+Anaconda prompt
+cd C:\Users\Jochen Alt\AppData\Roaming\Python\Python39\Scripts
+odrivetool
 
 Configuration of ODrive:
 # Motor
@@ -237,6 +243,9 @@ odrv0.axis0.requested_state = AXIS_STATE_ENCODER_INDEX_SEARCH
 odrv0.axis0.controller.config.input_filter_bandwidth = 20
 odrv0.axis0.controller.config.input_mode = INPUT_MODE_POS_FILTER
 odrv0.axis0.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
+
+
+odrv0.axis0.requested_state = AXIS_STATE_IDLE
 
 # miscellenous
 odrv0.reboot()
@@ -529,9 +538,3 @@ cmake .. -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX=~/lisbeth/code/contro
 cd ~/lisbeth/code/controller/script
 python main.py -i test
 
-
-
-0228 4333112
-
-Ostendorf Platz 3
-Abholcode 2030752350655454
