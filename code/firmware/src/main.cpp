@@ -9,6 +9,7 @@
 #include <IMUManager.h>
 #include <MotorPowerManager.h>
 #include <LEDPowerManager.h>
+#include <example.h>
 
 //  baud rate of Serial0 that is used for logging 
 #define LOG_BAUD_RATE 115200
@@ -39,7 +40,7 @@ uint32_t commandLastChar_us = 0;                             // time when the la
 // Teensy LED blinker
 static uint8_t DefaultBlinkPattern[3] = { 0b11001000,0b00001100,0b10000000}; // nice pattern. Each digit represents 50ms
 static uint8_t BlockingBlinkPattern[1] = { 0b11111110};                      // blocking pattern, used for blocking actions like startup of motors 
-PatternBlinker blinker;													                           
+// PatternBlinker blinker;													                           
 
 // Error codes
 uint8_t NO_ERROR = 0;
@@ -61,7 +62,7 @@ LEDPowerManager ledPowerManager;
 // yield is called randomly by delay, approx. every ms
 // we only allow harmless things happening there (e.g. the blinker)
 void yield() {
-  blinker.loop(millis());
+  // blinker.loop(millis());
 }
 
 void initODrives() {
@@ -114,8 +115,8 @@ void setup() {
   Serial.begin(LOG_BAUD_RATE);
 
   // everybody loves a blinking LED
-  pinMode(LED_BUILTIN, OUTPUT);
-  blinker.setup(LED_BUILTIN, 50);
+  // pinMode(LED_BUILTIN, OUTPUT);
+  // blinker.setup(LED_BUILTIN, 50);
 
  	// read configuration from EEPROM (or initialize if EEPPROM is a virgin)
 	Serial.println("EEPROM: setup");
@@ -138,7 +139,10 @@ void setup() {
   initODrives();
 
   // set default blink pattern
-  blinker.set(DefaultBlinkPattern,sizeof(DefaultBlinkPattern));		// assign pattern
+  // blinker.set(DefaultBlinkPattern,sizeof(DefaultBlinkPattern));		// assign pattern
+
+
+  displaySetup();
 
   if (error == NO_ERROR) {
    	// reset the board when wdt_reset() is not called every 100ms 
@@ -163,6 +167,8 @@ void setup() {
     delay(5000); // let the watchdog fire
     */
   }
+
+
 }
 
 // print nice help text and give the status
@@ -328,9 +334,9 @@ void executeCommand() {
             if (((l >= 0) && (l < odrives.getNumberODrives()*2))) {
               String name = odrives[l/2].getName(l % 2);
               slowWatchdog();
-              blinker.set(BlockingBlinkPattern, sizeof(BlockingBlinkPattern));
+              // blinker.set(BlockingBlinkPattern, sizeof(BlockingBlinkPattern));
               odrives[l/2].startup (l%2);
-              blinker.set(DefaultBlinkPattern, sizeof(DefaultBlinkPattern));
+              // blinker.set(DefaultBlinkPattern, sizeof(DefaultBlinkPattern));
               fastWatchdog();
             }
             else {
@@ -338,9 +344,9 @@ void executeCommand() {
             }
           } else {
               slowWatchdog();
-              blinker.set(BlockingBlinkPattern, sizeof(BlockingBlinkPattern));
+              // blinker.set(BlockingBlinkPattern, sizeof(BlockingBlinkPattern));
               odrives.startup ();
-              blinker.set(DefaultBlinkPattern, sizeof(DefaultBlinkPattern));
+              // blinker.set(DefaultBlinkPattern, sizeof(DefaultBlinkPattern));
               fastWatchdog();
           }
 					emptyCmd();
@@ -392,7 +398,7 @@ void loop() {
   wdt.feed();
   
   // everybody loves a blinking LED
-  blinker.loop(now_us/1000);
+  // blinker.loop(now_us/1000);
 
   // react on input from Serial 
   executeCommand();
@@ -400,7 +406,7 @@ void loop() {
   // get feedback of all odrives
   // odrives.loop();
 
-
+  displayLoop();
 
   static TimePassedBy imuTimer (1000);
   if (imuTimer.isDue()) {

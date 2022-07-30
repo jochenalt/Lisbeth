@@ -1,0 +1,2 @@
+void displaySetup();
+void displayLoop();
