@@ -23532,7 +23532,7 @@ Micropower Regulators, fixed</description>
 <part name="P15" library="jst-ph" deviceset="JST-PH2" device="" value="ON"/>
 <part name="LED1" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="LED" device="3MM" package3d_urn="urn:adsk.eagle:package:6240537/1" value="PWR"/>
 <part name="R9" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:23498/2" value="1K"/>
-<part name="D2" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="SCHOTTKY-DIODE" device="DO41" package3d_urn="urn:adsk.eagle:package:6240344/1" value="2A, 100V"/>
+<part name="D2" library="adafruit" library_urn="urn:adsk.eagle:library:420" deviceset="SCHOTTKY-DIODE" device="DO41" package3d_urn="urn:adsk.eagle:package:6240344/1" value="3A"/>
 <part name="C26" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="C-EU" device="050-024X044" package3d_urn="urn:adsk.eagle:package:23643/1" value="100nF"/>
 <part name="L2" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="L-EU" device="IRF-3" package3d_urn="urn:adsk.eagle:package:23536/1" value="20uH"/>
 <part name="R20" library="rcl" library_urn="urn:adsk.eagle:library:334" deviceset="R-EU_" device="0204/7" package3d_urn="urn:adsk.eagle:package:23498/2" value="100k"/>
@@ -23583,12 +23583,14 @@ Micropower Regulators, fixed</description>
 <plain>
 <text x="378.46" y="38.1" size="3.81" layer="91" rot="R270">Foot Sensor, analogue input</text>
 <text x="377.19" y="142.24" size="3.81" layer="91" rot="R270">Serial connection to 6 ODrives</text>
-<text x="-36.83" y="220.345" size="3.81" layer="91" distance="80">Power supply 5V 3A</text>
+<text x="-38.1" y="224.155" size="3.81" layer="91" distance="80">Power supply 5V 3A
+(for Teensy &amp; Raspi)</text>
 <text x="-121.92" y="113.665" size="3.81" layer="91" distance="80">Current and voltage measurement</text>
 <text x="-119.38" y="-12.065" size="3.81" layer="91" distance="80">MOSFET Switch with Inrush control</text>
 <text x="111.76" y="98.425" size="3.81" layer="91" distance="80">uController</text>
 <text x="194.31" y="220.345" size="3.81" layer="91" distance="80">PWM LED, 5V, 2A</text>
-<text x="74.93" y="220.345" size="3.81" layer="91" distance="80">Power supply 3.3V 500mA</text>
+<text x="74.93" y="220.345" size="3.81" layer="91" distance="80">Power supply 3.3V 500mA
+(for IMU and Magnetometer)</text>
 <text x="328.295" y="63.5" size="3.81" layer="91" distance="80" rot="R90">Sockets IMU &amp; MAG</text>
 <text x="328.295" y="16.51" size="3.81" layer="91" distance="80" rot="R90">Sockets Display </text>
 </plain>
@@ -24459,30 +24461,6 @@ Micropower Regulators, fixed</description>
 <pinref part="C14" gate="G$1" pin="+"/>
 </segment>
 </net>
-<net name="MISO/DC" class="0">
-<segment>
-<pinref part="U$1" gate="G$1" pin="12-MISO/MQSL"/>
-<label x="297.18" y="19.05" size="1.778" layer="95"/>
-<pinref part="P3" gate="G$1" pin="2"/>
-<wire x1="308.102" y1="19.05" x2="149.86" y2="19.05" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="MOSI" class="0">
-<segment>
-<pinref part="U$1" gate="G$1" pin="11-MOSI/CTX1"/>
-<label x="297.18" y="21.59" size="1.778" layer="95"/>
-<pinref part="P3" gate="G$1" pin="3"/>
-<wire x1="149.86" y1="21.59" x2="308.102" y2="21.59" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="CS" class="0">
-<segment>
-<pinref part="U$1" gate="G$1" pin="10-CS/MQSR"/>
-<label x="297.815" y="24.13" size="1.778" layer="95"/>
-<pinref part="P3" gate="G$1" pin="4"/>
-<wire x1="308.102" y1="24.13" x2="149.86" y2="24.13" width="0.1524" layer="91"/>
-</segment>
-</net>
 <net name="N$30" class="0">
 <segment>
 <wire x1="-55.245" y1="-50.165" x2="-55.245" y2="-53.975" width="0.1524" layer="91"/>
@@ -24996,17 +24974,6 @@ Micropower Regulators, fixed</description>
 <pinref part="C3" gate="G$1" pin="2"/>
 </segment>
 </net>
-<net name="T3.3V" class="0">
-<segment>
-<pinref part="U$1" gate="G$1" pin="3V3-3"/>
-<wire x1="134.62" y1="80.01" x2="134.62" y2="86.36" width="0.1524" layer="91"/>
-<wire x1="134.62" y1="86.36" x2="184.15" y2="86.36" width="0.1524" layer="91"/>
-<pinref part="P3" gate="G$1" pin="7"/>
-<wire x1="184.15" y1="31.75" x2="184.15" y2="86.36" width="0.1524" layer="91"/>
-<wire x1="308.102" y1="31.75" x2="184.15" y2="31.75" width="0.1524" layer="91"/>
-<label x="297.18" y="31.75" size="1.778" layer="95"/>
-</segment>
-</net>
 <net name="3.3V_RASPI" class="0">
 <segment>
 <pinref part="K1" gate="G$1" pin="1"/>
@@ -25016,15 +24983,10 @@ Micropower Regulators, fixed</description>
 <wire x1="453.39" y1="172.72" x2="453.39" y2="193.04" width="0.1524" layer="91"/>
 <label x="444.754" y="193.802" size="1.778" layer="95"/>
 </segment>
-</net>
-<net name="RESET" class="0">
 <segment>
-<pinref part="P3" gate="G$1" pin="6"/>
-<wire x1="308.102" y1="29.21" x2="179.07" y2="29.21" width="0.1524" layer="91"/>
-<wire x1="179.07" y1="29.21" x2="179.07" y2="8.89" width="0.1524" layer="91"/>
-<label x="297.18" y="29.21" size="1.778" layer="95"/>
-<pinref part="U$1" gate="G$1" pin="9-OUT1C"/>
-<wire x1="149.86" y1="8.89" x2="179.07" y2="8.89" width="0.1524" layer="91"/>
+<pinref part="P3" gate="G$1" pin="7"/>
+<wire x1="308.102" y1="31.75" x2="297.18" y2="31.75" width="0.1524" layer="91"/>
+<label x="294.64" y="31.75" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$7" class="0">
@@ -25060,16 +25022,6 @@ Micropower Regulators, fixed</description>
 <pinref part="R13" gate="G$1" pin="1"/>
 </segment>
 </net>
-<net name="SCK" class="0">
-<segment>
-<pinref part="U$1" gate="G$1" pin="13-SCK/LED"/>
-<wire x1="149.86" y1="16.51" x2="184.15" y2="16.51" width="0.1524" layer="91"/>
-<wire x1="184.15" y1="16.51" x2="186.69" y2="26.67" width="0.1524" layer="91"/>
-<pinref part="P3" gate="G$1" pin="5"/>
-<wire x1="186.69" y1="26.67" x2="308.102" y2="26.67" width="0.1524" layer="91"/>
-<label x="297.18" y="26.67" size="1.778" layer="95"/>
-</segment>
-</net>
 <net name="RASP_INT" class="0">
 <segment>
 <pinref part="K1" gate="G$1" pin="7"/>
@@ -25098,6 +25050,67 @@ Micropower Regulators, fixed</description>
 <wire x1="184.15" y1="12.7" x2="191.77" y2="12.7" width="0.1524" layer="91"/>
 </segment>
 </net>
+<net name="R_MOSI" class="0">
+<segment>
+<pinref part="K1" gate="G$1" pin="19"/>
+<wire x1="458.47" y1="170.18" x2="444.5" y2="170.18" width="0.1524" layer="91"/>
+<label x="444.5" y="170.18" size="1.778" layer="95"/>
+</segment>
+<segment>
+<pinref part="P3" gate="G$1" pin="3"/>
+<wire x1="308.102" y1="21.59" x2="297.18" y2="21.59" width="0.1524" layer="91"/>
+<label x="292.1" y="21.59" size="1.778" layer="95"/>
+</segment>
+</net>
+<net name="R_CLK" class="0">
+<segment>
+<pinref part="K1" gate="G$1" pin="23"/>
+<wire x1="458.47" y1="165.1" x2="444.5" y2="165.1" width="0.1524" layer="91"/>
+<label x="444.5" y="165.1" size="1.778" layer="95"/>
+</segment>
+<segment>
+<pinref part="P3" gate="G$1" pin="5"/>
+<wire x1="308.102" y1="26.67" x2="292.1" y2="26.67" width="0.1524" layer="91"/>
+<label x="292.1" y="26.67" size="1.778" layer="95"/>
+</segment>
+</net>
+<net name="R_CS/GPIO27" class="0">
+<segment>
+<pinref part="K1" gate="G$1" pin="11"/>
+<wire x1="458.47" y1="180.34" x2="444.5" y2="180.34" width="0.1524" layer="91"/>
+<label x="439.42" y="180.34" size="1.778" layer="95"/>
+</segment>
+<segment>
+<pinref part="P3" gate="G$1" pin="6"/>
+<wire x1="308.102" y1="29.21" x2="292.1" y2="29.21" width="0.1524" layer="91"/>
+<label x="292.1" y="29.21" size="1.778" layer="95"/>
+</segment>
+</net>
+<net name="R_DC/GPIO22" class="0">
+<segment>
+<pinref part="K1" gate="G$1" pin="13"/>
+<wire x1="458.47" y1="177.8" x2="444.5" y2="177.8" width="0.1524" layer="91"/>
+<label x="439.42" y="177.8" size="1.778" layer="95"/>
+</segment>
+<segment>
+<pinref part="P3" gate="G$1" pin="2"/>
+<wire x1="307.34" y1="19.05" x2="308.102" y2="19.05" width="0.1524" layer="91"/>
+<wire x1="308.102" y1="19.05" x2="292.1" y2="19.05" width="0.1524" layer="91"/>
+<label x="292.1" y="19.05" size="1.778" layer="95"/>
+</segment>
+</net>
+<net name="R_RST/GPIO5" class="0">
+<segment>
+<pinref part="K1" gate="G$1" pin="29"/>
+<wire x1="458.47" y1="157.48" x2="444.5" y2="157.48" width="0.1524" layer="91"/>
+<label x="443.23" y="157.48" size="1.778" layer="95"/>
+</segment>
+<segment>
+<pinref part="P3" gate="G$1" pin="4"/>
+<wire x1="308.102" y1="24.13" x2="293.37" y2="24.13" width="0.1524" layer="91"/>
+<label x="292.1" y="24.13" size="1.778" layer="95"/>
+</segment>
+</net>
 </nets>
 </sheet>
 </sheets>
@@ -25115,6 +25128,10 @@ Micropower Regulators, fixed</description>
 </schematic>
 </drawing>
 <compatibility>
+<note version="6.3" minversion="6.2.2" severity="warning">
+Since Version 6.2.2 text objects can contain more than one line,
+which will not be processed correctly with this version.
+</note>
 <note version="8.2" severity="warning">
 Since Version 8.2, EAGLE supports online libraries. The ids
 of those online libraries will not be understood (or retained)
